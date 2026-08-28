@@ -24,3 +24,4 @@ El proyecto se organiza en tres fases académicas con entregables individuales y
 - **Frontend:** Streamlit / Python
 - **Backend & Scraping:** Python, BeautifulSoup, Requests, APIs REST
 - **Control de Versiones & CI/CD:** GitHub Actions / Streamlit Cloud
+- **WEB SCRAPPING**
