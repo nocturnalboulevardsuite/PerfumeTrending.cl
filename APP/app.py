@@ -100,14 +100,14 @@ st.markdown(f"""
         border-color: {btn_hover_bg} !important;
     }}
     
-    /* 🔴 FIX ESPECÍFICO PARA EL BOTÓN "PHOTO SEARCH" 🔴 */
+    /* FIX ESPECÍFICO PARA EL BOTÓN "PHOTO SEARCH" */
     .st-key-btn_photo_search button {{
-        background-color: #1f242d !important; /* Fondo oscuro a juego con input */
+        background-color: #1f242d !important;
         border: 1px solid #3a3f4d !important;
     }}
     .st-key-btn_photo_search button p,
     .st-key-btn_photo_search button span {{
-        color: #ffffff !important; /* Texto blanco forzado */
+        color: #ffffff !important;
     }}
     .st-key-btn_photo_search button:hover {{
         background-color: #2d3340 !important;
@@ -181,7 +181,7 @@ st.markdown(f"""
         color: {text_color};
     }}
 
-    /* SWITCH TEMA (TOTALMENTE TRANSPARENTE EN EL CONTENEDOR) */
+    /* SWITCH TEMA */
     .st-key-theme_toggle div[data-testid="stButton"] > button,
     .st-key-theme_toggle button {{
         background: transparent !important;
@@ -248,7 +248,7 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # 3. CABECERA GLOBAL
-col_logo, col_nav, col_actions = st.columns([3, 5, 2], vertical_alignment="center")
+col_logo, col_nav, col_actions = st.columns([3, 4, 3], vertical_alignment="center")
 
 with col_logo:
     logo_color = "#333333" if is_dark else "#8c7b6d"
@@ -276,10 +276,12 @@ with col_nav:
     st.markdown("<div class='header-nav'><span>HOMBRES</span> | <span>MUJERES</span> | <span>ÁRABES</span> | <span>DISEÑADOR</span> | <span>NICHO</span></div>", unsafe_allow_html=True)
 
 with col_actions:
-    btn_col1, btn_col2 = st.columns([1, 1], vertical_alignment="center")
+    btn_col1, btn_col2, btn_col3 = st.columns([1, 1.2, 1], vertical_alignment="center")
     with btn_col1:
         st.button("👤 Ingresar", key="login_btn", use_container_width=True)
     with btn_col2:
+        st.page_link("pages/trendhype.py", label="🚂 HYPE", use_container_width=True)
+    with btn_col3:
         st.button(" ", key="theme_toggle", on_click=toggle_theme)
 
 st.write("")
@@ -306,7 +308,6 @@ with col_search:
 with col_separator:
     st.markdown(f"<div style='border-left: 2px solid {input_border}; height: 35px; margin: auto;'></div>", unsafe_allow_html=True)
 with col_photo:
-    # 🔴 AÑADIDA KEY ESPECÍFICA AQUÍ 🔴
     st.button("📷 PHOTO SEARCH", key="btn_photo_search", help="Buscar perfume por imagen", use_container_width=True)
 
 # Filtro rápido por Etiquetas de Esencias
