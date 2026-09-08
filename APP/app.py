@@ -99,6 +99,29 @@ st.markdown(f"""
         color: {btn_text} !important;
         border-color: {btn_hover_bg} !important;
     }}
+
+    /* NAVEGACIÓN SUPERIOR INVISIBLE / CLEAN */
+    .nav-container div[data-testid="stButton"] > button {{
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        color: {text_color} !important;
+        font-weight: 700 !important;
+        font-size: 0.9rem !important;
+        padding: 0px !important;
+        margin: 0px !important;
+        text-transform: uppercase;
+    }}
+    .nav-container div[data-testid="stButton"] > button:hover,
+    .nav-container div[data-testid="stButton"] > button:hover p {{
+        background: transparent !important;
+        color: #d4a373 !important;
+        border: none !important;
+    }}
+    .nav-container div[data-testid="stButton"] > button p {{
+        color: {text_color} !important;
+        font-weight: 700 !important;
+    }}
     
     /* FIX ESPECÍFICO PARA EL BOTÓN "PHOTO SEARCH" */
     .st-key-btn_photo_search button {{
@@ -170,16 +193,6 @@ st.markdown(f"""
     
     .product-title {{ font-size: 1.15rem; font-weight: bold; margin-bottom: 0; color: {text_color} !important; margin-top: 12px; }}
     .product-brand {{ font-size: 0.85rem; color: {subtext_color} !important; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }}
-    
-    .header-nav {{
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 25px;
-        font-weight: 700;
-        font-size: 0.95rem;
-        color: {text_color};
-    }}
 
     /* SWITCH TEMA */
     .st-key-theme_toggle div[data-testid="stButton"] > button,
@@ -248,7 +261,7 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # 3. CABECERA GLOBAL
-col_logo, col_nav, col_actions = st.columns([3, 4, 3], vertical_alignment="center")
+col_logo, col_nav, col_actions = st.columns([2.5, 5.5, 2], vertical_alignment="center")
 
 with col_logo:
     logo_color = "#333333" if is_dark else "#8c7b6d"
@@ -265,7 +278,7 @@ with col_logo:
             <path d="M 23 5 L 26 4" stroke="{text_color}" stroke-width="2.5" />
             <ellipse cx="29" cy="3" rx="3.5" ry="2.5" transform="rotate(-25 29 3)" fill="{logo_color}" stroke="{text_color}" stroke-width="1.5" />
         </svg>
-        <span style="font-family: 'Inter', sans-serif; font-size: 1.65rem; color: {text_color}; letter-spacing: -0.5px;">
+        <span style="font-family: 'Inter', sans-serif; font-size: 1.55rem; color: {text_color}; letter-spacing: -0.5px;">
             <span style="font-weight: 800;">Perfume</span><span style="font-weight: 400;">Trending</span>
         </span>
     </div>
@@ -273,16 +286,21 @@ with col_logo:
     st.markdown(logo_html, unsafe_allow_html=True)
 
 with col_nav:
-    st.markdown("<div class='header-nav'><span>HOMBRES</span> | <span>MUJERES</span> | <span>ÁRABES</span> | <span>DISEÑADOR</span> | <span>NICHO</span></div>", unsafe_allow_html=True)
+    st.markdown('<div class="nav-container">', unsafe_allow_html=True)
+    c1, c2, c3, c4, c5, c6 = st.columns([1, 1, 1, 1.2, 1, 1], vertical_alignment="center")
+    with c1: st.button("HOMBRES", key="n_hombres", on_click=navigate_to, args=('home',))
+    with c2: st.button("MUJERES", key="n_mujeres", on_click=navigate_to, args=('home',))
+    with c3: st.button("ÁRABES", key="n_arabes", on_click=navigate_to, args=('home',))
+    with c4: st.button("🚂 HYPE", key="n_hype", on_click=navigate_to, args=('hype',))
+    with c5: st.button("DISEÑADOR", key="n_disenador", on_click=navigate_to, args=('home',))
+    with c6: st.button("NICHO", key="n_nicho", on_click=navigate_to, args=('home',))
+    st.markdown('</div>', unsafe_allow_html=True)
 
 with col_actions:
-    btn_col1, btn_col2, btn_col3 = st.columns([1, 1.2, 1], vertical_alignment="center")
+    btn_col1, btn_col2 = st.columns([1.5, 1], vertical_alignment="center")
     with btn_col1:
         st.button("👤 Ingresar", key="login_btn", use_container_width=True)
     with btn_col2:
-        if st.button("🚂 HYPE", key="btn_hype_nav", use_container_width=True):
-            st.switch_page("pages/trendhype.py")
-    with btn_col3:
         st.button(" ", key="theme_toggle", on_click=toggle_theme)
 
 st.write("")
@@ -301,36 +319,37 @@ trending_perfumes = [
     {"brand": "VERSACE", "name": "EROS", "price": "$95.00", "notes": ["Menta", "Manzana Verde", "Vainilla", "Habatonka"], "img": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=500&q=80"}
 ]
 
-# 4. BARRA DE BÚSQUEDA INTEGRADA Y FILTRO DE ESENCIAS
-col_search, col_separator, col_photo = st.columns([8, 0.2, 2], vertical_alignment="center")
+# 4. BARRA DE BÚSQUEDA INTEGRADA Y FILTRO DE ESENCIAS (SOLO SI NO ESTAMOS EN TREN DEL HYPE)
+if st.session_state['current_page'] != 'hype':
+    col_search, col_separator, col_photo = st.columns([8, 0.2, 2], vertical_alignment="center")
 
-with col_search:
-    search_query = st.text_input("🔍 Buscar", placeholder="🔍 Buscar perfume, marca o esencias (Ej: Oud, Vainilla, Cítricos...)", label_visibility="collapsed")
-with col_separator:
-    st.markdown(f"<div style='border-left: 2px solid {input_border}; height: 35px; margin: auto;'></div>", unsafe_allow_html=True)
-with col_photo:
-    st.button("📷 PHOTO SEARCH", key="btn_photo_search", help="Buscar perfume por imagen", use_container_width=True)
+    with col_search:
+        search_query = st.text_input("🔍 Buscar", placeholder="🔍 Buscar perfume, marca o esencias (Ej: Oud, Vainilla, Cítricos...)", label_visibility="collapsed")
+    with col_separator:
+        st.markdown(f"<div style='border-left: 2px solid {input_border}; height: 35px; margin: auto;'></div>", unsafe_allow_html=True)
+    with col_photo:
+        st.button("📷 PHOTO SEARCH", key="btn_photo_search", help="Buscar perfume por imagen", use_container_width=True)
 
-# Filtro rápido por Etiquetas de Esencias
-all_notes = sorted(list(set([note for p in trending_perfumes for note in p["notes"]])))
-selected_essences = st.multiselect("🌸 Filtrar por Esencias / Notas Olfativas:", options=all_notes, placeholder="Selecciona una o varias esencias...")
+    # Filtro rápido por Etiquetas de Esencias
+    all_notes = sorted(list(set([note for p in trending_perfumes for note in p["notes"]])))
+    selected_essences = st.multiselect("🌸 Filtrar por Esencias / Notas Olfativas:", options=all_notes, placeholder="Selecciona una o varias esencias...")
 
-st.divider()
+    st.divider()
 
-# LÓGICA DE FILTRADO DINÁMICO
-filtered_perfumes = []
-for p in trending_perfumes:
-    matches_text = (
-        search_query.lower() in p["name"].lower() or 
-        search_query.lower() in p["brand"].lower() or
-        any(search_query.lower() in n.lower() for n in p["notes"])
-    )
-    matches_essences = True
-    if selected_essences:
-        matches_essences = any(essence in p["notes"] for essence in selected_essences)
-        
-    if matches_text and matches_essences:
-        filtered_perfumes.append(p)
+    # LÓGICA DE FILTRADO DINÁMICO
+    filtered_perfumes = []
+    for p in trending_perfumes:
+        matches_text = (
+            search_query.lower() in p["name"].lower() or 
+            search_query.lower() in p["brand"].lower() or
+            any(search_query.lower() in n.lower() for n in p["notes"])
+        )
+        matches_essences = True
+        if selected_essences:
+            matches_essences = any(essence in p["notes"] for essence in selected_essences)
+            
+        if matches_text and matches_essences:
+            filtered_perfumes.append(p)
 
 # ==========================================
 # VISTA 1: HOME / CATÁLOGO
@@ -432,6 +451,38 @@ elif st.session_state['current_page'] == 'product':
         </div>
         """
         st.markdown(tabla_html, unsafe_allow_html=True)
+
+# ==========================================
+# VISTA 3: TREN DEL HYPE (VIRAL TRENDS)
+# ==========================================
+elif st.session_state['current_page'] == 'hype':
+    st.button("← Volver al catálogo", on_click=navigate_to, args=('home',))
+    st.markdown(f"<h2 style='text-align: center; color: {text_color}; margin-top: 10px;'>🚂 EL TREN DEL HYPE</h2>", unsafe_allow_html=True)
+    st.markdown(f"<p style='text-align: center; color: {subtext_color}; font-size: 1.05rem;'>Las fragancias más virales y comentadas en redes esta semana.</p>", unsafe_allow_html=True)
+    st.write("<br>", unsafe_allow_html=True)
+
+    hype_items = [
+        {"rank": "#1 🔥", "brand": "LATTAFA", "name": "KHAMRAH", "hype_score": "98%", "reason": "Trending #1 en TikTok Fragrance Community"},
+        {"rank": "#2 🚀", "brand": "JEAN PAUL GAULTIER", "name": "LE MALE ELIXIR", "hype_score": "95%", "reason": "Sube en menciones y búsquedas globales"},
+        {"rank": "#3 💥", "brand": "CREED", "name": "AVENTUS", "hype_score": "91%", "reason": "Inmune al paso del tiempo, alta demanda"},
+    ]
+
+    for item in hype_items:
+        st.markdown(f"""
+        <div style="background-color: {'#1f242d' if is_dark else '#ffffff'}; border: 1px solid {'#3a3f4d' if is_dark else '#e2d8ce'}; border-radius: 12px; padding: 20px; margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between;">
+            <div>
+                <span style="font-size: 1.4rem; font-weight: 800; color: #d4a373;">{item['rank']}</span>
+                <span style="font-size: 1.2rem; font-weight: 700; color: {text_color}; margin-left: 15px;">{item['name']}</span>
+                <span style="font-size: 0.9rem; color: {subtext_color}; margin-left: 8px;">by {item['brand']}</span>
+                <p style="margin: 5px 0 0 0; color: {subtext_color}; font-size: 0.88rem;">{item['reason']}</p>
+            </div>
+            <div style="text-align: right;">
+                <span style="background-color: #d4a373; color: #ffffff; font-weight: bold; padding: 6px 14px; border-radius: 20px; font-size: 0.9rem;">
+                    HYPE SCORE: {item['hype_score']}
+                </span>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
 
 # 5. PIE DE PÁGINA (FOOTER)
 st.write("<br><br>", unsafe_allow_html=True)
