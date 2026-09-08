@@ -60,7 +60,7 @@ st.markdown(f"""
         color: {text_color} !important;
     }}
 
-    div[data-testid="stButton"] > button {{
+    div[data-testid="stButton"] > button, div[data-testid="stPopover"] > button {{
         background-color: {btn_bg} !important;
         color: {btn_text} !important;
         border: 1px solid {btn_border} !important;
@@ -70,14 +70,14 @@ st.markdown(f"""
         padding: 0.4rem 0.2rem !important;
     }}
     
-    div[data-testid="stButton"] > button p {{
+    div[data-testid="stButton"] > button p, div[data-testid="stPopover"] > button p {{
         color: {btn_text} !important;
         white-space: nowrap !important;
         overflow: visible !important;
         margin: 0 !important;
     }}
 
-    div[data-testid="stButton"] > button:hover {{
+    div[data-testid="stButton"] > button:hover, div[data-testid="stPopover"] > button:hover {{
         background-color: {btn_hover_bg} !important;
         border-color: #b5ad9e !important;
     }}
@@ -168,7 +168,7 @@ st.markdown(f"""
     </style>
 """, unsafe_allow_html=True)
 
-# 3. CABECERA SUPERIOR INDEPENDIENTE (Logo y Login/Tema)
+# 3. CABECERA SUPERIOR INDEPENDIENTE
 col_logo, col_espacio, col_actions = st.columns([4, 4, 2.5], vertical_alignment="center")
 
 with col_logo:
@@ -200,11 +200,9 @@ with col_actions:
     with btn_col2:
         st.button(" ", key="theme_toggle", on_click=toggle_theme)
 
-# Empujamos todo un poco hacia abajo
 st.markdown("<br><br>", unsafe_allow_html=True)
 
-# 4. BOTONES DE NAVEGACIÓN CENTRADOS (Justo arriba de la búsqueda)
-# Usamos columnas vacías a los lados para empujarlos al centro perfecto
+# 4. BOTONES DE NAVEGACIÓN CENTRADOS
 espacio_izq, c1, c2, c3, c4, espacio_der = st.columns([1.5, 1.2, 1.7, 1.2, 1.4, 1.5], vertical_alignment="center")
 
 with c1: st.button("PERFUMES", key="n_perfumes", on_click=navigate_to, args=('home',), use_container_width=True)
@@ -212,24 +210,49 @@ with c2: st.button("PERFUMES ÁRABES", key="n_arabes", on_click=navigate_to, arg
 with c3: st.button("MARCAS", key="n_marcas", on_click=navigate_to, args=('home',), use_container_width=True)
 with c4: st.button("REMATES 💰", key="n_remates", on_click=navigate_to, args=('hype',), use_container_width=True)
 
-st.write("") # Pequeño respiro visual
+st.write("")
 
-# 5. BARRA DE BÚSQUEDA Y FILTRO (Movidas hacia abajo)
-col_search, col_separator, col_photo = st.columns([8, 0.2, 2], vertical_alignment="center")
+# 5. BARRA DE BÚSQUEDA Y FILTRO INTEGRADO
+# Se añade una columna específica para el menú desplegable (popover)
+col_search, col_filter, col_separator, col_photo = st.columns([6, 1.8, 0.2, 2], vertical_alignment="center")
 
 with col_search:
-    search_query = st.text_input("🔍 Buscar", placeholder="🔍 Buscar perfume, marca o esencias (Ej: Oud, Vainilla, Cítricos...)", label_visibility="collapsed")
+    search_query = st.text_input("🔍 Buscar", placeholder="🔍 Buscar perfume, marca o esencias...", label_visibility="collapsed")
+
+with col_filter:
+    # Este botón abrirá una caja desplegable flotante sin romper el layout
+    with st.popover("🌸 Esencias", use_container_width=True):
+        all_notes = sorted([
+            "Abedul", "Albahaca", "Almizcle (Musk)", "Ámbar", "Ámbar Gris", "Azafrán", "Bergamota",
+            "Cacao", "Café", "Canela", "Caramelo", "Cardamomo", "Cedro", "Cereza", "Ciruela", 
+            "Cítricos", "Civeta", "Coco", "Cuero", "Frambuesa", "Grosellas Negras", "Haba Tonka", 
+            "Higo", "Incienso", "Iris", "Jazmín", "Jengibre", "Lavanda", "Lichi", "Limón", 
+            "Mandarina", "Manzana", "Melocotón", "Menta", "Miel", "Mirra", "Naranjo", "Nardos", 
+            "Neroli", "Notas Marinas", "Notas Solares", "Nuez Moscada", "Oud", "Pachulí", "Pera", 
+            "Pimienta Blanca", "Pimienta Negra", "Pimienta Rosa", "Piña", "Pomelo", "Praliné", 
+            "Romero", "Rosa", "Ruibarbo", "Salvia", "Sándalo", "Sangre", "Tabaco", "Té Verde", 
+            "Vainilla", "Vetiver", "Ylang-Ylang"
+        ])
+        selected_essences = st.multiselect(
+            "Selecciona notas olfativas:",
+            options=all_notes,
+            placeholder="Elige esencias...",
+            label_visibility="collapsed"
+        )
+
 with col_separator:
     st.markdown(f"<div style='border-left: 2px solid #ccc; height: 35px; margin: auto;'></div>", unsafe_allow_html=True)
+    
 with col_photo:
     st.button("📷 PHOTO SEARCH", key="btn_photo_search", help="Buscar perfume por imagen", use_container_width=True)
-
-all_notes = ["Ámbar", "Abedul", "Almizcle", "Bergamota", "Canela", "Cardamomo", "Cítricos", "Cuero", "Habatonka", "Jazmín", "Jengibre", "Lichi", "Manzana", "Menta", "Miel", "Nuez Moscada", "Oud", "Pimienta", "Piña", "Praliné", "Romero", "Rosa", "Ruibarbo", "Salvia", "Vainilla"]
-selected_essences = st.multiselect("🌸 Filtrar por Esencias / Notas Olfativas:", options=all_notes, placeholder="Selecciona una o varias esencias...")
 
 st.divider()
 
 # CATÁLOGO DE EJEMPLO ABAJO
 if st.session_state['current_page'] == 'home':
     st.markdown(f"<h3 style='text-align: center; margin-bottom: 25px; color: {text_color}; letter-spacing: 1px;'>🔥 CATÁLOGO Y TENDENCIAS</h3>", unsafe_allow_html=True)
-    st.info("Catálogo en desarrollo...")
+    
+    if selected_essences:
+        st.write(f"**Filtrando por:** {', '.join(selected_essences)}")
+    else:
+        st.info("Catálogo en desarrollo...")
