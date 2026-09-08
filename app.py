@@ -23,6 +23,16 @@ bg_color = "#0e1117" if is_dark else "#ffffff"
 text_color = "#ffffff" if is_dark else "#111111"
 subtext_color = "#a0a0a0" if is_dark else "#555555"
 
+# Colores para botones e inputs
+btn_bg = "#1f242d" if is_dark else "#111111"
+btn_text = "#ffffff"
+btn_border = "#3a3f4d" if is_dark else "#111111"
+btn_hover_bg = "#2d3340" if is_dark else "#333333"
+
+input_bg = "#1f242d" if is_dark else "#f4f5f7"
+input_text = "#ffffff" if is_dark else "#111111"
+input_border = "#3a3f4d" if is_dark else "#d1d5db"
+
 # Parámetros del interruptor personalizado
 bottle_left_pos = "42px" if is_dark else "-2px"
 static_icon_pos = "12px center" if is_dark else "calc(100% - 12px) center"
@@ -54,9 +64,38 @@ st.markdown(f"""
     }}
     
     .stApp {{
-        background-color: {bg_color};
-        color: {text_color};
+        background-color: {bg_color} !important;
+        color: {text_color} !important;
     }}
+
+    /* ESTILO GENERAL DE BOTONES STREAMLIT */
+    div[data-testid="stButton"] > button {{
+        background-color: {btn_bg} !important;
+        color: {btn_text} !important;
+        border: 1px solid {btn_border} !important;
+        border-radius: 6px !important;
+        font-weight: 600 !important;
+        transition: all 0.2s ease !important;
+    }}
+    div[data-testid="stButton"] > button:hover {{
+        background-color: {btn_hover_bg} !important;
+        color: {btn_text} !important;
+        border-color: {btn_hover_bg} !important;
+    }}
+
+    /* ESTILO GENERAL DE CAMPOS DE TEXTO E INPUTS */
+    div[data-baseweb="input"] {{
+        background-color: {input_bg} !important;
+        border: 1px solid {input_border} !important;
+        border-radius: 8px !important;
+    }}
+    div[data-baseweb="input"] input {{
+        color: {input_text} !important;
+    }}
+    div[data-baseweb="input"] input::placeholder {{
+        color: {subtext_color} !important;
+    }}
+
     .trust-badge-green {{
         background-color: #d4edda; color: #155724; padding: 4px 10px; 
         border-radius: 4px; border: 1px solid #c3e6cb; font-size: 12px; font-weight: bold;
@@ -80,6 +119,7 @@ st.markdown(f"""
         gap: 20px;
         font-weight: bold;
         font-size: 0.95rem;
+        color: {text_color};
     }}
 
     /* INTERRUPTOR PERSONALIZADO EN FORMA DE BOTELLA DE PERFUME */
@@ -193,20 +233,19 @@ st.divider()
 # VISTA 1: HOME o LOBBY (TRENDING en SOCIAL MEDIA)
 # ==========================================
 if st.session_state['current_page'] == 'home':
-    st.markdown("<h3 style='text-align: center; margin-bottom: 20px;'>TENDENCIAS EN REDES SOCIALES</h3>", unsafe_allow_html=True)
+    st.markdown(f"<h3 style='text-align: center; margin-bottom: 20px; color: {text_color};'>TENDENCIAS EN REDES SOCIALES</h3>", unsafe_allow_html=True)
     
-    # Lista ampliada a 10 perfumes
     trending_perfumes = [
-        {"brand": "CREED", "name": "AVENTUS", "price": "$140.00", "img": "https://via.placeholder.com/150?text=Creed+Aventus"},
-        {"brand": "DIOR", "name": "SAUVAGE", "price": "$145.00", "img": "https://via.placeholder.com/150?text=Dior+Sauvage"},
-        {"brand": "MAISON ALHAMBRA", "name": "MIDNIGHT OUD", "price": "$110.00", "img": "https://via.placeholder.com/150?text=Midnight+Oud"},
-        {"brand": "TOM FORD", "name": "OMBRE LEATHER", "price": "$145.00", "img": "https://via.placeholder.com/150?text=Ombre+Leather"},
-        {"brand": "JEAN PAUL GAULTIER", "name": "LE MALE ELIXIR", "price": "$125.00", "img": "https://via.placeholder.com/150?text=Le+Male+Elixir"},
-        {"brand": "PARFUMS DE MARLY", "name": "DELINA", "price": "$210.00", "img": "https://via.placeholder.com/150?text=PDM+Delina"},
-        {"brand": "LATTAFA", "name": "KHAMRAH", "price": "$45.00", "img": "https://via.placeholder.com/150?text=Lattafa+Khamrah"},
-        {"brand": "GIORGIO ARMANI", "name": "ACQUA DI GIO", "price": "$115.00", "img": "https://via.placeholder.com/150?text=Acqua+Di+Gio"},
-        {"brand": "YVES SAINT LAURENT", "name": "Y EDP", "price": "$130.00", "img": "https://via.placeholder.com/150?text=YSL+Y+EDP"},
-        {"brand": "VERSACE", "name": "EROS", "price": "$95.00", "img": "https://via.placeholder.com/150?text=Versace+Eros"}
+        {"brand": "CREED", "name": "AVENTUS", "price": "$140.00", "img": "https://images.unsplash.com/photo-1594035910387-fea47794261f?w=300&q=80"},
+        {"brand": "DIOR", "name": "SAUVAGE", "price": "$145.00", "img": "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=300&q=80"},
+        {"brand": "MAISON ALHAMBRA", "name": "MIDNIGHT OUD", "price": "$110.00", "img": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=300&q=80"},
+        {"brand": "TOM FORD", "name": "OMBRE LEATHER", "price": "$145.00", "img": "https://images.unsplash.com/photo-1541643600914-78b084683601?w=300&q=80"},
+        {"brand": "JEAN PAUL GAULTIER", "name": "LE MALE ELIXIR", "price": "$125.00", "img": "https://images.unsplash.com/photo-1616949755610-8c9bbc08f138?w=300&q=80"},
+        {"brand": "PARFUMS DE MARLY", "name": "DELINA", "price": "$210.00", "img": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=300&q=80"},
+        {"brand": "LATTAFA", "name": "KHAMRAH", "price": "$45.00", "img": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=300&q=80"},
+        {"brand": "GIORGIO ARMANI", "name": "ACQUA DI GIO", "price": "$115.00", "img": "https://images.unsplash.com/photo-1594035910387-fea47794261f?w=300&q=80"},
+        {"brand": "YVES SAINT LAURENT", "name": "Y EDP", "price": "$130.00", "img": "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=300&q=80"},
+        {"brand": "VERSACE", "name": "EROS", "price": "$95.00", "img": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=300&q=80"}
     ]
 
     # Despliegue en filas de 4 columnas
@@ -226,7 +265,7 @@ if st.session_state['current_page'] == 'home':
                     st.button("Ver Ofertas", key=f"btn_{idx}", on_click=navigate_to, args=('product',), use_container_width=True)
                 else:
                     st.button("Ver Ofertas", key=f"btn_{idx}", use_container_width=True)
-        st.write("") # Espaciado entre filas
+        st.write("")
 
 # ==========================================
 # VISTA 2: DETALLE DE PRODUCTO (COMPARADOR)
@@ -238,24 +277,23 @@ elif st.session_state['current_page'] == 'product':
     col_izq, col_der = st.columns([1, 2])
     
     with col_izq:
-        st.image("https://via.placeholder.com/300?text=Midnight+Oud+Bottle", use_container_width=True)
-        st.markdown("### MIDNIGHT OUD - EAU DE PARFUM")
+        st.image("https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80", use_container_width=True)
+        st.markdown(f"<h3 style='color: {text_color};'>MIDNIGHT OUD - EAU DE PARFUM</h3>", unsafe_allow_html=True)
         st.write("**50ml / 1.7 oz**")
         st.markdown("""
         * 🪵 **Madera de Oud:** Oud floral amaderado
         * 🌹 **Rosa Búlgara:** Rosa Búlgara fresca
         * 🍯 **Ámbar:** Ámbar cálido y resinoso
         """)
-        st.image("https://via.placeholder.com/300x100?text=Grafico+de+Tendencia+(Hype+Score)", use_container_width=True)
 
     with col_der:
-        st.markdown("#### Comparación de Precios y Confianza")
+        st.markdown(f"<h4 style='color: {text_color};'>Comparación de Precios y Confianza</h4>", unsafe_allow_html=True)
         
-        table_bg = "#1a1d24" if is_dark else "#f9f9f9"
-        table_border = "#333333" if is_dark else "#dddddd"
+        table_bg = "#1f242d" if is_dark else "#f8f9fa"
+        table_border = "#3a3f4d" if is_dark else "#e5e7eb"
         
         tabla_html = f"""
-        <table style="width:100%; text-align:center; border-collapse: collapse; color: {text_color};">
+        <table style="width:100%; text-align:center; border-collapse: collapse; color: {text_color}; border: 1px solid {table_border};">
             <tr style="border-bottom: 2px solid {table_border}; background-color: {table_bg};">
                 <th style="padding: 10px;">#</th>
                 <th style="padding: 10px;">TIENDA</th>
