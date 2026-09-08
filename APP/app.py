@@ -7,10 +7,8 @@ st.set_page_config(page_title="PerfumeTrending", layout="wide", initial_sidebar_
 # 2. MANEJO DE ESTADO (Navegación y Tema)
 if 'current_page' not in st.session_state:
     st.session_state['current_page'] = 'home'
-
 if 'theme' not in st.session_state:
     st.session_state['theme'] = 'light'
-
 if 'selected_perfume' not in st.session_state:
     st.session_state['selected_perfume'] = None
 
@@ -22,7 +20,6 @@ def navigate_to(page, perfume_data=None):
     if perfume_data:
         st.session_state['selected_perfume'] = perfume_data
 
-# Configuración dinámica de colores según el tema activo
 is_dark = st.session_state['theme'] == 'dark'
 
 app_bg_css = "background-color: #f6efe9 !important;" if not is_dark else "background-color: #0e1117 !important;"
@@ -53,7 +50,6 @@ bottle_svg = (
     "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 58'><rect x='18' y='2' width='14' height='7' rx='2' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><rect x='21' y='9' width='8' height='5' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='19' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='5' fill='none' stroke='%23111111' stroke-width='2'/><line x1='25' y1='23' x2='25' y2='26' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='25' y1='42' x2='25' y2='45' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='14' y1='34' x2='17' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='33' y1='34' x2='36' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='17' y1='26' x2='19' y2='28' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='31' y1='40' x2='33' y2='42' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='17' y1='42' x2='19' y2='40' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='31' y1='28' x2='33' y2='26' stroke='%23111111' stroke-width='2' stroke-linecap='round'/></svg>"
 )
 
-# Estilos CSS
 st.markdown(f"""
     <style>
     header[data-testid="stHeader"] {{ display: none !important; }}
@@ -64,7 +60,6 @@ st.markdown(f"""
         color: {text_color} !important;
     }}
 
-    /* BOTONES GENERALES DE ACCIÓN Y MENÚ */
     div[data-testid="stButton"] > button {{
         background-color: {btn_bg} !important;
         color: {btn_text} !important;
@@ -77,7 +72,7 @@ st.markdown(f"""
     
     div[data-testid="stButton"] > button p {{
         color: {btn_text} !important;
-        white-space: nowrap !important; /* Previene el corte del texto (...) */
+        white-space: nowrap !important;
         overflow: visible !important;
         margin: 0 !important;
     }}
@@ -87,7 +82,6 @@ st.markdown(f"""
         border-color: #b5ad9e !important;
     }}
 
-    /* FIX BOTÓN "PHOTO SEARCH" */
     .st-key-btn_photo_search button {{
         background-color: #1f242d !important;
         border: 1px solid #3a3f4d !important;
@@ -100,7 +94,6 @@ st.markdown(f"""
         background-color: #2d3340 !important;
     }}
 
-    /* INPUTS Y SELECTS (Adaptados a los tonos oscuros de la imagen) */
     div[data-baseweb="input"], 
     div[data-baseweb="select"] > div {{
         background-color: {input_bg} !important;
@@ -114,18 +107,14 @@ st.markdown(f"""
         color: {input_text} !important;
     }}
     
-    div[data-baseweb="input"] input::placeholder {{ 
-        color: #9e9e9e !important; 
-    }}
+    div[data-baseweb="input"] input::placeholder {{ color: #9e9e9e !important; }}
 
-    /* ETIQUETAS DE MULTISELECT */
     span[data-baseweb="tag"] {{
         background-color: #2d3340 !important;
         border: 1px solid #3a3f4d !important;
         color: white !important;
     }}
 
-    /* SWITCH TEMA */
     .st-key-theme_toggle div[data-testid="stButton"] > button,
     .st-key-theme_toggle button {{
         background: transparent !important;
@@ -179,8 +168,8 @@ st.markdown(f"""
     </style>
 """, unsafe_allow_html=True)
 
-# 3. CABECERA GLOBAL
-col_logo, col_nav, col_actions = st.columns([2.5, 6, 2], vertical_alignment="center")
+# 3. CABECERA SUPERIOR INDEPENDIENTE (Logo y Login/Tema)
+col_logo, col_espacio, col_actions = st.columns([4, 4, 2.5], vertical_alignment="center")
 
 with col_logo:
     logo_color = "#8c7b6d"
@@ -204,14 +193,6 @@ with col_logo:
     """
     st.markdown(logo_html, unsafe_allow_html=True)
 
-with col_nav:
-    # Proporciones ajustadas para que los botones queden perfectamente medidos
-    c1, c2, c3, c4 = st.columns([1.1, 1.6, 1, 1.2], vertical_alignment="center")
-    with c1: st.button("PERFUMES", key="n_perfumes", on_click=navigate_to, args=('home',), use_container_width=True)
-    with c2: st.button("PERFUMES ÁRABES", key="n_arabes", on_click=navigate_to, args=('home',), use_container_width=True)
-    with c3: st.button("MARCAS", key="n_marcas", on_click=navigate_to, args=('home',), use_container_width=True)
-    with c4: st.button("REMATES 💰", key="n_remates", on_click=navigate_to, args=('hype',), use_container_width=True)
-
 with col_actions:
     btn_col1, btn_col2 = st.columns([1.5, 1], vertical_alignment="center")
     with btn_col1:
@@ -219,9 +200,21 @@ with col_actions:
     with btn_col2:
         st.button(" ", key="theme_toggle", on_click=toggle_theme)
 
-st.write("")
+# Empujamos todo un poco hacia abajo
+st.markdown("<br><br>", unsafe_allow_html=True)
 
-# 4. BARRA DE BÚSQUEDA INTEGRADA Y FILTRO DE ESENCIAS
+# 4. BOTONES DE NAVEGACIÓN CENTRADOS (Justo arriba de la búsqueda)
+# Usamos columnas vacías a los lados para empujarlos al centro perfecto
+espacio_izq, c1, c2, c3, c4, espacio_der = st.columns([1.5, 1.2, 1.7, 1.2, 1.4, 1.5], vertical_alignment="center")
+
+with c1: st.button("PERFUMES", key="n_perfumes", on_click=navigate_to, args=('home',), use_container_width=True)
+with c2: st.button("PERFUMES ÁRABES", key="n_arabes", on_click=navigate_to, args=('home',), use_container_width=True)
+with c3: st.button("MARCAS", key="n_marcas", on_click=navigate_to, args=('home',), use_container_width=True)
+with c4: st.button("REMATES 💰", key="n_remates", on_click=navigate_to, args=('hype',), use_container_width=True)
+
+st.write("") # Pequeño respiro visual
+
+# 5. BARRA DE BÚSQUEDA Y FILTRO (Movidas hacia abajo)
 col_search, col_separator, col_photo = st.columns([8, 0.2, 2], vertical_alignment="center")
 
 with col_search:
@@ -236,9 +229,7 @@ selected_essences = st.multiselect("🌸 Filtrar por Esencias / Notas Olfativas:
 
 st.divider()
 
-# ==========================================
-# RESTO DEL CÓDIGO (Catálogo, Perfil, etc.)
-# ==========================================
+# CATÁLOGO DE EJEMPLO ABAJO
 if st.session_state['current_page'] == 'home':
     st.markdown(f"<h3 style='text-align: center; margin-bottom: 25px; color: {text_color}; letter-spacing: 1px;'>🔥 CATÁLOGO Y TENDENCIAS</h3>", unsafe_allow_html=True)
     st.info("Catálogo en desarrollo...")
