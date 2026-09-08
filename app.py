@@ -64,18 +64,18 @@ with col_logo:
     st.markdown("### 🏷️ PERFUME**TRENDING**")
 
 with col_nav:
-    st.markdown("<div class='header-nav'><span>MEN</span> | <span>WOMEN</span> | <span>ARABIC</span> | <span>DESIGNER</span> | <span>NICHE</span></div>", unsafe_allow_html=True)
+    st.markdown("<div class='header-nav'><span>HOMBRES</span> | <span>MUJERES</span> | <span>ÁRABES</span> | <span>DISEÑADOR</span> | <span>NICHO</span></div>", unsafe_allow_html=True)
 
 with col_actions:
     btn_col1, btn_col2 = st.columns([1, 1])
     with btn_col1:
-        st.button("👤 Login", key="login_btn", use_container_width=True)
+        st.button("👤 Ingresar", key="login_btn", use_container_width=True)
     with btn_col2:
         # Si está oscuro muestra perfume + sol (pasa a blanco). Si está claro muestra perfume + luna (pasa a oscuro).
         theme_icon = "🧴☀️" if is_dark else "🧴🌙"
         st.button(theme_icon, key="theme_toggle", on_click=toggle_theme, use_container_width=True)
 
-st.text_input("🔍 Search for perfume, brand, notes...", placeholder="Ej: Midnight Oud...")
+st.text_input("🔍 Buscar perfume, marca, notas...", placeholder="Ej: Midnight Oud...")
 
 st.divider()
 
@@ -83,7 +83,7 @@ st.divider()
 # VISTA 1: HOME o LOBBY (TRENDING en SOCIAL MEDIA)
 # ==========================================
 if st.session_state['current_page'] == 'home':
-    st.markdown("<h3 style='text-align: center;'>TRENDING ON SOCIAL MEDIA</h3>", unsafe_allow_html=True)
+    st.markdown("<h3 style='text-align: center;'>TENDENCIAS EN REDES SOCIALES</h3>", unsafe_allow_html=True)
     st.write("")
     
     # Datos simulados de fragancias virales (dummy)
@@ -102,13 +102,13 @@ if st.session_state['current_page'] == 'home':
             st.image(perfume["img"], use_container_width=True)
             st.markdown(f"<div class='product-title'>{perfume['name']}</div>", unsafe_allow_html=True)
             st.markdown(f"<div class='product-brand'>{perfume['brand']}</div>", unsafe_allow_html=True)
-            st.write(f"Compare prices from **{perfume['price']}**")
+            st.write(f"Compara precios desde **{perfume['price']}**")
             
             # El botón de Midnight Oud lleva a la vista de los detalles
             if perfume["name"] == "MIDNIGHT OUD":
-                st.button("View Deals", key=f"btn_{i}", on_click=navigate_to, args=('product',), use_container_width=True)
+                st.button("Ver Ofertas", key=f"btn_{i}", on_click=navigate_to, args=('product',), use_container_width=True)
             else:
-                st.button("View Deals", key=f"btn_{i}", use_container_width=True)
+                st.button("Ver Ofertas", key=f"btn_{i}", use_container_width=True)
 
 # ==========================================
 # VISTA 2: DETALLE DE PRODUCTO (COMPARADOR)
@@ -124,12 +124,12 @@ elif st.session_state['current_page'] == 'product':
         st.markdown("### MIDNIGHT OUD - EAU DE PARFUM")
         st.write("**50ml / 1.7 oz**")
         st.markdown("""
-        * 🪵 **Oud Wood:** Oud Wood with an Oud floral
-        * 🌹 **Bulgarian Rose:** Bulgarian Rose, Bulgarian Rose
-        * 🍯 **Amber:** Amber with morning hair
+        * 🪵 **Madera de Oud:** Oud floral amaderado
+        * 🌹 **Rosa Búlgara:** Rosa Búlgara fresca
+        * 🍯 **Ámbar:** Ámbar cálido y resinoso
         """)
         # Placeholder para el gráfico del Hype Score (Diego y Alonso pls revisar)
-        st.image("https://via.placeholder.com/300x100?text=Tendency+Graph+(Hype+Score)", use_container_width=True)
+        st.image("https://via.placeholder.com/300x100?text=Grafico+de+Tendencia+(Hype+Score)", use_container_width=True)
 
     with col_der:
         st.markdown("#### Comparación de Precios y Confianza")
@@ -142,8 +142,8 @@ elif st.session_state['current_page'] == 'product':
         <table style="width:100%; text-align:center; border-collapse: collapse; color: {text_color};">
             <tr style="border-bottom: 2px solid {table_border}; background-color: {table_bg};">
                 <th style="padding: 10px;">#</th>
-                <th style="padding: 10px;">STORE</th>
-                <th style="padding: 10px;">PRICE</th>
+                <th style="padding: 10px;">TIENDA</th>
+                <th style="padding: 10px;">PRECIO</th>
                 <th style="padding: 10px;">NIVEL DE CONFIANZA</th>
                 <th style="padding: 10px;">COMPRA AHORA</th>
             </tr>
@@ -155,7 +155,7 @@ elif st.session_state['current_page'] == 'product':
                     <span class="trust-badge-green">✔️ CONFIRMADO</span><br>
                     <small style="color: green;">Muy Seguro</small>
                 </td>
-                <td><a href="#" class="buy-btn">COMPRA AHORA</a></td>
+                <td><a href="#" class="buy-btn">COMPRAR AHORA</a></td>
             </tr>
             <tr style="border-bottom: 1px solid {table_border};">
                 <td style="padding: 15px;">2</td>
@@ -165,7 +165,7 @@ elif st.session_state['current_page'] == 'product':
                     <span class="trust-badge-red">❌ RIESGO ALTO</span><br>
                     <small style="color: red;">Alerta Estafa</small>
                 </td>
-                <td><a href="#" class="buy-btn" style="background-color: #555;">COMPRA AHORA</a></td>
+                <td><a href="#" class="buy-btn" style="background-color: #555;">COMPRAR AHORA</a></td>
             </tr>
             <tr style="border-bottom: 1px solid {table_border};">
                 <td style="padding: 15px;">3</td>
@@ -175,7 +175,7 @@ elif st.session_state['current_page'] == 'product':
                     <span class="trust-badge-green">✔️ CONFIRMADO</span><br>
                     <small style="color: green;">Muy Seguro</small>
                 </td>
-                <td><a href="#" class="buy-btn">COMPRA AHORA</a></td>
+                <td><a href="#" class="buy-btn">COMPRAR AHORA</a></td>
             </tr>
             <tr>
                 <td style="padding: 15px;">4</td>
@@ -185,7 +185,7 @@ elif st.session_state['current_page'] == 'product':
                     <span class="trust-badge-green">✔️ CONFIRMADO</span><br>
                     <small style="color: green;">Muy Seguro</small>
                 </td>
-                <td><a href="#" class="buy-btn">COMPRA AHORA</a></td>
+                <td><a href="#" class="buy-btn">COMPRAR AHORA</a></td>
             </tr>
         </table>
         """
