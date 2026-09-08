@@ -4,41 +4,76 @@ import pandas as pd
 # 1. CONFIGURACIÓN DE la PÁGINA Y CSS CUSTOM 
 st.set_page_config(page_title="PerfumeTrending", layout="wide", initial_sidebar_state="collapsed")
 
-# CSS para replicar los botones y etiquetas (badges) como se mostraban en los mockups
-st.markdown("""
-    <style>
-    .trust-badge-green {
-        background-color: #d4edda; color: #155724; padding: 4px 10px; 
-        border-radius: 4px; border: 1px solid #c3e6cb; font-size: 12px; font-weight: bold;
-    }
-    .trust-badge-red {
-        background-color: #f8d7da; color: #721c24; padding: 4px 10px; 
-        border-radius: 4px; border: 1px solid #f5c6cb; font-size: 12px; font-weight: bold;
-    }
-    .buy-btn {
-        background-color: #4a86e8; color: white !important; padding: 6px 12px; 
-        text-decoration: none; border-radius: 4px; font-size: 12px; font-weight: bold;
-    }
-    .product-title { font-size: 1.2rem; font-weight: bold; margin-bottom: 0; }
-    .product-brand { font-size: 0.9rem; color: gray; margin-bottom: 10px; }
-    </style>
-""", unsafe_allow_html=True)
-
 # 2. MANEJO DE ESTADO (la Navegación)
 if 'current_page' not in st.session_state:
     st.session_state['current_page'] = 'home'
 
+if 'theme' not in st.session_state:
+    st.session_state['theme'] = 'dark'
+
+def toggle_theme():
+    st.session_state['theme'] = 'light' if st.session_state['theme'] == 'dark' else 'dark'
+
 def navigate_to(page):
     st.session_state['current_page'] = page
 
+# Configuración dinámica de colores según el tema activo
+is_dark = st.session_state['theme'] == 'dark'
+bg_color = "#0e1117" if is_dark else "#ffffff"
+text_color = "#ffffff" if is_dark else "#111111"
+subtext_color = "#a0a0a0" if is_dark else "#555555"
+
+# CSS para replicar los botones y etiquetas (badges) como se mostraban en los mockups
+st.markdown(f"""
+    <style>
+    .stApp {{
+        background-color: {bg_color};
+        color: {text_color};
+    }}
+    .trust-badge-green {{
+        background-color: #d4edda; color: #155724; padding: 4px 10px; 
+        border-radius: 4px; border: 1px solid #c3e6cb; font-size: 12px; font-weight: bold;
+    }}
+    .trust-badge-red {{
+        background-color: #f8d7da; color: #721c24; padding: 4px 10px; 
+        border-radius: 4px; border: 1px solid #f5c6cb; font-size: 12px; font-weight: bold;
+    }}
+    .buy-btn {{
+        background-color: #4a86e8; color: white !important; padding: 6px 12px; 
+        text-decoration: none; border-radius: 4px; font-size: 12px; font-weight: bold;
+        display: inline-block;
+    }}
+    .product-title {{ font-size: 1.2rem; font-weight: bold; margin-bottom: 0; color: {text_color}; }}
+    .product-brand {{ font-size: 0.9rem; color: {subtext_color}; margin-bottom: 10px; }}
+    
+    .header-nav {{
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 20px;
+        font-weight: bold;
+        font-size: 0.95rem;
+    }}
+    </style>
+""", unsafe_allow_html=True)
+
 # 3. CABECERA GLOBAL (Los Header y el super Buscador)
-col_logo, col_nav, col_mode = st.columns([2, 5, 1])
+col_logo, col_nav, col_actions = st.columns([3, 5, 2], vertical_alignment="center")
+
 with col_logo:
     st.markdown("### 🏷️ PERFUME**TRENDING**")
+
 with col_nav:
-    st.markdown("**MEN** &nbsp;&nbsp;|&nbsp;&nbsp; **WOMEN** &nbsp;&nbsp;|&nbsp;&nbsp; **ARABIC** &nbsp;&nbsp;|&nbsp;&nbsp; **DESIGNER** &nbsp;&nbsp;|&nbsp;&nbsp; **NICHE**")
-with col_mode:
-    st.markdown("👤 Login | 🌗 Theme")
+    st.markdown("<div class='header-nav'><span>MEN</span> | <span>WOMEN</span> | <span>ARABIC</span> | <span>DESIGNER</span> | <span>NICHE</span></div>", unsafe_allow_html=True)
+
+with col_actions:
+    btn_col1, btn_col2 = st.columns([1, 1])
+    with btn_col1:
+        st.button("👤 Login", key="login_btn", use_container_width=True)
+    with btn_col2:
+        # Si está oscuro muestra perfume + sol (pasa a blanco). Si está claro muestra perfume + luna (pasa a oscuro).
+        theme_icon = "🧴☀️" if is_dark else "🧴🌙"
+        st.button(theme_icon, key="theme_toggle", on_click=toggle_theme, use_container_width=True)
 
 st.text_input("🔍 Search for perfume, brand, notes...", placeholder="Ej: Midnight Oud...")
 
@@ -63,7 +98,8 @@ if st.session_state['current_page'] == 'home':
     cols = st.columns(4)
     for i, perfume in enumerate(trending_perfumes):
         with cols[i]:
-            st.image(perfume["img"], use_column_width=True)
+            # Solución del error: reemplazo de use_column_width por use_container_width
+            st.image(perfume["img"], use_container_width=True)
             st.markdown(f"<div class='product-title'>{perfume['name']}</div>", unsafe_allow_html=True)
             st.markdown(f"<div class='product-brand'>{perfume['brand']}</div>", unsafe_allow_html=True)
             st.write(f"Compare prices from **{perfume['price']}**")
@@ -84,7 +120,7 @@ elif st.session_state['current_page'] == 'product':
     col_izq, col_der = st.columns([1, 2])
     
     with col_izq:
-        st.image("https://via.placeholder.com/300?text=Midnight+Oud+Bottle", use_column_width=True)
+        st.image("https://via.placeholder.com/300?text=Midnight+Oud+Bottle", use_container_width=True)
         st.markdown("### MIDNIGHT OUD - EAU DE PARFUM")
         st.write("**50ml / 1.7 oz**")
         st.markdown("""
@@ -93,22 +129,25 @@ elif st.session_state['current_page'] == 'product':
         * 🍯 **Amber:** Amber with morning hair
         """)
         # Placeholder para el gráfico del Hype Score (Diego y Alonso pls revisar)
-        st.image("https://via.placeholder.com/300x100?text=Tendency+Graph+(Hype+Score)", use_column_width=True)
+        st.image("https://via.placeholder.com/300x100?text=Tendency+Graph+(Hype+Score)", use_container_width=True)
 
     with col_der:
         st.markdown("#### Comparación de Precios y Confianza")
         
+        table_bg = "#1a1d24" if is_dark else "#f9f9f9"
+        table_border = "#333333" if is_dark else "#dddddd"
+        
         # Tabla HTML personalizada para replicar exactamente los badges del mockup
-        tabla_html = """
-        <table style="width:100%; text-align:center; border-collapse: collapse;">
-            <tr style="border-bottom: 2px solid #ddd; background-color: #f9f9f9;">
+        tabla_html = f"""
+        <table style="width:100%; text-align:center; border-collapse: collapse; color: {text_color};">
+            <tr style="border-bottom: 2px solid {table_border}; background-color: {table_bg};">
                 <th style="padding: 10px;">#</th>
                 <th style="padding: 10px;">STORE</th>
                 <th style="padding: 10px;">PRICE</th>
                 <th style="padding: 10px;">NIVEL DE CONFIANZA</th>
                 <th style="padding: 10px;">COMPRA AHORA</th>
             </tr>
-            <tr style="border-bottom: 1px solid #eee;">
+            <tr style="border-bottom: 1px solid {table_border};">
                 <td style="padding: 15px;">1</td>
                 <td><strong>AURA SCENTS</strong></td>
                 <td><strong>$110.00</strong></td>
@@ -118,7 +157,7 @@ elif st.session_state['current_page'] == 'product':
                 </td>
                 <td><a href="#" class="buy-btn">COMPRA AHORA</a></td>
             </tr>
-            <tr style="border-bottom: 1px solid #eee;">
+            <tr style="border-bottom: 1px solid {table_border};">
                 <td style="padding: 15px;">2</td>
                 <td><strong>THE PERFUME BARN</strong></td>
                 <td><strong>$105.00</strong></td>
@@ -128,7 +167,7 @@ elif st.session_state['current_page'] == 'product':
                 </td>
                 <td><a href="#" class="buy-btn" style="background-color: #555;">COMPRA AHORA</a></td>
             </tr>
-            <tr style="border-bottom: 1px solid #eee;">
+            <tr style="border-bottom: 1px solid {table_border};">
                 <td style="padding: 15px;">3</td>
                 <td><strong>ELEGANT FRAGRANCE</strong></td>
                 <td><strong>$112.50</strong></td>
