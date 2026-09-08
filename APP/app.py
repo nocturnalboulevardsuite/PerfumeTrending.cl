@@ -338,7 +338,8 @@ st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
 col_chip1, col_chip2, col_chip3, col_chip_space = st.columns([1.5, 1.8, 1.6, 5.1], vertical_alignment="center")
 
 with col_chip1:
-    st.button("Trend Del Hype", key="btn_trend", on_click=navigate_to, args=('trend_page',), use_container_width=True)
+    if st.button("Trend Del Hype", key="btn_trend", use_container_width=True):
+        st.switch_page("pages/trendhype.py")
 with col_chip2:
     st.button("Páginas de Confianza", key="btn_trust", on_click=navigate_to, args=('trust_page',), use_container_width=True)
 with col_chip3:
@@ -354,8 +355,6 @@ if st.session_state['current_page'] == 'home':
         st.write(f"**Filtrando por:** {', '.join(selected_essences)}")
     else:
         st.info("Catálogo en desarrollo...")
-elif st.session_state['current_page'] == 'trend_page':
-    st.markdown(f"<h3 style='text-align: center; color: {text_color};'>Trend Del Hype (Próximamente)</h3>", unsafe_allow_html=True)
 elif st.session_state['current_page'] == 'trust_page':
     st.markdown(f"<h3 style='text-align: center; color: {text_color};'>Páginas de Confianza (Próximamente)</h3>", unsafe_allow_html=True)
 elif st.session_state['current_page'] == 'compare_page':
