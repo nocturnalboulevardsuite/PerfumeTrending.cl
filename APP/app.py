@@ -98,8 +98,12 @@ st.markdown(f"""
     }}
 
     /* NAVEGACIÓN ESTILO LETRAS CLICKEABLES (TRANSPARENTE Y SIN CORTES) */
-    .st-key-n_hombres button, .st-key-n_mujeres button, .st-key-n_arabes button, 
-    .st-key-n_hype button, .st-key-n_disenador button, .st-key-n_nicho button {{
+    div[data-testid="stButton"].st-key-n_hombres > button,
+    div[data-testid="stButton"].st-key-n_mujeres > button,
+    div[data-testid="stButton"].st-key-n_arabes > button,
+    div[data-testid="stButton"].st-key-n_hype > button,
+    div[data-testid="stButton"].st-key-n_disenador > button,
+    div[data-testid="stButton"].st-key-n_nicho > button {{
         background: transparent !important;
         background-color: transparent !important;
         border: none !important;
@@ -108,9 +112,24 @@ st.markdown(f"""
         white-space: nowrap !important;
         overflow: visible !important;
     }}
+
+    div[data-testid="stButton"].st-key-n_hombres > button:hover,
+    div[data-testid="stButton"].st-key-n_mujeres > button:hover,
+    div[data-testid="stButton"].st-key-n_arabes > button:hover,
+    div[data-testid="stButton"].st-key-n_hype > button:hover,
+    div[data-testid="stButton"].st-key-n_disenador > button:hover,
+    div[data-testid="stButton"].st-key-n_nicho > button:hover {{
+        background: transparent !important;
+        background-color: transparent !important;
+        border: none !important;
+    }}
     
-    .st-key-n_hombres button p, .st-key-n_mujeres button p, .st-key-n_arabes button p, 
-    .st-key-n_hype button p, .st-key-n_disenador button p, .st-key-n_nicho button p {{
+    div[data-testid="stButton"].st-key-n_hombres > button p,
+    div[data-testid="stButton"].st-key-n_mujeres > button p,
+    div[data-testid="stButton"].st-key-n_arabes > button p,
+    div[data-testid="stButton"].st-key-n_hype > button p,
+    div[data-testid="stButton"].st-key-n_disenador > button p,
+    div[data-testid="stButton"].st-key-n_nicho > button p {{
         color: {text_color} !important;
         font-size: 0.95rem !important;
         font-weight: 800 !important;
@@ -122,8 +141,12 @@ st.markdown(f"""
         transition: color 0.2s ease !important;
     }}
 
-    .st-key-n_hombres button:hover p, .st-key-n_mujeres button:hover p, .st-key-n_arabes button:hover p, 
-    .st-key-n_hype button:hover p, .st-key-n_disenador button:hover p, .st-key-n_nicho button:hover p {{
+    div[data-testid="stButton"].st-key-n_hombres > button:hover p,
+    div[data-testid="stButton"].st-key-n_mujeres > button:hover p,
+    div[data-testid="stButton"].st-key-n_arabes > button:hover p,
+    div[data-testid="stButton"].st-key-n_hype > button:hover p,
+    div[data-testid="stButton"].st-key-n_disenador > button:hover p,
+    div[data-testid="stButton"].st-key-n_nicho > button:hover p {{
         color: #d4a373 !important;
         text-decoration: underline !important;
         text-underline-offset: 4px !important;
