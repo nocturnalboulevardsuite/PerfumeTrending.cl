@@ -280,7 +280,8 @@ with col_actions:
     with btn_col1:
         st.button("👤 Ingresar", key="login_btn", use_container_width=True)
     with btn_col2:
-        st.page_link("pages/trendhype.py", label="🚂 HYPE", use_container_width=True)
+        if st.button("🚂 HYPE", key="btn_hype_nav", use_container_width=True):
+            st.switch_page("pages/trendhype.py")
     with btn_col3:
         st.button(" ", key="theme_toggle", on_click=toggle_theme)
 
