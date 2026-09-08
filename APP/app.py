@@ -36,7 +36,7 @@ btn_hover_bg = "#2d3340" if is_dark else "#f5ece4"
 
 input_bg = "#1f242d" if is_dark else "#ffffff"
 input_text = "#ffffff" if is_dark else "#2c2c2c"
-input_border = "#3a3f4d" if is_dark else "#d4cdc5"
+input_border = "#3a3f4d" if is_dark else "#c9c0b5"
 
 bottle_left_pos = "42px" if is_dark else "-2px"
 static_icon_pos = "12px center" if is_dark else "calc(100% - 12px) center"
@@ -59,6 +59,11 @@ st.markdown(f"""
     header[data-testid="stHeader"] {{ display: none !important; }}
     .block-container {{ padding-top: 2rem !important; padding-bottom: 2rem !important; }}
     .stApp {{ {app_bg_css} color: {text_color} !important; }}
+
+    /* FIX GENERAL TEXT AND LABELS VISIBILITY */
+    .stApp p, .stApp span, .stApp label, .stMarkdown p, .stTextInput label p, .stMultiSelect label p {{
+        color: {text_color} !important;
+    }}
 
     /* IMÁGENES Y EFECTOS */
     div[data-testid="stImage"] img {{
@@ -89,14 +94,29 @@ st.markdown(f"""
         border-color: {btn_hover_bg} !important;
     }}
 
-    /* INPUTS */
-    div[data-baseweb="input"] {{
+    /* INPUTS Y SELECTS (CORRECCIÓN MODO CLARO/OSCURO) */
+    div[data-baseweb="input"], 
+    div[data-baseweb="select"] > div {{
         background-color: {input_bg} !important;
         border: 1px solid {input_border} !important;
         border-radius: 8px !important;
     }}
-    div[data-baseweb="input"] input {{ color: {input_text} !important; }}
-    div[data-baseweb="input"] input::placeholder {{ color: {subtext_color} !important; }}
+    
+    div[data-baseweb="input"] input, 
+    div[data-baseweb="select"] span[data-baseweb="tag"] span,
+    div[data-baseweb="select"] div {{
+        color: {input_text} !important;
+    }}
+    
+    div[data-baseweb="input"] input::placeholder {{ 
+        color: {subtext_color} !important; 
+    }}
+
+    /* ETIQUETAS DE MULTISELECT */
+    span[data-baseweb="tag"] {{
+        background-color: {btn_hover_bg} !important;
+        border: 1px solid {btn_border} !important;
+    }}
 
     /* BADGES DE NOTAS / ESENCIAS */
     .note-badge {{
@@ -129,8 +149,8 @@ st.markdown(f"""
     }}
     .buy-btn:hover {{ transform: scale(1.05); }}
     
-    .product-title {{ font-size: 1.15rem; font-weight: bold; margin-bottom: 0; color: {text_color}; margin-top: 12px; }}
-    .product-brand {{ font-size: 0.85rem; color: {subtext_color}; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }}
+    .product-title {{ font-size: 1.15rem; font-weight: bold; margin-bottom: 0; color: {text_color} !important; margin-top: 12px; }}
+    .product-brand {{ font-size: 0.85rem; color: {subtext_color} !important; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }}
     
     .header-nav {{
         display: flex;
