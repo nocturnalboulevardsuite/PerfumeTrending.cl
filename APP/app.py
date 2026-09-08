@@ -78,7 +78,7 @@ st.markdown(f"""
         box-shadow: 0 8px 20px rgba(0,0,0,0.15) !important;
     }}
 
-    /* BOTONES GENERALES DE ACCIÓN */
+    /* BOTONES GENERALES DE ACCIÓN (Ver Ofertas, etc) */
     div[data-testid="stButton"] > button {{
         background-color: {btn_bg} !important;
         color: {btn_text} !important;
@@ -97,8 +97,13 @@ st.markdown(f"""
         border-color: {btn_hover_bg} !important;
     }}
 
-    /* NAVEGACIÓN ESTILO LETRAS CLICKEABLES (TEXT-LINK STYLE) */
-    .nav-container div[data-testid="stButton"] > button {{
+    /* === NAVEGACIÓN ESTILO LETRAS CLICKEABLES (LIMPIO) === */
+    .st-key-n_hombres button,
+    .st-key-n_mujeres button,
+    .st-key-n_arabes button,
+    .st-key-n_hype button,
+    .st-key-n_disenador button,
+    .st-key-n_nicho button {{
         background: transparent !important;
         background-color: transparent !important;
         border: none !important;
@@ -113,7 +118,12 @@ st.markdown(f"""
         cursor: pointer !important;
     }}
     
-    .nav-container div[data-testid="stButton"] > button p {{
+    .st-key-n_hombres button p,
+    .st-key-n_mujeres button p,
+    .st-key-n_arabes button p,
+    .st-key-n_hype button p,
+    .st-key-n_disenador button p,
+    .st-key-n_nicho button p {{
         color: {text_color} !important;
         font-size: 0.95rem !important;
         font-weight: 800 !important;
@@ -123,17 +133,24 @@ st.markdown(f"""
         margin: 0 !important;
     }}
 
-    .nav-container div[data-testid="stButton"] > button:hover,
-    .nav-container div[data-testid="stButton"] > button:focus,
-    .nav-container div[data-testid="stButton"] > button:active {{
+    .st-key-n_hombres button:hover,
+    .st-key-n_mujeres button:hover,
+    .st-key-n_arabes button:hover,
+    .st-key-n_hype button:hover,
+    .st-key-n_disenador button:hover,
+    .st-key-n_nicho button:hover {{
         background: transparent !important;
         background-color: transparent !important;
         border: none !important;
         box-shadow: none !important;
-        outline: none !important;
     }}
 
-    .nav-container div[data-testid="stButton"] > button:hover p {{
+    .st-key-n_hombres button:hover p,
+    .st-key-n_mujeres button:hover p,
+    .st-key-n_arabes button:hover p,
+    .st-key-n_hype button:hover p,
+    .st-key-n_disenador button:hover p,
+    .st-key-n_nicho button:hover p {{
         color: #d4a373 !important;
         text-decoration: underline !important;
         text-underline-offset: 4px !important;
@@ -290,7 +307,6 @@ with col_logo:
     st.markdown(logo_html, unsafe_allow_html=True)
 
 with col_nav:
-    st.markdown('<div class="nav-container">', unsafe_allow_html=True)
     c1, c2, c3, c4, c5, c6 = st.columns([1, 1, 1, 1.2, 1, 1.2], vertical_alignment="center")
     with c1: st.button("HOMBRES", key="n_hombres", on_click=navigate_to, args=('home',))
     with c2: st.button("MUJERES", key="n_mujeres", on_click=navigate_to, args=('home',))
@@ -298,7 +314,6 @@ with col_nav:
     with c4: st.button("🚂 HYPE", key="n_hype", on_click=navigate_to, args=('hype',))
     with c5: st.button("DISEÑADOR", key="n_disenador", on_click=navigate_to, args=('home',))
     with c6: st.button("NICHO", key="n_nicho", on_click=navigate_to, args=('home',))
-    st.markdown('</div>', unsafe_allow_html=True)
 
 with col_actions:
     btn_col1, btn_col2 = st.columns([1.5, 1], vertical_alignment="center")
