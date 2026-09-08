@@ -79,7 +79,7 @@ st.markdown(f"""
         box-shadow: 0 8px 20px rgba(0,0,0,0.15) !important;
     }}
 
-    /* BOTONES */
+    /* BOTONES GENERALES */
     div[data-testid="stButton"] > button {{
         background-color: {btn_bg} !important;
         color: {btn_text} !important;
@@ -162,11 +162,14 @@ st.markdown(f"""
         color: {text_color};
     }}
 
-    /* SWITCH TEMA */
+    /* SWITCH TEMA (TOTALMENTE TRANSPARENTE EN EL CONTENEDOR) */
+    .st-key-theme_toggle div[data-testid="stButton"] > button,
     .st-key-theme_toggle button {{
         background: transparent !important;
+        background-color: transparent !important;
         border: none !important;
         box-shadow: none !important;
+        outline: none !important;
         padding: 0 !important;
         width: 82px !important;
         height: 48px !important;
@@ -177,7 +180,21 @@ st.markdown(f"""
         margin: 0 auto !important;
         display: block !important;
     }}
+    
+    .st-key-theme_toggle div[data-testid="stButton"] > button:hover,
+    .st-key-theme_toggle div[data-testid="stButton"] > button:focus,
+    .st-key-theme_toggle div[data-testid="stButton"] > button:active,
+    .st-key-theme_toggle button:hover,
+    .st-key-theme_toggle button:focus,
+    .st-key-theme_toggle button:active {{
+        background: transparent !important;
+        background-color: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+    }}
+
     .st-key-theme_toggle button * {{ display: none !important; }}
+    
     .st-key-theme_toggle button::before {{
         content: '' !important;
         position: absolute !important;
@@ -194,6 +211,7 @@ st.markdown(f"""
         background-size: 18px 18px !important;
         transition: all 0.3s ease !important;
     }}
+    
     .st-key-theme_toggle button::after {{
         content: '' !important;
         position: absolute !important;
