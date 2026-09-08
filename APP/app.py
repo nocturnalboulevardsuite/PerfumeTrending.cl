@@ -26,7 +26,7 @@ def navigate_to(page, perfume_data=None):
 is_dark = st.session_state['theme'] == 'dark'
 
 app_bg_css = "background-color: #0e1117 !important;" if is_dark else "background: linear-gradient(135deg, #fdfbf9 0%, #ede4dc 100%) !important;"
-text_color = "#ffffff" if is_dark else "#2c2c2c"
+text_color = "#ffffff" if is_dark else "#1a1a1a"
 subtext_color = "#a0a0a0" if is_dark else "#666666"
 
 btn_bg = "#1f242d" if is_dark else "#ffffff"
@@ -60,7 +60,6 @@ st.markdown(f"""
     .block-container {{ padding-top: 2rem !important; padding-bottom: 2rem !important; }}
     .stApp {{ {app_bg_css} color: {text_color} !important; }}
 
-    /* FIX GENERAL TEXT AND LABELS VISIBILITY */
     .stApp p, .stApp span, .stApp label, .stMarkdown p, .stTextInput label p, .stMultiSelect label p {{
         color: {text_color} !important;
     }}
@@ -79,7 +78,7 @@ st.markdown(f"""
         box-shadow: 0 8px 20px rgba(0,0,0,0.15) !important;
     }}
 
-    /* BOTONES GENERALES */
+    /* BOTONES GENERALES DE ACCIÓN */
     div[data-testid="stButton"] > button {{
         background-color: {btn_bg} !important;
         color: {btn_text} !important;
@@ -93,37 +92,54 @@ st.markdown(f"""
         color: {btn_text} !important;
     }}
 
-    div[data-testid="stButton"] > button:hover,
-    div[data-testid="stButton"] > button:hover p {{
+    div[data-testid="stButton"] > button:hover {{
         background-color: {btn_hover_bg} !important;
-        color: {btn_text} !important;
         border-color: {btn_hover_bg} !important;
     }}
 
-    /* NAVEGACIÓN SUPERIOR INVISIBLE / CLEAN */
+    /* NAVEGACIÓN ESTILO LETRAS CLICKEABLES (TEXT-LINK STYLE) */
     .nav-container div[data-testid="stButton"] > button {{
         background: transparent !important;
+        background-color: transparent !important;
         border: none !important;
+        border-radius: 0px !important;
         box-shadow: none !important;
-        color: {text_color} !important;
-        font-weight: 700 !important;
-        font-size: 0.9rem !important;
-        padding: 0px !important;
+        outline: none !important;
+        padding: 4px 0px !important;
         margin: 0px !important;
-        text-transform: uppercase;
-    }}
-    .nav-container div[data-testid="stButton"] > button:hover,
-    .nav-container div[data-testid="stButton"] > button:hover p {{
-        background: transparent !important;
-        color: #d4a373 !important;
-        border: none !important;
-    }}
-    .nav-container div[data-testid="stButton"] > button p {{
-        color: {text_color} !important;
-        font-weight: 700 !important;
+        min-height: 0px !important;
+        height: auto !important;
+        width: 100% !important;
+        cursor: pointer !important;
     }}
     
-    /* FIX ESPECÍFICO PARA EL BOTÓN "PHOTO SEARCH" */
+    .nav-container div[data-testid="stButton"] > button p {{
+        color: {text_color} !important;
+        font-size: 0.95rem !important;
+        font-weight: 800 !important;
+        letter-spacing: 1.5px !important;
+        text-transform: uppercase !important;
+        transition: color 0.2s ease, transform 0.2s ease !important;
+        margin: 0 !important;
+    }}
+
+    .nav-container div[data-testid="stButton"] > button:hover,
+    .nav-container div[data-testid="stButton"] > button:focus,
+    .nav-container div[data-testid="stButton"] > button:active {{
+        background: transparent !important;
+        background-color: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        outline: none !important;
+    }}
+
+    .nav-container div[data-testid="stButton"] > button:hover p {{
+        color: #d4a373 !important;
+        text-decoration: underline !important;
+        text-underline-offset: 4px !important;
+    }}
+
+    /* FIX BOTÓN "PHOTO SEARCH" */
     .st-key-btn_photo_search button {{
         background-color: #1f242d !important;
         border: 1px solid #3a3f4d !important;
@@ -160,7 +176,7 @@ st.markdown(f"""
         border: 1px solid {btn_border} !important;
     }}
 
-    /* BADGES DE NOTAS / ESENCIAS */
+    /* BADGES DE NOTAS */
     .note-badge {{
         background-color: {'#2d3340' if is_dark else '#ebdcd0'};
         color: {text_color};
@@ -212,18 +228,6 @@ st.markdown(f"""
         margin: 0 auto !important;
         display: block !important;
     }}
-    
-    .st-key-theme_toggle div[data-testid="stButton"] > button:hover,
-    .st-key-theme_toggle div[data-testid="stButton"] > button:focus,
-    .st-key-theme_toggle div[data-testid="stButton"] > button:active,
-    .st-key-theme_toggle button:hover,
-    .st-key-theme_toggle button:focus,
-    .st-key-theme_toggle button:active {{
-        background: transparent !important;
-        background-color: transparent !important;
-        border: none !important;
-        box-shadow: none !important;
-    }}
 
     .st-key-theme_toggle button * {{ display: none !important; }}
     
@@ -261,7 +265,7 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # 3. CABECERA GLOBAL
-col_logo, col_nav, col_actions = st.columns([2.5, 5.5, 2], vertical_alignment="center")
+col_logo, col_nav, col_actions = st.columns([2.5, 6, 2], vertical_alignment="center")
 
 with col_logo:
     logo_color = "#333333" if is_dark else "#8c7b6d"
@@ -287,7 +291,7 @@ with col_logo:
 
 with col_nav:
     st.markdown('<div class="nav-container">', unsafe_allow_html=True)
-    c1, c2, c3, c4, c5, c6 = st.columns([1, 1, 1, 1.2, 1, 1], vertical_alignment="center")
+    c1, c2, c3, c4, c5, c6 = st.columns([1, 1, 1, 1.2, 1, 1.2], vertical_alignment="center")
     with c1: st.button("HOMBRES", key="n_hombres", on_click=navigate_to, args=('home',))
     with c2: st.button("MUJERES", key="n_mujeres", on_click=navigate_to, args=('home',))
     with c3: st.button("ÁRABES", key="n_arabes", on_click=navigate_to, args=('home',))
@@ -305,7 +309,7 @@ with col_actions:
 
 st.write("")
 
-# DATOS BASE DE PERFUMES CON ESENCIAS/NOTAS
+# DATOS BASE DE PERFUMES
 trending_perfumes = [
     {"brand": "CREED", "name": "AVENTUS", "price": "$140.00", "notes": ["Piña", "Cítricos", "Abedul", "Almizcle"], "img": "https://images.unsplash.com/photo-1594035910387-fea47794261f?w=500&q=80"},
     {"brand": "DIOR", "name": "SAUVAGE", "price": "$145.00", "notes": ["Bergamota", "Pimienta", "Ambroxan", "Cítricos"], "img": "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=500&q=80"},
@@ -319,7 +323,7 @@ trending_perfumes = [
     {"brand": "VERSACE", "name": "EROS", "price": "$95.00", "notes": ["Menta", "Manzana Verde", "Vainilla", "Habatonka"], "img": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=500&q=80"}
 ]
 
-# 4. BARRA DE BÚSQUEDA INTEGRADA Y FILTRO DE ESENCIAS (SOLO SI NO ESTAMOS EN TREN DEL HYPE)
+# 4. BARRA DE BÚSQUEDA INTEGRADA Y FILTRO DE ESENCIAS
 if st.session_state['current_page'] != 'hype':
     col_search, col_separator, col_photo = st.columns([8, 0.2, 2], vertical_alignment="center")
 
@@ -330,13 +334,11 @@ if st.session_state['current_page'] != 'hype':
     with col_photo:
         st.button("📷 PHOTO SEARCH", key="btn_photo_search", help="Buscar perfume por imagen", use_container_width=True)
 
-    # Filtro rápido por Etiquetas de Esencias
     all_notes = sorted(list(set([note for p in trending_perfumes for note in p["notes"]])))
     selected_essences = st.multiselect("🌸 Filtrar por Esencias / Notas Olfativas:", options=all_notes, placeholder="Selecciona una o varias esencias...")
 
     st.divider()
 
-    # LÓGICA DE FILTRADO DINÁMICO
     filtered_perfumes = []
     for p in trending_perfumes:
         matches_text = (
@@ -371,12 +373,10 @@ if st.session_state['current_page'] == 'home':
                     st.markdown(f"<div class='product-title'>{perfume['name']}</div>", unsafe_allow_html=True)
                     st.markdown(f"<div class='product-brand'>{perfume['brand']}</div>", unsafe_allow_html=True)
                     
-                    # Render de badges de notas
                     notes_html = "".join([f"<span class='note-badge'>{note}</span>" for note in perfume["notes"][:3]])
                     st.markdown(f"<div>{notes_html}</div>", unsafe_allow_html=True)
                     
                     st.write(f"Desde **{perfume['price']}**")
-                    
                     st.button("✨ Ver Ofertas", key=f"btn_{idx}", on_click=navigate_to, args=('product', perfume), use_container_width=True)
             st.write("<br>", unsafe_allow_html=True)
 
@@ -453,7 +453,7 @@ elif st.session_state['current_page'] == 'product':
         st.markdown(tabla_html, unsafe_allow_html=True)
 
 # ==========================================
-# VISTA 3: TREN DEL HYPE (VIRAL TRENDS)
+# VISTA 3: TREN DEL HYPE
 # ==========================================
 elif st.session_state['current_page'] == 'hype':
     st.button("← Volver al catálogo", on_click=navigate_to, args=('home',))
