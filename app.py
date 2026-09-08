@@ -68,11 +68,11 @@ st.markdown(f"""
         color: {text_color} !important;
     }}
 
-    /* REGLA DE UNIFORMIDAD Y SIMETRÍA PARA IMÁGENES DE PERFUMES */
+    /* UNIFORMIDAD TOTAL (ANCHO Y ALTO IDÉNTICOS PARA TODAS LAS IMÁGENES) */
     div[data-testid="stImage"] img {{
         object-fit: cover !important;
-        height: 260px !important;
         width: 100% !important;
+        height: 260px !important;
         border-radius: 8px !important;
     }}
 
