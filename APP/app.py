@@ -53,61 +53,93 @@ bottle_svg = (
 st.markdown(f"""
     <style>
     header[data-testid="stHeader"] {{ display: none !important; }}
-    .block-container {{ padding-top: 2rem !important; padding-bottom: 2rem !important; }}
+    .block-container {{ padding-top: 1.5rem !important; padding-bottom: 2rem !important; }}
     .stApp {{ {app_bg_css} color: {text_color} !important; }}
 
     .stApp p, .stApp span, .stApp label, .stMarkdown p, .stTextInput label p, .stMultiSelect label p {{
         color: {text_color} !important;
     }}
 
-    /* BOTONES DE NAVEGACIÓN PRINCIPAL */
-    div[data-testid="stButton"] > button {{
+    /* NAVEGACIÓN PRINCIPAL SUPERIOR (ESTILO PESTAÑAS / TABS) */
+    .st-key-n_perfumes button, 
+    .st-key-n_arabes button, 
+    .st-key-n_marcas button, 
+    .st-key-n_remates button {{
+        background-color: transparent !important;
+        border: none !important;
+        border-bottom: 2px solid transparent !important;
+        border-radius: 0px !important;
+        font-weight: 600 !important;
+        font-size: 0.9rem !important;
+        padding: 0.4rem 0.2rem !important;
+        box-shadow: none !important;
+    }}
+
+    .st-key-n_perfumes button p, 
+    .st-key-n_arabes button p, 
+    .st-key-n_marcas button p, 
+    .st-key-n_remates button p {{
+        color: {text_color} !important;
+        white-space: nowrap !important;
+    }}
+
+    .st-key-n_perfumes button:hover, 
+    .st-key-n_arabes button:hover, 
+    .st-key-n_marcas button:hover, 
+    .st-key-n_remates button:hover {{
+        background-color: transparent !important;
+        border-bottom: 2px solid #8c7b6d !important;
+    }}
+
+    .st-key-n_perfumes button:hover p, 
+    .st-key-n_arabes button:hover p, 
+    .st-key-n_marcas button:hover p, 
+    .st-key-n_remates button:hover p {{
+        color: #8c7b6d !important;
+    }}
+
+    /* HERRAMIENTAS RÁPIDAS (CHIPS DEBAJO DEL HERO SEARCH) */
+    .st-key-btn_trend button, 
+    .st-key-btn_trust button, 
+    .st-key-btn_compare button {{
+        background-color: transparent !important;
+        border: 1px solid {btn_border} !important;
+        border-radius: 16px !important;
+        padding: 0.2rem 0.6rem !important;
+        box-shadow: none !important;
+    }}
+    
+    .st-key-btn_trend button p, 
+    .st-key-btn_trust button p, 
+    .st-key-btn_compare button p {{
+        font-size: 0.8rem !important;
+        font-weight: 500 !important;
+        color: {subtext_color} !important;
+    }}
+
+    .st-key-btn_trend button:hover, 
+    .st-key-btn_trust button:hover, 
+    .st-key-btn_compare button:hover {{
+        border-color: #8c7b6d !important;
+        background-color: {btn_hover_bg} !important;
+    }}
+    
+    .st-key-btn_trend button:hover p, 
+    .st-key-btn_trust button:hover p, 
+    .st-key-btn_compare button:hover p {{
+        color: #8c7b6d !important;
+    }}
+
+    /* BOTÓN INGRESAR */
+    .st-key-login_btn button {{
         background-color: {btn_bg} !important;
         color: {btn_text} !important;
         border: 1px solid {btn_border} !important;
         border-radius: 8px !important;
         font-weight: 500 !important;
-        transition: all 0.2s ease !important;
-        padding: 0.4rem 0.2rem !important;
-    }}
-    
-    div[data-testid="stButton"] > button p {{
-        color: {btn_text} !important;
-        white-space: nowrap !important;
-        overflow: visible !important;
-        margin: 0 !important;
     }}
 
-    div[data-testid="stButton"] > button:hover {{
-        background-color: {btn_hover_bg} !important;
-        border-color: #b5ad9e !important;
-    }}
-
-    /* BOTONES CLEAN ESPECIALES (Hype, Confianza, Comparar) */
-    .st-key-btn_trend button, .st-key-btn_trust button, .st-key-btn_compare button {{
-        background-color: transparent !important;
-        border: 1.5px solid {btn_border} !important;
-        border-radius: 20px !important; /* Forma de píldora */
-        padding: 0.2rem 0.5rem !important;
-        box-shadow: none !important;
-    }}
-    
-    .st-key-btn_trend button p, .st-key-btn_trust button p, .st-key-btn_compare button p {{
-        font-size: 0.95rem !important;
-        font-weight: 600 !important;
-        color: {text_color} !important;
-    }}
-
-    .st-key-btn_trend button:hover, .st-key-btn_trust button:hover, .st-key-btn_compare button:hover {{
-        border-color: #8c7b6d !important;
-        background-color: {btn_hover_bg} !important;
-    }}
-    
-    .st-key-btn_trend button:hover p, .st-key-btn_trust button:hover p, .st-key-btn_compare button:hover p {{
-        color: #8c7b6d !important;
-    }}
-
-    /* FIX: BOTÓN POPOVER (ESENCIAS) Y PHOTO SEARCH */
+    /* POPOVER ESENCIAS Y PHOTO SEARCH */
     div[data-testid="stPopover"] > button,
     .st-key-btn_photo_search button {{
         background-color: #1f242d !important;
@@ -116,7 +148,6 @@ st.markdown(f"""
         padding: 0.4rem 0.2rem !important;
     }}
     
-    /* AUMENTO EXTREMO DE ESPECIFICIDAD PARA FORZAR LETRAS BLANCAS */
     .stApp div[data-testid="stPopover"] button,
     .stApp div[data-testid="stPopover"] button p,
     .stApp div[data-testid="stPopover"] button span,
@@ -209,8 +240,8 @@ st.markdown(f"""
     </style>
 """, unsafe_allow_html=True)
 
-# 3. CABECERA SUPERIOR INDEPENDIENTE
-col_logo, col_espacio, col_actions = st.columns([4, 4, 2.5], vertical_alignment="center")
+# 1. LA CABECERA (LOGO + USER / THEME)
+col_logo, col_espacio, col_actions = st.columns([4, 3, 2.5], vertical_alignment="center")
 
 with col_logo:
     logo_color = "#8c7b6d"
@@ -241,24 +272,23 @@ with col_actions:
     with btn_col2:
         st.button(" ", key="theme_toggle", on_click=toggle_theme)
 
+# 2. NAVEGACIÓN PRINCIPAL (UBICADA INMEDIATAMENTE DEBAJO DE LA CABECERA)
+st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
+col_nav1, col_nav2, col_nav3, col_nav4, col_nav_space = st.columns([1.2, 1.6, 1.2, 1.4, 4.6], vertical_alignment="center")
 
-# 4. NUEVA SECCIÓN DE BOTONES CLEAN CENTRADOS
-st.markdown("<br>", unsafe_allow_html=True)
+with col_nav1: 
+    st.button("PERFUMES", key="n_perfumes", on_click=navigate_to, args=('home',), use_container_width=True)
+with col_nav2: 
+    st.button("PERFUMES ÁRABES", key="n_arabes", on_click=navigate_to, args=('home',), use_container_width=True)
+with col_nav3: 
+    st.button("MARCAS", key="n_marcas", on_click=navigate_to, args=('home',), use_container_width=True)
+with col_nav4: 
+    st.button("REMATES 💰", key="n_remates", on_click=navigate_to, args=('hype',), use_container_width=True)
 
-sp_l, col_t1, col_t2, col_t3, sp_r = st.columns([1.5, 1.3, 1.6, 1.3, 1.5], vertical_alignment="center")
+st.markdown(f"<hr style='margin: 8px 0 25px 0; border: none; border-bottom: 1px solid {btn_border}; opacity: 0.5;'>", unsafe_allow_html=True)
 
-with col_t1:
-    st.button("🔥 Trend Del Hype", key="btn_trend", on_click=navigate_to, args=('trend_page',), use_container_width=True)
-with col_t2:
-    st.button("🛡️ Páginas de Confianza", key="btn_trust", on_click=navigate_to, args=('trust_page',), use_container_width=True)
-with col_t3:
-    st.button("⚖️ Comparar Precios", key="btn_compare", on_click=navigate_to, args=('compare_page',), use_container_width=True)
-
-st.markdown("<br>", unsafe_allow_html=True)
-
-
-# 5. BARRA DE BÚSQUEDA Y FILTRO INTEGRADO
-col_search, col_filter, col_separator, col_photo = st.columns([6, 1.8, 0.2, 2], vertical_alignment="center")
+# 3. EL "HERO" DE BÚSQUEDA (CENTRO DE ATENCIÓN UNIFICADO)
+col_search, col_filter, col_separator, col_photo = st.columns([5.5, 1.8, 0.2, 2], vertical_alignment="center")
 
 with col_search:
     search_query = st.text_input("🔍 Buscar", placeholder="🔍 Buscar perfume, marca o esencias...", label_visibility="collapsed")
@@ -285,24 +315,24 @@ with col_filter:
 
 with col_separator:
     st.markdown(f"<div style='border-left: 2px solid #ccc; height: 35px; margin: auto;'></div>", unsafe_allow_html=True)
-    
+
 with col_photo:
     st.button("📷 PHOTO SEARCH", key="btn_photo_search", help="Buscar perfume por imagen", use_container_width=True)
 
-st.write("")
-st.write("")
+# 4. HERRAMIENTAS RÁPIDAS (FILTROS DE CONFIANZA TIPO CHIPS DEBAJO DEL BUSCADOR)
+st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
+col_chip1, col_chip2, col_chip3, col_chip_space = st.columns([1.5, 1.8, 1.6, 5.1], vertical_alignment="center")
 
-# 6. BOTONES DE NAVEGACIÓN PRINCIPAL
-espacio_izq, c1, c2, c3, c4, espacio_der = st.columns([1.5, 1.2, 1.7, 1.2, 1.4, 1.5], vertical_alignment="center")
+with col_chip1:
+    st.button("🔥 Trend Del Hype", key="btn_trend", on_click=navigate_to, args=('trend_page',), use_container_width=True)
+with col_chip2:
+    st.button("🛡️ Páginas de Confianza", key="btn_trust", on_click=navigate_to, args=('trust_page',), use_container_width=True)
+with col_chip3:
+    st.button("⚖️ Comparar Precios", key="btn_compare", on_click=navigate_to, args=('compare_page',), use_container_width=True)
 
-with c1: st.button("PERFUMES", key="n_perfumes", on_click=navigate_to, args=('home',), use_container_width=True)
-with c2: st.button("PERFUMES ÁRABES", key="n_arabes", on_click=navigate_to, args=('home',), use_container_width=True)
-with c3: st.button("MARCAS", key="n_marcas", on_click=navigate_to, args=('home',), use_container_width=True)
-with c4: st.button("REMATES 💰", key="n_remates", on_click=navigate_to, args=('hype',), use_container_width=True)
+st.markdown("<br><br>", unsafe_allow_html=True)
 
-st.divider()
-
-# CATÁLOGO DE EJEMPLO ABAJO
+# VISTAS DE PÁGINA Y CATÁLOGO
 if st.session_state['current_page'] == 'home':
     st.markdown(f"<h3 style='text-align: center; margin-bottom: 25px; color: {text_color}; letter-spacing: 1px;'>🔥 CATÁLOGO Y TENDENCIAS</h3>", unsafe_allow_html=True)
     
