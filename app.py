@@ -1,10 +1,10 @@
 import streamlit as st
 import pandas as pd
 
-# 1. CONFIGURACIÓN DE la PÁGINA Y CSS CUSTOM 
+# 1. CONFIGURACIÓN DE LA PÁGINA Y CSS CUSTOM 
 st.set_page_config(page_title="PerfumeTrending", layout="wide", initial_sidebar_state="collapsed")
 
-# 2. MANEJO DE ESTADO (la Navegación)
+# 2. MANEJO DE ESTADO (Navegación)
 if 'current_page' not in st.session_state:
     st.session_state['current_page'] = 'home'
 
@@ -23,7 +23,7 @@ bg_color = "#0e1117" if is_dark else "#ffffff"
 text_color = "#ffffff" if is_dark else "#111111"
 subtext_color = "#a0a0a0" if is_dark else "#555555"
 
-# Parámetros del interruptor personalizado (Posición y SVGs Vectoriales)
+# Parámetros del interruptor personalizado
 bottle_left_pos = "42px" if is_dark else "-2px"
 static_icon_pos = "12px center" if is_dark else "calc(100% - 12px) center"
 
@@ -39,12 +39,18 @@ bottle_svg = (
     "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 58'><rect x='18' y='2' width='14' height='7' rx='2' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><rect x='21' y='9' width='8' height='5' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='19' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='5' fill='none' stroke='%23111111' stroke-width='2'/><line x1='25' y1='23' x2='25' y2='26' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='25' y1='42' x2='25' y2='45' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='14' y1='34' x2='17' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='33' y1='34' x2='36' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='17' y1='26' x2='19' y2='28' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='31' y1='40' x2='33' y2='42' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='17' y1='42' x2='19' y2='40' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='31' y1='28' x2='33' y2='26' stroke='%23111111' stroke-width='2' stroke-linecap='round'/></svg>"
 )
 
-# CSS para replicar los botones y etiquetas (badges) como se mostraban en los mockups
+# Estilos CSS
 st.markdown(f"""
     <style>
-    /* Reducir el espacio en blanco superior por defecto de Streamlit */
+    /* Ocultar barra superior predeterminada de Streamlit para evitar solapamientos */
+    header[data-testid="stHeader"] {{
+        display: none !important;
+    }}
+    
+    /* Espaciado superior limpio */
     .block-container {{
-        padding-top: 1.5rem !important;
+        padding-top: 2rem !important;
+        padding-bottom: 2rem !important;
     }}
     
     .stApp {{
@@ -134,37 +140,35 @@ st.markdown(f"""
     </style>
 """, unsafe_allow_html=True)
 
-# 3. CABECERA GLOBAL (Los Header y el super Buscador)
+# 3. CABECERA GLOBAL
 col_logo, col_nav, col_actions = st.columns([3, 5, 2], vertical_alignment="center")
 
 with col_logo:
-    # Construcción HTML/SVG para replicar fielmente el logo del mockup
     logo_color = "#333333" if is_dark else "#a0a0a0"
     
-    # Se añade un margin-top negativo aquí para empujar el logo específicamente hacia arriba
     logo_html = f"""
-    <div style="display: flex; align-items: center; gap: 8px; margin-top: -15px;">
-        <svg width="45" height="45" viewBox="0 -2 36 38" fill="none" stroke-linecap="round" stroke-linejoin="round">
-            <!-- Liquid Fill (Fondo del frasco) -->
+    <div style="display: flex; align-items: center; gap: 10px; overflow: visible;">
+        <svg width="42" height="42" viewBox="0 0 36 36" fill="none" stroke-linecap="round" stroke-linejoin="round" style="overflow: visible;">
+            <!-- Liquid Fill -->
             <path d="M 6.8 21 L 29.2 21 C 30 25 27 32 18 32 C 9 32 6 25 6.8 21 Z" fill="{logo_color}" />
-            <!-- Liquid Level Line (Línea de líquido) -->
+            <!-- Liquid Level Line -->
             <line x1="6.8" y1="21" x2="29.2" y2="21" stroke="{text_color}" stroke-width="2" />
-            <!-- Straw (Tubo interior) -->
+            <!-- Straw -->
             <line x1="18" y1="10" x2="18" y2="30" stroke="{text_color}" stroke-width="1.5" />
-            <!-- Bottle Outline (Contorno frasco) -->
+            <!-- Bottle Outline -->
             <path d="M 18 32 C 9 32 5 24 7.5 17 C 9 12 13 10 15 10 L 21 10 C 23 10 27 12 28.5 17 C 31 24 27 32 18 32 Z" stroke="{text_color}" stroke-width="2.5" />
-            <!-- Neck (Cuello) -->
+            <!-- Neck -->
             <rect x="15" y="7" width="6" height="3" stroke="{text_color}" stroke-width="2.5" />
-            <!-- Pump Base (Base del pulsador) -->
+            <!-- Pump Base -->
             <rect x="13" y="3" width="10" height="4" rx="1" stroke="{text_color}" stroke-width="2.5" />
-            <!-- Pump Top (Botón) -->
+            <!-- Pump Top -->
             <rect x="16" y="0" width="4" height="3" rx="1" fill="{logo_color}" stroke="{text_color}" stroke-width="1.5" />
-            <!-- Atomizer Stem (Conexión bomba) -->
+            <!-- Atomizer Stem -->
             <path d="M 23 5 L 26 4" stroke="{text_color}" stroke-width="2.5" />
-            <!-- Atomizer Bulb (Perilla apretable) -->
+            <!-- Atomizer Bulb -->
             <ellipse cx="29" cy="3" rx="3.5" ry="2.5" transform="rotate(-25 29 3)" fill="{logo_color}" stroke="{text_color}" stroke-width="1.5" />
         </svg>
-        <span style="font-family: 'Inter', 'Helvetica Neue', Helvetica, sans-serif; font-size: 1.75rem; color: {text_color}; letter-spacing: -0.5px;">
+        <span style="font-family: 'Inter', 'Helvetica Neue', Helvetica, sans-serif; font-size: 1.65rem; color: {text_color}; letter-spacing: -0.5px; white-space: nowrap;">
             <span style="font-weight: 800;">Perfume</span><span style="font-weight: 400;">Trending</span>
         </span>
     </div>
@@ -192,7 +196,6 @@ if st.session_state['current_page'] == 'home':
     st.markdown("<h3 style='text-align: center;'>TENDENCIAS EN REDES SOCIALES</h3>", unsafe_allow_html=True)
     st.write("")
     
-    # Datos simulados de fragancias virales (dummy)
     trending_perfumes = [
         {"brand": "CREED", "name": "AVENTUS", "price": "$140.00", "img": "https://via.placeholder.com/150?text=Creed+Aventus"},
         {"brand": "DIOR", "name": "SAUVAGE", "price": "$145.00", "img": "https://via.placeholder.com/150?text=Dior+Sauvage"},
@@ -200,7 +203,6 @@ if st.session_state['current_page'] == 'home':
         {"brand": "TOM FORD", "name": "OMBRE LEATHER", "price": "$145.00", "img": "https://via.placeholder.com/150?text=Ombre+Leather"}
     ]
 
-    # Creador de 4 columnas
     cols = st.columns(4)
     for i, perfume in enumerate(trending_perfumes):
         with cols[i]:
@@ -209,7 +211,6 @@ if st.session_state['current_page'] == 'home':
             st.markdown(f"<div class='product-brand'>{perfume['brand']}</div>", unsafe_allow_html=True)
             st.write(f"Compara precios desde **{perfume['price']}**")
             
-            # El botón de Midnight Oud lleva a la vista de los detalles
             if perfume["name"] == "MIDNIGHT OUD":
                 st.button("Ver Ofertas", key=f"btn_{i}", on_click=navigate_to, args=('product',), use_container_width=True)
             else:
@@ -233,7 +234,6 @@ elif st.session_state['current_page'] == 'product':
         * 🌹 **Rosa Búlgara:** Rosa Búlgara fresca
         * 🍯 **Ámbar:** Ámbar cálido y resinoso
         """)
-        # Placeholder para el gráfico del Hype Score (Diego y Alonso pls revisar)
         st.image("https://via.placeholder.com/300x100?text=Grafico+de+Tendencia+(Hype+Score)", use_container_width=True)
 
     with col_der:
@@ -242,7 +242,6 @@ elif st.session_state['current_page'] == 'product':
         table_bg = "#1a1d24" if is_dark else "#f9f9f9"
         table_border = "#333333" if is_dark else "#dddddd"
         
-        # Tabla HTML personalizada para replicar exactamente los badges del mockup
         tabla_html = f"""
         <table style="width:100%; text-align:center; border-collapse: collapse; color: {text_color};">
             <tr style="border-bottom: 2px solid {table_border}; background-color: {table_bg};">
