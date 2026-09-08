@@ -88,7 +88,14 @@ st.markdown(f"""
         font-weight: 600 !important;
         transition: all 0.2s ease !important;
     }}
-    div[data-testid="stButton"] > button:hover {{
+    
+    /* Corrección: Forzar el color del texto interno (etiqueta p) del botón */
+    div[data-testid="stButton"] > button p {{
+        color: {btn_text} !important;
+    }}
+
+    div[data-testid="stButton"] > button:hover,
+    div[data-testid="stButton"] > button:hover p {{
         background-color: {btn_hover_bg} !important;
         color: {btn_text} !important;
         border-color: {btn_hover_bg} !important;
