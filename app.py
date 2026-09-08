@@ -133,7 +133,37 @@ st.markdown(f"""
 col_logo, col_nav, col_actions = st.columns([3, 5, 2], vertical_alignment="center")
 
 with col_logo:
-    st.markdown("### 🏷️ PERFUME**TRENDING**")
+    # Construcción HTML/SVG para replicar fielmente el logo del mockup
+    logo_color = "#333333" if is_dark else "#a0a0a0"
+    
+    logo_html = f"""
+    <div style="display: flex; align-items: center; gap: 8px;">
+        <svg width="45" height="45" viewBox="0 -2 36 38" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <!-- Liquid Fill (Fondo del frasco) -->
+            <path d="M 6.8 21 L 29.2 21 C 30 25 27 32 18 32 C 9 32 6 25 6.8 21 Z" fill="{logo_color}" />
+            <!-- Liquid Level Line (Línea de líquido) -->
+            <line x1="6.8" y1="21" x2="29.2" y2="21" stroke="{text_color}" stroke-width="2" />
+            <!-- Straw (Tubo interior) -->
+            <line x1="18" y1="10" x2="18" y2="30" stroke="{text_color}" stroke-width="1.5" />
+            <!-- Bottle Outline (Contorno frasco) -->
+            <path d="M 18 32 C 9 32 5 24 7.5 17 C 9 12 13 10 15 10 L 21 10 C 23 10 27 12 28.5 17 C 31 24 27 32 18 32 Z" stroke="{text_color}" stroke-width="2.5" />
+            <!-- Neck (Cuello) -->
+            <rect x="15" y="7" width="6" height="3" stroke="{text_color}" stroke-width="2.5" />
+            <!-- Pump Base (Base del pulsador) -->
+            <rect x="13" y="3" width="10" height="4" rx="1" stroke="{text_color}" stroke-width="2.5" />
+            <!-- Pump Top (Botón) -->
+            <rect x="16" y="0" width="4" height="3" rx="1" fill="{logo_color}" stroke="{text_color}" stroke-width="1.5" />
+            <!-- Atomizer Stem (Conexión bomba) -->
+            <path d="M 23 5 L 26 4" stroke="{text_color}" stroke-width="2.5" />
+            <!-- Atomizer Bulb (Perilla apretable) -->
+            <ellipse cx="29" cy="3" rx="3.5" ry="2.5" transform="rotate(-25 29 3)" fill="{logo_color}" stroke="{text_color}" stroke-width="1.5" />
+        </svg>
+        <span style="font-family: 'Inter', 'Helvetica Neue', Helvetica, sans-serif; font-size: 1.75rem; color: {text_color}; letter-spacing: -0.5px;">
+            <span style="font-weight: 800;">Perfume</span><span style="font-weight: 400;">Trending</span>
+        </span>
+    </div>
+    """
+    st.markdown(logo_html, unsafe_allow_html=True)
 
 with col_nav:
     st.markdown("<div class='header-nav'><span>HOMBRES</span> | <span>MUJERES</span> | <span>ÁRABES</span> | <span>DISEÑADOR</span> | <span>NICHO</span></div>", unsafe_allow_html=True)
