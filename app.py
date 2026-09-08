@@ -4,7 +4,7 @@ import pandas as pd
 # 1. CONFIGURACIÓN DE la PÁGINA Y CSS CUSTOM 
 st.set_page_config(page_title="PerfumeTrending", layout="wide", initial_sidebar_state="collapsed")
 
-# 2. MANEJO DE ESTADO (la Navegación)
+# 2. MANEJO DE ESTADO (la Navegación y Tema)
 if 'current_page' not in st.session_state:
     st.session_state['current_page'] = 'home'
 
@@ -23,7 +23,7 @@ bg_color = "#0e1117" if is_dark else "#ffffff"
 text_color = "#ffffff" if is_dark else "#111111"
 subtext_color = "#a0a0a0" if is_dark else "#555555"
 
-# CSS para replicar los botones y etiquetas (badges) como se mostraban en los mockups
+# CSS principal y CSS avanzado para el Toggle de Perfume
 st.markdown(f"""
     <style>
     .stApp {{
@@ -54,6 +54,62 @@ st.markdown(f"""
         font-weight: bold;
         font-size: 0.95rem;
     }}
+
+    /* ----- TOGGLE PERSONALIZADO: BOTELLA DE PERFUME ----- */
+    /* Ocultar texto por defecto del botón */
+    button[title="switch_theme"] p {{
+        display: none;
+    }}
+    
+    /* El fondo del interruptor (Track) */
+    button[title="switch_theme"] {{
+        width: 76px !important;
+        min-width: 76px !important;
+        height: 36px !important;
+        border-radius: 20px !important;
+        background-color: {"#333333" if is_dark else "#e0e0e0"} !important;
+        border: 2px solid {"#111111" if is_dark else "#aaaaaa"} !important;
+        position: relative;
+        overflow: visible !important;
+        display: block;
+        margin: 0 auto;
+        cursor: pointer;
+        transition: all 0.4s ease;
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.3) !important;
+    }}
+    
+    /* Icono de luna de fondo cuando está en modo oscuro */
+    button[title="switch_theme"]::after {{
+        content: '{"🌙" if is_dark else ""}'; 
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 16px;
+        opacity: {"1" if is_dark else "0"};
+        transition: 0.3s;
+    }}
+
+    /* El interruptor movible (La botella de perfume blanca) */
+    button[title="switch_theme"]::before {{
+        content: '{"☀️" if is_dark else "🌙"}';
+        position: absolute;
+        top: -6px;
+        left: {"-4px" if is_dark else "36px"};
+        width: 38px;
+        height: 44px;
+        background-color: #f4f4f4;
+        color: #111;
+        border: 2px solid #111;
+        border-radius: 45% 45% 15% 15%; /* Forma de frasco */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        z-index: 2;
+        transition: left 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+        box-shadow: 2px 4px 6px rgba(0,0,0,0.3);
+    }}
     </style>
 """, unsafe_allow_html=True)
 
@@ -71,9 +127,8 @@ with col_actions:
     with btn_col1:
         st.button("👤 Ingresar", key="login_btn", use_container_width=True)
     with btn_col2:
-        # Si está oscuro muestra perfume + sol (pasa a blanco). Si está claro muestra perfume + luna (pasa a oscuro).
-        theme_icon = "🧴☀️" if is_dark else "🧴🌙"
-        st.button(theme_icon, key="theme_toggle", on_click=toggle_theme, use_container_width=True)
+        # El parámetro help="switch_theme" aplica el diseño de la botella de perfume mediante CSS
+        st.button(" ", key="theme_toggle", on_click=toggle_theme, help="switch_theme")
 
 st.text_input("🔍 Buscar perfume, marca, notas...", placeholder="Ej: Midnight Oud...")
 
@@ -98,7 +153,6 @@ if st.session_state['current_page'] == 'home':
     cols = st.columns(4)
     for i, perfume in enumerate(trending_perfumes):
         with cols[i]:
-            # Solución del error: reemplazo de use_column_width por use_container_width
             st.image(perfume["img"], use_container_width=True)
             st.markdown(f"<div class='product-title'>{perfume['name']}</div>", unsafe_allow_html=True)
             st.markdown(f"<div class='product-brand'>{perfume['brand']}</div>", unsafe_allow_html=True)
