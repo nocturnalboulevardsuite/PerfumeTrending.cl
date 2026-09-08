@@ -89,7 +89,6 @@ st.markdown(f"""
         transition: all 0.2s ease !important;
     }}
     
-    /* Corrección: Forzar el color del texto interno (etiqueta p) del botón */
     div[data-testid="stButton"] > button p {{
         color: {btn_text} !important;
     }}
@@ -100,8 +99,21 @@ st.markdown(f"""
         color: {btn_text} !important;
         border-color: {btn_hover_bg} !important;
     }}
+    
+    /* 🔴 FIX ESPECÍFICO PARA EL BOTÓN "PHOTO SEARCH" 🔴 */
+    .st-key-btn_photo_search button {{
+        background-color: #1f242d !important; /* Fondo oscuro a juego con input */
+        border: 1px solid #3a3f4d !important;
+    }}
+    .st-key-btn_photo_search button p,
+    .st-key-btn_photo_search button span {{
+        color: #ffffff !important; /* Texto blanco forzado */
+    }}
+    .st-key-btn_photo_search button:hover {{
+        background-color: #2d3340 !important;
+    }}
 
-    /* INPUTS Y SELECTS (CORRECCIÓN MODO CLARO/OSCURO) */
+    /* INPUTS Y SELECTS */
     div[data-baseweb="input"], 
     div[data-baseweb="select"] > div {{
         background-color: {input_bg} !important;
@@ -294,7 +306,8 @@ with col_search:
 with col_separator:
     st.markdown(f"<div style='border-left: 2px solid {input_border}; height: 35px; margin: auto;'></div>", unsafe_allow_html=True)
 with col_photo:
-    st.button("📷 PHOTO SEARCH", help="Buscar perfume por imagen", use_container_width=True)
+    # 🔴 AÑADIDA KEY ESPECÍFICA AQUÍ 🔴
+    st.button("📷 PHOTO SEARCH", key="btn_photo_search", help="Buscar perfume por imagen", use_container_width=True)
 
 # Filtro rápido por Etiquetas de Esencias
 all_notes = sorted(list(set([note for p in trending_perfumes for note in p["notes"]])))
