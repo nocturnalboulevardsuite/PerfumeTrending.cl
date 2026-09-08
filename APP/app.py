@@ -92,11 +92,12 @@ st.markdown(f"""
         padding: 0.4rem 0.2rem !important;
     }}
     
-    /* AUMENTO DE ESPECIFICIDAD PARA FORZAR LETRAS BLANCAS */
-    .stApp div[data-testid="stPopover"] > button,
-    .stApp div[data-testid="stPopover"] > button p,
-    .stApp div[data-testid="stPopover"] > button span,
-    .stApp div[data-testid="stPopover"] > button div,
+    /* AUMENTO EXTREMO DE ESPECIFICIDAD PARA FORZAR LETRAS BLANCAS */
+    .stApp div[data-testid="stPopover"] button,
+    .stApp div[data-testid="stPopover"] button p,
+    .stApp div[data-testid="stPopover"] button span,
+    .stApp div[data-testid="stPopover"] button div,
+    .stApp .st-key-btn_photo_search button,
     .stApp .st-key-btn_photo_search button p,
     .stApp .st-key-btn_photo_search button span {{
         color: #ffffff !important;
