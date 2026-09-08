@@ -25,18 +25,18 @@ def navigate_to(page, perfume_data=None):
 # Configuración dinámica de colores según el tema activo
 is_dark = st.session_state['theme'] == 'dark'
 
-app_bg_css = "background-color: #0e1117 !important;" if is_dark else "background: linear-gradient(135deg, #fdfbf9 0%, #ede4dc 100%) !important;"
+app_bg_css = "background-color: #f6efe9 !important;" if not is_dark else "background-color: #0e1117 !important;"
 text_color = "#ffffff" if is_dark else "#1a1a1a"
 subtext_color = "#a0a0a0" if is_dark else "#666666"
 
 btn_bg = "#1f242d" if is_dark else "#ffffff"
 btn_text = "#ffffff" if is_dark else "#2c2c2c"
 btn_border = "#3a3f4d" if is_dark else "#d4cdc5"
-btn_hover_bg = "#2d3340" if is_dark else "#f5ece4"
+btn_hover_bg = "#2d3340" if is_dark else "#fcfaf8"
 
-input_bg = "#1f242d" if is_dark else "#ffffff"
-input_text = "#ffffff" if is_dark else "#2c2c2c"
-input_border = "#3a3f4d" if is_dark else "#c9c0b5"
+input_bg = "#1f242d" if is_dark else "#252b36"
+input_text = "#ffffff" if is_dark else "#ffffff"
+input_border = "#3a3f4d" if is_dark else "#1a1a1a"
 
 bottle_left_pos = "42px" if is_dark else "-2px"
 static_icon_pos = "12px center" if is_dark else "calc(100% - 12px) center"
@@ -64,86 +64,27 @@ st.markdown(f"""
         color: {text_color} !important;
     }}
 
-    /* IMÁGENES Y EFECTOS */
-    div[data-testid="stImage"] img {{
-        object-fit: cover !important;
-        width: 100% !important;
-        height: 280px !important;
-        border-radius: 12px !important;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.08) !important;
-        transition: transform 0.3s ease, box-shadow 0.3s ease !important;
-    }}
-    div[data-testid="stImage"] img:hover {{
-        transform: translateY(-5px);
-        box-shadow: 0 8px 20px rgba(0,0,0,0.15) !important;
-    }}
-
-    /* BOTONES GENERALES DE ACCIÓN */
+    /* BOTONES GENERALES DE ACCIÓN Y MENÚ */
     div[data-testid="stButton"] > button {{
         background-color: {btn_bg} !important;
         color: {btn_text} !important;
         border: 1px solid {btn_border} !important;
         border-radius: 8px !important;
-        font-weight: 600 !important;
+        font-weight: 500 !important;
         transition: all 0.2s ease !important;
+        padding: 0.4rem 0.2rem !important;
     }}
     
     div[data-testid="stButton"] > button p {{
         color: {btn_text} !important;
+        white-space: nowrap !important; /* Previene el corte del texto (...) */
+        overflow: visible !important;
+        margin: 0 !important;
     }}
 
     div[data-testid="stButton"] > button:hover {{
         background-color: {btn_hover_bg} !important;
-        border-color: {btn_hover_bg} !important;
-    }}
-
-    /* NAVEGACIÓN ESTILO LETRAS CLICKEABLES (COPIA EXACTA DE LA IMAGEN DE REFERENCIA) */
-    div[data-testid="stButton"].st-key-n_perfumes > button,
-    div[data-testid="stButton"].st-key-n_arabes > button,
-    div[data-testid="stButton"].st-key-n_marcas > button,
-    div[data-testid="stButton"].st-key-n_remates > button {{
-        background: transparent !important;
-        background-color: transparent !important;
-        border: none !important;
-        box-shadow: none !important;
-        padding: 0 !important;
-        min-width: max-content !important; /* Fuerza a que el botón se expanda al texto */
-        display: inline-flex !important;
-        justify-content: center !important;
-    }}
-
-    div[data-testid="stButton"].st-key-n_perfumes > button:hover,
-    div[data-testid="stButton"].st-key-n_arabes > button:hover,
-    div[data-testid="stButton"].st-key-n_marcas > button:hover,
-    div[data-testid="stButton"].st-key-n_remates > button:hover {{
-        background: transparent !important;
-        background-color: transparent !important;
-        border: none !important;
-    }}
-    
-    div[data-testid="stButton"].st-key-n_perfumes > button p,
-    div[data-testid="stButton"].st-key-n_arabes > button p,
-    div[data-testid="stButton"].st-key-n_marcas > button p,
-    div[data-testid="stButton"].st-key-n_remates > button p {{
-        color: {text_color} !important;
-        font-size: 1.1rem !important;
-        font-weight: 400 !important;
-        letter-spacing: 0.5px !important;
-        text-transform: uppercase !important;
-        white-space: nowrap !important; /* Evita que el texto salte a otra línea */
-        overflow: visible !important; /* Evita recortes */
-        text-overflow: clip !important; /* Elimina los puntos suspensivos (...) */
-        margin: 0 !important;
-        transition: all 0.2s ease !important;
-    }}
-
-    div[data-testid="stButton"].st-key-n_perfumes > button:hover p,
-    div[data-testid="stButton"].st-key-n_arabes > button:hover p,
-    div[data-testid="stButton"].st-key-n_marcas > button:hover p,
-    div[data-testid="stButton"].st-key-n_remates > button:hover p {{
-        text-decoration: underline !important;
-        text-underline-offset: 8px !important;
-        text-decoration-thickness: 1.5px !important;
+        border-color: #b5ad9e !important;
     }}
 
     /* FIX BOTÓN "PHOTO SEARCH" */
@@ -159,7 +100,7 @@ st.markdown(f"""
         background-color: #2d3340 !important;
     }}
 
-    /* INPUTS Y SELECTS */
+    /* INPUTS Y SELECTS (Adaptados a los tonos oscuros de la imagen) */
     div[data-baseweb="input"], 
     div[data-baseweb="select"] > div {{
         background-color: {input_bg} !important;
@@ -174,48 +115,15 @@ st.markdown(f"""
     }}
     
     div[data-baseweb="input"] input::placeholder {{ 
-        color: {subtext_color} !important; 
+        color: #9e9e9e !important; 
     }}
 
     /* ETIQUETAS DE MULTISELECT */
     span[data-baseweb="tag"] {{
-        background-color: {btn_hover_bg} !important;
-        border: 1px solid {btn_border} !important;
+        background-color: #2d3340 !important;
+        border: 1px solid #3a3f4d !important;
+        color: white !important;
     }}
-
-    /* BADGES DE NOTAS */
-    .note-badge {{
-        background-color: {'#2d3340' if is_dark else '#ebdcd0'};
-        color: {text_color};
-        padding: 4px 10px;
-        border-radius: 12px;
-        font-size: 0.78rem;
-        font-weight: 600;
-        display: inline-block;
-        margin-right: 4px;
-        margin-bottom: 6px;
-    }}
-
-    .trust-badge-green {{
-        background-color: #d4edda; color: #155724; padding: 4px 10px; 
-        border-radius: 6px; border: 1px solid #c3e6cb; font-size: 12px; font-weight: bold;
-    }}
-    .trust-badge-red {{
-        background-color: #f8d7da; color: #721c24; padding: 4px 10px; 
-        border-radius: 6px; border: 1px solid #f5c6cb; font-size: 12px; font-weight: bold;
-    }}
-    .buy-btn {{
-        background: linear-gradient(90deg, #4a86e8 0%, #366bc2 100%); 
-        color: white !important; padding: 8px 16px; 
-        text-decoration: none; border-radius: 6px; font-size: 12px; font-weight: bold;
-        display: inline-block;
-        box-shadow: 0 2px 5px rgba(74, 134, 232, 0.3);
-        transition: transform 0.2s;
-    }}
-    .buy-btn:hover {{ transform: scale(1.05); }}
-    
-    .product-title {{ font-size: 1.15rem; font-weight: bold; margin-bottom: 0; color: {text_color} !important; margin-top: 12px; }}
-    .product-brand {{ font-size: 0.85rem; color: {subtext_color} !important; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }}
 
     /* SWITCH TEMA */
     .st-key-theme_toggle div[data-testid="stButton"] > button,
@@ -275,7 +183,7 @@ st.markdown(f"""
 col_logo, col_nav, col_actions = st.columns([2.5, 6, 2], vertical_alignment="center")
 
 with col_logo:
-    logo_color = "#333333" if is_dark else "#8c7b6d"
+    logo_color = "#8c7b6d"
     logo_html = f"""
     <div style="display: flex; align-items: center; gap: 10px; cursor: pointer;" onclick="window.location.reload();">
         <svg width="42" height="42" viewBox="0 0 36 36" fill="none" stroke-linecap="round" stroke-linejoin="round">
@@ -297,8 +205,8 @@ with col_logo:
     st.markdown(logo_html, unsafe_allow_html=True)
 
 with col_nav:
-    # Ajustamos proporciones para darle espacio exacto a las palabras y evitar cortes
-    c1, c2, c3, c4 = st.columns([1.2, 1.8, 1, 1.2], vertical_alignment="center")
+    # Proporciones ajustadas para que los botones queden perfectamente medidos
+    c1, c2, c3, c4 = st.columns([1.1, 1.6, 1, 1.2], vertical_alignment="center")
     with c1: st.button("PERFUMES", key="n_perfumes", on_click=navigate_to, args=('home',), use_container_width=True)
     with c2: st.button("PERFUMES ÁRABES", key="n_arabes", on_click=navigate_to, args=('home',), use_container_width=True)
     with c3: st.button("MARCAS", key="n_marcas", on_click=navigate_to, args=('home',), use_container_width=True)
@@ -313,190 +221,24 @@ with col_actions:
 
 st.write("")
 
-# DATOS BASE DE PERFUMES
-trending_perfumes = [
-    {"brand": "CREED", "name": "AVENTUS", "price": "$140.00", "notes": ["Piña", "Cítricos", "Abedul", "Almizcle"], "img": "https://images.unsplash.com/photo-1594035910387-fea47794261f?w=500&q=80"},
-    {"brand": "DIOR", "name": "SAUVAGE", "price": "$145.00", "notes": ["Bergamota", "Pimienta", "Ambroxan", "Cítricos"], "img": "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=500&q=80"},
-    {"brand": "MAISON ALHAMBRA", "name": "MIDNIGHT OUD", "price": "$110.00", "notes": ["Oud", "Rosa", "Ámbar", "Cuero"], "img": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=500&q=80"},
-    {"brand": "TOM FORD", "name": "OMBRE LEATHER", "price": "$145.00", "notes": ["Cuero", "Cardamomo", "Jazmín", "Ámbar"], "img": "https://images.unsplash.com/photo-1541643600914-78b084683601?w=500&q=80"},
-    {"brand": "JEAN PAUL GAULTIER", "name": "LE MALE ELIXIR", "price": "$125.00", "notes": ["Menta", "Vainilla", "Miel", "Habatonka"], "img": "https://images.unsplash.com/photo-1616949755610-8c9bbc08f138?w=500&q=80"},
-    {"brand": "PARFUMS DE MARLY", "name": "DELINA", "price": "$210.00", "notes": ["Lichi", "Rosa", "Vainilla", "Ruibarbo"], "img": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=500&q=80"},
-    {"brand": "LATTAFA", "name": "KHAMRAH", "price": "$45.00", "notes": ["Canela", "Nuez Moscada", "Vainilla", "Praliné"], "img": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=500&q=80"},
-    {"brand": "GIORGIO ARMANI", "name": "ACQUA DI GIO", "price": "$115.00", "notes": ["Marinas", "Bergamota", "Cítricos", "Romero"], "img": "https://images.unsplash.com/photo-1594035910387-fea47794261f?w=500&q=80"},
-    {"brand": "YVES SAINT LAURENT", "name": "Y EDP", "price": "$130.00", "notes": ["Manzana", "Jengibre", "Salvia", "Abedul"], "img": "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=500&q=80"},
-    {"brand": "VERSACE", "name": "EROS", "price": "$95.00", "notes": ["Menta", "Manzana Verde", "Vainilla", "Habatonka"], "img": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=500&q=80"}
-]
-
 # 4. BARRA DE BÚSQUEDA INTEGRADA Y FILTRO DE ESENCIAS
-if st.session_state['current_page'] != 'hype':
-    col_search, col_separator, col_photo = st.columns([8, 0.2, 2], vertical_alignment="center")
+col_search, col_separator, col_photo = st.columns([8, 0.2, 2], vertical_alignment="center")
 
-    with col_search:
-        search_query = st.text_input("🔍 Buscar", placeholder="🔍 Buscar perfume, marca o esencias (Ej: Oud, Vainilla, Cítricos...)", label_visibility="collapsed")
-    with col_separator:
-        st.markdown(f"<div style='border-left: 2px solid {input_border}; height: 35px; margin: auto;'></div>", unsafe_allow_html=True)
-    with col_photo:
-        st.button("📷 PHOTO SEARCH", key="btn_photo_search", help="Buscar perfume por imagen", use_container_width=True)
+with col_search:
+    search_query = st.text_input("🔍 Buscar", placeholder="🔍 Buscar perfume, marca o esencias (Ej: Oud, Vainilla, Cítricos...)", label_visibility="collapsed")
+with col_separator:
+    st.markdown(f"<div style='border-left: 2px solid #ccc; height: 35px; margin: auto;'></div>", unsafe_allow_html=True)
+with col_photo:
+    st.button("📷 PHOTO SEARCH", key="btn_photo_search", help="Buscar perfume por imagen", use_container_width=True)
 
-    all_notes = sorted(list(set([note for p in trending_perfumes for note in p["notes"]])))
-    selected_essences = st.multiselect("🌸 Filtrar por Esencias / Notas Olfativas:", options=all_notes, placeholder="Selecciona una o varias esencias...")
+all_notes = ["Ámbar", "Abedul", "Almizcle", "Bergamota", "Canela", "Cardamomo", "Cítricos", "Cuero", "Habatonka", "Jazmín", "Jengibre", "Lichi", "Manzana", "Menta", "Miel", "Nuez Moscada", "Oud", "Pimienta", "Piña", "Praliné", "Romero", "Rosa", "Ruibarbo", "Salvia", "Vainilla"]
+selected_essences = st.multiselect("🌸 Filtrar por Esencias / Notas Olfativas:", options=all_notes, placeholder="Selecciona una o varias esencias...")
 
-    st.divider()
-
-    filtered_perfumes = []
-    for p in trending_perfumes:
-        matches_text = (
-            search_query.lower() in p["name"].lower() or 
-            search_query.lower() in p["brand"].lower() or
-            any(search_query.lower() in n.lower() for n in p["notes"])
-        )
-        matches_essences = True
-        if selected_essences:
-            matches_essences = any(essence in p["notes"] for essence in selected_essences)
-            
-        if matches_text and matches_essences:
-            filtered_perfumes.append(p)
+st.divider()
 
 # ==========================================
-# VISTA 1: HOME / CATÁLOGO
+# RESTO DEL CÓDIGO (Catálogo, Perfil, etc.)
 # ==========================================
 if st.session_state['current_page'] == 'home':
     st.markdown(f"<h3 style='text-align: center; margin-bottom: 25px; color: {text_color}; letter-spacing: 1px;'>🔥 CATÁLOGO Y TENDENCIAS</h3>", unsafe_allow_html=True)
-    
-    if not filtered_perfumes:
-        st.warning("No se encontraron perfumes con los criterios seleccionados.")
-    else:
-        cols_per_row = 4
-        for row_start in range(0, len(filtered_perfumes), cols_per_row):
-            row_items = filtered_perfumes[row_start:row_start + cols_per_row]
-            cols = st.columns(cols_per_row, gap="medium")
-            for i, perfume in enumerate(row_items):
-                idx = row_start + i
-                with cols[i]:
-                    st.image(perfume["img"], use_container_width=True)
-                    st.markdown(f"<div class='product-title'>{perfume['name']}</div>", unsafe_allow_html=True)
-                    st.markdown(f"<div class='product-brand'>{perfume['brand']}</div>", unsafe_allow_html=True)
-                    
-                    notes_html = "".join([f"<span class='note-badge'>{note}</span>" for note in perfume["notes"][:3]])
-                    st.markdown(f"<div>{notes_html}</div>", unsafe_allow_html=True)
-                    
-                    st.write(f"Desde **{perfume['price']}**")
-                    st.button("✨ Ver Ofertas", key=f"btn_{idx}", on_click=navigate_to, args=('product', perfume), use_container_width=True)
-            st.write("<br>", unsafe_allow_html=True)
-
-# ==========================================
-# VISTA 2: PERFIL Y COMPARADOR DEL PERFUME
-# ==========================================
-elif st.session_state['current_page'] == 'product':
-    perfume = st.session_state.get('selected_perfume') or trending_perfumes[2]
-    
-    st.button("← Volver al catálogo", on_click=navigate_to, args=('home',))
-    st.write("")
-    
-    col_izq, col_der = st.columns([1, 2], gap="large")
-    
-    with col_izq:
-        st.image(perfume["img"], use_container_width=True)
-        st.markdown(f"<h3 style='color: {text_color}; margin-top: 15px;'>{perfume['name']}<br><span style='font-size: 1rem; font-weight: normal; color: {subtext_color};'>{perfume['brand']}</span></h3>", unsafe_allow_html=True)
-        st.write("**100ml / 3.4 oz**")
-        
-        st.markdown("**Notas Olfativas y Esencias:**")
-        for note in perfume["notes"]:
-            st.markdown(f"* 🧪 **{note}**")
-
-    with col_der:
-        st.markdown(f"<h4 style='color: {text_color}; border-bottom: 2px solid {input_border}; padding-bottom: 10px;'>📊 Comparación de Precios y Confianza</h4>", unsafe_allow_html=True)
-        st.write("")
-        
-        table_bg = "#1f242d" if is_dark else "#ffffff"
-        table_border = "#3a3f4d" if is_dark else "#d4cdc5"
-        
-        tabla_html = f"""
-        <div style="border-radius: 10px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
-            <table style="width:100%; text-align:center; border-collapse: collapse; color: {text_color}; background-color: {table_bg};">
-                <tr style="border-bottom: 2px solid {table_border}; background-color: {'#2d3340' if is_dark else '#f5ece4'};">
-                    <th style="padding: 15px;">#</th>
-                    <th style="padding: 15px;">TIENDA</th>
-                    <th style="padding: 15px;">PRECIO</th>
-                    <th style="padding: 15px;">NIVEL DE CONFIANZA</th>
-                    <th style="padding: 15px;">ACCIÓN</th>
-                </tr>
-                <tr style="border-bottom: 1px solid {table_border};">
-                    <td style="padding: 18px;">1</td>
-                    <td><strong>AURA SCENTS</strong></td>
-                    <td style="color: #27ae60; font-size: 1.1rem;"><strong>{perfume['price']}</strong></td>
-                    <td>
-                        <span class="trust-badge-green">✔️ CONFIRMADO</span><br>
-                        <small style="color: #27ae60;">Distribuidor Oficial</small>
-                    </td>
-                    <td><a href="#" class="buy-btn">COMPRAR AHORA</a></td>
-                </tr>
-                <tr style="border-bottom: 1px solid {table_border};">
-                    <td style="padding: 18px;">2</td>
-                    <td><strong>THE PERFUME BARN</strong></td>
-                    <td style="font-size: 1.1rem;"><strong>$105.00</strong></td>
-                    <td>
-                        <span class="trust-badge-red">❌ RIESGO ALTO</span><br>
-                        <small style="color: #c0392b;">Alerta de Falsificación</small>
-                    </td>
-                    <td><a href="#" class="buy-btn" style="background: #7f8c8d; box-shadow: none;">COMPRAR AHORA</a></td>
-                </tr>
-                <tr style="border-bottom: 1px solid {table_border};">
-                    <td style="padding: 18px;">3</td>
-                    <td><strong>ELEGANT FRAGRANCE</strong></td>
-                    <td style="font-size: 1.1rem;"><strong>$112.50</strong></td>
-                    <td>
-                        <span class="trust-badge-green">✔️ CONFIRMADO</span><br>
-                        <small style="color: #27ae60;">Seguro</small>
-                    </td>
-                    <td><a href="#" class="buy-btn">COMPRAR AHORA</a></td>
-                </tr>
-            </table>
-        </div>
-        """
-        st.markdown(tabla_html, unsafe_allow_html=True)
-
-# ==========================================
-# VISTA 3: TREN DEL HYPE (Mapeado a Remates)
-# ==========================================
-elif st.session_state['current_page'] == 'hype':
-    st.button("← Volver al catálogo", on_click=navigate_to, args=('home',))
-    st.markdown(f"<h2 style='text-align: center; color: {text_color}; margin-top: 10px;'>💰 SECCIÓN DE REMATES Y OFERTAS</h2>", unsafe_allow_html=True)
-    st.markdown(f"<p style='text-align: center; color: {subtext_color}; font-size: 1.05rem;'>Las fragancias más virales con descuentos especiales esta semana.</p>", unsafe_allow_html=True)
-    st.write("<br>", unsafe_allow_html=True)
-
-    hype_items = [
-        {"rank": "#1 🔥", "brand": "LATTAFA", "name": "KHAMRAH", "hype_score": "98%", "reason": "Trending #1 en TikTok Fragrance Community"},
-        {"rank": "#2 🚀", "brand": "JEAN PAUL GAULTIER", "name": "LE MALE ELIXIR", "hype_score": "95%", "reason": "Sube en menciones y búsquedas globales"},
-        {"rank": "#3 💥", "brand": "CREED", "name": "AVENTUS", "hype_score": "91%", "reason": "Inmune al paso del tiempo, alta demanda"},
-    ]
-
-    for item in hype_items:
-        st.markdown(f"""
-        <div style="background-color: {'#1f242d' if is_dark else '#ffffff'}; border: 1px solid {'#3a3f4d' if is_dark else '#e2d8ce'}; border-radius: 12px; padding: 20px; margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between;">
-            <div>
-                <span style="font-size: 1.4rem; font-weight: 800; color: #d4a373;">{item['rank']}</span>
-                <span style="font-size: 1.2rem; font-weight: 700; color: {text_color}; margin-left: 15px;">{item['name']}</span>
-                <span style="font-size: 0.9rem; color: {subtext_color}; margin-left: 8px;">by {item['brand']}</span>
-                <p style="margin: 5px 0 0 0; color: {subtext_color}; font-size: 0.88rem;">{item['reason']}</p>
-            </div>
-            <div style="text-align: right;">
-                <span style="background-color: #d4a373; color: #ffffff; font-weight: bold; padding: 6px 14px; border-radius: 20px; font-size: 0.9rem;">
-                    HYPE SCORE: {item['hype_score']}
-                </span>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-
-# 5. PIE DE PÁGINA (FOOTER)
-st.write("<br><br>", unsafe_allow_html=True)
-st.divider()
-st.markdown(
-    f"""
-    <div style='text-align: center; color: {subtext_color}; padding: 15px 0px; font-size: 0.85rem; letter-spacing: 0.5px;'>
-        © 2026 Perfume Trending. Todos los derechos reservados.<br>
-        <span style='font-size: 0.75rem;'>Diseñado para amantes de las fragancias.</span>
-    </div>
-    """,
-    unsafe_allow_html=True
-)
+    st.info("Catálogo en desarrollo...")
