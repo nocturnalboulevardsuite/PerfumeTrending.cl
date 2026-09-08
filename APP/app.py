@@ -83,6 +83,30 @@ st.markdown(f"""
         border-color: #b5ad9e !important;
     }}
 
+    /* BOTONES CLEAN ESPECIALES (Hype, Confianza, Comparar) */
+    .st-key-btn_trend button, .st-key-btn_trust button, .st-key-btn_compare button {{
+        background-color: transparent !important;
+        border: 1.5px solid {btn_border} !important;
+        border-radius: 20px !important; /* Forma de píldora */
+        padding: 0.2rem 0.5rem !important;
+        box-shadow: none !important;
+    }}
+    
+    .st-key-btn_trend button p, .st-key-btn_trust button p, .st-key-btn_compare button p {{
+        font-size: 0.95rem !important;
+        font-weight: 600 !important;
+        color: {text_color} !important;
+    }}
+
+    .st-key-btn_trend button:hover, .st-key-btn_trust button:hover, .st-key-btn_compare button:hover {{
+        border-color: #8c7b6d !important;
+        background-color: {btn_hover_bg} !important;
+    }}
+    
+    .st-key-btn_trend button:hover p, .st-key-btn_trust button:hover p, .st-key-btn_compare button:hover p {{
+        color: #8c7b6d !important;
+    }}
+
     /* FIX: BOTÓN POPOVER (ESENCIAS) Y PHOTO SEARCH */
     div[data-testid="stPopover"] > button,
     .st-key-btn_photo_search button {{
@@ -217,9 +241,23 @@ with col_actions:
     with btn_col2:
         st.button(" ", key="theme_toggle", on_click=toggle_theme)
 
-st.markdown("<br><br>", unsafe_allow_html=True)
 
-# 4. BARRA DE BÚSQUEDA Y FILTRO INTEGRADO (AHORA ARRIBA)
+# 4. NUEVA SECCIÓN DE BOTONES CLEAN CENTRADOS
+st.markdown("<br>", unsafe_allow_html=True)
+
+sp_l, col_t1, col_t2, col_t3, sp_r = st.columns([1.5, 1.3, 1.6, 1.3, 1.5], vertical_alignment="center")
+
+with col_t1:
+    st.button("🔥 Trend Del Hype", key="btn_trend", on_click=navigate_to, args=('trend_page',), use_container_width=True)
+with col_t2:
+    st.button("🛡️ Páginas de Confianza", key="btn_trust", on_click=navigate_to, args=('trust_page',), use_container_width=True)
+with col_t3:
+    st.button("⚖️ Comparar Precios", key="btn_compare", on_click=navigate_to, args=('compare_page',), use_container_width=True)
+
+st.markdown("<br>", unsafe_allow_html=True)
+
+
+# 5. BARRA DE BÚSQUEDA Y FILTRO INTEGRADO
 col_search, col_filter, col_separator, col_photo = st.columns([6, 1.8, 0.2, 2], vertical_alignment="center")
 
 with col_search:
@@ -254,7 +292,7 @@ with col_photo:
 st.write("")
 st.write("")
 
-# 5. BOTONES DE NAVEGACIÓN CENTRADOS (AHORA ABAJO)
+# 6. BOTONES DE NAVEGACIÓN PRINCIPAL
 espacio_izq, c1, c2, c3, c4, espacio_der = st.columns([1.5, 1.2, 1.7, 1.2, 1.4, 1.5], vertical_alignment="center")
 
 with c1: st.button("PERFUMES", key="n_perfumes", on_click=navigate_to, args=('home',), use_container_width=True)
@@ -272,3 +310,9 @@ if st.session_state['current_page'] == 'home':
         st.write(f"**Filtrando por:** {', '.join(selected_essences)}")
     else:
         st.info("Catálogo en desarrollo...")
+elif st.session_state['current_page'] == 'trend_page':
+    st.markdown(f"<h3 style='text-align: center; color: {text_color};'>🔥 Trend Del Hype (Próximamente)</h3>", unsafe_allow_html=True)
+elif st.session_state['current_page'] == 'trust_page':
+    st.markdown(f"<h3 style='text-align: center; color: {text_color};'>🛡️ Páginas de Confianza (Próximamente)</h3>", unsafe_allow_html=True)
+elif st.session_state['current_page'] == 'compare_page':
+    st.markdown(f"<h3 style='text-align: center; color: {text_color};'>⚖️ Comparador de Precios (Próximamente)</h3>", unsafe_allow_html=True)
