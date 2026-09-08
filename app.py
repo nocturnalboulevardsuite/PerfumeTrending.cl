@@ -9,10 +9,10 @@ if 'current_page' not in st.session_state:
     st.session_state['current_page'] = 'home'
 
 if 'theme' not in st.session_state:
-    st.session_state['theme'] = 'dark'
+    st.session_state['theme'] = 'light'
 
 def toggle_theme():
-    st.session_state['theme'] = 'light' if st.session_state['theme'] == 'dark' else 'dark'
+    st.session_state['theme'] = 'dark' if st.session_state['theme'] == 'light' else 'light'
 
 def navigate_to(page):
     st.session_state['current_page'] = page
@@ -22,6 +22,22 @@ is_dark = st.session_state['theme'] == 'dark'
 bg_color = "#0e1117" if is_dark else "#ffffff"
 text_color = "#ffffff" if is_dark else "#111111"
 subtext_color = "#a0a0a0" if is_dark else "#555555"
+
+# Parámetros del interruptor personalizado (Posición y SVGs Vectoriales)
+bottle_left_pos = "42px" if is_dark else "-2px"
+static_icon_pos = "12px center" if is_dark else "calc(100% - 12px) center"
+
+static_icon_svg = (
+    "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='4'/><line x1='12' y1='1' x2='12' y2='3'/><line x1='12' y1='21' x2='12' y2='23'/><line x1='4.22' y1='4.22' x2='5.64' y2='5.64'/><line x1='18.36' y1='18.36' x2='19.78' y2='19.78'/><line x1='1' y1='12' x2='3' y2='12'/><line x1='21' y1='12' x2='23' y2='12'/><line x1='4.22' y1='19.78' x2='5.64' y2='18.36'/><line x1='18.36' y1='5.64' x2='19.78' y2='4.22'/></svg>"
+    if is_dark else
+    "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z'/></svg>"
+)
+
+bottle_svg = (
+    "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 58'><rect x='18' y='2' width='14' height='7' rx='2' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><rect x='21' y='9' width='8' height='5' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='19' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><path d='M21 28a8 8 0 0 0 9 10.5 8.5 8.5 0 0 1-9-10.5z' fill='none' stroke='%23111111' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/></svg>"
+    if is_dark else
+    "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 58'><rect x='18' y='2' width='14' height='7' rx='2' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><rect x='21' y='9' width='8' height='5' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='19' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='5' fill='none' stroke='%23111111' stroke-width='2'/><line x1='25' y1='23' x2='25' y2='26' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='25' y1='42' x2='25' y2='45' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='14' y1='34' x2='17' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='33' y1='34' x2='36' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='17' y1='26' x2='19' y2='28' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='31' y1='40' x2='33' y2='42' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='17' y1='42' x2='19' y2='40' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='31' y1='28' x2='33' y2='26' stroke='%23111111' stroke-width='2' stroke-linecap='round'/></svg>"
+)
 
 # CSS para replicar los botones y etiquetas (badges) como se mostraban en los mockups
 st.markdown(f"""
@@ -55,23 +71,60 @@ st.markdown(f"""
         font-size: 0.95rem;
     }}
 
-    /* Estilo del interruptor (Switch) con perfume */
+    /* INTERRUPTOR PERSONALIZADO EN FORMA DE BOTELLA DE PERFUME */
     .st-key-theme_toggle button {{
-        background-color: {"#1e232a" if is_dark else "#e2e8f0"} !important;
-        border: 2px solid {"#4a5568" if is_dark else "#cbd5e0"} !important;
-        border-radius: 25px !important;
-        padding: 4px 12px !important;
-        height: 42px !important;
-        width: 100% !important;
-        font-weight: bold !important;
-        font-size: 15px !important;
-        color: {text_color} !important;
-        box-shadow: inset 0 2px 4px rgba(0,0,0,0.25) !important;
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        width: 82px !important;
+        height: 48px !important;
+        min-height: 48px !important;
+        position: relative !important;
+        cursor: pointer !important;
+        overflow: visible !important;
+        margin: 0 auto !important;
+        display: block !important;
+    }}
+
+    .st-key-theme_toggle button * {{
+        display: none !important;
+    }}
+
+    /* Cápsula de fondo (Track) */
+    .st-key-theme_toggle button::before {{
+        content: '' !important;
+        position: absolute !important;
+        top: 7px !important;
+        left: 0 !important;
+        width: 80px !important;
+        height: 36px !important;
+        background-color: #262626 !important;
+        border: 2px solid #111111 !important;
+        border-radius: 20px !important;
+        box-shadow: inset 0 2px 5px rgba(0,0,0,0.6) !important;
+        box-sizing: border-box !important;
+        background-image: url("{static_icon_svg}") !important;
+        background-repeat: no-repeat !important;
+        background-position: {static_icon_pos} !important;
+        background-size: 18px 18px !important;
         transition: all 0.3s ease !important;
     }}
-    .st-key-theme_toggle button:hover {{
-        border-color: #4a86e8 !important;
-        transform: scale(1.03);
+
+    /* Botella de Perfume deslizante (Thumb) */
+    .st-key-theme_toggle button::after {{
+        content: '' !important;
+        position: absolute !important;
+        top: -1px !important;
+        left: {bottle_left_pos} !important;
+        width: 40px !important;
+        height: 46px !important;
+        background-image: url("{bottle_svg}") !important;
+        background-repeat: no-repeat !important;
+        background-size: contain !important;
+        transition: left 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+        filter: drop-shadow(2px 3px 4px rgba(0,0,0,0.4)) !important;
+        z-index: 2 !important;
     }}
     </style>
 """, unsafe_allow_html=True)
@@ -90,9 +143,7 @@ with col_actions:
     with btn_col1:
         st.button("👤 Ingresar", key="login_btn", use_container_width=True)
     with btn_col2:
-        # Interruptor interactivo estilo Switch con el Perfume
-        toggle_label = "🧴☀️  ──  🌙" if is_dark else "☀️  ──  🧴🌙"
-        st.button(toggle_label, key="theme_toggle", on_click=toggle_theme, use_container_width=True)
+        st.button(" ", key="theme_toggle", on_click=toggle_theme)
 
 st.text_input("🔍 Buscar perfume, marca, notas...", placeholder="Ej: Midnight Oud...")
 
@@ -117,7 +168,6 @@ if st.session_state['current_page'] == 'home':
     cols = st.columns(4)
     for i, perfume in enumerate(trending_perfumes):
         with cols[i]:
-            # Solución del error: reemplazo de use_column_width por use_container_width
             st.image(perfume["img"], use_container_width=True)
             st.markdown(f"<div class='product-title'>{perfume['name']}</div>", unsafe_allow_html=True)
             st.markdown(f"<div class='product-brand'>{perfume['brand']}</div>", unsafe_allow_html=True)
