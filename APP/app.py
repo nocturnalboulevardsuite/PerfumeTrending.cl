@@ -60,7 +60,8 @@ st.markdown(f"""
         color: {text_color} !important;
     }}
 
-    div[data-testid="stButton"] > button, div[data-testid="stPopover"] > button {{
+    /* BOTONES DE NAVEGACIÓN PRINCIPAL */
+    div[data-testid="stButton"] > button {{
         background-color: {btn_bg} !important;
         color: {btn_text} !important;
         border: 1px solid {btn_border} !important;
@@ -70,30 +71,42 @@ st.markdown(f"""
         padding: 0.4rem 0.2rem !important;
     }}
     
-    div[data-testid="stButton"] > button p, div[data-testid="stPopover"] > button p {{
+    div[data-testid="stButton"] > button p {{
         color: {btn_text} !important;
         white-space: nowrap !important;
         overflow: visible !important;
         margin: 0 !important;
     }}
 
-    div[data-testid="stButton"] > button:hover, div[data-testid="stPopover"] > button:hover {{
+    div[data-testid="stButton"] > button:hover {{
         background-color: {btn_hover_bg} !important;
         border-color: #b5ad9e !important;
     }}
 
+    /* FIX: BOTÓN POPOVER (ESENCIAS) Y PHOTO SEARCH */
+    div[data-testid="stPopover"] > button,
     .st-key-btn_photo_search button {{
         background-color: #1f242d !important;
         border: 1px solid #3a3f4d !important;
+        border-radius: 8px !important;
+        padding: 0.4rem 0.2rem !important;
     }}
+    
+    div[data-testid="stPopover"] > button p,
+    div[data-testid="stPopover"] > button span,
+    div[data-testid="stPopover"] > button div,
     .st-key-btn_photo_search button p,
     .st-key-btn_photo_search button span {{
         color: #ffffff !important;
+        white-space: nowrap !important;
     }}
+
+    div[data-testid="stPopover"] > button:hover,
     .st-key-btn_photo_search button:hover {{
         background-color: #2d3340 !important;
     }}
 
+    /* INPUTS Y SELECTS */
     div[data-baseweb="input"], 
     div[data-baseweb="select"] > div {{
         background-color: {input_bg} !important;
@@ -115,6 +128,7 @@ st.markdown(f"""
         color: white !important;
     }}
 
+    /* SWITCH DE TEMA */
     .st-key-theme_toggle div[data-testid="stButton"] > button,
     .st-key-theme_toggle button {{
         background: transparent !important;
@@ -213,14 +227,12 @@ with c4: st.button("REMATES 💰", key="n_remates", on_click=navigate_to, args=(
 st.write("")
 
 # 5. BARRA DE BÚSQUEDA Y FILTRO INTEGRADO
-# Se añade una columna específica para el menú desplegable (popover)
 col_search, col_filter, col_separator, col_photo = st.columns([6, 1.8, 0.2, 2], vertical_alignment="center")
 
 with col_search:
     search_query = st.text_input("🔍 Buscar", placeholder="🔍 Buscar perfume, marca o esencias...", label_visibility="collapsed")
 
 with col_filter:
-    # Este botón abrirá una caja desplegable flotante sin romper el layout
     with st.popover("🌸 Esencias", use_container_width=True):
         all_notes = sorted([
             "Abedul", "Albahaca", "Almizcle (Musk)", "Ámbar", "Ámbar Gris", "Azafrán", "Bergamota",
