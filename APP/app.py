@@ -97,59 +97,53 @@ st.markdown(f"""
         border-color: {btn_hover_bg} !important;
     }}
 
-    /* NAVEGACIÓN ESTILO LETRAS CLICKEABLES (TRANSPARENTE Y SIN CORTES) */
-    div[data-testid="stButton"].st-key-n_hombres > button,
-    div[data-testid="stButton"].st-key-n_mujeres > button,
+    /* NAVEGACIÓN ESTILO LETRAS CLICKEABLES (COPIA EXACTA DE LA IMAGEN DE REFERENCIA) */
+    div[data-testid="stButton"].st-key-n_perfumes > button,
     div[data-testid="stButton"].st-key-n_arabes > button,
-    div[data-testid="stButton"].st-key-n_hype > button,
-    div[data-testid="stButton"].st-key-n_disenador > button,
-    div[data-testid="stButton"].st-key-n_nicho > button {{
+    div[data-testid="stButton"].st-key-n_marcas > button,
+    div[data-testid="stButton"].st-key-n_remates > button {{
         background: transparent !important;
         background-color: transparent !important;
         border: none !important;
         box-shadow: none !important;
         padding: 0 !important;
-        white-space: nowrap !important;
-        overflow: visible !important;
+        min-width: max-content !important; /* Fuerza a que el botón se expanda al texto */
+        display: inline-flex !important;
+        justify-content: center !important;
     }}
 
-    div[data-testid="stButton"].st-key-n_hombres > button:hover,
-    div[data-testid="stButton"].st-key-n_mujeres > button:hover,
+    div[data-testid="stButton"].st-key-n_perfumes > button:hover,
     div[data-testid="stButton"].st-key-n_arabes > button:hover,
-    div[data-testid="stButton"].st-key-n_hype > button:hover,
-    div[data-testid="stButton"].st-key-n_disenador > button:hover,
-    div[data-testid="stButton"].st-key-n_nicho > button:hover {{
+    div[data-testid="stButton"].st-key-n_marcas > button:hover,
+    div[data-testid="stButton"].st-key-n_remates > button:hover {{
         background: transparent !important;
         background-color: transparent !important;
         border: none !important;
     }}
     
-    div[data-testid="stButton"].st-key-n_hombres > button p,
-    div[data-testid="stButton"].st-key-n_mujeres > button p,
+    div[data-testid="stButton"].st-key-n_perfumes > button p,
     div[data-testid="stButton"].st-key-n_arabes > button p,
-    div[data-testid="stButton"].st-key-n_hype > button p,
-    div[data-testid="stButton"].st-key-n_disenador > button p,
-    div[data-testid="stButton"].st-key-n_nicho > button p {{
+    div[data-testid="stButton"].st-key-n_marcas > button p,
+    div[data-testid="stButton"].st-key-n_remates > button p {{
         color: {text_color} !important;
-        font-size: 0.95rem !important;
-        font-weight: 800 !important;
-        letter-spacing: 1px !important;
+        font-size: 1.1rem !important;
+        font-weight: 400 !important;
+        letter-spacing: 0.5px !important;
         text-transform: uppercase !important;
-        white-space: nowrap !important;
-        overflow: visible !important;
+        white-space: nowrap !important; /* Evita que el texto salte a otra línea */
+        overflow: visible !important; /* Evita recortes */
+        text-overflow: clip !important; /* Elimina los puntos suspensivos (...) */
         margin: 0 !important;
-        transition: color 0.2s ease !important;
+        transition: all 0.2s ease !important;
     }}
 
-    div[data-testid="stButton"].st-key-n_hombres > button:hover p,
-    div[data-testid="stButton"].st-key-n_mujeres > button:hover p,
+    div[data-testid="stButton"].st-key-n_perfumes > button:hover p,
     div[data-testid="stButton"].st-key-n_arabes > button:hover p,
-    div[data-testid="stButton"].st-key-n_hype > button:hover p,
-    div[data-testid="stButton"].st-key-n_disenador > button:hover p,
-    div[data-testid="stButton"].st-key-n_nicho > button:hover p {{
-        color: #d4a373 !important;
+    div[data-testid="stButton"].st-key-n_marcas > button:hover p,
+    div[data-testid="stButton"].st-key-n_remates > button:hover p {{
         text-decoration: underline !important;
-        text-underline-offset: 4px !important;
+        text-underline-offset: 8px !important;
+        text-decoration-thickness: 1.5px !important;
     }}
 
     /* FIX BOTÓN "PHOTO SEARCH" */
@@ -303,14 +297,12 @@ with col_logo:
     st.markdown(logo_html, unsafe_allow_html=True)
 
 with col_nav:
-    # Ajustamos proporciones para darle más espacio a las palabras largas (ej: DISEÑADOR)
-    c1, c2, c3, c4, c5, c6 = st.columns([1, 1, 1, 1.2, 1.4, 1], vertical_alignment="center")
-    with c1: st.button("HOMBRES", key="n_hombres", on_click=navigate_to, args=('home',))
-    with c2: st.button("MUJERES", key="n_mujeres", on_click=navigate_to, args=('home',))
-    with c3: st.button("ÁRABES", key="n_arabes", on_click=navigate_to, args=('home',))
-    with c4: st.button("🚂 HYPE", key="n_hype", on_click=navigate_to, args=('hype',))
-    with c5: st.button("DISEÑADOR", key="n_disenador", on_click=navigate_to, args=('home',))
-    with c6: st.button("NICHO", key="n_nicho", on_click=navigate_to, args=('home',))
+    # Ajustamos proporciones para darle espacio exacto a las palabras y evitar cortes
+    c1, c2, c3, c4 = st.columns([1.2, 1.8, 1, 1.2], vertical_alignment="center")
+    with c1: st.button("PERFUMES", key="n_perfumes", on_click=navigate_to, args=('home',), use_container_width=True)
+    with c2: st.button("PERFUMES ÁRABES", key="n_arabes", on_click=navigate_to, args=('home',), use_container_width=True)
+    with c3: st.button("MARCAS", key="n_marcas", on_click=navigate_to, args=('home',), use_container_width=True)
+    with c4: st.button("REMATES 💰", key="n_remates", on_click=navigate_to, args=('hype',), use_container_width=True)
 
 with col_actions:
     btn_col1, btn_col2 = st.columns([1.5, 1], vertical_alignment="center")
@@ -465,12 +457,12 @@ elif st.session_state['current_page'] == 'product':
         st.markdown(tabla_html, unsafe_allow_html=True)
 
 # ==========================================
-# VISTA 3: TREN DEL HYPE
+# VISTA 3: TREN DEL HYPE (Mapeado a Remates)
 # ==========================================
 elif st.session_state['current_page'] == 'hype':
     st.button("← Volver al catálogo", on_click=navigate_to, args=('home',))
-    st.markdown(f"<h2 style='text-align: center; color: {text_color}; margin-top: 10px;'>🚂 EL TREN DEL HYPE</h2>", unsafe_allow_html=True)
-    st.markdown(f"<p style='text-align: center; color: {subtext_color}; font-size: 1.05rem;'>Las fragancias más virales y comentadas en redes esta semana.</p>", unsafe_allow_html=True)
+    st.markdown(f"<h2 style='text-align: center; color: {text_color}; margin-top: 10px;'>💰 SECCIÓN DE REMATES Y OFERTAS</h2>", unsafe_allow_html=True)
+    st.markdown(f"<p style='text-align: center; color: {subtext_color}; font-size: 1.05rem;'>Las fragancias más virales con descuentos especiales esta semana.</p>", unsafe_allow_html=True)
     st.write("<br>", unsafe_allow_html=True)
 
     hype_items = [
