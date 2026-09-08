@@ -219,17 +219,7 @@ with col_actions:
 
 st.markdown("<br><br>", unsafe_allow_html=True)
 
-# 4. BOTONES DE NAVEGACIÓN CENTRADOS
-espacio_izq, c1, c2, c3, c4, espacio_der = st.columns([1.5, 1.2, 1.7, 1.2, 1.4, 1.5], vertical_alignment="center")
-
-with c1: st.button("PERFUMES", key="n_perfumes", on_click=navigate_to, args=('home',), use_container_width=True)
-with c2: st.button("PERFUMES ÁRABES", key="n_arabes", on_click=navigate_to, args=('home',), use_container_width=True)
-with c3: st.button("MARCAS", key="n_marcas", on_click=navigate_to, args=('home',), use_container_width=True)
-with c4: st.button("REMATES 💰", key="n_remates", on_click=navigate_to, args=('hype',), use_container_width=True)
-
-st.write("")
-
-# 5. BARRA DE BÚSQUEDA Y FILTRO INTEGRADO
+# 4. BARRA DE BÚSQUEDA Y FILTRO INTEGRADO (AHORA ARRIBA)
 col_search, col_filter, col_separator, col_photo = st.columns([6, 1.8, 0.2, 2], vertical_alignment="center")
 
 with col_search:
@@ -260,6 +250,17 @@ with col_separator:
     
 with col_photo:
     st.button("📷 PHOTO SEARCH", key="btn_photo_search", help="Buscar perfume por imagen", use_container_width=True)
+
+st.write("")
+st.write("")
+
+# 5. BOTONES DE NAVEGACIÓN CENTRADOS (AHORA ABAJO)
+espacio_izq, c1, c2, c3, c4, espacio_der = st.columns([1.5, 1.2, 1.7, 1.2, 1.4, 1.5], vertical_alignment="center")
+
+with c1: st.button("PERFUMES", key="n_perfumes", on_click=navigate_to, args=('home',), use_container_width=True)
+with c2: st.button("PERFUMES ÁRABES", key="n_arabes", on_click=navigate_to, args=('home',), use_container_width=True)
+with c3: st.button("MARCAS", key="n_marcas", on_click=navigate_to, args=('home',), use_container_width=True)
+with c4: st.button("REMATES 💰", key="n_remates", on_click=navigate_to, args=('hype',), use_container_width=True)
 
 st.divider()
 
