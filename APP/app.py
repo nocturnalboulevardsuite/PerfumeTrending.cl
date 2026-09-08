@@ -68,6 +68,14 @@ st.markdown(f"""
         color: {text_color} !important;
     }}
 
+    /* REGLA DE SIMETRÍA Y TAMAÑO IDENTICO PARA TODAS LAS IMÁGENES */
+    div[data-testid="stImage"] img {{
+        object-fit: cover !important;
+        width: 100% !important;
+        height: 280px !important;
+        border-radius: 8px !important;
+    }}
+
     /* ESTILO GENERAL DE BOTONES STREAMLIT */
     div[data-testid="stButton"] > button {{
         background-color: {btn_bg} !important;
@@ -109,7 +117,7 @@ st.markdown(f"""
         text-decoration: none; border-radius: 4px; font-size: 12px; font-weight: bold;
         display: inline-block;
     }}
-    .product-title {{ font-size: 1.1rem; font-weight: bold; margin-bottom: 0; color: {text_color}; }}
+    .product-title {{ font-size: 1.1rem; font-weight: bold; margin-bottom: 0; color: {text_color}; margin-top: 10px; }}
     .product-brand {{ font-size: 0.85rem; color: {subtext_color}; margin-bottom: 10px; }}
     
     .header-nav {{
@@ -236,16 +244,16 @@ if st.session_state['current_page'] == 'home':
     st.markdown(f"<h3 style='text-align: center; margin-bottom: 20px; color: {text_color};'>TENDENCIAS EN REDES SOCIALES</h3>", unsafe_allow_html=True)
     
     trending_perfumes = [
-        {"brand": "CREED", "name": "AVENTUS", "price": "$140.00", "img": "https://images.unsplash.com/photo-1594035910387-fea47794261f?w=300&q=80"},
-        {"brand": "DIOR", "name": "SAUVAGE", "price": "$145.00", "img": "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=300&q=80"},
-        {"brand": "MAISON ALHAMBRA", "name": "MIDNIGHT OUD", "price": "$110.00", "img": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=300&q=80"},
-        {"brand": "TOM FORD", "name": "OMBRE LEATHER", "price": "$145.00", "img": "https://images.unsplash.com/photo-1541643600914-78b084683601?w=300&q=80"},
-        {"brand": "JEAN PAUL GAULTIER", "name": "LE MALE ELIXIR", "price": "$125.00", "img": "https://images.unsplash.com/photo-1616949755610-8c9bbc08f138?w=300&q=80"},
-        {"brand": "PARFUMS DE MARLY", "name": "DELINA", "price": "$210.00", "img": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=300&q=80"},
-        {"brand": "LATTAFA", "name": "KHAMRAH", "price": "$45.00", "img": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=300&q=80"},
-        {"brand": "GIORGIO ARMANI", "name": "ACQUA DI GIO", "price": "$115.00", "img": "https://images.unsplash.com/photo-1594035910387-fea47794261f?w=300&q=80"},
-        {"brand": "YVES SAINT LAURENT", "name": "Y EDP", "price": "$130.00", "img": "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=300&q=80"},
-        {"brand": "VERSACE", "name": "EROS", "price": "$95.00", "img": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=300&q=80"}
+        {"brand": "CREED", "name": "AVENTUS", "price": "$140.00", "img": "https://images.unsplash.com/photo-1594035910387-fea47794261f?w=500&q=80"},
+        {"brand": "DIOR", "name": "SAUVAGE", "price": "$145.00", "img": "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=500&q=80"},
+        {"brand": "MAISON ALHAMBRA", "name": "MIDNIGHT OUD", "price": "$110.00", "img": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=500&q=80"},
+        {"brand": "TOM FORD", "name": "OMBRE LEATHER", "price": "$145.00", "img": "https://images.unsplash.com/photo-1541643600914-78b084683601?w=500&q=80"},
+        {"brand": "JEAN PAUL GAULTIER", "name": "LE MALE ELIXIR", "price": "$125.00", "img": "https://images.unsplash.com/photo-1616949755610-8c9bbc08f138?w=500&q=80"},
+        {"brand": "PARFUMS DE MARLY", "name": "DELINA", "price": "$210.00", "img": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=500&q=80"},
+        {"brand": "LATTAFA", "name": "KHAMRAH", "price": "$45.00", "img": "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=500&q=80"},
+        {"brand": "GIORGIO ARMANI", "name": "ACQUA DI GIO", "price": "$115.00", "img": "https://images.unsplash.com/photo-1594035910387-fea47794261f?w=500&q=80"},
+        {"brand": "YVES SAINT LAURENT", "name": "Y EDP", "price": "$130.00", "img": "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=500&q=80"},
+        {"brand": "VERSACE", "name": "EROS", "price": "$95.00", "img": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=500&q=80"}
     ]
 
     # Despliegue en filas de 4 columnas
@@ -277,8 +285,8 @@ elif st.session_state['current_page'] == 'product':
     col_izq, col_der = st.columns([1, 2])
     
     with col_izq:
-        st.image("https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=400&q=80", use_container_width=True)
-        st.markdown(f"<h3 style='color: {text_color};'>MIDNIGHT OUD - EAU DE PARFUM</h3>", unsafe_allow_html=True)
+        st.image("https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=500&q=80", use_container_width=True)
+        st.markdown(f"<h3 style='color: {text_color}; margin-top: 15px;'>MIDNIGHT OUD - EAU DE PARFUM</h3>", unsafe_allow_html=True)
         st.write("**50ml / 1.7 oz**")
         st.markdown("""
         * 🪵 **Madera de Oud:** Oud floral amaderado
