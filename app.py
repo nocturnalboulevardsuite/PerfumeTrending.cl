@@ -42,6 +42,11 @@ bottle_svg = (
 # CSS para replicar los botones y etiquetas (badges) como se mostraban en los mockups
 st.markdown(f"""
     <style>
+    /* Reducir el espacio en blanco superior por defecto de Streamlit */
+    .block-container {{
+        padding-top: 1.5rem !important;
+    }}
+    
     .stApp {{
         background-color: {bg_color};
         color: {text_color};
@@ -136,8 +141,9 @@ with col_logo:
     # Construcción HTML/SVG para replicar fielmente el logo del mockup
     logo_color = "#333333" if is_dark else "#a0a0a0"
     
+    # Se añade un margin-top negativo aquí para empujar el logo específicamente hacia arriba
     logo_html = f"""
-    <div style="display: flex; align-items: center; gap: 8px;">
+    <div style="display: flex; align-items: center; gap: 8px; margin-top: -15px;">
         <svg width="45" height="45" viewBox="0 -2 36 38" fill="none" stroke-linecap="round" stroke-linejoin="round">
             <!-- Liquid Fill (Fondo del frasco) -->
             <path d="M 6.8 21 L 29.2 21 C 30 25 27 32 18 32 C 9 32 6 25 6.8 21 Z" fill="{logo_color}" />
