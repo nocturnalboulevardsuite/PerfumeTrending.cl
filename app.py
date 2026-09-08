@@ -42,12 +42,12 @@ bottle_svg = (
 # Estilos CSS
 st.markdown(f"""
     <style>
-    /* Ocultar barra superior predeterminada de Streamlit para evitar solapamientos */
+    /* Ocultar barra superior predeterminada de Streamlit */
     header[data-testid="stHeader"] {{
         display: none !important;
     }}
     
-    /* Espaciado superior limpio */
+    /* Espaciado superior e inferior limpio */
     .block-container {{
         padding-top: 2rem !important;
         padding-bottom: 2rem !important;
@@ -70,8 +70,8 @@ st.markdown(f"""
         text-decoration: none; border-radius: 4px; font-size: 12px; font-weight: bold;
         display: inline-block;
     }}
-    .product-title {{ font-size: 1.2rem; font-weight: bold; margin-bottom: 0; color: {text_color}; }}
-    .product-brand {{ font-size: 0.9rem; color: {subtext_color}; margin-bottom: 10px; }}
+    .product-title {{ font-size: 1.1rem; font-weight: bold; margin-bottom: 0; color: {text_color}; }}
+    .product-brand {{ font-size: 0.85rem; color: {subtext_color}; margin-bottom: 10px; }}
     
     .header-nav {{
         display: flex;
@@ -193,28 +193,40 @@ st.divider()
 # VISTA 1: HOME o LOBBY (TRENDING en SOCIAL MEDIA)
 # ==========================================
 if st.session_state['current_page'] == 'home':
-    st.markdown("<h3 style='text-align: center;'>TENDENCIAS EN REDES SOCIALES</h3>", unsafe_allow_html=True)
-    st.write("")
+    st.markdown("<h3 style='text-align: center; margin-bottom: 20px;'>TENDENCIAS EN REDES SOCIALES</h3>", unsafe_allow_html=True)
     
+    # Lista ampliada a 10 perfumes
     trending_perfumes = [
         {"brand": "CREED", "name": "AVENTUS", "price": "$140.00", "img": "https://via.placeholder.com/150?text=Creed+Aventus"},
         {"brand": "DIOR", "name": "SAUVAGE", "price": "$145.00", "img": "https://via.placeholder.com/150?text=Dior+Sauvage"},
         {"brand": "MAISON ALHAMBRA", "name": "MIDNIGHT OUD", "price": "$110.00", "img": "https://via.placeholder.com/150?text=Midnight+Oud"},
-        {"brand": "TOM FORD", "name": "OMBRE LEATHER", "price": "$145.00", "img": "https://via.placeholder.com/150?text=Ombre+Leather"}
+        {"brand": "TOM FORD", "name": "OMBRE LEATHER", "price": "$145.00", "img": "https://via.placeholder.com/150?text=Ombre+Leather"},
+        {"brand": "JEAN PAUL GAULTIER", "name": "LE MALE ELIXIR", "price": "$125.00", "img": "https://via.placeholder.com/150?text=Le+Male+Elixir"},
+        {"brand": "PARFUMS DE MARLY", "name": "DELINA", "price": "$210.00", "img": "https://via.placeholder.com/150?text=PDM+Delina"},
+        {"brand": "LATTAFA", "name": "KHAMRAH", "price": "$45.00", "img": "https://via.placeholder.com/150?text=Lattafa+Khamrah"},
+        {"brand": "GIORGIO ARMANI", "name": "ACQUA DI GIO", "price": "$115.00", "img": "https://via.placeholder.com/150?text=Acqua+Di+Gio"},
+        {"brand": "YVES SAINT LAURENT", "name": "Y EDP", "price": "$130.00", "img": "https://via.placeholder.com/150?text=YSL+Y+EDP"},
+        {"brand": "VERSACE", "name": "EROS", "price": "$95.00", "img": "https://via.placeholder.com/150?text=Versace+Eros"}
     ]
 
-    cols = st.columns(4)
-    for i, perfume in enumerate(trending_perfumes):
-        with cols[i]:
-            st.image(perfume["img"], use_container_width=True)
-            st.markdown(f"<div class='product-title'>{perfume['name']}</div>", unsafe_allow_html=True)
-            st.markdown(f"<div class='product-brand'>{perfume['brand']}</div>", unsafe_allow_html=True)
-            st.write(f"Compara precios desde **{perfume['price']}**")
-            
-            if perfume["name"] == "MIDNIGHT OUD":
-                st.button("Ver Ofertas", key=f"btn_{i}", on_click=navigate_to, args=('product',), use_container_width=True)
-            else:
-                st.button("Ver Ofertas", key=f"btn_{i}", use_container_width=True)
+    # Despliegue en filas de 4 columnas
+    cols_per_row = 4
+    for row_start in range(0, len(trending_perfumes), cols_per_row):
+        row_items = trending_perfumes[row_start:row_start + cols_per_row]
+        cols = st.columns(cols_per_row)
+        for i, perfume in enumerate(row_items):
+            idx = row_start + i
+            with cols[i]:
+                st.image(perfume["img"], use_container_width=True)
+                st.markdown(f"<div class='product-title'>{perfume['name']}</div>", unsafe_allow_html=True)
+                st.markdown(f"<div class='product-brand'>{perfume['brand']}</div>", unsafe_allow_html=True)
+                st.write(f"Compara precios desde **{perfume['price']}**")
+                
+                if perfume["name"] == "MIDNIGHT OUD":
+                    st.button("Ver Ofertas", key=f"btn_{idx}", on_click=navigate_to, args=('product',), use_container_width=True)
+                else:
+                    st.button("Ver Ofertas", key=f"btn_{idx}", use_container_width=True)
+        st.write("") # Espaciado entre filas
 
 # ==========================================
 # VISTA 2: DETALLE DE PRODUCTO (COMPARADOR)
@@ -294,3 +306,14 @@ elif st.session_state['current_page'] == 'product':
         </table>
         """
         st.markdown(tabla_html, unsafe_allow_html=True)
+
+# 4. PIE DE PÁGINA (FOOTER)
+st.divider()
+st.markdown(
+    f"""
+    <div style='text-align: center; color: {subtext_color}; padding: 15px 0px; font-size: 0.85rem;'>
+        © 2026 Perfume Trending. Todos los derechos reservados.
+    </div>
+    """,
+    unsafe_allow_html=True
+)
