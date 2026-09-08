@@ -307,7 +307,7 @@ with col_search:
     search_query = st.text_input("🔍 Buscar", placeholder="🔍 Buscar perfume, marca o esencias...", label_visibility="collapsed")
 
 with col_filter:
-    with st.popover("🌸 Esencias", use_container_width=True):
+    with st.popover("Esencias", use_container_width=True):
         all_notes = sorted([
             "Abedul", "Albahaca", "Almizcle (Musk)", "Ámbar", "Ámbar Gris", "Azafrán", "Bergamota",
             "Cacao", "Café", "Canela", "Caramelo", "Cardamomo", "Cedro", "Cereza", "Ciruela", 
