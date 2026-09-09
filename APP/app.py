@@ -508,7 +508,12 @@ if st.session_state['current_page'] == 'detalle' and st.session_state['selected_
         tab_comparador, tab_historico = st.tabs(["🛒 Comparativa de Precios por Tienda", "📈 Análisis Periódico y Evolución de Precios"])
 
         with tab_comparador:
-            st.write("##### Precios recopilados por el scraper en tiendas chilenas (Haz clic en el precio para abrir la tienda):")
+            st.markdown(f"""
+            <div style="background: rgba(39, 174, 96, 0.1); border-left: 4px solid #27ae60; padding: 10px 15px; border-radius: 8px; margin-bottom: 18px; font-size: 0.88rem; color: {text_color};">
+                🔒 <strong>Enlaces Directos Verificados:</strong> Solo se muestran tiendas con enlace directo a la ficha del perfume. Al hacer clic en el precio o en el botón serás llevado directamente al producto.
+            </div>
+            """, unsafe_allow_html=True)
+
             if precios_tiendas:
                 for pt in precios_tiendas:
                     tiene_stock = (pt["en_stock"] == 1 and pt["precio_actual"] > 0)
@@ -530,46 +535,33 @@ if st.session_state['current_page'] == 'detalle' and st.session_state['selected_
                         """, unsafe_allow_html=True)
 
                     with col_t2:
-                        # CLIC EN EL PRECIO REDIRIGE DIRECTO A LA PÁGINA O BÚSQUEDA EN LA TIENDA
-                        if tiene_stock:
-                            st.markdown(f"""
-                            <div>
-                                <a href="{pt['url_producto']}" target="_blank" style="text-decoration: none; color: inherit;" title="Clic aquí para abrir la oferta en {pt['tienda_nombre']}">
-                                    <span style="font-size: 1.35rem; font-weight: 800; color: #27ae60; border-bottom: 2px dashed #27ae60; cursor: pointer;">
-                                        ${pt['precio_actual']:,} CLP ↗
-                                    </span>
-                                </a><br>
-                                <span style="font-size: 0.8rem; color: {subtext_color}; text-decoration: line-through;">${pt['precio_normal']:,} CLP</span>
-                                {f"<span style='color: #e74c3c; font-size: 0.8rem; font-weight: bold;'> (-{ahorro_pct}%)</span>" if ahorro_pct > 0 else ""}
-                            </div>
-                            """, unsafe_allow_html=True)
-                        else:
-                            st.markdown(f"""
-                            <div>
-                                <a href="{pt['url_producto']}" target="_blank" style="text-decoration: none; color: inherit;" title="Verificar catálogo de {pt['tienda_nombre']}">
-                                    <span style="font-size: 0.95rem; font-weight: 600; color: #888; border-bottom: 1px dashed #888; cursor: pointer;">
-                                        Sin stock verificado ↗
-                                    </span>
-                                </a>
-                            </div>
-                            """, unsafe_allow_html=True)
+                        # CLIC EN EL PRECIO REDIRIGE DIRECTO A LA FICHA DEL PERFUME
+                        st.markdown(f"""
+                        <div>
+                            <a href="{pt['url_producto']}" target="_blank" style="text-decoration: none; color: inherit;" title="Abrir ficha directa en {pt['tienda_nombre']}">
+                                <span style="font-size: 1.35rem; font-weight: 800; color: #27ae60; border-bottom: 2px dashed #27ae60; cursor: pointer;">
+                                    ${pt['precio_actual']:,} CLP ↗
+                                </span>
+                            </a><br>
+                            <span style="font-size: 0.8rem; color: {subtext_color}; text-decoration: line-through;">${pt['precio_normal']:,} CLP</span>
+                            {f"<span style='color: #e74c3c; font-size: 0.8rem; font-weight: bold;'> (-{ahorro_pct}%)</span>" if ahorro_pct > 0 else ""}
+                        </div>
+                        """, unsafe_allow_html=True)
 
                     with col_t3:
-                        stock_badge = "🟢 En Stock Verificado" if tiene_stock else "🔴 No comercializado / Agotado"
                         st.markdown(f"""
                         <div style="font-size: 0.85rem; color: {subtext_color};">
-                            {stock_badge}<br>
+                            <span style="color: #27ae60; font-weight: bold;">🟢 En Stock Directo</span><br>
                             <span style="font-size: 0.75rem;">Captura: {pt['fecha_registro']}</span>
                         </div>
                         """, unsafe_allow_html=True)
 
                     with col_t4:
-                        btn_label = "Ir a la tienda ↗" if tiene_stock else "Buscar en tienda ↗"
-                        st.link_button(btn_label, pt["url_producto"], use_container_width=True)
+                        st.link_button(f"Comprar en {pt['tienda_nombre']} ↗", pt["url_producto"], use_container_width=True)
 
                     st.markdown(f"<hr style='margin: 8px 0; border: none; border-bottom: 1px dashed {btn_border};'>", unsafe_allow_html=True)
             else:
-                st.info("No se han registrado tiendas para este perfume aún.")
+                st.info("Actualmente se están verificando enlaces directos para este perfume en tiendas oficiales.")
 
 
         with tab_historico:

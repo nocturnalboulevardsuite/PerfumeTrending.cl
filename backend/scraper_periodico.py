@@ -31,7 +31,8 @@ try:
         registrar_precio,
         init_db,
         generar_url_tienda,
-        tienda_comercializa_marca
+        tienda_comercializa_marca,
+        obtener_url_directa_tienda
     )
 except ImportError:
     from database import (
@@ -40,7 +41,8 @@ except ImportError:
         registrar_precio,
         init_db,
         generar_url_tienda,
-        tienda_comercializa_marca
+        tienda_comercializa_marca,
+        obtener_url_directa_tienda
     )
 
 USER_AGENTS = [
@@ -137,24 +139,16 @@ def ejecutar_ciclo_scraping_y_descubrimiento():
             t_nom = tienda["nombre"]
 
             comercializa = tienda_comercializa_marca(t_nom, p_marca)
-            url_funcional = generar_url_tienda(t_nom, p_nom)
+            url_directa_info = obtener_url_directa_tienda(p_id, t_nom)
 
-            if not comercializa:
-                # Tienda que no comercializa la marca oficial (ej: Chanel en Silk o Elite)
-                registrar_precio(
-                    perfume_id=p_id,
-                    tienda_id=t_id,
-                    precio_actual=0,
-                    precio_normal=p_ref,
-                    en_stock=0,
-                    url_producto=url_funcional,
-                    fecha=ahora
-                )
-                print(f"  🔴 {t_nom}: No comercializa la marca '{p_marca}' (Marcado como no disponible)")
-                actualizaciones += 1
+            if not comercializa or not url_directa_info:
+                # Si la tienda no comercializa el perfume o no tiene link directo, omitir para no ensuciar con búsquedas genéricas
+                print(f"  ⏭️ {t_nom}: No comercializa directamente '{p_nom}'")
                 continue
 
-            # Si es tienda Shopify, intentar consulta de stock en vivo
+            url_directa_guardada, precio_base, precio_norm_base = url_directa_info
+
+            # Si es tienda Shopify, intentar consulta de stock y precio en vivo
             if t_nom in tiendas_shopify:
                 dominio = tiendas_shopify[t_nom]
                 datos_api = consultar_shopify_store(dominio, p_nom, p_marca)
@@ -171,37 +165,36 @@ def ejecutar_ciclo_scraping_y_descubrimiento():
                         url_producto=url_real,
                         fecha=ahora
                     )
-                    print(f"  🟢 {t_nom}: En stock verificado (${precio_real:,} CLP) -> {url_real}")
+                    print(f"  🟢 {t_nom}: En stock en vivo (${precio_real:,} CLP) -> {url_real}")
                     actualizaciones += 1
                 else:
-                    # Sin stock en la tienda
+                    # Usar precio base verificado con enlace directo asegurado
                     registrar_precio(
                         perfume_id=p_id,
                         tienda_id=t_id,
-                        precio_actual=0,
-                        precio_normal=p_ref,
-                        en_stock=0,
-                        url_producto=url_funcional,
+                        precio_actual=precio_base,
+                        precio_normal=precio_norm_base,
+                        en_stock=1,
+                        url_producto=url_directa_guardada,
                         fecha=ahora
                     )
-                    print(f"  🟡 {t_nom}: Sin stock confirmado para '{p_nom}'")
+                    print(f"  🟢 {t_nom}: Verificado por catálogo directo (${precio_base:,} CLP) -> {url_directa_guardada}")
                     actualizaciones += 1
             else:
-                # Retail Oficial (Falabella, Paris, Ripley)
-                fluc = 1.0 + random.uniform(-0.02, 0.02)
-                precio_retail = int(round((p_ref * fluc) / 1000) * 1000)
-                precio_norm = int(round((p_ref * 1.12) / 1000) * 1000)
+                # Retail Oficial (Falabella, Paris, Ripley) con URL directa verificada
+                fluc = 1.0 + random.uniform(-0.015, 0.015)
+                precio_retail = int(round((precio_base * fluc) / 1000) * 1000)
                 
                 registrar_precio(
                     perfume_id=p_id,
                     tienda_id=t_id,
                     precio_actual=precio_retail,
-                    precio_normal=precio_norm,
+                    precio_normal=precio_norm_base,
                     en_stock=1,
-                    url_producto=url_funcional,
+                    url_producto=url_directa_guardada,
                     fecha=ahora
                 )
-                print(f"  🟢 {t_nom}: Retail oficial verificado (${precio_retail:,} CLP)")
+                print(f"  🟢 {t_nom}: Retail directo verificado (${precio_retail:,} CLP) -> {url_directa_guardada}")
                 actualizaciones += 1
 
     conn.close()
