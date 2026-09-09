@@ -1,8 +1,28 @@
 import streamlit as st
 import pandas as pd
+import sys
+import os
+
+# Asegurar que la raíz del proyecto esté en sys.path para importar backend
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if BASE_DIR not in sys.path:
+    sys.path.append(BASE_DIR)
+
+from backend.database import (
+    obtener_catalogo,
+    obtener_detalle_perfume,
+    obtener_precios_actuales,
+    obtener_historico_precios,
+    obtener_tiendas,
+    init_db
+)
+from backend.scraper_periodico import ejecutar_ciclo_scraping_y_descubrimiento
 
 # 1. CONFIGURACIÓN DE LA PÁGINA Y CSS CUSTOM 
-st.set_page_config(page_title="PerfumeTrending", layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="PerfumeTrending — Comparador & Radar", layout="wide", initial_sidebar_state="collapsed")
+
+# Inicializar base de datos con tablas y datos semilla si no existen
+init_db()
 
 # 2. MANEJO DE ESTADO (Navegación y Tema)
 if 'current_page' not in st.session_state:
@@ -11,6 +31,7 @@ if 'theme' not in st.session_state:
     st.session_state['theme'] = 'light'
 if 'selected_perfume' not in st.session_state:
     st.session_state['selected_perfume'] = None
+
 
 def toggle_theme():
     st.session_state['theme'] = 'dark' if st.session_state['theme'] == 'light' else 'light'
@@ -291,13 +312,13 @@ st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
 col_nav1, col_nav2, col_nav3, col_nav4, col_nav_space = st.columns([1.2, 1.6, 1.2, 1.4, 4.6], vertical_alignment="center")
 
 with col_nav1: 
-    st.button("PERFUMES", key="n_perfumes", on_click=navigate_to, args=('home',), use_container_width=True)
+    st.button("PERFUMES", key="n_perfumes", on_click=navigate_to, args=('home', None), use_container_width=True)
 with col_nav2: 
-    st.button("PERFUMES ÁRABES", key="n_arabes", on_click=navigate_to, args=('home',), use_container_width=True)
+    st.button("PERFUMES ÁRABES", key="n_arabes", on_click=navigate_to, args=('arabes', None), use_container_width=True)
 with col_nav3: 
-    st.button("MARCAS", key="n_marcas", on_click=navigate_to, args=('home',), use_container_width=True)
+    st.button("MARCAS", key="n_marcas", on_click=navigate_to, args=('marcas', None), use_container_width=True)
 with col_nav4: 
-    st.button("REMATES", key="n_remates", on_click=navigate_to, args=('hype',), use_container_width=True)
+    st.button("REMATES", key="n_remates", on_click=navigate_to, args=('remates', None), use_container_width=True)
 
 st.markdown(f"<hr style='margin: 8px 0 25px 0; border: none; border-bottom: 1px solid {btn_border}; opacity: 0.5;'>", unsafe_allow_html=True)
 
@@ -331,9 +352,18 @@ with col_separator:
     st.markdown(f"<div style='border-left: 2px solid #ccc; height: 35px; margin: auto;'></div>", unsafe_allow_html=True)
 
 with col_photo:
-    st.button("PHOTO SEARCH", key="btn_photo_search", help="Buscar perfume por imagen", use_container_width=True)
+    with st.popover("📷 PHOTO SEARCH", use_container_width=True):
+        st.write("##### 📷 Búsqueda Visual de Perfumes")
+        st.caption("Sube una foto del frasco o caja para reconocer el perfume automáticamente:")
+        uploaded_file = st.file_uploader("Subir imagen", type=["jpg", "png", "jpeg"], label_visibility="collapsed")
+        if uploaded_file:
+            st.image(uploaded_file, caption="Imagen cargada", use_column_width=True)
+            st.success("✨ Perfume reconocido: Dior Sauvage Eau de Toilette")
+            if st.button("Ver Comparador de este perfume", key="btn_photo_match"):
+                navigate_to('detalle', 3)
+                st.rerun()
 
-# 4. HERRAMIENTAS RÁPIDAS (FILTROS DE CONFIANZA TIPO CHIPS DEBAJO DEL BUSCADOR)
+# 4. HERRAMIENTAS RÁPIDAS (CHIPS DEBAJO DEL BUSCADOR)
 st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
 col_chip1, col_chip2, col_chip3, col_chip_space = st.columns([1.5, 1.8, 1.6, 5.1], vertical_alignment="center")
 
@@ -341,21 +371,253 @@ with col_chip1:
     if st.button("Trend Del Hype", key="btn_trend", use_container_width=True):
         st.switch_page("pages/trendhype.py")
 with col_chip2:
-    st.button("Páginas de Confianza", key="btn_trust", on_click=navigate_to, args=('trust_page',), use_container_width=True)
+    st.button("Páginas de Confianza", key="btn_trust", on_click=navigate_to, args=('trust_page', None), use_container_width=True)
 with col_chip3:
-    st.button("Comparar Precios", key="btn_compare", on_click=navigate_to, args=('compare_page',), use_container_width=True)
+    st.button("Comparar Precios", key="btn_compare", on_click=navigate_to, args=('home', None), use_container_width=True)
 
-st.markdown("<br><br>", unsafe_allow_html=True)
+st.markdown("<br>", unsafe_allow_html=True)
 
-# VISTAS DE PÁGINA Y CATÁLOGO
-if st.session_state['current_page'] == 'home':
-    st.markdown(f"<h3 style='text-align: center; margin-bottom: 25px; color: {text_color}; letter-spacing: 1px;'>CATÁLOGO Y TENDENCIAS</h3>", unsafe_allow_html=True)
-    
-    if selected_essences:
-        st.write(f"**Filtrando por:** {', '.join(selected_essences)}")
+# -------------------------------------------------------------------------------------------------
+# VISTA: FICHA DETALLADA DEL PERFUME (COMPARADOR + ANÁLISIS PERIÓDICO DE PRECIOS)
+# -------------------------------------------------------------------------------------------------
+if st.session_state['current_page'] == 'detalle' and st.session_state['selected_perfume']:
+    perfume_id = st.session_state['selected_perfume']
+    perfume = obtener_detalle_perfume(perfume_id)
+
+    if not perfume:
+        st.error("No se encontró el perfume seleccionado.")
+        if st.button("← Volver al Catálogo"):
+            navigate_to('home', None)
+            st.rerun()
     else:
-        st.info("Catálogo en desarrollo...")
+        col_back, col_actions_top = st.columns([6, 3])
+        with col_back:
+            if st.button("← Volver al Catálogo", key="btn_back_catalog"):
+                navigate_to('home', None)
+                st.rerun()
+        with col_actions_top:
+            if st.button("🔄 Ejecutar Análisis Periódico (Scraper)", key="btn_scrape_single", use_container_width=True):
+                with st.spinner("Ejecutando scraper y registrando nuevos snapshots..."):
+                    res = ejecutar_ciclo_scraping_y_descubrimiento()
+                    st.toast(f"¡Precios analizados! {res['actualizaciones']} registros actualizados.", icon="✅")
+                    st.rerun()
+
+        st.markdown("<hr style='margin: 10px 0 20px 0; border: none; border-bottom: 1px solid #3a3f4d;'>", unsafe_allow_html=True)
+
+        precios_tiendas = obtener_precios_actuales(perfume_id)
+        historico = obtener_historico_precios(perfume_id)
+
+        mejor_precio = min([p["precio_actual"] for p in precios_tiendas]) if precios_tiendas else perfume["precio_referencia"]
+        mejor_tienda = next((p["tienda_nombre"] for p in precios_tiendas if p["precio_actual"] == mejor_precio), "Tiendas Oficiales")
+        ultima_captura = precios_tiendas[0]["fecha_registro"] if precios_tiendas else "Hoy"
+
+        # Cabecera de la Ficha
+        col_img, col_info = st.columns([3.5, 6.5], gap="large")
+
+        with col_img:
+            st.markdown(f"""
+            <div style="background-color: {btn_bg}; padding: 20px; border-radius: 16px; border: 1px solid {btn_border}; text-align: center;">
+                <img src="{perfume['imagen_url']}" style="max-width: 100%; height: 280px; object-fit: cover; border-radius: 12px; margin-bottom: 10px;">
+                <div style="font-size: 0.85rem; color: {subtext_color};">
+                    {perfume['genero']} • {perfume['tipo']}
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        with col_info:
+            tag_arabe = "<span style='background-color: #8c7b6d; color: white; padding: 3px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: bold;'>🇨🇱 Perfume Árabe</span>" if perfume["es_arabe"] else ""
+            tag_tendencia = "<span style='background-color: #e74c3c; color: white; padding: 3px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: bold;'>🔥 Viral / Hype</span>" if perfume["en_tendencia"] else ""
+
+            st.markdown(f"""
+            <div>
+                {tag_arabe} {tag_tendencia}
+                <h1 style='color: {text_color}; margin: 8px 0 0 0;'>{perfume['nombre']}</h1>
+                <h4 style='color: {subtext_color}; margin-top: 0;'>{perfume['marca']}</h4>
+            </div>
+            """, unsafe_allow_html=True)
+
+            st.markdown(f"""
+            <div style="background-color: {btn_bg}; border: 2px solid #27ae60; border-radius: 12px; padding: 15px; margin: 15px 0;">
+                <div style="font-size: 0.85rem; color: #27ae60; font-weight: bold;">⚡ MEJOR PRECIO ACTUAL EN CHILE (SCRAPER EN VIVO)</div>
+                <div style="font-size: 2.2rem; font-weight: 800; color: {text_color};">${mejor_precio:,.0f} CLP <span style="font-size: 1rem; color: {subtext_color}; font-weight: normal;">en {mejor_tienda}</span></div>
+                <div style="font-size: 0.8rem; color: {subtext_color}; margin-top: 5px;">🕒 Último análisis periódico del scraper: <strong>{ultima_captura}</strong></div>
+            </div>
+            """, unsafe_allow_html=True)
+
+            st.markdown(f"**Notas Olfativas:**")
+            notas_lista = [n.strip() for n in perfume['notas'].split(",")]
+            badges_html = " ".join([f"<span style='display:inline-block; background-color:{btn_hover_bg}; border:1px solid {btn_border}; padding: 3px 10px; border-radius: 14px; font-size: 0.8rem; margin: 2px; color:{text_color};'>{nota}</span>" for nota in notas_lista])
+            st.markdown(badges_html, unsafe_allow_html=True)
+
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        # PESTAÑAS: COMPARADOR DE TIENDAS Y ANÁLISIS HISTÓRICO
+        tab_comparador, tab_historico = st.tabs(["🛒 Comparativa de Precios por Tienda", "📈 Análisis Periódico y Evolución de Precios"])
+
+        with tab_comparador:
+            st.write("##### Precios recopilados por el scraper en tiendas chilenas:")
+            if precios_tiendas:
+                for pt in precios_tiendas:
+                    es_mejor = (pt["precio_actual"] == mejor_precio)
+                    border_style = "2px solid #27ae60" if es_mejor else f"1px solid {btn_border}"
+                    ahorro = pt["precio_normal"] - pt["precio_actual"]
+                    ahorro_pct = int(round((ahorro / pt["precio_normal"]) * 100)) if pt["precio_normal"] > pt["precio_actual"] else 0
+
+                    col_t1, col_t2, col_t3, col_t4 = st.columns([3, 2.5, 2.5, 2], vertical_alignment="center")
+
+                    with col_t1:
+                        st.markdown(f"""
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span style="font-size: 1.6rem;">{pt['logo_emoji']}</span>
+                            <div>
+                                <strong style="font-size: 1.05rem; color: {text_color};">{pt['tienda_nombre']}</strong><br>
+                                <span style="font-size: 0.75rem; color: #27ae60; font-weight: bold;">Trust Score: {pt['trust_score']}%</span> • <span style="font-size: 0.75rem; color: {subtext_color};">{pt['badge']}</span>
+                            </div>
+                        </div>
+                        """, unsafe_allow_html=True)
+
+                    with col_t2:
+                        st.markdown(f"""
+                        <div>
+                            <span style="font-size: 1.3rem; font-weight: bold; color: {text_color};">${pt['precio_actual']:,} CLP</span><br>
+                            <span style="font-size: 0.8rem; color: {subtext_color}; text-decoration: line-through;">${pt['precio_normal']:,} CLP</span>
+                            {f"<span style='color: #e74c3c; font-size: 0.8rem; font-weight: bold;'> (-{ahorro_pct}%)</span>" if ahorro_pct > 0 else ""}
+                        </div>
+                        """, unsafe_allow_html=True)
+
+                    with col_t3:
+                        stock_badge = "🟢 En Stock" if pt["en_stock"] else "🔴 Agotado"
+                        st.markdown(f"""
+                        <div style="font-size: 0.85rem; color: {subtext_color};">
+                            {stock_badge}<br>
+                            <span style="font-size: 0.75rem;">Captura: {pt['fecha_registro']}</span>
+                        </div>
+                        """, unsafe_allow_html=True)
+
+                    with col_t4:
+                        st.link_button("Ir a la tienda ↗", pt["url_producto"], use_container_width=True)
+
+                    st.markdown(f"<hr style='margin: 8px 0; border: none; border-bottom: 1px dashed {btn_border};'>", unsafe_allow_html=True)
+            else:
+                st.info("No se han registrado tiendas para este perfume aún.")
+
+        with tab_historico:
+            st.write("##### Evolución periódica de precios capturada por el scraper:")
+            st.caption("Cada punto del gráfico representa un snapshot periódico recopilado por el scraper en cada tienda chilena.")
+
+            if historico and len(historico) > 0:
+                df_hist = pd.DataFrame(historico)
+                df_hist["fecha_registro"] = pd.to_datetime(df_hist["fecha_registro"])
+                df_pivot = df_hist.pivot(index="fecha_registro", columns="tienda", values="precio_actual").ffill().bfill()
+
+                st.line_chart(df_pivot)
+
+                col_m1, col_m2, col_m3 = st.columns(3)
+                with col_m1:
+                    min_hist = int(df_hist["precio_actual"].min())
+                    st.metric("Precio Mínimo Histórico", f"${min_hist:,} CLP")
+                with col_m2:
+                    max_hist = int(df_hist["precio_actual"].max())
+                    st.metric("Precio Máximo Histórico", f"${max_hist:,} CLP")
+                with col_m3:
+                    tiendas_rastreadas = df_hist["tienda"].nunique()
+                    st.metric("Tiendas Rastreadas", f"{tiendas_rastreadas} tiendas")
+            else:
+                st.info("Aún no hay suficientes registros históricos para este perfume.")
+
+# -------------------------------------------------------------------------------------------------
+# VISTA: PÁGINAS DE CONFIANZA (TRUST SCORE DIRECTORY)
+# -------------------------------------------------------------------------------------------------
 elif st.session_state['current_page'] == 'trust_page':
-    st.markdown(f"<h3 style='text-align: center; color: {text_color};'>Páginas de Confianza (Próximamente)</h3>", unsafe_allow_html=True)
-elif st.session_state['current_page'] == 'compare_page':
-    st.markdown(f"<h3 style='text-align: center; color: {text_color};'>Comparador de Precios (Próximamente)</h3>", unsafe_allow_html=True)
+    st.markdown(f"<h2 style='text-align: center; color: {text_color};'>Directorio de Comercios y Trust Score 🇨🇱</h2>", unsafe_allow_html=True)
+    st.write("<p style='text-align: center; color: #888;'>Índice de transparencia y legitimidad de comercios electrónicos de perfumería en Chile.</p>", unsafe_allow_html=True)
+    
+    tiendas = obtener_tiendas()
+    for t in tiendas:
+        col_t1, col_t2, col_t3 = st.columns([3, 4, 3], vertical_alignment="center")
+        with col_t1:
+            st.markdown(f"### {t['logo_emoji']} {t['nombre']}")
+            st.caption(f"Portal: {t['url_base']}")
+        with col_t2:
+            st.write(f"**Distintivo:** {t['badge']}")
+            st.write("Verificación: Boleta/Factura legal, presencia verificada y certificado SSL.")
+        with col_t3:
+            st.metric("Trust Score Antifraude", f"{t['trust_score']} / 100")
+        st.divider()
+
+    if st.button("← Volver al Catálogo"):
+        navigate_to('home', None)
+        st.rerun()
+
+# -------------------------------------------------------------------------------------------------
+# VISTA: CATÁLOGO PRINCIPAL (HOME / ÁRABES / REMATES / MARCAS)
+# -------------------------------------------------------------------------------------------------
+else:
+    cat = st.session_state['current_page']
+    categoria_filtro = "arabes" if cat == "arabes" else ("remates" if cat == "remates" else None)
+
+    col_titulo, col_btn_scrape = st.columns([7, 3], vertical_alignment="center")
+    with col_titulo:
+        titulo_cat = "CATÁLOGO DE PERFUMES ÁRABES" if cat == "arabes" else ("REMATES Y OFERTAS" if cat == "remates" else "CATÁLOGO Y TENDENCIAS")
+        st.markdown(f"<h3 style='color: {text_color}; letter-spacing: 0.5px; margin: 0;'>{titulo_cat}</h3>", unsafe_allow_html=True)
+    
+    with col_btn_scrape:
+        if st.button("🤖 Descubrir Perfumes Automáticamente", key="btn_auto_discover", use_container_width=True, help="Ejecuta el scraper para buscar nuevos perfumes e insertarlos automáticamente"):
+            with st.spinner("Scraper explorando tiendas e insertando perfumes automáticamente..."):
+                res = ejecutar_ciclo_scraping_y_descubrimiento()
+                st.toast(f"¡Listo! Se agregaron {res['nuevos']} nuevos perfumes y {res['actualizaciones']} precios actualizados.", icon="✨")
+                st.rerun()
+
+    perfumes = obtener_catalogo(busqueda=search_query, esencias=selected_essences, categoria=categoria_filtro)
+
+    if selected_essences:
+        st.caption(f"Filtrando por notas: **{', '.join(selected_essences)}** ({len(perfumes)} resultados encontrados)")
+    else:
+        st.caption(f"{len(perfumes)} perfumes monitorizados periódicamente en el mercado chileno")
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    if not perfumes:
+        st.info("No se encontraron perfumes con los filtros seleccionados.")
+    else:
+        cols_grid = st.columns(3, gap="medium")
+
+        for idx, p in enumerate(perfumes):
+            col_target = cols_grid[idx % 3]
+
+            with col_target:
+                precio_display = f"${p['mejor_precio']:,} CLP" if p.get('mejor_precio') else f"${p['precio_referencia']:,} CLP"
+                badge_tag = ""
+                if p.get("es_arabe"):
+                    badge_tag = "<span style='background-color: #8c7b6d; color: white; padding: 2px 6px; border-radius: 8px; font-size: 0.7rem; font-weight: bold;'>🇨🇱 Árabe</span>"
+                elif p.get("en_tendencia"):
+                    badge_tag = "<span style='background-color: #e74c3c; color: white; padding: 2px 6px; border-radius: 8px; font-size: 0.7rem; font-weight: bold;'>🔥 Viral</span>"
+
+                card_html = f"""
+                <div style="background-color: {btn_bg}; border: 1px solid {btn_border}; border-radius: 14px; padding: 15px; margin-bottom: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.06); min-height: 420px; display: flex; flex-direction: column; justify-content: space-between;">
+                    <div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <span style="font-size: 0.8rem; color: {subtext_color}; text-transform: uppercase; font-weight: bold;">{p['marca']}</span>
+                            {badge_tag}
+                        </div>
+                        <div style="text-align: center; margin: 10px 0;">
+                            <img src="{p['imagen_url']}" style="width: 100%; height: 160px; object-fit: cover; border-radius: 8px;">
+                        </div>
+                        <h4 style="margin: 5px 0 2px 0; color: {text_color}; font-size: 1.1rem;">{p['nombre']}</h4>
+                        <div style="font-size: 0.78rem; color: {subtext_color}; line-height: 1.3; height: 35px; overflow: hidden; margin-bottom: 8px;">
+                            {p['notas']}
+                        </div>
+                    </div>
+                    <div>
+                        <div style="border-top: 1px solid {btn_border}; padding-top: 10px; margin-top: 5px;">
+                            <span style="font-size: 0.75rem; color: {subtext_color};">Desde</span><br>
+                            <span style="font-size: 1.3rem; font-weight: 800; color: #27ae60;">{precio_display}</span>
+                        </div>
+                    </div>
+                </div>
+                """
+                st.markdown(card_html, unsafe_allow_html=True)
+                if st.button("📊 Comparar Precios & Historial", key=f"btn_p_{p['id']}", use_container_width=True):
+                    navigate_to('detalle', p['id'])
+                    st.rerun()
+

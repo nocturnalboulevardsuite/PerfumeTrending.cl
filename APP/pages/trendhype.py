@@ -156,4 +156,9 @@ for i, data in enumerate(hype_data):
         """
         st.markdown(html_card, unsafe_allow_html=True)
         # El botón de Streamlit va por fuera del HTML para que sea interactivo
-        st.button("Comparar Precios", key=f"btn_compare_{i}", use_container_width=True)
+        perfume_id_map = {0: 1, 1: 2, 2: 3}
+        if st.button("📊 Comparar Precios & Historial", key=f"btn_compare_{i}", use_container_width=True):
+            st.session_state['selected_perfume'] = perfume_id_map.get(i, 1)
+            st.session_state['current_page'] = 'detalle'
+            st.switch_page("app.py")
+
