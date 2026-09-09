@@ -579,7 +579,7 @@ if st.session_state['current_page'] == 'detalle' and st.session_state['selected_
             if historico and len(historico) > 0:
                 df_hist = pd.DataFrame(historico)
                 df_hist["fecha_registro"] = pd.to_datetime(df_hist["fecha_registro"])
-                df_pivot = df_hist.pivot(index="fecha_registro", columns="tienda", values="precio_actual").ffill().bfill()
+                df_pivot = df_hist.pivot_table(index="fecha_registro", columns="tienda", values="precio_actual", aggfunc="last").ffill().bfill()
 
                 st.line_chart(df_pivot)
 
