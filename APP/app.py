@@ -407,8 +407,18 @@ if st.session_state['current_page'] == 'detalle' and st.session_state['selected_
         precios_tiendas = obtener_precios_actuales(perfume_id)
         historico = obtener_historico_precios(perfume_id)
 
-        mejor_precio = min([p["precio_actual"] for p in precios_tiendas]) if precios_tiendas else perfume["precio_referencia"]
-        mejor_tienda = next((p["tienda_nombre"] for p in precios_tiendas if p["precio_actual"] == mejor_precio), "Tiendas Oficiales")
+        # Filtrar tiendas que tienen stock y precio > 0 para calcular el mejor precio disponible
+        tiendas_en_stock = [p for p in precios_tiendas if p.get("en_stock") == 1 and p.get("precio_actual", 0) > 0]
+        if tiendas_en_stock:
+            mejor_tienda_obj = min(tiendas_en_stock, key=lambda x: x["precio_actual"])
+            mejor_precio = mejor_tienda_obj["precio_actual"]
+            mejor_tienda = mejor_tienda_obj["tienda_nombre"]
+            mejor_url = mejor_tienda_obj["url_producto"]
+        else:
+            mejor_precio = perfume["precio_referencia"]
+            mejor_tienda = "Retail Oficial"
+            mejor_url = f"https://www.google.com/search?q={perfume['nombre']}+perfume+chile"
+
         ultima_captura = precios_tiendas[0]["fecha_registro"] if precios_tiendas else "Hoy"
 
         # Cabecera de la Ficha
@@ -436,12 +446,18 @@ if st.session_state['current_page'] == 'detalle' and st.session_state['selected_
             </div>
             """, unsafe_allow_html=True)
 
+            # BANNER DEL MEJOR PRECIO: CLIC EN EL BANNER O EN EL PRECIO REDIRIGE DIRECTO A LA TIENDA
             st.markdown(f"""
-            <div style="background-color: {btn_bg}; border: 2px solid #27ae60; border-radius: 12px; padding: 15px; margin: 15px 0;">
-                <div style="font-size: 0.85rem; color: #27ae60; font-weight: bold;">⚡ MEJOR PRECIO ACTUAL EN CHILE (SCRAPER EN VIVO)</div>
-                <div style="font-size: 2.2rem; font-weight: 800; color: {text_color};">${mejor_precio:,.0f} CLP <span style="font-size: 1rem; color: {subtext_color}; font-weight: normal;">en {mejor_tienda}</span></div>
-                <div style="font-size: 0.8rem; color: {subtext_color}; margin-top: 5px;">🕒 Último análisis periódico del scraper: <strong>{ultima_captura}</strong></div>
-            </div>
+            <a href="{mejor_url}" target="_blank" style="text-decoration: none; color: inherit;">
+                <div style="background-color: {btn_bg}; border: 2px solid #27ae60; border-radius: 12px; padding: 15px; margin: 15px 0; cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.01)'" onmouseout="this.style.transform='scale(1)'">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 0.85rem; color: #27ae60; font-weight: bold;">⚡ MEJOR PRECIO DISPONIBLE EN CHILE (CLIC PARA IR A LA TIENDA ↗)</span>
+                        <span style="background-color: #27ae60; color: white; padding: 4px 12px; border-radius: 8px; font-size: 0.8rem; font-weight: bold;">Ver en {mejor_tienda} ↗</span>
+                    </div>
+                    <div style="font-size: 2.3rem; font-weight: 800; color: #27ae60; margin: 6px 0;">${mejor_precio:,.0f} CLP <span style="font-size: 1.05rem; color: {text_color}; font-weight: 600;">en {mejor_tienda}</span></div>
+                    <div style="font-size: 0.8rem; color: {subtext_color};">🕒 Último análisis del scraper: <strong>{ultima_captura}</strong> • <span style="color: #27ae60; text-decoration: underline; font-weight: bold;">Haz clic en el precio para comprar directamente</span></div>
+                </div>
+            </a>
             """, unsafe_allow_html=True)
 
             st.markdown(f"**Notas Olfativas:**")
@@ -455,13 +471,13 @@ if st.session_state['current_page'] == 'detalle' and st.session_state['selected_
         tab_comparador, tab_historico = st.tabs(["🛒 Comparativa de Precios por Tienda", "📈 Análisis Periódico y Evolución de Precios"])
 
         with tab_comparador:
-            st.write("##### Precios recopilados por el scraper en tiendas chilenas:")
+            st.write("##### Precios recopilados por el scraper en tiendas chilenas (Haz clic en el precio para abrir la tienda):")
             if precios_tiendas:
                 for pt in precios_tiendas:
-                    es_mejor = (pt["precio_actual"] == mejor_precio)
-                    border_style = "2px solid #27ae60" if es_mejor else f"1px solid {btn_border}"
-                    ahorro = pt["precio_normal"] - pt["precio_actual"]
-                    ahorro_pct = int(round((ahorro / pt["precio_normal"]) * 100)) if pt["precio_normal"] > pt["precio_actual"] else 0
+                    tiene_stock = (pt["en_stock"] == 1 and pt["precio_actual"] > 0)
+                    es_mejor = (tiene_stock and pt["precio_actual"] == mejor_precio)
+                    ahorro = pt["precio_normal"] - pt["precio_actual"] if tiene_stock else 0
+                    ahorro_pct = int(round((ahorro / pt["precio_normal"]) * 100)) if (tiene_stock and pt["precio_normal"] > pt["precio_actual"]) else 0
 
                     col_t1, col_t2, col_t3, col_t4 = st.columns([3, 2.5, 2.5, 2], vertical_alignment="center")
 
@@ -477,16 +493,32 @@ if st.session_state['current_page'] == 'detalle' and st.session_state['selected_
                         """, unsafe_allow_html=True)
 
                     with col_t2:
-                        st.markdown(f"""
-                        <div>
-                            <span style="font-size: 1.3rem; font-weight: bold; color: {text_color};">${pt['precio_actual']:,} CLP</span><br>
-                            <span style="font-size: 0.8rem; color: {subtext_color}; text-decoration: line-through;">${pt['precio_normal']:,} CLP</span>
-                            {f"<span style='color: #e74c3c; font-size: 0.8rem; font-weight: bold;'> (-{ahorro_pct}%)</span>" if ahorro_pct > 0 else ""}
-                        </div>
-                        """, unsafe_allow_html=True)
+                        # CLIC EN EL PRECIO REDIRIGE DIRECTO A LA PÁGINA O BÚSQUEDA EN LA TIENDA
+                        if tiene_stock:
+                            st.markdown(f"""
+                            <div>
+                                <a href="{pt['url_producto']}" target="_blank" style="text-decoration: none; color: inherit;" title="Clic aquí para abrir la oferta en {pt['tienda_nombre']}">
+                                    <span style="font-size: 1.35rem; font-weight: 800; color: #27ae60; border-bottom: 2px dashed #27ae60; cursor: pointer;">
+                                        ${pt['precio_actual']:,} CLP ↗
+                                    </span>
+                                </a><br>
+                                <span style="font-size: 0.8rem; color: {subtext_color}; text-decoration: line-through;">${pt['precio_normal']:,} CLP</span>
+                                {f"<span style='color: #e74c3c; font-size: 0.8rem; font-weight: bold;'> (-{ahorro_pct}%)</span>" if ahorro_pct > 0 else ""}
+                            </div>
+                            """, unsafe_allow_html=True)
+                        else:
+                            st.markdown(f"""
+                            <div>
+                                <a href="{pt['url_producto']}" target="_blank" style="text-decoration: none; color: inherit;" title="Verificar catálogo de {pt['tienda_nombre']}">
+                                    <span style="font-size: 0.95rem; font-weight: 600; color: #888; border-bottom: 1px dashed #888; cursor: pointer;">
+                                        Sin stock verificado ↗
+                                    </span>
+                                </a>
+                            </div>
+                            """, unsafe_allow_html=True)
 
                     with col_t3:
-                        stock_badge = "🟢 En Stock" if pt["en_stock"] else "🔴 Agotado"
+                        stock_badge = "🟢 En Stock Verificado" if tiene_stock else "🔴 No comercializado / Agotado"
                         st.markdown(f"""
                         <div style="font-size: 0.85rem; color: {subtext_color};">
                             {stock_badge}<br>
@@ -495,11 +527,13 @@ if st.session_state['current_page'] == 'detalle' and st.session_state['selected_
                         """, unsafe_allow_html=True)
 
                     with col_t4:
-                        st.link_button("Ir a la tienda ↗", pt["url_producto"], use_container_width=True)
+                        btn_label = "Ir a la tienda ↗" if tiene_stock else "Buscar en tienda ↗"
+                        st.link_button(btn_label, pt["url_producto"], use_container_width=True)
 
                     st.markdown(f"<hr style='margin: 8px 0; border: none; border-bottom: 1px dashed {btn_border};'>", unsafe_allow_html=True)
             else:
                 st.info("No se han registrado tiendas para este perfume aún.")
+
 
         with tab_historico:
             st.write("##### Evolución periódica de precios capturada por el scraper:")
