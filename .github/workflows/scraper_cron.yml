@@ -1,0 +1,37 @@
+name: Scraper Periódico de Perfumes
+
+on:
+  schedule:
+    # Se ejecuta todos los días a las 06:00 y 18:00 UTC (dos veces al día)
+    - cron: '0 6,18 * * *'
+  workflow_dispatch: # Permite ejecutarlo manualmente desde la pestaña Actions en GitHub
+
+jobs:
+  scrape-and-update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Instalar dependencias
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests beautifulsoup4
+
+      - name: Ejecutar Scraper y Descubrimiento Periódico
+        run: |
+          python backend/scraper_periodico.py
+
+      - name: Guardar y commitear cambios en la base de datos
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action Scraper"
+          git add data/perfumes.db
+          git diff --quiet && git diff --staged --quiet || (git commit -m "🤖 Actualización periódica de precios y catálogo [skip ci]" && git push)
