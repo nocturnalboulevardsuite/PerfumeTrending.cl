@@ -18,11 +18,46 @@ from backend.database import (
 )
 from backend.scraper_periodico import ejecutar_ciclo_scraping_y_descubrimiento
 
+import base64
+
+def get_image_src(img_path_or_url):
+    """
+    Retorna la URL remota o el data URI en base64 si es un archivo local del proyecto,
+    garantizando que se renderice con máxima fidelidad en navegador y en Streamlit Cloud.
+    """
+    if not img_path_or_url:
+        return "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=500&q=80"
+    
+    if img_path_or_url.startswith("http://") or img_path_or_url.startswith("https://") or img_path_or_url.startswith("data:"):
+        return img_path_or_url
+
+    local_path = img_path_or_url
+    if not os.path.isabs(local_path):
+        cand1 = os.path.join(BASE_DIR, local_path)
+        cand2 = os.path.join(BASE_DIR, "APP", local_path)
+        if os.path.exists(cand1):
+            local_path = cand1
+        elif os.path.exists(cand2):
+            local_path = cand2
+
+    if os.path.exists(local_path):
+        ext = os.path.splitext(local_path)[1].lower().replace(".", "")
+        mime = "image/png" if ext == "png" else "image/jpeg"
+        try:
+            with open(local_path, "rb") as f:
+                b64 = base64.b64encode(f.read()).decode("utf-8")
+                return f"data:{mime};base64,{b64}"
+        except Exception:
+            pass
+
+    return img_path_or_url
+
 # 1. CONFIGURACIÓN DE LA PÁGINA Y CSS CUSTOM 
 st.set_page_config(page_title="PerfumeTrending — Comparador & Radar", layout="wide", initial_sidebar_state="collapsed")
 
 # Inicializar base de datos con tablas y datos semilla si no existen
 init_db()
+
 
 # 2. MANEJO DE ESTADO (Navegación y Tema)
 if 'current_page' not in st.session_state:
@@ -425,14 +460,16 @@ if st.session_state['current_page'] == 'detalle' and st.session_state['selected_
         col_img, col_info = st.columns([3.5, 6.5], gap="large")
 
         with col_img:
+            img_src = get_image_src(perfume.get('imagen_url'))
             st.markdown(f"""
-            <div style="background-color: {btn_bg}; padding: 20px; border-radius: 16px; border: 1px solid {btn_border}; text-align: center;">
-                <img src="{perfume['imagen_url']}" style="max-width: 100%; height: 280px; object-fit: cover; border-radius: 12px; margin-bottom: 10px;">
-                <div style="font-size: 0.85rem; color: {subtext_color};">
+            <div style="background-color: {btn_bg}; padding: 25px; border-radius: 20px; border: 1px solid {btn_border}; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.12); position: relative; overflow: hidden;">
+                <img src="{img_src}" style="max-width: 100%; height: 350px; object-fit: contain; border-radius: 12px; margin-bottom: 15px; filter: drop-shadow(0 12px 24px rgba(0,0,0,0.28)); transition: transform 0.4s ease;" onmouseover="this.style.transform='scale(1.04)'" onmouseout="this.style.transform='scale(1)'">
+                <div style="font-size: 0.88rem; color: {text_color}; font-weight: 600; letter-spacing: 0.5px;">
                     {perfume['genero']} • {perfume['tipo']}
                 </div>
             </div>
             """, unsafe_allow_html=True)
+
 
         with col_info:
             tag_arabe = "<span style='background-color: #8c7b6d; color: white; padding: 3px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: bold;'>🇨🇱 Perfume Árabe</span>" if perfume["es_arabe"] else ""
@@ -620,6 +657,7 @@ else:
             col_target = cols_grid[idx % 3]
 
             with col_target:
+                p_img_src = get_image_src(p.get("imagen_url"))
                 precio_display = f"${p['mejor_precio']:,} CLP" if p.get('mejor_precio') else f"${p['precio_referencia']:,} CLP"
                 badge_tag = ""
                 if p.get("es_arabe"):
@@ -628,16 +666,16 @@ else:
                     badge_tag = "<span style='background-color: #e74c3c; color: white; padding: 2px 6px; border-radius: 8px; font-size: 0.7rem; font-weight: bold;'>🔥 Viral</span>"
 
                 card_html = f"""
-                <div style="background-color: {btn_bg}; border: 1px solid {btn_border}; border-radius: 14px; padding: 15px; margin-bottom: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.06); min-height: 420px; display: flex; flex-direction: column; justify-content: space-between;">
+                <div style="background-color: {btn_bg}; border: 1px solid {btn_border}; border-radius: 14px; padding: 15px; margin-bottom: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.06); min-height: 430px; display: flex; flex-direction: column; justify-content: space-between;">
                     <div>
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                             <span style="font-size: 0.8rem; color: {subtext_color}; text-transform: uppercase; font-weight: bold;">{p['marca']}</span>
                             {badge_tag}
                         </div>
-                        <div style="text-align: center; margin: 10px 0;">
-                            <img src="{p['imagen_url']}" style="width: 100%; height: 160px; object-fit: cover; border-radius: 8px;">
+                        <div style="text-align: center; margin: 8px 0; background: {btn_hover_bg}; border-radius: 10px; padding: 12px;">
+                            <img src="{p_img_src}" style="width: 100%; height: 175px; object-fit: contain; filter: drop-shadow(0 6px 12px rgba(0,0,0,0.2)); transition: transform 0.3s ease;">
                         </div>
-                        <h4 style="margin: 5px 0 2px 0; color: {text_color}; font-size: 1.1rem;">{p['nombre']}</h4>
+                        <h4 style="margin: 6px 0 2px 0; color: {text_color}; font-size: 1.1rem;">{p['nombre']}</h4>
                         <div style="font-size: 0.78rem; color: {subtext_color}; line-height: 1.3; height: 35px; overflow: hidden; margin-bottom: 8px;">
                             {p['notas']}
                         </div>
@@ -651,6 +689,7 @@ else:
                 </div>
                 """
                 st.markdown(card_html, unsafe_allow_html=True)
+
                 if st.button("📊 Comparar Precios & Historial", key=f"btn_p_{p['id']}", use_container_width=True):
                     navigate_to('detalle', p['id'])
                     st.rerun()

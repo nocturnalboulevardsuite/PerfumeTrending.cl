@@ -142,31 +142,31 @@ def poblar_datos_semilla(conn):
         (
             1, "Bleu de Chanel", "Chanel", "Hombre", "Eau de Parfum",
             "Cítricos, Pomelo, Menta, Pimienta Rosa, Cedro, Sándalo, Incienso",
-            "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=500&q=80",
+            "APP/assets/perfumes/bleu_de_chanel.jpg",
             0, 1, 0, 184990
         ),
         (
             2, "YSL Libre", "Yves Saint Laurent", "Mujer", "Eau de Parfum",
             "Lavanda, Mandarina, Grosellas Negras, Jazmín, Vainilla, Cedro, Ámbar Gris",
-            "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=500&q=80",
+            "APP/assets/perfumes/ysl_libre.jpg",
             0, 1, 0, 149990
         ),
         (
             3, "Dior Sauvage", "Dior", "Hombre", "Eau de Toilette",
             "Bergamota, Pimienta Negra, Lavanda, Pimienta Rosa, Vetiver, Pachulí, Cedro",
-            "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=500&q=80",
+            "APP/assets/perfumes/dior_sauvage.jpg",
             0, 1, 0, 165990
         ),
         (
             4, "Club de Nuit Intense Man", "Armaf", "Hombre", "Eau de Toilette",
             "Limón, Piña, Bergamota, Grosellas Negras, Manzana, Abedul, Jazmín, Rosa, Almizcle (Musk), Ámbar Gris, Pachulí, Vainilla",
-            "https://images.unsplash.com/photo-1594035910387-fea47794261f?w=500&q=80",
+            "APP/assets/perfumes/club_de_nuit.jpg",
             1, 1, 1, 32990
         ),
         (
             5, "Khamrah", "Lattafa", "Unisex", "Eau de Parfum",
             "Canela, Nuez Moscada, Bergamota, Dátiles, Praliné, Tuberosa, Vainilla, Haba Tonka, Mirra, Benjuí, Ámbar",
-            "https://images.unsplash.com/photo-1547887537-6158d64c35b3?w=500&q=80",
+            "APP/assets/perfumes/lattafa_khamrah.jpg",
             1, 1, 1, 24990
         ),
         (

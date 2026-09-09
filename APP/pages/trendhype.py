@@ -97,23 +97,38 @@ with col_filtro2:
 
 st.divider()
 
+import os
+import base64
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+def get_image_src(img_path):
+    if not img_path or img_path.startswith("http"):
+        return img_path
+    local_path = os.path.join(BASE_DIR, img_path) if not os.path.isabs(img_path) else img_path
+    if os.path.exists(local_path):
+        with open(local_path, "rb") as f:
+            b64 = base64.b64encode(f.read()).decode("utf-8")
+            return f"data:image/jpeg;base64,{b64}"
+    return img_path
+
 # 5. Base de datos del Hype
 hype_data = [
     {
-        "rank": "#1", "name": "Bleu de Chanel", "score": "95%", "year": "2010", "price": "$180,000 CLP",
-        "img": "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=500&q=80",
+        "rank": "#1", "name": "Bleu de Chanel", "score": "95%", "year": "2010", "price": "$184,990 CLP",
+        "img": get_image_src("APP/assets/perfumes/bleu_de_chanel.jpg"),
         "stats": "75 videos and 1.5 Million views in 1 month",
         "ai_text": "Trending due to fresh versatility and 'quiet luxury' aesthetic endorsement by major TikTok influencers."
     },
     {
-        "rank": "#2", "name": "YSL Libre", "score": "90%", "year": "2019", "price": "$150,000 CLP",
-        "img": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=500&q=80",
+        "rank": "#2", "name": "YSL Libre", "score": "90%", "year": "2019", "price": "$149,990 CLP",
+        "img": get_image_src("APP/assets/perfumes/ysl_libre.jpg"),
         "stats": "60 videos and 1 Million views in 1 month",
         "ai_text": "Exploding in popularity for its bold floral lavender profile, often featured in 'best feminine scents' lists."
     },
     {
-        "rank": "#3", "name": "Dior Sauvage", "score": "88%", "year": "2015", "price": "$165,000 CLP",
-        "img": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=500&q=80",
+        "rank": "#3", "name": "Dior Sauvage", "score": "88%", "year": "2015", "price": "$165,990 CLP",
+        "img": get_image_src("APP/assets/perfumes/dior_sauvage.jpg"),
         "stats": "55 videos and 900k views in 1 month",
         "ai_text": "Continues viral dominance, praised for mass appeal and strong performance, sparking debate and reviews."
     }
@@ -132,9 +147,10 @@ for i, data in enumerate(hype_data):
                 <div>{data['score']}</div>
             </div>
             
-            <div style="text-align: center; margin-top: 30px; margin-bottom: 10px;">
-                <img src="{data['img']}" style="width: 120px; height: 120px; object-fit: cover; border-radius: 10px;">
+            <div style="text-align: center; margin-top: 25px; margin-bottom: 12px; background: {ai_bg}; padding: 10px; border-radius: 12px;">
+                <img src="{data['img']}" style="width: 130px; height: 130px; object-fit: contain; border-radius: 8px; filter: drop-shadow(0 6px 10px rgba(0,0,0,0.25));">
             </div>
+
             
             <div class="year-badge">{data['year']}</div>
             <h3 style="margin: 0; padding: 0;">{data['name']}</h3>
