@@ -282,7 +282,7 @@ with col_logo:
 with col_actions:
     btn_col1, btn_col2 = st.columns([1.5, 1], vertical_alignment="center")
     with btn_col1:
-        st.button("👤 Ingresar", key="login_btn", use_container_width=True)
+        st.button("👤awd Ingresar", key="login_btn", use_container_width=True)
     with btn_col2:
         st.button(" ", key="theme_toggle", on_click=toggle_theme)
 
