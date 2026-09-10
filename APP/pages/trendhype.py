@@ -40,21 +40,22 @@ bottle_svg = (
     "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 58'><rect x='18' y='2' width='14' height='7' rx='2' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><rect x='21' y='9' width='8' height='5' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='19' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='5' fill='none' stroke='%23111111' stroke-width='2'/><line x1='25' y1='23' x2='25' y2='26' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='25' y1='42' x2='25' y2='45' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='14' y1='34' x2='17' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='33' y1='34' x2='36' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='17' y1='26' x2='19' y2='28' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='31' y1='40' x2='33' y2='42' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='17' y1='42' x2='19' y2='40' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='31' y1='28' x2='33' y2='26' stroke='%23111111' stroke-width='2' stroke-linecap='round'/></svg>"
 )
 
-# 3. ESTILOS CSS REFINADOS (ELIMINACIÓN TOTAL DE MARGEN SUPERIOR)
+# 3. ESTILOS CSS REFINADOS (POSICIONAMIENTO PERFECTO)
 st.markdown(f"""
     <style>
-    /* Ocultar encabezados predeterminados y colapsar espacio superior */
+    /* Ocultar encabezados predeterminados de Streamlit */
     header[data-testid="stHeader"] {{ display: none !important; }}
     div[data-testid="stAppViewContainer"] {{ padding-top: 0px !important; }}
     
     .stApp {{ {app_bg_css} }}
     
+    /* Contenedor principal alineado al tope sin recortes */
     .main .block-container,
     div.block-container,
     [data-testid="stMainBlockContainer"],
     [data-testid="stAppViewBlockContainer"] {{
-        padding-top: 0.5rem !important;
-        margin-top: -3.5rem !important;
+        padding-top: 1.5rem !important;
+        margin-top: 0rem !important;
         padding-bottom: 2rem !important;
         max-width: 1200px !important;
     }}
@@ -142,7 +143,7 @@ st.markdown(f"""
         display: none !important;
     }}
 
-    /* Estilo del enlace superior central idéntico al original */
+    /* Estilo del enlace superior central */
     .nav-back-link {{
         text-align: center;
         display: block;
@@ -240,7 +241,7 @@ with col_theme:
     st.button(" ", key="theme_toggle", on_click=toggle_theme)
 
 # 5. TÍTULO Y FILTROS CENTRALIZADOS
-st.markdown(f"<h1 style='text-align: center; color: {text_color}; font-weight: 800; font-size: 2.3rem; margin-top: 35px; margin-bottom: 35px;'>RADAR DEL HYPE - Viral Fragrances</h1>", unsafe_allow_html=True)
+st.markdown(f"<h1 style='text-align: center; color: {text_color}; font-weight: 800; font-size: 2.3rem; margin-top: 25px; margin-bottom: 25px;'>RADAR DEL HYPE - Viral Fragrances</h1>", unsafe_allow_html=True)
 
 col_title, col_fecha, col_red, col_empty = st.columns([1.2, 2.2, 2.2, 3.5], vertical_alignment="center")
 
