@@ -113,11 +113,11 @@ st.markdown(f"""
         z-index: 2 !important;
     }}
 
-    /* TÍTULO Y TOOLTIP */
+    /* TÍTULO Y TOOLTIP DE INFORMACIÓN RESTRUCTURADO */
     .radar-title-container {{
         display: inline-flex;
         align-items: baseline;
-        gap: 6px;
+        gap: 1px;
     }}
 
     .radar-title-text {{
@@ -138,26 +138,28 @@ st.markdown(f"""
         position: relative;
         display: inline-block;
         vertical-align: super;
-        top: -12px;
-        left: 3px;
+        top: -16px; /* Más arriba */
+        left: 0px;  /* Pegado a la S */
     }}
 
     .info-btn-badge {{
-        width: 18px;
-        height: 18px;
+        width: 17px;
+        height: 17px;
         background: linear-gradient(135deg, #d83737 0%, #a81722 100%);
         color: #ffffff;
         border-radius: 50%;
         font-size: 11px;
-        font-weight: 900;
-        font-family: 'Georgia', serif;
-        font-style: italic;
+        font-weight: 700;
+        font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; /* 'i' Estándar y limpia */
+        font-style: normal;
         display: flex;
         align-items: center;
         justify-content: center;
         cursor: pointer;
         box-shadow: 0 2px 6px rgba(216, 55, 55, 0.35);
         transition: transform 0.25s ease, box-shadow 0.25s ease;
+        line-height: 1;
+        padding-bottom: 1px;
     }}
 
     .info-icon-container:hover .info-btn-badge {{
@@ -193,7 +195,7 @@ st.markdown(f"""
         pointer-events: auto;
     }}
 
-    /* ETIQUETA "FILTRAR POR :" PERFECTAMENTE ALINEADA */
+    /* ETIQUETA "FILTRAR POR :" */
     .filter-label-text {{
         color: {text_color} !important;
         font-weight: 800 !important;
@@ -206,10 +208,12 @@ st.markdown(f"""
         height: 32px;
     }}
 
-    /* ESTILOS IDÉNTICOS PARA EL BOTÓN POP-OVER Y EL CHIP DE YOUTUBE */
+    /* BOTÓN POP-OVER CENTRADO */
     div[data-testid="stPopover"] {{
         display: flex !important;
         align-items: center !important;
+        justify-content: center !important; /* Centrado dentro de su columna */
+        width: 100% !important;
     }}
 
     div[data-testid="stPopover"] > button,
@@ -228,7 +232,7 @@ st.markdown(f"""
         align-items: center !important;
         justify-content: center !important;
         gap: 6px !important;
-        margin: 0 !important;
+        margin: 0 auto !important;
         box-sizing: border-box !important;
     }}
 
@@ -247,7 +251,6 @@ st.markdown(f"""
         height: 12px !important;
     }}
 
-    /* HOVER MODERNO EN EL BOTÓN POP-OVER */
     div[data-testid="stPopover"] button:hover {{
         background-color: {btn_hover_bg} !important;
         border-color: #d83737 !important;
@@ -255,7 +258,7 @@ st.markdown(f"""
         box-shadow: 0 3px 8px rgba(0,0,0,0.08) !important;
     }}
 
-    /* CHIP DE YOUTUBE Y TEXTO ADYACENTE CON MISMA ALTURA Y ESTILO */
+    /* CHIP DE YOUTUBE Y TEXTO ADYACENTE */
     .social-select-box {{
         display: flex;
         align-items: center;
@@ -533,7 +536,7 @@ with col_logo:
 with col_theme:
     st.button(" ", key="theme_toggle", on_click=toggle_theme)
 
-# SECCIÓN DEL TÍTULO CON BOTÓN FLOTANTE 'i'
+# SECCIÓN DEL TÍTULO CON BOTÓN 'i'
 st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
 col_header_title, col_back_btn = st.columns([3.4, 1], vertical_alignment="center")
 
@@ -557,15 +560,14 @@ with col_back_btn:
 
 st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
 
-# 5. FILTROS ALINEADOS Y BALANCEADOS
-col_title, col_fecha, col_red = st.columns([0.85, 1.25, 4.9], vertical_alignment="center")
+# 5. FILTROS CENTRADOS Y ALINEADOS
+col_title, col_fecha, col_red = st.columns([1.0, 1.5, 4.5], vertical_alignment="center")
 
 with col_title:
     st.markdown("<div class='filter-label-text'>Filtrar por :</div>", unsafe_allow_html=True)
 
 with col_fecha:
     opciones_fecha = ["Este Mes", "Hoy / Día", "Esta Semana", "Este Año", "Año Pasado"]
-    # Se eliminó la flecha adicional manual ('▾') ya que Streamlit añade nativamente su propia flecha SVG
     with st.popover(f"📅 {st.session_state['selected_month']}", use_container_width=False):
         for opt in opciones_fecha:
             if st.button(opt, key=f"btn_m_{opt}", use_container_width=True):
