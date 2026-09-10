@@ -111,18 +111,18 @@ st.markdown(f"""
         z-index: 2 !important;
     }}
 
-    /* TÍTULO Y BOTÓN DE INFORMACIÓN HOVER 'i' */
-    .title-wrapper {{
-        position: relative;
-        display: inline-block;
-        padding-right: 20px;
+    /* TÍTULO Y BOTÓN DE INFORMACIÓN HOVER 'i' PEGANO A LA 'S' */
+    .radar-title-container {{
+        display: inline-flex;
+        align-items: baseline;
+        gap: 6px;
     }}
 
     .radar-title-text {{
         color: #d9787f !important;
         font-weight: 900 !important;
         font-size: 2.1rem !important;
-        letter-spacing: 2.5px !important;
+        letter-spacing: 1.5px !important;
         margin: 0;
         display: inline;
         transition: color 0.3s ease !important;
@@ -133,33 +133,33 @@ st.markdown(f"""
     }}
 
     .info-icon-container {{
-        position: absolute;
-        top: -4px;
-        right: -4px;
+        position: relative;
         display: inline-block;
+        vertical-align: super;
+        top: -8px;
     }}
 
     .info-btn-badge {{
-        width: 19px;
-        height: 19px;
-        background-color: #8b121a; /* ROJO BACCARAT ROUGE 540 EXTRAIT MATE */
+        width: 18px;
+        height: 18px;
+        background: linear-gradient(135deg, #8b121a 0%, #a81722 100%);
         color: #ffffff;
         border-radius: 50%;
         font-size: 11px;
         font-weight: 900;
-        font-family: 'Inter', sans-serif;
+        font-family: 'Georgia', serif;
+        font-style: italic;
         display: flex;
         align-items: center;
         justify-content: center;
         cursor: pointer;
         box-shadow: 0 2px 6px rgba(139, 18, 26, 0.35);
-        transition: transform 0.25s ease, background-color 0.25s ease;
-        font-style: italic;
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
     }}
 
     .info-icon-container:hover .info-btn-badge {{
-        transform: scale(1.2);
-        background-color: #a81722;
+        transform: scale(1.22);
+        box-shadow: 0 4px 10px rgba(139, 18, 26, 0.5);
     }}
 
     .info-tooltip-box {{
@@ -173,7 +173,7 @@ st.markdown(f"""
         padding: 14px 16px;
         position: absolute;
         top: 26px;
-        right: -10px;
+        left: -140px;
         z-index: 999;
         box-shadow: 0 12px 30px rgba(0,0,0,0.25);
         font-size: 0.86rem;
@@ -190,12 +190,15 @@ st.markdown(f"""
         pointer-events: auto;
     }}
 
-    /* FILTROS Y CONTENEDORES */
-    .filter-title {{
+    /* SECCIÓN DE FILTROS ALINEADOS Y PEGADOS */
+    .filter-label-text {{
         color: {text_color} !important;
         font-weight: 800 !important;
         font-size: 0.95rem;
         margin: 0;
+        white-space: nowrap;
+        text-align: right;
+        padding-right: 2px;
     }}
     
     div[data-baseweb="select"] > div {{
@@ -205,6 +208,7 @@ st.markdown(f"""
         color: #ffffff !important;
         font-weight: 600 !important;
         height: 38px !important;
+        cursor: pointer !important;
     }}
     
     div[data-baseweb="select"] span, 
@@ -221,33 +225,42 @@ st.markdown(f"""
         display: none !important;
     }}
 
+    /* TEXTO EXPLICATIVO RED SOCIAL */
     .social-select-box {{
         display: flex;
         align-items: center;
-        gap: 10px;
-        background-color: transparent;
-        border: 1px solid transparent;
-        border-radius: 10px;
-        padding: 0;
-        height: 38px;
+        gap: 8px;
         color: {text_color};
-        font-weight: 600;
         font-size: 13px;
         width: 100%;
         box-sizing: border-box;
-        box-shadow: none;
+    }}
+
+    .social-label {{
+        color: {subtext_color};
+        font-weight: 600;
+        white-space: nowrap;
     }}
 
     .yt-chip {{
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        background-color: transparent;
-        border: 1px solid transparent;
-        border-radius: 6px;
-        padding: 2px 8px;
+        background-color: {btn_hover_bg};
+        border: 1px solid {btn_border};
+        border-radius: 8px;
+        padding: 4px 10px;
         color: {text_color};
         font-weight: 700;
+        font-size: 12px;
+        white-space: nowrap;
+    }}
+
+    .social-desc {{
+        font-size: 11px;
+        color: {subtext_color};
+        font-style: italic;
+        line-height: 1.2;
     }}
 
     .nav-back-link {{
@@ -286,16 +299,22 @@ st.markdown(f"""
         border-color: #8b121a;
     }}
 
+    /* BADGES DE RANKING CON ESTRELLAS DISTINTIVAS */
     .rank-badge {{
         position: absolute; top: -12px; left: -8px;
         background-color: {btn_bg}; color: {text_color};
-        font-size: 18px; font-weight: 900; padding: 3px 10px;
+        font-size: 17px; font-weight: 900; padding: 3px 10px;
         border: 2px solid {btn_border}; border-radius: 6px; box-shadow: 2px 2px 0px {btn_border}; z-index: 2;
+        display: flex; align-items: center; gap: 4px;
         transition: border-color 0.3s ease;
     }}
     .hype-card:hover .rank-badge {{
         border-color: #8b121a;
     }}
+
+    .star-red {{ color: #e63946; font-size: 16px; }}
+    .star-gold {{ color: #f1c40f; font-size: 16px; }}
+    .star-silver {{ color: #a8b2d1; font-size: 16px; }}
 
     .score-circle {{
         position: absolute; top: 10px; right: 10px; width: 56px; height: 56px; border-radius: 50%;
@@ -399,19 +418,19 @@ with col_logo:
 with col_theme:
     st.button(" ", key="theme_toggle", on_click=toggle_theme)
 
-# SECCIÓN DEL TÍTULO CON BOTÓN FLOTANTE 'i' EN LA 'S' FINAL
+# SECCIÓN DEL TÍTULO CON BOTÓN FLOTANTE 'i' PEGADO A LA 'S'
 st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
-col_header_title, col_back_btn = st.columns([3.2, 1], vertical_alignment="center")
+col_header_title, col_back_btn = st.columns([3.4, 1], vertical_alignment="center")
 
 with col_header_title:
     title_html = f"""
-    <div class="title-wrapper">
+    <div class="radar-title-container">
         <h1 class="radar-title-text">RADAR DEL HYPE - VIRAL FRAGRANCES</h1>
         <div class="info-icon-container">
             <div class="info-btn-badge">i</div>
             <div class="info-tooltip-box">
                 <div style="font-weight: 800; color: #d9787f; margin-bottom: 6px; font-size: 0.92rem;">📡 ¿Qué es el Radar del Hype?</div>
-                Es nuestro sistema inteligente que detecta qué fragancias se están volviendo virales en tiempo real a través de <b>YouTube</b>. Una herramienta clave para <b>revendedores, influencers y entusiastas</b> que buscan adelantarse al mercado y adquirir un perfume antes de que se agote o suba de precio.
+                Es nuestro sistema inteligente que detecta qué fragancias se están volviendo virales en tiempo real analizando menciones y reproducciones en <b>YouTube</b>. Una herramienta clave para <b>revendedores, influencers y entusiastas</b> que buscan adelantarse a las tendencias del mercado.
             </div>
         </div>
     </div>
@@ -423,30 +442,31 @@ with col_back_btn:
 
 st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
 
-# 5. FILTROS CENTRALIZADOS
-col_title, col_fecha, col_red = st.columns([1.1, 2.8, 3.8], vertical_alignment="center")
+# 5. FILTROS CENTRALIZADOS CON TEXTO "FILTRAR POR:" PEGADO AL DESPLEGABLE
+col_title, col_fecha, col_red = st.columns([0.65, 2.0, 4.35], vertical_alignment="center")
 
 with col_title:
-    st.markdown("<p class='filter-title'>Filtrar por :</p>", unsafe_allow_html=True)
+    st.markdown("<p class='filter-label-text'>Filtrar por :</p>", unsafe_allow_html=True)
 
 with col_fecha:
     opcion_fecha = st.selectbox(
         "Filtrar por Fecha",
-        ["📅 Fecha: Este Mes", "📅 Fecha: Esta Semana", "📅 Fecha: Este Año", "📅 Fecha: Año Pasado"],
+        ["📅 Fecha: Este Mes", "📅 Fecha: Hoy / Día", "📅 Fecha: Esta Semana", "📅 Fecha: Este Año", "📅 Fecha: Año Pasado"],
         index=0
     )
 
 with col_red:
     social_select_html = f"""
     <div class="social-select-box">
-        <span style="color: {subtext_color}; font-size: 13px;">Red social seleccionada:</span>
+        <span class="social-label">Red social analizada:</span>
         <div class="yt-chip">
-            <svg width="18" height="14" viewBox="0 0 26 20" fill="none">
+            <svg width="16" height="12" viewBox="0 0 26 20" fill="none">
                 <rect x="1" y="1" width="24" height="18" rx="5" fill="#8b121a" />
                 <polygon points="10,5 18,10 10,15" fill="#ffffff" />
             </svg>
             <span>YouTube</span>
         </div>
+        <span class="social-desc">(Mide la popularidad en tiempo real según menciones y reseñas en video)</span>
     </div>
     """
     st.markdown(social_select_html, unsafe_allow_html=True)
@@ -456,37 +476,37 @@ st.write("")
 # 6. BASE DE DATOS DE 6 PERFUMES
 hype_data = [
     {
-        "rank": "#1", "name": "Bleu de Chanel", "score": "95%", "year": "2010", "price": "$180,000 CLP",
+        "rank": "#1", "star": "<span class='star-red'>★</span>", "name": "Bleu de Chanel", "score": "95%", "year": "2010", "price": "$180,000 CLP",
         "img": "https://fimgs.net/mdig/rx_perfume/58/28/6005828.jpg",
         "stats": "↗ 75 videos y 1.5M<br>visitas este mes",
         "ai_text": "Tendencia por su versatilidad fresca y estética de 'lujo silencioso' en YouTube."
     },
     {
-        "rank": "#2", "name": "YSL Libre EDP", "score": "90%", "year": "2019", "price": "$150,000 CLP",
+        "rank": "#2", "star": "<span class='star-gold'>★</span>", "name": "YSL Libre EDP", "score": "90%", "year": "2019", "price": "$150,000 CLP",
         "img": "https://fimgs.net/mdig/rx_perfume/56/55/5605655.jpg",
         "stats": "↗ 60 videos y 1.0M<br>visitas este mes",
         "ai_text": "Gran popularidad por su elegante nota de lavanda floral para uso diario o de noche."
     },
     {
-        "rank": "#3", "name": "Dior Sauvage", "score": "88%", "year": "2015", "price": "$165,000 CLP",
+        "rank": "#3", "star": "<span class='star-silver'>★</span>", "name": "Dior Sauvage", "score": "88%", "year": "2015", "price": "$165,000 CLP",
         "img": "https://fimgs.net/mdig/rx_perfume/31/86/31861.jpg",
         "stats": "↗ 55 videos y 900k<br>visitas este mes",
         "ai_text": "Dominio constante en redes por su proyección masiva y versatilidad inigualable."
     },
     {
-        "rank": "#4", "name": "Baccarat Rouge 540", "score": "86%", "year": "2015", "price": "$310,000 CLP",
+        "rank": "#4", "star": "", "name": "Baccarat Rouge 540", "score": "86%", "year": "2015", "price": "$310,000 CLP",
         "img": "https://fimgs.net/mdig/rx_perfume/30/88/30886.jpg",
         "stats": "↗ 48 videos y 820k<br>visitas este mes",
         "ai_text": "El aroma nicho dulzón y ambarado más clonado e influyente de YouTube."
     },
     {
-        "rank": "#5", "name": "Club de Nuit Intense", "score": "84%", "year": "2015", "price": "$45,000 CLP",
+        "rank": "#5", "star": "", "name": "Club de Nuit Intense", "score": "84%", "year": "2015", "price": "$45,000 CLP",
         "img": "https://fimgs.net/mdig/rx_perfume/27/65/27656.jpg",
         "stats": "↗ 42 videos y 750k<br>visitas este mes",
         "ai_text": "Rey indiscutido de las fragancias árabes relación precio-calidad."
     },
     {
-        "rank": "#6", "name": "Angels' Share", "score": "82%", "year": "2020", "price": "$240,000 CLP",
+        "rank": "#6", "star": "", "name": "Angels' Share", "score": "82%", "year": "2020", "price": "$240,000 CLP",
         "img": "https://fimgs.net/mdig/rx_perfume/62/61/62615.jpg",
         "stats": "↗ 38 videos y 680k<br>visitas este mes",
         "ai_text": "Tendencia invernal gourmand con notas de licor de canela y praliné."
@@ -504,7 +524,7 @@ for row in range(0, len(hype_data), cols_per_row):
             with cols[i]:
                 html_card = f"""
                 <div class="hype-card">
-                    <div class="rank-badge">{data['rank']}</div>
+                    <div class="rank-badge">{data['star']}{data['rank']}</div>
                     <div class="score-circle">
                         <div class="score-title">HYPE<br>SCORE:</div>
                         <div class="score-value">{data['score']}</div>
