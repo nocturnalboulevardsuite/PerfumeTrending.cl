@@ -14,19 +14,13 @@ if 'selected_perfume' not in st.session_state:
 def toggle_theme():
     st.session_state['theme'] = 'dark' if st.session_state['theme'] == 'light' else 'light'
 
-def navigate_to(page, perfume_data=None):
-    st.session_state['current_page'] = page
-    if perfume_data:
-        st.session_state['selected_perfume'] = perfume_data
-
 is_dark = st.session_state['theme'] == 'dark'
 
 app_bg_css = "background-color: #f6efe9 !important;" if not is_dark else "background-color: #0e1117 !important;"
 text_color = "#ffffff" if is_dark else "#1a1a1a"
-subtext_color = "#a0a0a0" if is_dark else "#666666"
+subtext_color = "#888888" if is_dark else "#777777"
 
 btn_bg = "#1f242d" if is_dark else "#ffffff"
-btn_text = "#ffffff" if is_dark else "#2c2c2c"
 btn_border = "#3a3f4d" if is_dark else "#d4cdc5"
 btn_hover_bg = "#2d3340" if is_dark else "#fcfaf8"
 
@@ -46,12 +40,20 @@ bottle_svg = (
     "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 58'><rect x='18' y='2' width='14' height='7' rx='2' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><rect x='21' y='9' width='8' height='5' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='19' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='5' fill='none' stroke='%23111111' stroke-width='2'/><line x1='25' y1='23' x2='25' y2='26' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='25' y1='42' x2='25' y2='45' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='14' y1='34' x2='17' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='33' y1='34' x2='36' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='17' y1='26' x2='19' y2='28' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='31' y1='40' x2='33' y2='42' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='17' y1='42' x2='19' y2='40' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='31' y1='28' x2='33' y2='26' stroke='%23111111' stroke-width='2' stroke-linecap='round'/></svg>"
 )
 
-# 3. ESTILOS CSS REFINADOS
+# 3. ESTILOS CSS REFINADOS (AJUSTE DE MARGEN Y CENTRALIZACIÓN)
 st.markdown(f"""
     <style>
+    /* Ocultar encabezados predeterminados y elevar el contenido */
     header[data-testid="stHeader"] {{ display: none !important; }}
     .stApp {{ {app_bg_css} }}
     
+    .main .block-container {{
+        padding-top: 1rem !important;
+        padding-bottom: 2rem !important;
+        max-width: 1200px !important;
+        margin: 0 auto !important;
+    }}
+
     /* --- SWITCH DE TEMA ANIMADO EN FORMA DE BOTELLA --- */
     .st-key-theme_toggle div[data-testid="stButton"] > button,
     .st-key-theme_toggle button {{
@@ -104,39 +106,49 @@ st.markdown(f"""
         z-index: 2 !important;
     }}
 
-    /* --- ESTILO MINIMALISTA PARA DESPLEGABLES (SELECTBOX) --- */
+    /* --- ESTILO OSCURO DE FILTROS DESPLEGABLES (PILL STYLE ORIGINAL) --- */
     .filter-title {{
-        color: #000000 !important;
-        font-weight: 900 !important;
+        color: {text_color} !important;
+        font-weight: 800 !important;
         font-size: 1.1rem;
         margin: 0;
     }}
     
     div[data-baseweb="select"] > div {{
-        background-color: #ffffff !important;
-        border: 1.5px solid #000000 !important;
-        border-radius: 25px !important;
-        color: #000000 !important;
+        background-color: #282933 !important;
+        border: 1px solid #383946 !important;
+        border-radius: 10px !important;
+        color: #ffffff !important;
         font-weight: 600 !important;
-        padding-left: 10px !important;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        transition: all 0.2s ease-in-out;
-    }}
-    
-    div[data-baseweb="select"]:hover > div {{
-        box-shadow: 0 4px 8px rgba(0,0,0,0.12);
-        transform: translateY(-1px);
+        height: 42px !important;
     }}
     
     div[data-baseweb="select"] span, 
-    div[data-baseweb="select"] div,
-    div[data-baseweb="popover"] div {{
-        color: #000000 !important;
-        font-size: 13px !important;
+    div[data-baseweb="select"] div {{
+        color: #ffffff !important;
+        font-size: 14px !important;
+    }}
+
+    div[data-baseweb="select"] svg {{
+        fill: #ffffff !important;
     }}
     
     div[data-testid="stSelectbox"] label {{
         display: none !important;
+    }}
+
+    /* Estilo del enlace superior central */
+    .nav-back-link {{
+        text-align: center;
+        display: block;
+        color: {subtext_color};
+        text-decoration: none;
+        font-size: 0.95rem;
+        font-weight: 500;
+        transition: color 0.2s ease;
+    }}
+    .nav-back-link:hover {{
+        color: {text_color};
     }}
 
     /* --- ESTILOS DE LAS TARJETAS --- */
@@ -191,14 +203,14 @@ st.markdown(f"""
     </style>
 """, unsafe_allow_html=True)
 
-# 4. CABECERA SUPERIOR (LOGO + BOTÓN DE REGRESO + TEMA)
-col_logo, col_back, col_theme = st.columns([4, 3, 1], vertical_alignment="center")
+# 4. CABECERA SUPERIOR (LOGO + VOLVER AL CATÁLOGO AL CENTRO + TEMA A LA DERECHA)
+col_logo, col_back, col_theme = st.columns([3, 4, 1], vertical_alignment="center")
 
 with col_logo:
     logo_color = "#8c7b6d"
     logo_html = f"""
     <div style="display: flex; align-items: center; gap: 10px; cursor: pointer;" onclick="window.location.reload();">
-        <svg width="42" height="42" viewBox="0 0 36 36" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <svg width="38" height="38" viewBox="0 0 36 36" fill="none" stroke-linecap="round" stroke-linejoin="round">
             <path d="M 6.8 21 L 29.2 21 C 30 25 27 32 18 32 C 9 32 6 25 6.8 21 Z" fill="{logo_color}" />
             <line x1="6.8" y1="21" x2="29.2" y2="21" stroke="{text_color}" stroke-width="2" />
             <line x1="18" y1="10" x2="18" y2="30" stroke="{text_color}" stroke-width="1.5" />
@@ -217,15 +229,15 @@ with col_logo:
     st.markdown(logo_html, unsafe_allow_html=True)
 
 with col_back:
-    st.page_link("app.py", label="← Volver al Catálogo principal")
+    st.markdown('<a href="app.py" target="_self" class="nav-back-link">← Volver al Catálogo principal</a>', unsafe_allow_html=True)
 
 with col_theme:
     st.button(" ", key="theme_toggle", on_click=toggle_theme)
 
-# 5. TÍTULO Y FILTROS MINIMALISTAS
-st.markdown(f"<h1 style='text-align: center; color: {text_color}; font-weight: 800; font-size: 2.5rem; margin-top: 15px; margin-bottom: 30px;'>RADAR DEL HYPE - Viral Fragrances</h1>", unsafe_allow_html=True)
+# 5. TÍTULO Y FILTROS MINIMALISTAS CENTRALIZADOS
+st.markdown(f"<h1 style='text-align: center; color: {text_color}; font-weight: 800; font-size: 2.3rem; margin-top: 35px; margin-bottom: 35px;'>RADAR DEL HYPE - Viral Fragrances</h1>", unsafe_allow_html=True)
 
-col_title, col_fecha, col_red, col_espacio = st.columns([1.2, 2, 2, 3], vertical_alignment="center")
+col_title, col_fecha, col_red, col_empty = st.columns([1.2, 2.2, 2.2, 3.5], vertical_alignment="center")
 
 with col_title:
     st.markdown("<p class='filter-title'>Filtrar por :</p>", unsafe_allow_html=True)
@@ -244,7 +256,7 @@ with col_red:
         index=0
     )
 
-st.divider()
+st.write("")
 
 # 6. BASE DE DATOS
 hype_data = [
