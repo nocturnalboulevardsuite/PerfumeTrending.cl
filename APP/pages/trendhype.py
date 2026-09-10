@@ -58,7 +58,7 @@ st.markdown(f"""
         max-width: 1200px !important;
     }}
 
-    /* SWITCH DE TEMA */
+    /* SWITCH DE TEMA LIMPIO SIN BORDES ROJOS */
     .st-key-theme_toggle div[data-testid="stButton"] > button,
     .st-key-theme_toggle button {{
         background: transparent !important;
@@ -85,10 +85,10 @@ st.markdown(f"""
         position: absolute !important;
         top: 7px !important; left: 0 !important;
         width: 80px !important; height: 36px !important;
-        background-color: #262626 !important;
-        border: 2px solid #111111 !important;
+        background-color: #2b2c34 !important;
+        border: 2px solid #1a1b20 !important;
         border-radius: 20px !important;
-        box-shadow: inset 0 2px 5px rgba(0,0,0,0.6) !important;
+        box-shadow: inset 0 2px 5px rgba(0,0,0,0.4) !important;
         box-sizing: border-box !important;
         background-image: url("{static_icon_svg}") !important;
         background-repeat: no-repeat !important;
@@ -107,26 +107,78 @@ st.markdown(f"""
         background-repeat: no-repeat !important;
         background-size: contain !important;
         transition: left 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
-        filter: drop-shadow(2px 3px 4px rgba(0,0,0,0.4)) !important;
+        filter: drop-shadow(2px 3px 4px rgba(0,0,0,0.3)) !important;
         z-index: 2 !important;
     }}
 
-    /* INFORMACIÓN DINÁMICA DEL RADAR */
-    .radar-info-box {{
+    /* TÍTULO ANCHO, ROJIZO PERLADO Y CON HOVER OSCURO */
+    .radar-title-text {{
+        color: #d9787f !important;
+        font-weight: 900 !important;
+        font-size: 2.1rem !important;
+        letter-spacing: 2.5px !important;
+        margin: 0;
+        display: inline-block;
+        transition: color 0.3s ease, transform 0.3s ease !important;
+        cursor: pointer;
+    }}
+
+    .radar-title-text:hover {{
+        color: #7a1c24 !important;
+    }}
+
+    /* INFORMACIÓN DEL RADAR DESPLEGABLE ANIMADO */
+    details.radar-dropdown {{
         background-color: {btn_bg};
         border: 1px solid {btn_border};
-        border-left: 4px solid #e62117;
         border-radius: 12px;
-        padding: 12px 18px;
-        margin-top: 10px;
+        margin-top: 12px;
         margin-bottom: 20px;
-        color: {text_color};
-        font-size: 0.88rem;
-        line-height: 1.45;
+        overflow: hidden;
+        transition: all 0.3s ease;
         box-shadow: 0 4px 12px rgba(0,0,0,0.04);
     }}
 
-    /* FILTROS DESPLEGABLES Y CONTENEDOR DE RED SOCIAL */
+    details.radar-dropdown summary {{
+        padding: 12px 18px;
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: {text_color};
+        cursor: pointer;
+        list-style: none;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        user-select: none;
+        transition: background-color 0.2s ease;
+    }}
+
+    details.radar-dropdown summary::-webkit-details-marker {{
+        display: none;
+    }}
+
+    details.radar-dropdown summary:hover {{
+        background-color: {btn_hover_bg};
+    }}
+
+    details.radar-dropdown[open] summary {{
+        border-bottom: 1px solid {btn_border};
+    }}
+
+    .radar-dropdown-content {{
+        padding: 14px 18px;
+        color: {subtext_color};
+        font-size: 0.88rem;
+        line-height: 1.5;
+        animation: fadeInSubtle 0.35s ease-in-out;
+    }}
+
+    @keyframes fadeInSubtle {{
+        from {{ opacity: 0; transform: translateY(-6px); }}
+        to {{ opacity: 1; transform: translateY(0); }}
+    }}
+
+    /* FILTROS DESPLEGABLES Y CONTENEDOR DE RED SOCIAL TRANSPARENTE */
     .filter-title {{
         color: {text_color} !important;
         font-weight: 800 !important;
@@ -161,28 +213,28 @@ st.markdown(f"""
         display: flex;
         align-items: center;
         gap: 10px;
-        background-color: #282933;
-        border: 1px solid #383946;
+        background-color: transparent;
+        border: 1px solid transparent;
         border-radius: 10px;
-        padding: 0 14px;
+        padding: 0;
         height: 38px;
-        color: #ffffff;
+        color: {text_color};
         font-weight: 600;
         font-size: 13px;
         width: 100%;
         box-sizing: border-box;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+        box-shadow: none;
     }}
 
     .yt-chip {{
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        background-color: #1f2029;
-        border: 1px solid #e62117;
+        background-color: transparent;
+        border: 1px solid transparent;
         border-radius: 6px;
         padding: 2px 8px;
-        color: #ffffff;
+        color: {text_color};
         font-weight: 700;
     }}
 
@@ -220,7 +272,7 @@ st.markdown(f"""
     .hype-card:hover {{
         transform: translateY(-8px) scale(1.025);
         box-shadow: 0 16px 30px rgba(0,0,0,0.16);
-        border-color: #e62117;
+        border-color: #7a1c24;
     }}
 
     .rank-badge {{
@@ -231,7 +283,7 @@ st.markdown(f"""
         transition: border-color 0.3s ease;
     }}
     .hype-card:hover .rank-badge {{
-        border-color: #e62117;
+        border-color: #7a1c24;
     }}
 
     .score-circle {{
@@ -242,7 +294,7 @@ st.markdown(f"""
         transition: border-color 0.3s ease;
     }}
     .hype-card:hover .score-circle {{
-        border-color: #e62117;
+        border-color: #7a1c24;
     }}
 
     .score-title {{ font-size: 7px; font-weight: 800; line-height: 1.0; text-align: center; color: {text_color}; }}
@@ -281,24 +333,24 @@ st.markdown(f"""
     }}
     .price-text {{ text-align: center; font-size: 11px; color: {text_color}; margin-bottom: 6px; }}
 
-    /* BOTONES COMPARAR PRECIOS EN ROJO YOUTUBE CON ZOOM DINÁMICO Y BORDES SUAVES */
+    /* BOTONES COMPARAR PRECIOS EN ROJO VINO MATE */
     div[data-testid="stElementContainer"] > div.stButton > button:not([aria-label=" "]) {{
-        background-color: #e62117 !important;
+        background-color: #7a1c24 !important;
         color: #ffffff !important;
         border: none !important;
         border-radius: 10px !important;
         font-weight: 700 !important;
         font-size: 13px !important;
         padding: 10px 16px !important;
-        box-shadow: 0 3px 10px rgba(230, 33, 23, 0.25) !important;
+        box-shadow: 0 3px 10px rgba(122, 28, 36, 0.25) !important;
         transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s ease, box-shadow 0.25s ease !important;
         width: 100% !important;
     }}
 
     div[data-testid="stElementContainer"] > div.stButton > button:not([aria-label=" "]):hover {{
-        background-color: #cc180e !important;
-        transform: scale(1.05) translateY(-2px) !important;
-        box-shadow: 0 8px 18px rgba(230, 33, 23, 0.45) !important;
+        background-color: #5c131a !important;
+        transform: scale(1.04) translateY(-2px) !important;
+        box-shadow: 0 6px 16px rgba(122, 28, 36, 0.4) !important;
         color: #ffffff !important;
     }}
 
@@ -336,21 +388,27 @@ with col_logo:
 with col_theme:
     st.button(" ", key="theme_toggle", on_click=toggle_theme)
 
-# SECCIÓN DEL TÍTULO CON BOTÓN VOLVER A LA DERECHA
+# SECCIÓN DEL TÍTULO CON TEXTO ROJIZO PERLADO Y BOTÓN VOLVER
 st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
 col_header_title, col_back_btn = st.columns([3.2, 1], vertical_alignment="center")
 
 with col_header_title:
-    st.markdown(f"<h1 style='color: {text_color}; font-weight: 800; font-size: 2.1rem; margin: 0;'>RADAR DEL HYPE - Viral Fragrances</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 class='radar-title-text'>RADAR DEL HYPE - VIRAL FRAGRANCES</h1>", unsafe_allow_html=True)
 
 with col_back_btn:
     st.markdown('<a href="app.py" target="_self" class="nav-back-link">← Volver al Catálogo principal</a>', unsafe_allow_html=True)
 
-# BANNER INFORMATIVO DINÁMICO DEL RADAR
+# BANNER INFORMATIVO DESPLEGABLE Y SUAVE (RADAR DEL HYPE)
 st.markdown(f"""
-    <div class="radar-info-box">
-        📡 <b>¿Qué es el Radar del Hype?</b> Es nuestro sistema inteligente que detecta qué fragancias se están volviendo virales en tiempo real a través de <b>YouTube</b>. Una herramienta clave para <b>revendedores, influencers y entusiastas</b> que buscan adelantarse al mercado y adquirir un perfume antes de que se agote o suba de precio.
-    </div>
+    <details class="radar-dropdown">
+        <summary>
+            <span>📡 ¿Qué es el Radar del Hype?</span>
+            <span style="font-size: 0.8rem; opacity: 0.7;">▼ ver detalle</span>
+        </summary>
+        <div class="radar-dropdown-content">
+            Es nuestro sistema inteligente que detecta qué fragancias se están volviendo virales en tiempo real a través de <b>YouTube</b>. Una herramienta clave para <b>revendedores, influencers y entusiastas</b> que buscan adelantarse al mercado y adquirir un perfume antes de que se agote o suba de precio.
+        </div>
+    </details>
 """, unsafe_allow_html=True)
 
 # 5. FILTROS CENTRALIZADOS BIEN DISTRIBUIDOS
@@ -372,7 +430,7 @@ with col_red:
         <span style="color: {subtext_color}; font-size: 13px;">Red social seleccionada:</span>
         <div class="yt-chip">
             <svg width="18" height="14" viewBox="0 0 26 20" fill="none">
-                <rect x="1" y="1" width="24" height="18" rx="5" fill="#e62117" />
+                <rect x="1" y="1" width="24" height="18" rx="5" fill="#7a1c24" />
                 <polygon points="10,5 18,10 10,15" fill="#ffffff" />
             </svg>
             <span>YouTube</span>
