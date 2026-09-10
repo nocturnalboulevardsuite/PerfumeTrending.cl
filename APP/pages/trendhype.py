@@ -3,13 +3,15 @@ import streamlit as st
 # 1. CONFIGURACIÓN DE PÁGINA
 st.set_page_config(page_title="Radar del Hype - PerfumeTrending", layout="wide")
 
-# 2. MANEJO DE ESTADO (Navegación y Tema)
+# 2. MANEJO DE ESTADO (Navegación, Tema y Filtro)
 if 'current_page' not in st.session_state:
     st.session_state['current_page'] = 'home'
 if 'theme' not in st.session_state:
     st.session_state['theme'] = 'light'
 if 'selected_perfume' not in st.session_state:
     st.session_state['selected_perfume'] = None
+if 'selected_month' not in st.session_state:
+    st.session_state['selected_month'] = "Este Mes"
 
 def toggle_theme():
     st.session_state['theme'] = 'dark' if st.session_state['theme'] == 'light' else 'light'
@@ -40,7 +42,7 @@ bottle_svg = (
     "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 58'><rect x='18' y='2' width='14' height='7' rx='2' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><rect x='21' y='9' width='8' height='5' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='19' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='5' fill='none' stroke='%23111111' stroke-width='2'/><line x1='25' y1='23' x2='25' y2='26' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='25' y1='42' x2='25' y2='45' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='14' y1='34' x2='17' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='33' y1='34' x2='36' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='17' y1='26' x2='19' y2='28' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='31' y1='40' x2='33' y2='42' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='17' y1='42' x2='19' y2='40' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='31' y1='28' x2='33' y2='26' stroke='%23111111' stroke-width='2' stroke-linecap='round'/></svg>"
 )
 
-# 3. ESTILOS CSS REFINADOS Y ANIMACIONES
+# 3. ESTILOS CSS REFINADOS Y ANIMACIONES MINIMALISTAS
 st.markdown(f"""
     <style>
     header[data-testid="stHeader"] {{ display: none !important; }}
@@ -190,7 +192,7 @@ st.markdown(f"""
         pointer-events: auto;
     }}
 
-    /* SECCIÓN DE FILTROS Y BLOQUEO DE ESCRITURA EN SELECTBOX */
+    /* SECCIÓN DE FILTROS ESTILO YOUTUBE CHIP (SIN ESCRITURA) */
     .filter-label-text {{
         color: {text_color} !important;
         font-weight: 800 !important;
@@ -200,38 +202,26 @@ st.markdown(f"""
         text-align: right;
         padding-right: 2px;
     }}
-    
-    div[data-baseweb="select"] > div {{
-        background-color: #282933 !important;
-        border: 1px solid #383946 !important;
-        border-radius: 10px !important;
-        color: #ffffff !important;
-        font-weight: 600 !important;
-        height: 38px !important;
-        cursor: pointer !important;
-    }}
-    
-    /* BLOQUEO TOTAL DE ESCRITURA / EDICIÓN EN SELECTBOX */
-    div[data-baseweb="select"] input {{
-        caret-color: transparent !important;
-        pointer-events: none !important;
-        user-select: none !important;
-        cursor: pointer !important;
-    }}
-    
-    div[data-baseweb="select"] span, 
-    div[data-baseweb="select"] div {{
-        color: #ffffff !important;
+
+    /* ESTILO BOTÓN CHIP YOUTUBE DE FECHA */
+    div[data-testid="stPopover"] > button {{
+        background-color: {"#282933" if is_dark else "#e8e0d7"} !important;
+        color: {text_color} !important;
+        border: 1px solid {"#383946" if is_dark else "#d4cdc5"} !important;
+        border-radius: 20px !important;
+        padding: 6px 16px !important;
+        font-weight: 700 !important;
         font-size: 13px !important;
-        user-select: none !important;
+        height: 38px !important;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05) !important;
+        transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
     }}
 
-    div[data-baseweb="select"] svg {{
-        fill: #ffffff !important;
-    }}
-    
-    div[data-testid="stSelectbox"] label {{
-        display: none !important;
+    div[data-testid="stPopover"] > button:hover {{
+        background-color: #d83737 !important;
+        color: #ffffff !important;
+        border-color: #d83737 !important;
+        transform: translateY(-1px) scale(1.02) !important;
     }}
 
     /* INTERACTIVIDAD Y ANIMACIÓN DEL BOTÓN YOUTUBE */
@@ -352,41 +342,62 @@ st.markdown(f"""
         border-color: #d83737;
     }}
 
-    /* BADGES DE RANKING Y ESTRELLAS CON ANIMACIÓN VIVA */
+    /* BADGES DE RANKING Y ESTRELLAS MINIMALISTAS */
     .rank-badge {{
         position: absolute; top: -12px; left: -8px;
         background-color: {btn_bg}; color: {text_color};
-        font-size: 17px; font-weight: 900; padding: 3px 10px;
+        font-size: 16px; font-weight: 900; padding: 3px 10px;
         border: 2px solid {btn_border}; border-radius: 6px; box-shadow: 2px 2px 0px {btn_border}; z-index: 2;
-        display: flex; align-items: center; gap: 5px;
+        display: flex; align-items: center; gap: 6px;
         transition: border-color 0.3s ease;
     }}
     .hype-card:hover .rank-badge {{
         border-color: #d83737;
     }}
 
-    /* ANIMACIONES DE ESTRELLAS CON VIDA Y BRILLO */
-    @keyframes starRubyGlow {{
-        0% {{ transform: scale(1) rotate(0deg); filter: drop-shadow(0 0 2px rgba(230, 57, 70, 0.6)); }}
-        50% {{ transform: scale(1.22) rotate(8deg); filter: drop-shadow(0 0 10px rgba(230, 57, 70, 0.95)); }}
-        100% {{ transform: scale(1) rotate(0deg); filter: drop-shadow(0 0 2px rgba(230, 57, 70, 0.6)); }}
+    /* ANIMACIÓN SUTIL Y ELEGANTE PARA ESTRELLAS MINIMALISTAS */
+    @keyframes minimalStarGlow {{
+        0%, 100% {{
+            transform: scale(1);
+            filter: drop-shadow(0 0 2px rgba(216, 55, 55, 0.3));
+            opacity: 0.92;
+        }}
+        50% {{
+            transform: scale(1.15);
+            filter: drop-shadow(0 0 7px rgba(216, 55, 55, 0.75));
+            opacity: 1;
+        }}
     }}
 
-    @keyframes starGoldGlow {{
-        0% {{ transform: scale(1) rotate(0deg); filter: drop-shadow(0 0 2px rgba(241, 196, 15, 0.6)); }}
-        50% {{ transform: scale(1.2) rotate(-8deg); filter: drop-shadow(0 0 10px rgba(241, 196, 15, 0.95)); }}
-        100% {{ transform: scale(1) rotate(0deg); filter: drop-shadow(0 0 2px rgba(241, 196, 15, 0.6)); }}
+    @keyframes goldStarGlow {{
+        0%, 100% {{
+            transform: scale(1);
+            filter: drop-shadow(0 0 2px rgba(212, 175, 55, 0.3));
+            opacity: 0.92;
+        }}
+        50% {{
+            transform: scale(1.15);
+            filter: drop-shadow(0 0 7px rgba(241, 196, 15, 0.75));
+            opacity: 1;
+        }}
     }}
 
-    @keyframes starSilverGlow {{
-        0% {{ transform: scale(1); filter: drop-shadow(0 0 2px rgba(168, 178, 209, 0.5)); }}
-        50% {{ transform: scale(1.18); filter: drop-shadow(0 0 8px rgba(168, 178, 209, 0.9)); }}
-        100% {{ transform: scale(1); filter: drop-shadow(0 0 2px rgba(168, 178, 209, 0.5)); }}
+    @keyframes silverStarGlow {{
+        0%, 100% {{
+            transform: scale(1);
+            filter: drop-shadow(0 0 2px rgba(148, 163, 184, 0.3));
+            opacity: 0.92;
+        }}
+        50% {{
+            transform: scale(1.15);
+            filter: drop-shadow(0 0 7px rgba(226, 232, 240, 0.75));
+            opacity: 1;
+        }}
     }}
 
-    .star-anim-red {{ animation: starRubyGlow 2.2s infinite ease-in-out; display: inline-flex; vertical-align: middle; }}
-    .star-anim-gold {{ animation: starGoldGlow 2.4s infinite ease-in-out; display: inline-flex; vertical-align: middle; }}
-    .star-anim-silver {{ animation: starSilverGlow 2.6s infinite ease-in-out; display: inline-flex; vertical-align: middle; }}
+    .star-minimal-ruby {{ animation: minimalStarGlow 3s ease-in-out infinite; display: inline-flex; vertical-align: middle; }}
+    .star-minimal-gold {{ animation: goldStarGlow 3.2s ease-in-out infinite; display: inline-flex; vertical-align: middle; }}
+    .star-minimal-silver {{ animation: silverStarGlow 3.5s ease-in-out infinite; display: inline-flex; vertical-align: middle; }}
 
     .score-circle {{
         position: absolute; top: 10px; right: 10px; width: 56px; height: 56px; border-radius: 50%;
@@ -435,7 +446,7 @@ st.markdown(f"""
     }}
     .price-text {{ text-align: center; font-size: 11px; color: {text_color}; margin-bottom: 6px; }}
 
-    /* BOTONES DE COMPARAR PRECIOS - ROJO MATE TIPO BOTELLA */
+    /* BOTONES DE COMPARAR PRECIOS */
     div[data-testid="stElementContainer"] > div.stButton > button:not([aria-label=" "]) {{
         background-color: #d83737 !important;
         color: #ffffff !important;
@@ -547,18 +558,20 @@ with col_back_btn:
 
 st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
 
-# 5. FILTROS CENTRALIZADOS
-col_title, col_fecha, col_red = st.columns([0.65, 2.0, 4.35], vertical_alignment="center")
+# 5. FILTROS CENTRALIZADOS CON BOTÓN CHIP TIPO YOUTUBE (SIN CAMPO DE ESCRITURA)
+col_title, col_fecha, col_red = st.columns([0.65, 1.8, 4.55], vertical_alignment="center")
 
 with col_title:
     st.markdown("<p class='filter-label-text'>Filtrar por :</p>", unsafe_allow_html=True)
 
 with col_fecha:
-    opcion_fecha = st.selectbox(
-        "Filtrar por Fecha",
-        ["📅 Fecha: Este Mes", "📅 Fecha: Hoy / Día", "📅 Fecha: Esta Semana", "📅 Fecha: Este Año", "📅 Fecha: Año Pasado"],
-        index=0
-    )
+    # Botón Chip Interactivo Popover estilo YouTube (100% Clic, sin campo de texto)
+    opciones_fecha = ["Este Mes", "Hoy / Día", "Esta Semana", "Este Año", "Año Pasado"]
+    with st.popover(f"📅 {st.session_state['selected_month']} ▾", use_container_width=True):
+        for opt in opciones_fecha:
+            if st.button(opt, key=f"btn_m_{opt}", use_container_width=True):
+                st.session_state['selected_month'] = opt
+                st.rerun()
 
 with col_red:
     social_select_html = f"""
@@ -578,51 +591,49 @@ with col_red:
 
 st.write("")
 
-# 6. ICONOS DE ESTRELLAS CON DISEÑO ELABORADO Y ANIMACIÓN
+# 6. ICONOS DE ESTRELLAS MINIMALISTAS Y PROFESIONALES (LUJO GEOMÉTRICO 4 PUNTAS)
 star_ruby_svg = """
-<div class="star-anim-red">
-    <svg width="18" height="18" viewBox="0 0 24 24">
+<div class="star-minimal-ruby">
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
         <defs>
-            <linearGradient id="rubyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <linearGradient id="minRuby" x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" stop-color="#ff4d5a"/>
-                <stop offset="50%" stop-color="#d83737"/>
-                <stop offset="100%" stop-color="#8a0c13"/>
+                <stop offset="100%" stop-color="#a81722"/>
             </linearGradient>
         </defs>
-        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" 
-                 fill="url(#rubyGrad)" stroke="#ff949c" stroke-width="1.2"/>
+        <path d="M12 2L14.4 9.6L22 12L14.4 14.4L12 22L9.6 14.4L2 12L9.6 9.6L12 2Z" fill="url(#minRuby)" stroke="#ff8591" stroke-width="0.8"/>
+        <circle cx="12" cy="12" r="1.5" fill="#ffffff" opacity="0.9"/>
     </svg>
 </div>
 """
 
 star_gold_svg = """
-<div class="star-anim-gold">
-    <svg width="18" height="18" viewBox="0 0 24 24">
+<div class="star-minimal-gold">
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
         <defs>
-            <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#fff176"/>
-                <stop offset="50%" stop-color="#f1c40f"/>
-                <stop offset="100%" stop-color="#b78103"/>
+            <linearGradient id="minGold" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#f3e5ab"/>
+                <stop offset="50%" stop-color="#d4af37"/>
+                <stop offset="100%" stop-color="#aa7c11"/>
             </linearGradient>
         </defs>
-        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" 
-                 fill="url(#goldGrad)" stroke="#fff8b3" stroke-width="1.2"/>
+        <path d="M12 2L14.4 9.6L22 12L14.4 14.4L12 22L9.6 14.4L2 12L9.6 9.6L12 2Z" fill="url(#minGold)" stroke="#fff3a8" stroke-width="0.8"/>
+        <circle cx="12" cy="12" r="1.5" fill="#ffffff" opacity="0.9"/>
     </svg>
 </div>
 """
 
 star_silver_svg = """
-<div class="star-anim-silver">
-    <svg width="18" height="18" viewBox="0 0 24 24">
+<div class="star-minimal-silver">
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
         <defs>
-            <linearGradient id="silverGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <linearGradient id="minSilver" x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" stop-color="#ffffff"/>
-                <stop offset="50%" stop-color="#b0bec5"/>
-                <stop offset="100%" stop-color="#607d8b"/>
+                <stop offset="100%" stop-color="#8a99ad"/>
             </linearGradient>
         </defs>
-        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" 
-                 fill="url(#silverGrad)" stroke="#e2e8f0" stroke-width="1.2"/>
+        <path d="M12 2L14.4 9.6L22 12L14.4 14.4L12 22L9.6 14.4L2 12L9.6 9.6L12 2Z" fill="url(#minSilver)" stroke="#e2e8f0" stroke-width="0.8"/>
+        <circle cx="12" cy="12" r="1.5" fill="#ffffff" opacity="0.9"/>
     </svg>
 </div>
 """
