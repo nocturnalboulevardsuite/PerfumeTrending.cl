@@ -198,11 +198,12 @@ st.markdown(f"""
         color: {text_color} !important;
         font-weight: 700 !important;
         font-size: 1rem !important;
-        margin: 0,9 !important;
+        margin: 0 !important;
         display: flex;
         align-items: center !important;
         justify-content: flex-start;
         height: 32px;
+        white-space: nowrap !important;
     }}
 
     /* ESTILOS IDÉNTICOS Y CENTRADO ABSOLUTO PARA EL BOTÓN POP-OVER Y CHIP YOUTUBE */
@@ -575,7 +576,7 @@ with col_back_btn:
 st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
 
 # 5. FILTROS ALINEADOS Y PEGADOS ("Filtrado por :" + Popover)
-col_title, col_fecha, col_red = st.columns([0.28, 0.42, 3.3], gap="small", vertical_alignment="center")
+col_title, col_fecha, col_red = st.columns([0.6, 0.5, 2.9], gap="small", vertical_alignment="center")
 
 with col_title:
     st.markdown("<div class='filter-label-text'>Filtrado por :</div>", unsafe_allow_html=True)
