@@ -193,14 +193,16 @@ st.markdown(f"""
         pointer-events: auto;
     }}
 
-    /* ETIQUETA "FILTRAR POR :" PERFECTAMENTE ALINEADA */
+    /* ETIQUETA "FILTRAR POR :" ALINEADA AL BOTÓN */
     .filter-label-text {{
         color: {text_color} !important;
         font-weight: 700 !important;
+        font-size: 0.95rem !important;
         margin: 0 !important;
+        white-space: nowrap;
         display: flex;
-        align-items: center !important
-        justify-content: flex-end;
+        align-items: center !important;
+        justify-content: flex-start;
         height: 32px;
     }}
 
@@ -573,11 +575,11 @@ with col_back_btn:
 
 st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
 
-# 5. FILTROS ALINEADOS Y BALANCEADOS
-col_title, col_fecha, col_red = st.columns([0.85, 1.25, 4.9], vertical_alignment="center")
+# 5. FILTROS ALINEADOS Y PEGADOS ("Filtrado por :" + Popover)
+col_title, col_fecha, col_red = st.columns([0.28, 0.42, 3.3], gap="small", vertical_alignment="center")
 
 with col_title:
-    st.markdown("<div class='filter-label-text'>Filtrar por :</div>", unsafe_allow_html=True)
+    st.markdown("<div class='filter-label-text'>Filtrado por :</div>", unsafe_allow_html=True)
 
 with col_fecha:
     opciones_fecha = ["Este Mes", "Hoy / Día", "Esta Semana", "Este Año", "Año Pasado"]
