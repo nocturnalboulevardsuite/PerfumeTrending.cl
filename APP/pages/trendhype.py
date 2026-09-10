@@ -87,7 +87,7 @@ st.markdown(f"""
         position: absolute !important;
         top: 7px !important; left: 0 !important;
         width: 80px !important; height: 36px !important;
-        background-color: #2b2c34 !important;
+        background-color: #f3ece3 !important;
         border: 2px solid #1a1b20 !important;
         border-radius: 20px !important;
         box-shadow: inset 0 2px 5px rgba(0,0,0,0.4) !important;
