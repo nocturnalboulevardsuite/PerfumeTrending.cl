@@ -196,10 +196,9 @@ st.markdown(f"""
     /* ETIQUETA "FILTRAR POR :" PERFECTAMENTE ALINEADA */
     .filter-label-text {{
         color: {text_color} !important;
-        font-weight: 800 !important;
-        font-size: 0.88rem !important;
+        font-weight: 700 !important;
         margin: 0 !important;
-        display: flex !important;
+        display: flex;
         align-items: center !important
         justify-content: flex-end;
         height: 32px;
