@@ -42,7 +42,7 @@ bottle_svg = (
     "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 58'><rect x='18' y='2' width='14' height='7' rx='2' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><rect x='21' y='9' width='8' height='5' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='19' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='5' fill='none' stroke='%23111111' stroke-width='2'/><line x1='25' y1='23' x2='25' y2='26' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='25' y1='42' x2='25' y2='45' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='14' y1='34' x2='17' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='33' y1='34' x2='36' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='17' y1='26' x2='19' y2='28' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='31' y1='40' x2='33' y2='42' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='17' y1='42' x2='19' y2='40' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='31' y1='28' x2='33' y2='26' stroke='%23111111' stroke-width='2' stroke-linecap='round'/></svg>"
 )
 
-# 3. ESTILOS CSS REFINADOS Y ANIMACIONES MINIMALISTAS
+# 3. ESTILOS CSS REFINADOS Y ANIMACIONES DINÁMICAS
 st.markdown(f"""
     <style>
     header[data-testid="stHeader"] {{ display: none !important; }}
@@ -113,11 +113,9 @@ st.markdown(f"""
         z-index: 2 !important;
     }}
 
-    /* TÍTULO Y BOTÓN DE INFORMACIÓN */
+    /* TÍTULO Y BOTÓN DE INFORMACIÓN SOBRE LA 'S' */
     .radar-title-container {{
-        display: inline-flex;
-        align-items: baseline;
-        gap: 6px;
+        display: inline-block;
     }}
 
     .radar-title-text {{
@@ -134,20 +132,25 @@ st.markdown(f"""
         color: #8b121a !important;
     }}
 
-    .info-icon-container {{
+    .s-info-wrapper {{
         position: relative;
         display: inline-block;
-        vertical-align: super;
-        top: -8px;
+    }}
+
+    .info-icon-container {{
+        position: absolute;
+        top: -10px;
+        right: -12px;
+        display: inline-block;
     }}
 
     .info-btn-badge {{
-        width: 18px;
-        height: 18px;
+        width: 17px;
+        height: 17px;
         background: linear-gradient(135deg, #d83737 0%, #a81722 100%);
         color: #ffffff;
         border-radius: 50%;
-        font-size: 11px;
+        font-size: 10px;
         font-weight: 900;
         font-family: 'Georgia', serif;
         font-style: italic;
@@ -155,44 +158,46 @@ st.markdown(f"""
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        box-shadow: 0 2px 6px rgba(216, 55, 55, 0.35);
-        transition: transform 0.25s ease, box-shadow 0.25s ease;
+        box-shadow: 0 2px 6px rgba(216, 55, 55, 0.4);
+        transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease;
     }}
 
-    .info-icon-container:hover .info-btn-badge {{
-        transform: scale(1.22);
-        box-shadow: 0 4px 10px rgba(216, 55, 55, 0.5);
+    .s-info-wrapper:hover .info-btn-badge {{
+        transform: scale(1.28);
+        box-shadow: 0 4px 12px rgba(216, 55, 55, 0.6);
     }}
 
     .info-tooltip-box {{
         visibility: hidden;
         opacity: 0;
-        width: 320px;
+        width: 310px;
         background-color: {"#181a20" if is_dark else "#ffffff"};
         color: {text_color};
         border: 1px solid {"#343846" if is_dark else "#e2dacd"};
         border-radius: 12px;
         padding: 14px 16px;
         position: absolute;
-        top: 26px;
-        left: -140px;
+        top: 24px;
+        right: -100px;
         z-index: 999;
         box-shadow: 0 12px 30px rgba(0,0,0,0.25);
         font-size: 0.86rem;
+        font-weight: normal;
+        letter-spacing: normal;
         line-height: 1.45;
         transition: opacity 0.25s ease, visibility 0.25s ease, transform 0.25s ease;
         transform: translateY(-6px);
         pointer-events: none;
     }}
 
-    .info-icon-container:hover .info-tooltip-box {{
+    .s-info-wrapper:hover .info-tooltip-box {{
         visibility: visible;
         opacity: 1;
         transform: translateY(0);
         pointer-events: auto;
     }}
 
-    /* SECCIÓN DE FILTROS ESTILO YOUTUBE CHIP (SIN ESCRITURA) */
+    /* SECCIÓN DE FILTROS Y BOTÓN CHIP TRANSPARENTE DINÁMICO */
     .filter-label-text {{
         color: {text_color} !important;
         font-weight: 800 !important;
@@ -203,25 +208,32 @@ st.markdown(f"""
         padding-right: 2px;
     }}
 
-    /* ESTILO BOTÓN CHIP YOUTUBE DE FECHA */
+    /* BOTÓN DE MES TRANSPARENTE CON EFECTO DINÁMICO SIN BORDE NEGRO */
     div[data-testid="stPopover"] > button {{
-        background-color: {"#282933" if is_dark else "#e8e0d7"} !important;
+        background-color: transparent !important;
+        background: transparent !important;
         color: {text_color} !important;
-        border: 1px solid {"#383946" if is_dark else "#d4cdc5"} !important;
+        border: 1.5px solid {"rgba(255, 255, 255, 0.2)" if is_dark else "rgba(140, 123, 109, 0.35)"} !important;
         border-radius: 20px !important;
-        padding: 6px 16px !important;
+        padding: 6px 18px !important;
         font-weight: 700 !important;
         font-size: 13px !important;
         height: 38px !important;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.05) !important;
-        transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+        box-shadow: none !important;
+        transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+        position: relative !important;
     }}
 
     div[data-testid="stPopover"] > button:hover {{
-        background-color: #d83737 !important;
-        color: #ffffff !important;
+        background-color: rgba(216, 55, 55, 0.08) !important;
+        color: #d83737 !important;
         border-color: #d83737 !important;
-        transform: translateY(-1px) scale(1.02) !important;
+        transform: translateY(-2px) scale(1.04) !important;
+        box-shadow: 0 4px 15px rgba(216, 55, 55, 0.28) !important;
+    }}
+
+    div[data-testid="stPopover"] > button:active {{
+        transform: scale(0.96) !important;
     }}
 
     /* INTERACTIVIDAD Y ANIMACIÓN DEL BOTÓN YOUTUBE */
@@ -355,7 +367,7 @@ st.markdown(f"""
         border-color: #d83737;
     }}
 
-    /* ANIMACIÓN SUTIL Y ELEGANTE PARA ESTRELLAS MINIMALISTAS */
+    /* ANIMACIÓN PARA ESTRELLAS */
     @keyframes minimalStarGlow {{
         0%, 100% {{
             transform: scale(1);
@@ -534,21 +546,16 @@ with col_logo:
 with col_theme:
     st.button(" ", key="theme_toggle", on_click=toggle_theme)
 
-# SECCIÓN DEL TÍTULO CON BOTÓN FLOTANTE 'i'
+# SECCIÓN DEL TÍTULO CON BOTÓN 'i' UBICADO EN LA ESQUINA SUPERIOR DERECHA DE LA 'S'
 st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
 col_header_title, col_back_btn = st.columns([3.4, 1], vertical_alignment="center")
 
 with col_header_title:
     title_html = f"""
     <div class="radar-title-container">
-        <h1 class="radar-title-text">RADAR DEL HYPE - VIRAL FRAGRANCES</h1>
-        <div class="info-icon-container">
-            <div class="info-btn-badge">i</div>
-            <div class="info-tooltip-box">
-                <div style="font-weight: 800; color: #d83737; margin-bottom: 6px; font-size: 0.92rem;">📡 ¿Qué es el Radar del Hype?</div>
-                Es nuestro sistema inteligente que detecta qué fragancias se están volviendo virales en tiempo real analizando menciones y reproducciones en <b>YouTube</b>. Una herramienta clave para <b>revendedores, influencers y entusiastas</b> que buscan adelantarse a las tendencias del mercado.
-            </div>
-        </div>
+        <h1 class="radar-title-text">
+            RADAR DEL HYPE - VIRAL FRAGRANCE<span class="s-info-wrapper">S<span class="info-icon-container"><span class="info-btn-badge">i</span><span class="info-tooltip-box"><span style="font-weight: 800; color: #d83737; margin-bottom: 6px; font-size: 0.92rem; display: block;">📡 ¿Qué es el Radar del Hype?</span>Es nuestro sistema inteligente que detecta qué fragancias se están volviendo virales en tiempo real analizando menciones y reproducciones en <b>YouTube</b>. Una herramienta clave para <b>revendedores, influencers y entusiastas</b> que buscan adelantarse a las tendencias del mercado.</span></span></span>
+        </h1>
     </div>
     """
     st.markdown(title_html, unsafe_allow_html=True)
@@ -558,14 +565,13 @@ with col_back_btn:
 
 st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
 
-# 5. FILTROS CENTRALIZADOS CON BOTÓN CHIP TIPO YOUTUBE (SIN CAMPO DE ESCRITURA)
+# 5. FILTROS CENTRALIZADOS CON BOTÓN CHIP TRANSPARENTE
 col_title, col_fecha, col_red = st.columns([0.65, 1.8, 4.55], vertical_alignment="center")
 
 with col_title:
     st.markdown("<p class='filter-label-text'>Filtrar por :</p>", unsafe_allow_html=True)
 
 with col_fecha:
-    # Botón Chip Interactivo Popover estilo YouTube (100% Clic, sin campo de texto)
     opciones_fecha = ["Este Mes", "Hoy / Día", "Esta Semana", "Este Año", "Año Pasado"]
     with st.popover(f"📅 {st.session_state['selected_month']} ▾", use_container_width=True):
         for opt in opciones_fecha:
@@ -591,7 +597,7 @@ with col_red:
 
 st.write("")
 
-# 6. ICONOS DE ESTRELLAS MINIMALISTAS Y PROFESIONALES (LUJO GEOMÉTRICO 4 PUNTAS)
+# 6. ICONOS DE ESTRELLAS MINIMALISTAS
 star_ruby_svg = """
 <div class="star-minimal-ruby">
     <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
@@ -638,7 +644,7 @@ star_silver_svg = """
 </div>
 """
 
-# BASE DE DATOS DE 6 PERFUMES
+# BASE DE DATOS DE PERFUMES
 hype_data = [
     {
         "rank": "#1", "star": star_ruby_svg, "name": "Bleu de Chanel", "score": "95%", "year": "2010", "price": "$180,000 CLP",
