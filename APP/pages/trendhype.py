@@ -42,7 +42,7 @@ bottle_svg = (
     "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 58'><rect x='18' y='2' width='14' height='7' rx='2' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><rect x='21' y='9' width='8' height='5' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='19' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='5' fill='none' stroke='%23111111' stroke-width='2'/><line x1='25' y1='23' x2='25' y2='26' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='25' y1='42' x2='25' y2='45' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='14' y1='34' x2='17' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='33' y1='34' x2='36' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='17' y1='26' x2='19' y2='28' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='31' y1='40' x2='33' y2='42' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='17' y1='42' x2='19' y2='40' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='31' y1='28' x2='33' y2='26' stroke='%23111111' stroke-width='2' stroke-linecap='round'/></svg>"
 )
 
-# 3. ESTILOS CSS REFINADOS Y ALINEACIÓN PERFECTA
+# 3. ESTILOS CSS REFINADOS
 st.markdown(f"""
     <style>
     header[data-testid="stHeader"] {{ display: none !important; }}
@@ -193,23 +193,33 @@ st.markdown(f"""
         pointer-events: auto;
     }}
 
-    /* ETIQUETA "FILTRAR POR :" ALINEADA AL BOTÓN */
-    .filter-label-text {{
-        color: {text_color} !important;
-        font-weight: 700 !important;
-        font-size: 1rem !important;
-        margin: 0,9 !important;
+    /* BARRA DE FILTROS ESTILO E-COMMERCE */
+    .ecom-filter-bar {{
         display: flex;
-        align-items: center !important;
-        justify-content: flex-start;
-        height: 32px;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+        padding: 10px 16px;
+        background-color: {btn_bg};
+        border: 1px solid {btn_border};
+        border-radius: 10px;
+        margin-bottom: 15px;
     }}
 
-    /* ESTILOS PARA EL BOTÓN PRINCIPAL DEL POPOVER */
+    .ecom-filter-label {{
+        color: {text_color};
+        font-weight: 700;
+        font-size: 0.88rem;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        white-space: nowrap;
+    }}
+
+    /* ESTILO COMPACTO Y NEUTRO PARA BOTÓN POPOVER (DROPDOWN E-COMMERCE) */
     div[data-testid="stPopover"] {{
-        display: flex !important;
+        display: inline-flex !important;
         align-items: center !important;
-        height: 32px !important;
     }}
 
     div[data-testid="stPopover"] > button,
@@ -217,78 +227,73 @@ st.markdown(f"""
         background-color: {btn_bg} !important;
         background: {btn_bg} !important;
         border: 1px solid {btn_border} !important;
-        border-radius: 8px !important;
-        padding: 0 10px !important;
-        height: 32px !important;
-        min-height: 32px !important;
-        max-height: 32px !important;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.05) !important;
-        transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+        border-radius: 6px !important;
+        padding: 4px 10px !important;
+        height: 30px !important;
+        min-height: 30px !important;
+        box-shadow: none !important;
+        transition: all 0.2s ease !important;
         outline: none !important;
         display: inline-flex !important;
         align-items: center !important;
-        justify-content: center !important;
-        gap: 5px !important;
-        margin: 0 !important;
-        box-sizing: border-box !important;
+        gap: 6px !important;
+        cursor: pointer !important;
     }}
 
     div[data-testid="stPopover"] button *,
     div[data-testid="stPopover"] button p,
-    div[data-testid="stPopover"] button span,
-    div[data-testid="stPopover"] button div {{
+    div[data-testid="stPopover"] button span {{
         color: {text_color} !important;
-        font-weight: 700 !important;
-        font-size: 12px !important;
+        font-weight: 600 !important;
+        font-size: 13px !important;
         line-height: 1 !important;
         margin: 0 !important;
         padding: 0 !important;
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
     }}
 
     div[data-testid="stPopover"] button svg {{
         fill: {text_color} !important;
         width: 12px !important;
         height: 12px !important;
-        margin: 0 !important;
-        flex-shrink: 0 !important;
     }}
 
     div[data-testid="stPopover"] button:hover {{
-        background-color: {btn_hover_bg} !important;
         border-color: #d83737 !important;
-        transform: translateY(-1px) !important;
-        box-shadow: 0 3px 8px rgba(0,0,0,0.08) !important;
+        background-color: {btn_hover_bg} !important;
     }}
 
-    /* MENÚ DESPLEGABLE CONVENCIONAL Y COMPACTO */
+    /* MENÚ DESPLEGABLE TIPO LISTA DE OPCIONES (SIN BOTONES ROJOS GIGANTES) */
     div[data-testid="stPopoverBody"] {{
-        padding: 6px !important;
-        min-width: 160px !important;
-        border-radius: 10px !important;
+        padding: 4px !important;
+        min-width: 150px !important;
+        border-radius: 8px !important;
         background-color: {btn_bg} !important;
         border: 1px solid {btn_border} !important;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.2) !important;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.15) !important;
+    }}
+
+    div[data-testid="stPopoverBody"] div.stButton {{
+        margin: 0 !important;
+        padding: 0 !important;
     }}
 
     div[data-testid="stPopoverBody"] div.stButton > button {{
+        background: transparent !important;
         background-color: transparent !important;
         color: {text_color} !important;
         border: none !important;
-        border-radius: 6px !important;
-        font-weight: 600 !important;
+        border-radius: 4px !important;
+        font-weight: 500 !important;
         font-size: 13px !important;
-        padding: 6px 12px !important;
-        height: 32px !important;
-        min-height: 32px !important;
-        max-height: 32px !important;
+        padding: 6px 10px !important;
+        height: 28px !important;
+        min-height: 28px !important;
+        max-height: 28px !important;
         box-shadow: none !important;
         width: 100% !important;
         justify-content: flex-start !important;
         text-align: left !important;
-        margin: 2px 0 !important;
+        margin: 1px 0 !important;
         transition: background-color 0.15s ease, color 0.15s ease !important;
     }}
 
@@ -301,20 +306,25 @@ st.markdown(f"""
 
     div[data-testid="stPopoverBody"] div.stButton > button p {{
         font-size: 13px !important;
-        font-weight: 600 !important;
+        font-weight: 500 !important;
         color: inherit !important;
+        margin: 0 !important;
     }}
 
-    /* CHIP DE YOUTUBE */
+    /* SEPARADOR VERTICAL Y ETIQUETA RED SOCIAL */
+    .filter-divider {{
+        width: 1px;
+        height: 18px;
+        background-color: {btn_border};
+        margin: 0 4px;
+    }}
+
     .social-select-box {{
-        display: flex;
+        display: inline-flex;
         align-items: center;
         gap: 8px;
         color: {text_color};
         font-size: 13px;
-        width: 100%;
-        box-sizing: border-box;
-        height: 32px;
     }}
 
     .social-label {{
@@ -330,36 +340,22 @@ st.markdown(f"""
         gap: 6px;
         background-color: {btn_bg};
         border: 1px solid {btn_border};
-        border-radius: 8px;
+        border-radius: 6px;
         padding: 0 10px;
-        height: 32px;
+        height: 30px;
         box-sizing: border-box;
         color: {text_color};
         font-weight: 700;
         font-size: 12px;
-        line-height: 1;
         white-space: nowrap;
         cursor: pointer;
-        transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+        transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s ease, border-color 0.2s ease;
         outline: none;
-        user-select: none;
-    }}
-
-    .yt-chip-btn span {{
-        display: inline-flex;
-        align-items: center;
-        line-height: 1;
     }}
 
     .yt-chip-btn:hover {{
-        transform: translateY(-1px);
         border-color: #d83737;
         background-color: {btn_hover_bg};
-        box-shadow: 0 3px 8px rgba(216, 55, 55, 0.15);
-    }}
-
-    .yt-chip-btn:active {{
-        transform: scale(0.96);
     }}
 
     .yt-bounce {{
@@ -390,7 +386,6 @@ st.markdown(f"""
         font-size: 11px;
         color: {subtext_color};
         font-style: italic;
-        line-height: 1.2;
     }}
 
     .nav-back-link {{
@@ -612,37 +607,46 @@ with col_header_title:
 with col_back_btn:
     st.markdown('<a href="/" target="_self" class="nav-back-link">← Volver al Catálogo principal</a>', unsafe_allow_html=True)
 
-st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
+st.markdown("<div style='margin-top: 12px;'></div>", unsafe_allow_html=True)
 
-# 5. FILTROS ALINEADOS Y PEGADOS ("Filtrado por :" + Popover)
-col_title, col_fecha, col_red = st.columns([0.28, 0.42, 3.3], gap="small", vertical_alignment="center")
+# 5. BARRA DE FILTROS TIPO E-COMMERCE (UNIFICADA Y COMPACTA)
+col_filter_bar, _ = st.columns([0.98, 0.02])
 
-with col_title:
-    st.markdown("<div class='filter-label-text'>Filtrado por :</div>", unsafe_allow_html=True)
-
-with col_fecha:
+with col_filter_bar:
     opciones_fecha = ["Este Mes", "Hoy / Día", "Esta Semana", "Este Año", "Año Pasado"]
-    with st.popover(f"📅 {st.session_state['selected_month']}", use_container_width=False):
-        for opt in opciones_fecha:
-            if st.button(opt, key=f"btn_m_{opt}", use_container_width=True):
-                st.session_state['selected_month'] = opt
-                st.rerun()
-
-with col_red:
-    social_select_html = f"""
-    <div class="social-select-box">
-        <span class="social-label">Red social analizada:</span>
-        <button class="yt-chip-btn" onclick="triggerYtAnimation(event, this)">
-            <svg width="16" height="12" viewBox="0 0 26 20" fill="none">
-                <rect x="1" y="1" width="24" height="18" rx="5" fill="#d83737" />
-                <polygon points="10,5 18,10 10,15" fill="#ffffff" />
-            </svg>
-            <span>YouTube</span>
-        </button>
-        <span class="social-desc">(Mide la popularidad en tiempo real según menciones y reseñas en video)</span>
-    </div>
-    """
-    st.markdown(social_select_html, unsafe_allow_html=True)
+    
+    # Contenedor flexible
+    st.markdown('<div class="ecom-filter-bar">', unsafe_allow_html=True)
+    
+    col_f1, col_f2, col_f3 = st.columns([0.18, 0.22, 0.60], vertical_alignment="center")
+    
+    with col_f1:
+        st.markdown('<div class="ecom-filter-label">⚙️ Filtrar por:</div>', unsafe_allow_html=True)
+        
+    with col_f2:
+        with st.popover(f"📅 {st.session_state['selected_month']}", use_container_width=True):
+            for opt in opciones_fecha:
+                if st.button(opt, key=f"btn_m_{opt}", use_container_width=True):
+                    st.session_state['selected_month'] = opt
+                    st.rerun()
+                    
+    with col_f3:
+        social_select_html = f"""
+        <div class="social-select-box">
+            <span class="social-label">Plataforma:</span>
+            <button class="yt-chip-btn" onclick="triggerYtAnimation(event, this)">
+                <svg width="14" height="10" viewBox="0 0 26 20" fill="none">
+                    <rect x="1" y="1" width="24" height="18" rx="5" fill="#d83737" />
+                    <polygon points="10,5 18,10 10,15" fill="#ffffff" />
+                </svg>
+                <span>YouTube</span>
+            </button>
+            <span class="social-desc">(Mide popularidad en tiempo real por menciones y reseñas)</span>
+        </div>
+        """
+        st.markdown(social_select_html, unsafe_allow_html=True)
+        
+    st.markdown('</div>', unsafe_allow_html=True)
 
 st.write("")
 
