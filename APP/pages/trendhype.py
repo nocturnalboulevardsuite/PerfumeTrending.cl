@@ -24,7 +24,7 @@ btn_bg = "#1f242d" if is_dark else "#ffffff"
 btn_border = "#3a3f4d" if is_dark else "#d4cdc5"
 btn_hover_bg = "#2d3340" if is_dark else "#fcfaf8"
 
-# SWITCH DE TEMA - ESTILO NEUTRO ORIGINAL
+# SWITCH DE TEMA
 bottle_left_pos = "42px" if is_dark else "-2px"
 static_icon_pos = "12px center" if is_dark else "calc(100% - 12px) center"
 
@@ -40,7 +40,7 @@ bottle_svg = (
     "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 58'><rect x='18' y='2' width='14' height='7' rx='2' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><rect x='21' y='9' width='8' height='5' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='19' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='5' fill='none' stroke='%23111111' stroke-width='2'/><line x1='25' y1='23' x2='25' y2='26' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='25' y1='42' x2='25' y2='45' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='14' y1='34' x2='17' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='33' y1='34' x2='36' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='17' y1='26' x2='19' y2='28' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='31' y1='40' x2='33' y2='42' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='17' y1='42' x2='19' y2='40' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='31' y1='28' x2='33' y2='26' stroke='%23111111' stroke-width='2' stroke-linecap='round'/></svg>"
 )
 
-# 3. ESTILOS CSS REFINADOS
+# 3. ESTILOS CSS REFINADOS Y ANIMACIONES
 st.markdown(f"""
     <style>
     header[data-testid="stHeader"] {{ display: none !important; }}
@@ -111,7 +111,7 @@ st.markdown(f"""
         z-index: 2 !important;
     }}
 
-    /* TÍTULO Y BOTÓN DE INFORMACIÓN HOVER 'i' PEGANO A LA 'S' */
+    /* TÍTULO Y BOTÓN DE INFORMACIÓN */
     .radar-title-container {{
         display: inline-flex;
         align-items: baseline;
@@ -142,7 +142,7 @@ st.markdown(f"""
     .info-btn-badge {{
         width: 18px;
         height: 18px;
-        background: linear-gradient(135deg, #8b121a 0%, #a81722 100%);
+        background: linear-gradient(135deg, #d83737 0%, #a81722 100%);
         color: #ffffff;
         border-radius: 50%;
         font-size: 11px;
@@ -153,13 +153,13 @@ st.markdown(f"""
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        box-shadow: 0 2px 6px rgba(139, 18, 26, 0.35);
+        box-shadow: 0 2px 6px rgba(216, 55, 55, 0.35);
         transition: transform 0.25s ease, box-shadow 0.25s ease;
     }}
 
     .info-icon-container:hover .info-btn-badge {{
         transform: scale(1.22);
-        box-shadow: 0 4px 10px rgba(139, 18, 26, 0.5);
+        box-shadow: 0 4px 10px rgba(216, 55, 55, 0.5);
     }}
 
     .info-tooltip-box {{
@@ -190,7 +190,7 @@ st.markdown(f"""
         pointer-events: auto;
     }}
 
-    /* SECCIÓN DE FILTROS ALINEADOS Y PEGADOS */
+    /* SECCIÓN DE FILTROS Y BLOQUEO DE ESCRITURA EN SELECTBOX */
     .filter-label-text {{
         color: {text_color} !important;
         font-weight: 800 !important;
@@ -211,10 +211,19 @@ st.markdown(f"""
         cursor: pointer !important;
     }}
     
+    /* BLOQUEO TOTAL DE ESCRITURA / EDICIÓN EN SELECTBOX */
+    div[data-baseweb="select"] input {{
+        caret-color: transparent !important;
+        pointer-events: none !important;
+        user-select: none !important;
+        cursor: pointer !important;
+    }}
+    
     div[data-baseweb="select"] span, 
     div[data-baseweb="select"] div {{
         color: #ffffff !important;
         font-size: 13px !important;
+        user-select: none !important;
     }}
 
     div[data-baseweb="select"] svg {{
@@ -225,7 +234,7 @@ st.markdown(f"""
         display: none !important;
     }}
 
-    /* TEXTO EXPLICATIVO RED SOCIAL */
+    /* INTERACTIVIDAD Y ANIMACIÓN DEL BOTÓN YOUTUBE */
     .social-select-box {{
         display: flex;
         align-items: center;
@@ -242,18 +251,62 @@ st.markdown(f"""
         white-space: nowrap;
     }}
 
-    .yt-chip {{
+    .yt-chip-btn {{
         display: inline-flex;
         align-items: center;
         gap: 6px;
         background-color: {btn_hover_bg};
         border: 1px solid {btn_border};
         border-radius: 8px;
-        padding: 4px 10px;
+        padding: 5px 12px;
         color: {text_color};
         font-weight: 700;
         font-size: 12px;
         white-space: nowrap;
+        cursor: pointer;
+        transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+        outline: none;
+        user-select: none;
+    }}
+
+    .yt-chip-btn:hover {{
+        transform: translateY(-2px) scale(1.04);
+        border-color: #d83737;
+        box-shadow: 0 4px 12px rgba(216, 55, 55, 0.25);
+    }}
+
+    .yt-chip-btn:active {{
+        transform: scale(0.94);
+    }}
+
+    .yt-bounce {{
+        animation: ytPulseBounce 0.4s ease;
+    }}
+
+    @keyframes ytPulseBounce {{
+        0% {{ transform: scale(1); }}
+        40% {{ transform: scale(1.18) rotate(-4deg); }}
+        80% {{ transform: scale(0.95) rotate(3deg); }}
+        100% {{ transform: scale(1); }}
+    }}
+
+    .yt-particle {{
+        position: fixed;
+        z-index: 99999;
+        pointer-events: none;
+        font-size: 18px;
+        animation: floatAndFade 0.85s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
+    }}
+
+    @keyframes floatAndFade {{
+        0% {{
+            opacity: 1;
+            transform: translate(0, 0) scale(0.6) rotate(0deg);
+        }}
+        100% {{
+            opacity: 0;
+            transform: translate(var(--dx), var(--dy)) scale(1.4) rotate(360deg);
+        }}
     }}
 
     .social-desc {{
@@ -296,25 +349,44 @@ st.markdown(f"""
     .hype-card:hover {{
         transform: translateY(-8px) scale(1.025);
         box-shadow: 0 16px 30px rgba(0,0,0,0.16);
-        border-color: #8b121a;
+        border-color: #d83737;
     }}
 
-    /* BADGES DE RANKING CON ESTRELLAS DISTINTIVAS */
+    /* BADGES DE RANKING Y ESTRELLAS CON ANIMACIÓN VIVA */
     .rank-badge {{
         position: absolute; top: -12px; left: -8px;
         background-color: {btn_bg}; color: {text_color};
         font-size: 17px; font-weight: 900; padding: 3px 10px;
         border: 2px solid {btn_border}; border-radius: 6px; box-shadow: 2px 2px 0px {btn_border}; z-index: 2;
-        display: flex; align-items: center; gap: 4px;
+        display: flex; align-items: center; gap: 5px;
         transition: border-color 0.3s ease;
     }}
     .hype-card:hover .rank-badge {{
-        border-color: #8b121a;
+        border-color: #d83737;
     }}
 
-    .star-red {{ color: #e63946; font-size: 16px; }}
-    .star-gold {{ color: #f1c40f; font-size: 16px; }}
-    .star-silver {{ color: #a8b2d1; font-size: 16px; }}
+    /* ANIMACIONES DE ESTRELLAS CON VIDA Y BRILLO */
+    @keyframes starRubyGlow {{
+        0% {{ transform: scale(1) rotate(0deg); filter: drop-shadow(0 0 2px rgba(230, 57, 70, 0.6)); }}
+        50% {{ transform: scale(1.22) rotate(8deg); filter: drop-shadow(0 0 10px rgba(230, 57, 70, 0.95)); }}
+        100% {{ transform: scale(1) rotate(0deg); filter: drop-shadow(0 0 2px rgba(230, 57, 70, 0.6)); }}
+    }}
+
+    @keyframes starGoldGlow {{
+        0% {{ transform: scale(1) rotate(0deg); filter: drop-shadow(0 0 2px rgba(241, 196, 15, 0.6)); }}
+        50% {{ transform: scale(1.2) rotate(-8deg); filter: drop-shadow(0 0 10px rgba(241, 196, 15, 0.95)); }}
+        100% {{ transform: scale(1) rotate(0deg); filter: drop-shadow(0 0 2px rgba(241, 196, 15, 0.6)); }}
+    }}
+
+    @keyframes starSilverGlow {{
+        0% {{ transform: scale(1); filter: drop-shadow(0 0 2px rgba(168, 178, 209, 0.5)); }}
+        50% {{ transform: scale(1.18); filter: drop-shadow(0 0 8px rgba(168, 178, 209, 0.9)); }}
+        100% {{ transform: scale(1); filter: drop-shadow(0 0 2px rgba(168, 178, 209, 0.5)); }}
+    }}
+
+    .star-anim-red {{ animation: starRubyGlow 2.2s infinite ease-in-out; display: inline-flex; vertical-align: middle; }}
+    .star-anim-gold {{ animation: starGoldGlow 2.4s infinite ease-in-out; display: inline-flex; vertical-align: middle; }}
+    .star-anim-silver {{ animation: starSilverGlow 2.6s infinite ease-in-out; display: inline-flex; vertical-align: middle; }}
 
     .score-circle {{
         position: absolute; top: 10px; right: 10px; width: 56px; height: 56px; border-radius: 50%;
@@ -324,7 +396,7 @@ st.markdown(f"""
         transition: border-color 0.3s ease;
     }}
     .hype-card:hover .score-circle {{
-        border-color: #8b121a;
+        border-color: #d83737;
     }}
 
     .score-title {{ font-size: 7px; font-weight: 800; line-height: 1.0; text-align: center; color: {text_color}; }}
@@ -363,24 +435,24 @@ st.markdown(f"""
     }}
     .price-text {{ text-align: center; font-size: 11px; color: {text_color}; margin-bottom: 6px; }}
 
-    /* BOTONES EN ROJO BACCARAT ROUGE 540 EXTRAIT MATE */
+    /* BOTONES DE COMPARAR PRECIOS - ROJO MATE TIPO BOTELLA */
     div[data-testid="stElementContainer"] > div.stButton > button:not([aria-label=" "]) {{
-        background-color: #8b121a !important;
+        background-color: #d83737 !important;
         color: #ffffff !important;
         border: none !important;
         border-radius: 10px !important;
         font-weight: 700 !important;
         font-size: 13px !important;
         padding: 10px 16px !important;
-        box-shadow: 0 3px 10px rgba(139, 18, 26, 0.25) !important;
+        box-shadow: 0 4px 12px rgba(216, 55, 55, 0.22) !important;
         transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s ease, box-shadow 0.25s ease !important;
         width: 100% !important;
     }}
 
     div[data-testid="stElementContainer"] > div.stButton > button:not([aria-label=" "]):hover {{
-        background-color: #6a0b12 !important;
-        transform: scale(1.04) translateY(-2px) !important;
-        box-shadow: 0 6px 16px rgba(139, 18, 26, 0.4) !important;
+        background-color: #be2e2e !important;
+        transform: scale(1.03) translateY(-2px) !important;
+        box-shadow: 0 6px 18px rgba(216, 55, 55, 0.38) !important;
         color: #ffffff !important;
     }}
 
@@ -388,6 +460,39 @@ st.markdown(f"""
         transform: scale(0.98) translateY(0px) !important;
     }}
     </style>
+
+    <!-- SCRIPT DE ANIMACIONES INTERACTIVAS EN YOUTUBE -->
+    <script>
+    function triggerYtAnimation(event, btn) {{
+        btn.classList.add('yt-bounce');
+        setTimeout(() => btn.classList.remove('yt-bounce'), 400);
+
+        const emojis = ['▶️', '🔥', '✨', '🎵', '❤️', '🍿', '🚀', '⭐'];
+        const rect = btn.getBoundingClientRect();
+
+        for(let i=0; i<14; i++) {{
+            const particle = document.createElement('span');
+            particle.innerHTML = emojis[Math.floor(Math.random() * emojis.length)];
+            particle.className = 'yt-particle';
+            
+            const startX = event.clientX || (rect.left + rect.width / 2);
+            const startY = event.clientY || (rect.top + rect.height / 2);
+            
+            const angle = Math.random() * Math.PI * 2;
+            const distance = 45 + Math.random() * 85;
+            const destX = Math.cos(angle) * distance;
+            const destY = Math.sin(angle) * distance - 35;
+            
+            particle.style.left = startX + 'px';
+            particle.style.top = startY + 'px';
+            particle.style.setProperty('--dx', destX + 'px');
+            particle.style.setProperty('--dy', destY + 'px');
+            
+            document.body.appendChild(particle);
+            setTimeout(() => particle.remove(), 850);
+        }}
+    }}
+    </script>
 """, unsafe_allow_html=True)
 
 # 4. CABECERA CON LOGO
@@ -418,7 +523,7 @@ with col_logo:
 with col_theme:
     st.button(" ", key="theme_toggle", on_click=toggle_theme)
 
-# SECCIÓN DEL TÍTULO CON BOTÓN FLOTANTE 'i' PEGADO A LA 'S'
+# SECCIÓN DEL TÍTULO CON BOTÓN FLOTANTE 'i'
 st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
 col_header_title, col_back_btn = st.columns([3.4, 1], vertical_alignment="center")
 
@@ -429,7 +534,7 @@ with col_header_title:
         <div class="info-icon-container">
             <div class="info-btn-badge">i</div>
             <div class="info-tooltip-box">
-                <div style="font-weight: 800; color: #d9787f; margin-bottom: 6px; font-size: 0.92rem;">📡 ¿Qué es el Radar del Hype?</div>
+                <div style="font-weight: 800; color: #d83737; margin-bottom: 6px; font-size: 0.92rem;">📡 ¿Qué es el Radar del Hype?</div>
                 Es nuestro sistema inteligente que detecta qué fragancias se están volviendo virales en tiempo real analizando menciones y reproducciones en <b>YouTube</b>. Una herramienta clave para <b>revendedores, influencers y entusiastas</b> que buscan adelantarse a las tendencias del mercado.
             </div>
         </div>
@@ -442,7 +547,7 @@ with col_back_btn:
 
 st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
 
-# 5. FILTROS CENTRALIZADOS CON TEXTO "FILTRAR POR:" PEGADO AL DESPLEGABLE
+# 5. FILTROS CENTRALIZADOS
 col_title, col_fecha, col_red = st.columns([0.65, 2.0, 4.35], vertical_alignment="center")
 
 with col_title:
@@ -459,13 +564,13 @@ with col_red:
     social_select_html = f"""
     <div class="social-select-box">
         <span class="social-label">Red social analizada:</span>
-        <div class="yt-chip">
+        <button class="yt-chip-btn" onclick="triggerYtAnimation(event, this)">
             <svg width="16" height="12" viewBox="0 0 26 20" fill="none">
-                <rect x="1" y="1" width="24" height="18" rx="5" fill="#8b121a" />
+                <rect x="1" y="1" width="24" height="18" rx="5" fill="#d83737" />
                 <polygon points="10,5 18,10 10,15" fill="#ffffff" />
             </svg>
             <span>YouTube</span>
-        </div>
+        </button>
         <span class="social-desc">(Mide la popularidad en tiempo real según menciones y reseñas en video)</span>
     </div>
     """
@@ -473,22 +578,71 @@ with col_red:
 
 st.write("")
 
-# 6. BASE DE DATOS DE 6 PERFUMES
+# 6. ICONOS DE ESTRELLAS CON DISEÑO ELABORADO Y ANIMACIÓN
+star_ruby_svg = """
+<div class="star-anim-red">
+    <svg width="18" height="18" viewBox="0 0 24 24">
+        <defs>
+            <linearGradient id="rubyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#ff4d5a"/>
+                <stop offset="50%" stop-color="#d83737"/>
+                <stop offset="100%" stop-color="#8a0c13"/>
+            </linearGradient>
+        </defs>
+        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" 
+                 fill="url(#rubyGrad)" stroke="#ff949c" stroke-width="1.2"/>
+    </svg>
+</div>
+"""
+
+star_gold_svg = """
+<div class="star-anim-gold">
+    <svg width="18" height="18" viewBox="0 0 24 24">
+        <defs>
+            <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#fff176"/>
+                <stop offset="50%" stop-color="#f1c40f"/>
+                <stop offset="100%" stop-color="#b78103"/>
+            </linearGradient>
+        </defs>
+        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" 
+                 fill="url(#goldGrad)" stroke="#fff8b3" stroke-width="1.2"/>
+    </svg>
+</div>
+"""
+
+star_silver_svg = """
+<div class="star-anim-silver">
+    <svg width="18" height="18" viewBox="0 0 24 24">
+        <defs>
+            <linearGradient id="silverGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#ffffff"/>
+                <stop offset="50%" stop-color="#b0bec5"/>
+                <stop offset="100%" stop-color="#607d8b"/>
+            </linearGradient>
+        </defs>
+        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" 
+                 fill="url(#silverGrad)" stroke="#e2e8f0" stroke-width="1.2"/>
+    </svg>
+</div>
+"""
+
+# BASE DE DATOS DE 6 PERFUMES
 hype_data = [
     {
-        "rank": "#1", "star": "<span class='star-red'>★</span>", "name": "Bleu de Chanel", "score": "95%", "year": "2010", "price": "$180,000 CLP",
+        "rank": "#1", "star": star_ruby_svg, "name": "Bleu de Chanel", "score": "95%", "year": "2010", "price": "$180,000 CLP",
         "img": "https://fimgs.net/mdig/rx_perfume/58/28/6005828.jpg",
         "stats": "↗ 75 videos y 1.5M<br>visitas este mes",
         "ai_text": "Tendencia por su versatilidad fresca y estética de 'lujo silencioso' en YouTube."
     },
     {
-        "rank": "#2", "star": "<span class='star-gold'>★</span>", "name": "YSL Libre EDP", "score": "90%", "year": "2019", "price": "$150,000 CLP",
+        "rank": "#2", "star": star_gold_svg, "name": "YSL Libre EDP", "score": "90%", "year": "2019", "price": "$150,000 CLP",
         "img": "https://fimgs.net/mdig/rx_perfume/56/55/5605655.jpg",
         "stats": "↗ 60 videos y 1.0M<br>visitas este mes",
         "ai_text": "Gran popularidad por su elegante nota de lavanda floral para uso diario o de noche."
     },
     {
-        "rank": "#3", "star": "<span class='star-silver'>★</span>", "name": "Dior Sauvage", "score": "88%", "year": "2015", "price": "$165,000 CLP",
+        "rank": "#3", "star": star_silver_svg, "name": "Dior Sauvage", "score": "88%", "year": "2015", "price": "$165,000 CLP",
         "img": "https://fimgs.net/mdig/rx_perfume/31/86/31861.jpg",
         "stats": "↗ 55 videos y 900k<br>visitas este mes",
         "ai_text": "Dominio constante en redes por su proyección masiva y versatilidad inigualable."
