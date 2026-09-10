@@ -40,7 +40,7 @@ bottle_svg = (
     "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 58'><rect x='18' y='2' width='14' height='7' rx='2' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><rect x='21' y='9' width='8' height='5' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='19' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='5' fill='none' stroke='%23111111' stroke-width='2'/><line x1='25' y1='23' x2='25' y2='26' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='25' y1='42' x2='25' y2='45' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='14' y1='34' x2='17' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='33' y1='34' x2='36' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='17' y1='26' x2='19' y2='28' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='31' y1='40' x2='33' y2='42' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='17' y1='42' x2='19' y2='40' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='31' y1='28' x2='33' y2='26' stroke='%23111111' stroke-width='2' stroke-linecap='round'/></svg>"
 )
 
-# 3. ESTILOS CSS REFINADOS CON ZOOM DINÁMICO
+# 3. ESTILOS CSS REFINADOS
 st.markdown(f"""
     <style>
     header[data-testid="stHeader"] {{ display: none !important; }}
@@ -111,11 +111,26 @@ st.markdown(f"""
         z-index: 2 !important;
     }}
 
-    /* FILTROS DESPLEGABLES Y BADGE YOUTUBE ARTESANAL */
+    /* INFORMACIÓN DINÁMICA DEL RADAR */
+    .radar-info-box {{
+        background-color: {btn_bg};
+        border: 1px solid {btn_border};
+        border-left: 4px solid #e62117;
+        border-radius: 12px;
+        padding: 12px 18px;
+        margin-top: 10px;
+        margin-bottom: 20px;
+        color: {text_color};
+        font-size: 0.88rem;
+        line-height: 1.45;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+    }}
+
+    /* FILTROS DESPLEGABLES Y CONTENEDOR DE RED SOCIAL */
     .filter-title {{
         color: {text_color} !important;
         font-weight: 800 !important;
-        font-size: 1rem;
+        font-size: 0.95rem;
         margin: 0;
     }}
     
@@ -142,20 +157,33 @@ st.markdown(f"""
         display: none !important;
     }}
 
-    .yt-badge {{
+    .social-select-box {{
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 10px;
         background-color: #282933;
         border: 1px solid #383946;
         border-radius: 10px;
         padding: 0 14px;
         height: 38px;
         color: #ffffff;
-        font-weight: 700;
+        font-weight: 600;
         font-size: 13px;
-        width: fit-content;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        width: 100%;
+        box-sizing: border-box;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+    }}
+
+    .yt-chip {{
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background-color: #1f2029;
+        border: 1px solid #e62117;
+        border-radius: 6px;
+        padding: 2px 8px;
+        color: #ffffff;
+        font-weight: 700;
     }}
 
     /* ENLACE DE NAVEGACIÓN A LA DERECHA */
@@ -192,7 +220,7 @@ st.markdown(f"""
     .hype-card:hover {{
         transform: translateY(-8px) scale(1.025);
         box-shadow: 0 16px 30px rgba(0,0,0,0.16);
-        border-color: #d93838;
+        border-color: #e62117;
     }}
 
     .rank-badge {{
@@ -203,7 +231,7 @@ st.markdown(f"""
         transition: border-color 0.3s ease;
     }}
     .hype-card:hover .rank-badge {{
-        border-color: #d93838;
+        border-color: #e62117;
     }}
 
     .score-circle {{
@@ -214,7 +242,7 @@ st.markdown(f"""
         transition: border-color 0.3s ease;
     }}
     .hype-card:hover .score-circle {{
-        border-color: #d93838;
+        border-color: #e62117;
     }}
 
     .score-title {{ font-size: 7px; font-weight: 800; line-height: 1.0; text-align: center; color: {text_color}; }}
@@ -252,6 +280,31 @@ st.markdown(f"""
         justify-content: center; align-items: center; font-weight: bold; font-size: 9px; background-color: {btn_bg};
     }}
     .price-text {{ text-align: center; font-size: 11px; color: {text_color}; margin-bottom: 6px; }}
+
+    /* BOTONES COMPARAR PRECIOS EN ROJO YOUTUBE CON ZOOM DINÁMICO Y BORDES SUAVES */
+    div[data-testid="stElementContainer"] > div.stButton > button:not([aria-label=" "]) {{
+        background-color: #e62117 !important;
+        color: #ffffff !important;
+        border: none !important;
+        border-radius: 10px !important;
+        font-weight: 700 !important;
+        font-size: 13px !important;
+        padding: 10px 16px !important;
+        box-shadow: 0 3px 10px rgba(230, 33, 23, 0.25) !important;
+        transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s ease, box-shadow 0.25s ease !important;
+        width: 100% !important;
+    }}
+
+    div[data-testid="stElementContainer"] > div.stButton > button:not([aria-label=" "]):hover {{
+        background-color: #cc180e !important;
+        transform: scale(1.05) translateY(-2px) !important;
+        box-shadow: 0 8px 18px rgba(230, 33, 23, 0.45) !important;
+        color: #ffffff !important;
+    }}
+
+    div[data-testid="stElementContainer"] > div.stButton > button:not([aria-label=" "]):active {{
+        transform: scale(0.98) translateY(0px) !important;
+    }}
     </style>
 """, unsafe_allow_html=True)
 
@@ -293,10 +346,15 @@ with col_header_title:
 with col_back_btn:
     st.markdown('<a href="app.py" target="_self" class="nav-back-link">← Volver al Catálogo principal</a>', unsafe_allow_html=True)
 
-st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
+# BANNER INFORMATIVO DINÁMICO DEL RADAR
+st.markdown(f"""
+    <div class="radar-info-box">
+        📡 <b>¿Qué es el Radar del Hype?</b> Es nuestro sistema inteligente que detecta qué fragancias se están volviendo virales en tiempo real a través de <b>YouTube</b>. Una herramienta clave para <b>revendedores, influencers y entusiastas</b> que buscan adelantarse al mercado y adquirir un perfume antes de que se agote o suba de precio.
+    </div>
+""", unsafe_allow_html=True)
 
-# 5. FILTROS CENTRALIZADOS CON YOUTUBE CASERO ROJO
-col_title, col_fecha, col_red, col_empty = st.columns([1.1, 2.2, 2.2, 3.5], vertical_alignment="center")
+# 5. FILTROS CENTRALIZADOS BIEN DISTRIBUIDOS
+col_title, col_fecha, col_red = st.columns([1.1, 2.8, 3.8], vertical_alignment="center")
 
 with col_title:
     st.markdown("<p class='filter-title'>Filtrar por :</p>", unsafe_allow_html=True)
@@ -309,16 +367,19 @@ with col_fecha:
     )
 
 with col_red:
-    youtube_badge_html = f"""
-    <div class="yt-badge">
-        <svg width="22" height="18" viewBox="0 0 26 20" fill="none" stroke="{text_color}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="1" y="1" width="24" height="18" rx="5" fill="#d93838" />
-            <polygon points="10,5 18,10 10,15" fill="#ffffff" stroke="#ffffff" stroke-width="1" />
-        </svg>
-        <span>YouTube</span>
+    social_select_html = f"""
+    <div class="social-select-box">
+        <span style="color: {subtext_color}; font-size: 13px;">Red social seleccionada:</span>
+        <div class="yt-chip">
+            <svg width="18" height="14" viewBox="0 0 26 20" fill="none">
+                <rect x="1" y="1" width="24" height="18" rx="5" fill="#e62117" />
+                <polygon points="10,5 18,10 10,15" fill="#ffffff" />
+            </svg>
+            <span>YouTube</span>
+        </div>
     </div>
     """
-    st.markdown(youtube_badge_html, unsafe_allow_html=True)
+    st.markdown(social_select_html, unsafe_allow_html=True)
 
 st.write("")
 
