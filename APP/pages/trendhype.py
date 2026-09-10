@@ -1,62 +1,56 @@
 import streamlit as st
 
-# 1. Configuración de la página e integración con el tema global
+# 1. CONFIGURACIÓN DE PÁGINA E INTEGRACIÓN DE TEMA
 st.set_page_config(page_title="Radar del Hype - PerfumeTrending", layout="wide")
 
+# Heredamos el tema del session_state para que el botón de app.py funcione perfecto
 is_dark = st.session_state.get('theme', 'light') == 'dark'
 
-# Paleta de colores adaptable al tema (Claro / Oscuro)
+# Paleta de colores dinámica (Claro / Oscuro)
 app_bg = "#0e1117" if is_dark else "#f6efe9"
 card_bg = "#1f242d" if is_dark else "#ffffff"
 text_color = "#ffffff" if is_dark else "#1a1a1a"
-subtext_color = "#a0a0a0" if is_dark else "#666666"
-border_color = "#3a3f4d" if is_dark else "#d4cdc5"
-ai_bg = "#2d3340" if is_dark else "#f8f9fa"
-badge_bg = "#2d3340" if is_dark else "#e8e2dc"
+subtext_color = "#cccccc" if is_dark else "#444444"
+border_color = "#555555" if is_dark else "#1a1a1a"
+badge_bg = "#2d3340" if is_dark else "#f0f0f0"
 
-# 2. CSS Personalizado para emular el Mockup de la imagen
+# 2. ESTILOS CSS REFINADOS (Estilo Mockup)
 st.markdown(f"""
     <style>
     header[data-testid="stHeader"] {{ display: none !important; }}
-    .stApp {{
-        background-color: {app_bg} !important;
-        color: {text_color} !important;
-    }}
+    .stApp {{ background-color: {app_bg} !important; }}
     
-    /* Estilos del encabezado de filtros */
-    .filter-header-title {{
-        font-weight: bold;
-        font-size: 1.1rem;
-        color: {text_color};
-    }}
-    
-    /* Estilos de la tarjeta principal */
+    /* Contenedor principal de la tarjeta */
     .hype-card {{
         background-color: {card_bg};
         border: 2px solid {border_color};
-        border-radius: 18px;
-        padding: 24px 18px 18px 18px;
+        border-radius: 12px;
+        padding: 20px;
         position: relative;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        margin-top: 25px;
+        margin-bottom: 15px;
+        box-shadow: 2px 4px 10px rgba(0,0,0,0.1);
         color: {text_color};
-        margin-top: 15px;
+        font-family: 'Inter', sans-serif;
     }}
     
-    /* Banderola de Ranking superior izquierda (#1, #2, #3) */
+    /* Etiqueta de Ranking (#1, #2...) */
     .rank-badge {{
         position: absolute;
-        top: -14px;
-        left: 15px;
-        background: {text_color};
-        color: {card_bg};
-        font-size: 22px;
+        top: -15px;
+        left: -10px;
+        background-color: {card_bg};
+        color: {text_color};
+        font-size: 24px;
         font-weight: 900;
-        padding: 4px 14px;
-        border-radius: 8px;
+        padding: 5px 12px;
         border: 2px solid {border_color};
+        border-radius: 6px;
+        box-shadow: 2px 2px 0px {border_color};
+        z-index: 2;
     }}
     
-    /* Círculo de Hype Score superior derecho */
+    /* Círculo de HYPE SCORE */
     .score-circle {{
         position: absolute;
         top: 15px;
@@ -64,197 +58,165 @@ st.markdown(f"""
         width: 70px;
         height: 70px;
         border-radius: 50%;
-        border: 3px solid {text_color};
+        border: 3px solid {border_color};
         display: flex;
         flex-direction: column;
         justify-content: center;
         align-items: center;
-        text-align: center;
-        line-height: 1.1;
+        background-color: {card_bg};
+        padding: 2px;
+        box-shadow: inset 0 0 0 2px {card_bg}, inset 0 0 0 3px {border_color};
     }}
+    .score-title {{ font-size: 8px; font-weight: 800; line-height: 1.1; text-align: center; color: {text_color}; }}
+    .score-value {{ font-size: 18px; font-weight: 900; color: {text_color}; }}
     
-    .score-circle span {{
-        font-size: 8px;
-        font-weight: 800;
-        color: {subtext_color};
-        letter-spacing: 0.5px;
-    }}
-    
-    .score-circle div {{
-        font-size: 18px;
-        font-weight: 900;
-        color: {text_color};
-    }}
-    
-    /* Insignia del año del perfume */
+    /* Contenedor de Imagen y Año */
+    .img-wrapper {{ text-align: center; margin-top: 15px; position: relative; }}
+    .img-wrapper img {{ width: 130px; height: 130px; object-fit: contain; }}
     .year-badge {{
-        background-color: {badge_bg};
-        color: {text_color};
+        position: absolute;
+        bottom: 0;
+        right: 10px;
+        background: {card_bg};
+        border: 1px solid {border_color};
+        border-radius: 4px;
         padding: 2px 8px;
-        border-radius: 6px;
         font-size: 12px;
-        font-weight: 700;
-        border: 1px solid {border_color};
-        display: inline-block;
-    }}
-    
-    /* Bloque de Resumen IA */
-    .ai-box {{
-        background-color: {ai_bg};
-        border: 1px solid {border_color};
-        border-left: 4px solid #8c7b6d;
-        padding: 10px 12px;
-        border-radius: 10px;
-        font-size: 0.8rem;
-        margin: 12px 0;
-        display: flex;
-        gap: 8px;
-        align-items: flex-start;
-        line-height: 1.35;
-    }}
-    
-    .ai-icon {{
-        background: #8c7b6d;
-        color: white;
-        border-radius: 50%;
-        min-width: 22px;
-        height: 22px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        font-size: 10px;
         font-weight: bold;
     }}
     
-    /* Insignia de disponibilidad en Chile */
+    /* Título del Perfume */
+    .perfume-title {{ text-align: center; font-size: 16px; font-weight: bold; margin-top: 10px; margin-bottom: 15px; }}
+    
+    /* Fila de Estadísticas y Chile */
+    .stats-row {{ display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-size: 11px; }}
+    .stats-text {{ width: 55%; color: {text_color}; line-height: 1.3; }}
     .chile-badge {{
-        display: inline-flex;
+        display: flex;
         align-items: center;
-        gap: 4px;
-        background: {badge_bg};
-        color: {text_color};
-        padding: 3px 8px;
-        border-radius: 12px;
-        font-size: 0.72rem;
-        font-weight: 600;
+        gap: 5px;
+        background-color: {badge_bg};
         border: 1px solid {border_color};
-        white-space: nowrap;
+        border-radius: 20px;
+        padding: 4px 8px;
+        font-weight: bold;
+        font-size: 10px;
+        text-align: left;
+        line-height: 1.1;
     }}
     
-    .stats-text {{
-        font-size: 0.8rem;
-        color: {subtext_color};
-        font-weight: 600;
-        line-height: 1.2;
+    /* Bloque de IA */
+    .ai-box {{
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        border: 1px solid {border_color};
+        border-radius: 8px;
+        padding: 10px;
+        margin-bottom: 15px;
+        font-size: 11px;
+        line-height: 1.3;
+        background-color: {badge_bg};
     }}
+    .ai-icon {{
+        min-width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        border: 1px solid {border_color};
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-weight: bold;
+        font-size: 10px;
+        background-color: {card_bg};
+    }}
+    
+    /* Precio */
+    .price-text {{ text-align: center; font-size: 12px; color: {text_color}; margin-bottom: 10px; }}
     </style>
 """, unsafe_allow_html=True)
 
-# 3. Navegación superior
+# 3. NAVEGACIÓN SUPERIOR
 st.page_link("app.py", label="← Volver al Catálogo principal")
 
-st.markdown(f"<h1 style='text-align: center; color: {text_color}; margin-bottom: 25px;'>RADAR DEL HYPE - Viral Fragrances</h1>", unsafe_allow_html=True)
+st.markdown(f"<h1 style='text-align: center; color: {text_color}; font-weight: 800; font-size: 2.5rem; margin-bottom: 30px;'>RADAR DEL HYPE - Viral Fragrances</h1>", unsafe_allow_html=True)
 
-# 4. Sección de Filtros traducida (Marco Temporal y Plataforma Social exclusivamente con YouTube)
-col_lbl, col_tf, col_sp = st.columns([1.2, 4.5, 2.5], vertical_alignment="center")
+# 4. FILTROS (En Español, Solo YouTube)
+col_filtro1, col_filtro2, col_filtro3 = st.columns([1.2, 4, 2], vertical_alignment="center")
 
-with col_lbl:
-    st.markdown(f"<div class='filter-header-title' style='text-align: right;'>Filtrar por :</div>", unsafe_allow_html=True)
+with col_filtro1:
+    st.markdown(f"<h4 style='margin: 0; color: {text_color}; font-weight: bold;'>Filtrar por :</h4>", unsafe_allow_html=True)
 
-with col_tf:
-    st.caption("**Marco Temporal**")
-    st.radio(
-        "Marco Temporal", 
-        ["Esta Semana", "Este Mes", "Este Año", "Año Pasado"], 
-        horizontal=True, 
-        index=1, 
-        label_visibility="collapsed",
-        key="time_frame"
-    )
+with col_filtro2:
+    st.caption("Marco Temporal")
+    st.radio("Marco Temporal", ["Esta Semana", "Este Mes", "Este Año", "Año Pasado"], horizontal=True, index=1, label_visibility="collapsed")
 
-with col_sp:
-    st.caption("**Plataforma Social**")
-    st.radio(
-        "Plataforma Social", 
-        ["▶️ YouTube"], 
-        horizontal=True, 
-        index=0, 
-        label_visibility="collapsed",
-        key="social_platform"
-    )
+with col_filtro3:
+    st.caption("Plataforma Social")
+    st.radio("Plataforma Social", ["▶️ YouTube"], horizontal=True, index=0, label_visibility="collapsed")
 
 st.divider()
 
-# 5. Datos estructurados de los Perfumes en Tendencia
+# 5. BASE DE DATOS
 hype_data = [
     {
-        "rank": "#1", 
-        "name": "Bleu de Chanel", 
-        "score": "95%", 
-        "year": "2010", 
-        "price": "$180,000 CLP",
-        "img": "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=500&q=80",
-        "stats": "75 videos y 1.5 Millones de vistas en 1 mes",
-        "ai_text": "En tendencia por su versatilidad fresca y estilo 'quiet luxury', ampliamente recomendado por creadores en YouTube."
+        "rank": "#1", "name": "Bleu de Chanel", "score": "95%", "year": "2010", "price": "$180,000 CLP",
+        "img": "https://fimgs.net/mdig/rx_perfume/58/28/6005828.jpg",
+        "stats": "↗ 75 videos and 1.5 Million<br>views in 1 month",
+        "ai_text": "Trending due to fresh versatility and 'quiet luxury' aesthetic endorsement by major YouTube influencers."
     },
     {
-        "rank": "#2", 
-        "name": "YSL Libre", 
-        "score": "90%", 
-        "year": "2019", 
-        "price": "$150,000 CLP",
-        "img": "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?w=500&q=80",
-        "stats": "60 videos y 1 Millón de vistas en 1 mes",
-        "ai_text": "Popularidad en ascenso por su marcado perfil floral de lavanda, frecuente en tops de 'mejores perfumes femeninos'."
+        "rank": "#2", "name": "YSL Libre", "score": "90%", "year": "2019", "price": "$150,000 CLP",
+        "img": "https://fimgs.net/mdig/rx_perfume/56/55/5605655.jpg",
+        "stats": "↗ 60 videos and 1 Million<br>views in 1 month",
+        "ai_text": "Exploding in popularity for its bold floral lavender profile, often featured in 'best feminine scents' lists."
     },
     {
-        "rank": "#3", 
-        "name": "Dior Sauvage", 
-        "score": "88%", 
-        "year": "2015", 
-        "price": "$165,000 CLP",
-        "img": "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?w=500&q=80",
-        "stats": "55 videos y 900k vistas en 1 mes",
-        "ai_text": "Dominio viral continuo, elogiado por su gran atractivo masivo y excelente rendimiento en reseñas de YouTube."
+        "rank": "#3", "name": "Dior Sauvage", "score": "88%", "year": "2015", "price": "$165,000 CLP",
+        "img": "https://fimgs.net/mdig/rx_perfume/31/86/31861.jpg",
+        "stats": "↗ 55 videos and 900k<br>views in 1 month",
+        "ai_text": "Continues viral dominance, praised for mass appeal and strong performance, sparking debate and reviews."
     }
 ]
 
-# 6. Renderizado en 3 Columnas estilo Mockup
+# 6. RENDERIZADO DE TARJETAS
 cols = st.columns(3, gap="medium")
 
+# IMPORTANTE: El string de HTML se formatea SIN indentación al principio de cada línea
+# para evitar que Streamlit lo convierta en un bloque de código y muestre las etiquetas.
 for i, data in enumerate(hype_data):
     with cols[i]:
         html_card = f"""
-        <div class="hype-card">
-            <div class="rank-badge">{data['rank']}</div>
-            <div class="score-circle">
-                <span>HYPE SCORE</span>
-                <div>{data['score']}</div>
-            </div>
-            
-            <div style="text-align: center; margin-top: 25px; margin-bottom: 10px;">
-                <img src="{data['img']}" style="width: 120px; height: 120px; object-fit: cover; border-radius: 12px;">
-            </div>
-            
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <h3 style="margin: 0; font-size: 1.2rem; color: {text_color};">{data['name']}</h3>
-                <div class="year-badge">{data['year']}</div>
-            </div>
-            
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px; gap: 5px;">
-                <div class="stats-text" style="flex: 1;">{data['stats']}</div>
-                <div class="chile-badge">👤 Disponible en Chile 🇨🇱</div>
-            </div>
-            
-            <div class="ai-box">
-                <div class="ai-icon">AI</div>
-                <div>"{data['ai_text']}"</div>
-            </div>
-            
-            <p style="text-align: center; font-size: 0.88rem; margin-bottom: 10px; color: {subtext_color};">
-                Precio promedio de mercado: <strong style="color: {text_color};">{data['price']}</strong>
-            </p>
+<div class="hype-card">
+    <div class="rank-badge">{data['rank']}</div>
+    
+    <div class="score-circle">
+        <div class="score-title">HYPE<br>SCORE:</div>
+        <div class="score-value">{data['score']}</div>
+    </div>
+    
+    <div class="img-wrapper">
+        <img src="{data['img']}">
+        <div class="year-badge">{data['year']}</div>
+    </div>
+    
+    <div class="perfume-title">{data['name']}</div>
+    
+    <div class="stats-row">
+        <div class="stats-text">{data['stats']}</div>
+        <div class="chile-badge">
+            <span style="font-size:14px;">👤</span>
+            <div>Disponible<br>en Chile 🇨🇱</div>
         </div>
-        """
+    </div>
+    
+    <div class="ai-box">
+        <div class="ai-icon">AI</div>
+        <div>"{data['ai_text']}"</div>
+    </div>
+    
+    <div class="price-text">Average market price: <b>{data['price']}</b></div>
+</div>
+"""
         st.markdown(html_card, unsafe_allow_html=True)
         st.button("Comparar Precios", key=f"btn_compare_{i}", use_container_width=True)
