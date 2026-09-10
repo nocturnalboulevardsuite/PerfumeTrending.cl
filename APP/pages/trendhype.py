@@ -1,7 +1,7 @@
 import streamlit as st
 
-# 1. CONFIGURACIÓN DE LA PÁGINA Y CSS CUSTOM 
-st.set_page_config(page_title="PerfumeTrending", layout="wide", initial_sidebar_state="collapsed")
+# 1. CONFIGURACIÓN DE PÁGINA
+st.set_page_config(page_title="Radar del Hype - PerfumeTrending", layout="wide")
 
 # 2. MANEJO DE ESTADO (Navegación y Tema)
 if 'current_page' not in st.session_state:
@@ -30,58 +30,53 @@ btn_text = "#ffffff" if is_dark else "#2c2c2c"
 btn_border = "#3a3f4d" if is_dark else "#d4cdc5"
 btn_hover_bg = "#2d3340" if is_dark else "#fcfaf8"
 
-input_bg = "#1f242d" if is_dark else "#252b36"
-input_text = "#ffffff" if is_dark else "#ffffff"
-input_border = "#3a3f4d" if is_dark else "#1a1a1a"
-
-bottle_left_pos = "42px" if is_dark else "-2px"
-static_icon_pos = "12px center" if is_dark else "calc(100% - 12px) center"
-
-static_icon_svg = (
-    "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='4'/><line x1='12' y1='1' x2='12' y2='3'/><line x1='12' y1='21' x2='12' y2='23'/><line x1='4.22' y1='4.22' x2='5.64' y2='5.64'/><line x1='18.36' y1='18.36' x2='19.78' y2='19.78'/><line x1='1' y1='12' x2='3' y2='12'/><line x1='21' y1='12' x2='23' y2='12'/><line x1='4.22' y1='19.78' x2='5.64' y2='18.36'/><line x1='18.36' y1='5.64' x2='19.78' y2='4.22'/></svg>"
-    if is_dark else
-    "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z'/></svg>"
-)
-
-bottle_svg = (
-    "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 58'><rect x='18' y='2' width='14' height='7' rx='2' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><rect x='21' y='9' width='8' height='5' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='19' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><path d='M21 28a8 8 0 0 0 9 10.5 8.5 8.5 0 0 1-9-10.5z' fill='none' stroke='%23111111' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/></svg>"
-    if is_dark else
-    "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 58'><rect x='18' y='2' width='14' height='7' rx='2' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><rect x='21' y='9' width='8' height='5' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='19' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='5' fill='none' stroke='%23111111' stroke-width='2'/><line x1='25' y1='23' x2='25' y2='26' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='25' y1='42' x2='25' y2='45' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='14' y1='34' x2='17' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='33' y1='34' x2='36' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='17' y1='26' x2='19' y2='28' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='31' y1='40' x2='33' y2='42' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='17' y1='42' x2='19' y2='40' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='31' y1='28' x2='33' y2='26' stroke='%23111111' stroke-width='2' stroke-linecap='round'/></svg>"
-)
-# 3. ESTILOS CSS REFINADOS
+# 3. ESTILOS CSS REFINADOS (Desplegables Minimalistas)
 st.markdown(f"""
     <style>
     header[data-testid="stHeader"] {{ display: none !important; }}
     .stApp {{ {app_bg_css} }}
     
-    /* --- ESTILO PARA FILTROS DINÁMICOS (PILLS) --- */
-    .filter-label, div[role="radiogroup"] p {{
-        color: #000000 !important;
-    }}
-    div[role="radiogroup"] {{ display: flex; flex-direction: row; gap: 12px; align-items: center; }}
-    div[role="radiogroup"] > label {{
-        background-color: #ffffff !important;
-        border: 1px solid #cccccc !important;
-        border-radius: 30px !important;
-        padding: 8px 18px !important;
-        cursor: pointer;
-        transition: all 0.2s ease-in-out;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    }}
-    div[role="radiogroup"] > label:hover {{
-        border-color: #000000 !important;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        transform: translateY(-2px);
-    }}
-    div[role="radiogroup"] > label[data-checked="true"] {{
-        background-color: #f8f9fa !important;
-        border: 2px solid #000000 !important;
-        padding: 7px 17px !important; 
-    }}
-    div[role="radiogroup"] > label[data-checked="true"] p {{ font-weight: 800 !important; }}
-    div[role="radiogroup"] > label > div:first-child {{ display: none !important; }}
+    /* --- ESTILO MINIMALISTA PARA DESPLEGABLES (SELECTBOX) --- */
     
-    /* --- ESTILOS DE LAS TARJETAS INTEGRADOS CON NUEVO TEMA --- */
+    /* Etiqueta y texto negro forzado en filtros */
+    .filter-title {{
+        color: #000000 !important;
+        font-weight: 900 !important;
+        font-size: 1.1rem;
+        margin: 0;
+    }}
+    
+    /* Contenedor del desplegable */
+    div[data-baseweb="select"] > div {{
+        background-color: #ffffff !important;
+        border: 1.5px solid #000000 !important;
+        border-radius: 25px !important;
+        color: #000000 !important;
+        font-weight: 600 !important;
+        padding-left: 10px !important;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        transition: all 0.2s ease-in-out;
+    }}
+    
+    div[data-baseweb="select"]:hover > div {{
+        box-shadow: 0 4px 8px rgba(0,0,0,0.12);
+        transform: translateY(-1px);
+    }}
+    
+    /* Forzar texto dentro de los selectbox a negro */
+    div[data-baseweb="select"] span, 
+    div[data-baseweb="select"] div,
+    div[data-baseweb="popover"] div {{
+        color: #000000 !important;
+        font-size: 13px !important;
+    }}
+    
+    /* Ocultar etiquetas por defecto de Streamlit arriba de los inputs */
+    div[data-testid="stSelectbox"] label {{
+        display: none !important;
+    }}
+
+    /* --- ESTILOS DE LAS TARJETAS --- */
     .hype-card {{
         background-color: {btn_bg};
         border: 2px solid {btn_border};
@@ -131,61 +126,32 @@ st.markdown(f"""
     }}
     .price-text {{ text-align: center; font-size: 12px; color: {text_color}; margin-bottom: 10px; }}
     </style>
-
-    # 1. LA CABECERA (LOGO + USER / THEME)
-col_logo, col_espacio, col_actions = st.columns([4, 3, 2.5], vertical_alignment="center")
-
-with col_logo:
-    logo_color = "#8c7b6d"
-    logo_html = f"""
-    <div style="display: flex; align-items: center; gap: 10px; cursor: pointer;" onclick="window.location.reload();">
-        <svg width="42" height="42" viewBox="0 0 36 36" fill="none" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M 6.8 21 L 29.2 21 C 30 25 27 32 18 32 C 9 32 6 25 6.8 21 Z" fill="{logo_color}" />
-            <line x1="6.8" y1="21" x2="29.2" y2="21" stroke="{text_color}" stroke-width="2" />
-            <line x1="18" y1="10" x2="18" y2="30" stroke="{text_color}" stroke-width="1.5" />
-            <path d="M 18 32 C 9 32 5 24 7.5 17 C 9 12 13 10 15 10 L 21 10 C 23 10 27 12 28.5 17 C 31 24 27 32 18 32 Z" stroke="{text_color}" stroke-width="2.5" />
-            <rect x="15" y="7" width="6" height="3" stroke="{text_color}" stroke-width="2.5" />
-            <rect x="13" y="3" width="10" height="4" rx="1" stroke="{text_color}" stroke-width="2.5" />
-            <rect x="16" y="0" width="4" height="3" rx="1" fill="{logo_color}" stroke="{text_color}" stroke-width="1.5" />
-            <path d="M 23 5 L 26 4" stroke="{text_color}" stroke-width="2.5" />
-            <ellipse cx="29" cy="3" rx="3.5" ry="2.5" transform="rotate(-25 29 3)" fill="{logo_color}" stroke="{text_color}" stroke-width="1.5" />
-        </svg>
-        <span style="font-family: 'Inter', sans-serif; font-size: 1.55rem; color: {text_color}; letter-spacing: -0.5px;">
-            <span style="font-weight: 800;">Perfume</span><span style="font-weight: 400;">Trending</span>
-        </span>
-    </div>
-    """
-    st.markdown(logo_html, unsafe_allow_html=True)
-
-with col_actions:
-    btn_col1, btn_col2 = st.columns([1.5, 1], vertical_alignment="center")
-    with btn_col1:
-        st.button("👤 Ingresar", key="login_btn", use_container_width=True)
-    with btn_col2:
-        st.button(" ", key="theme_toggle", on_click=toggle_theme)
-    
 """, unsafe_allow_html=True)
 
-# 4. NAVEGACIÓN SUPERIOR
-# Si deseas que el botón use la función nativa de tu nuevo estado, descomenta la de abajo y borra el page_link.
+# 4. NAVEGACIÓN SUPERIOR Y TÍTULO
 st.page_link("app.py", label="← Volver al Catálogo principal")
-# st.button("← Volver al Catálogo principal", on_click=lambda: navigate_to('home'))
 
 st.markdown(f"<h1 style='text-align: center; color: {text_color}; font-weight: 800; font-size: 2.5rem; margin-bottom: 30px;'>RADAR DEL HYPE - Viral Fragrances</h1>", unsafe_allow_html=True)
 
-# 5. FILTROS DINÁMICOS
-col_filtro1, col_filtro2, col_filtro3 = st.columns([1.2, 4, 2], vertical_alignment="center")
+# 5. FILTROS MINIMALISTAS (CLICK Y DESPLEGABLE)
+col_title, col_fecha, col_red, col_espacio = st.columns([1.2, 2, 2, 3], vertical_alignment="center")
 
-with col_filtro1:
-    st.markdown(f"<h4 style='margin: 0; color: #000000; font-weight: 900;'>Filtrar por :</h4>", unsafe_allow_html=True)
+with col_title:
+    st.markdown("<p class='filter-title'>Filtrar por :</p>", unsafe_allow_html=True)
 
-with col_filtro2:
-    st.markdown("<div class='filter-label' style='font-size: 12px; font-weight: bold; margin-bottom: 5px;'>Marco Temporal</div>", unsafe_allow_html=True)
-    st.radio("Marco Temporal", ["Esta Semana", "Este Mes", "Este Año", "Año Pasado"], horizontal=True, index=1, label_visibility="collapsed")
+with col_fecha:
+    opcion_fecha = st.selectbox(
+        "Filtrar por Fecha",
+        ["📅 Fecha: Este Mes", "📅 Fecha: Esta Semana", "📅 Fecha: Este Año", "📅 Fecha: Año Pasado"],
+        index=0
+    )
 
-with col_filtro3:
-    st.markdown("<div class='filter-label' style='font-size: 12px; font-weight: bold; margin-bottom: 5px;'>Plataforma Social</div>", unsafe_allow_html=True)
-    st.radio("Plataforma Social", ["▶️ YouTube"], horizontal=True, index=0, label_visibility="collapsed")
+with col_red:
+    opcion_red = st.selectbox(
+        "Plataforma Social",
+        ["▶️ YouTube", "🎵 TikTok", "📸 Instagram"],
+        index=0
+    )
 
 st.divider()
 
