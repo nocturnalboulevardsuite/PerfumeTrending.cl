@@ -42,7 +42,7 @@ bottle_svg = (
     "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 58'><rect x='18' y='2' width='14' height='7' rx='2' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><rect x='21' y='9' width='8' height='5' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='19' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='5' fill='none' stroke='%23111111' stroke-width='2'/><line x1='25' y1='23' x2='25' y2='26' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='25' y1='42' x2='25' y2='45' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='14' y1='34' x2='17' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='33' y1='34' x2='36' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='17' y1='26' x2='19' y2='28' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='31' y1='40' x2='33' y2='42' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='17' y1='42' x2='19' y2='40' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='31' y1='28' x2='33' y2='26' stroke='%23111111' stroke-width='2' stroke-linecap='round'/></svg>"
 )
 
-# 3. ESTILOS CSS REFINADOS Y ALINEACIÓN PERFECTA
+# 3. ESTILOS CSS REFINADOS - ALINEACIÓN HORIZONTAL RECTA PERFECTA
 st.markdown(f"""
     <style>
     header[data-testid="stHeader"] {{ display: none !important; }}
@@ -58,6 +58,30 @@ st.markdown(f"""
         margin-top: 0rem !important;
         padding-bottom: 2rem !important;
         max-width: 1200px !important;
+    }}
+
+    /* REGLAS DE ALINEACIÓN RECTA PARA COLUMNAS Y CONTENEDORES */
+    div[data-testid="stHorizontalBlock"] {{
+        align-items: center !important;
+    }}
+
+    div[data-testid="stColumn"] {{
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+    }}
+
+    div[data-testid="stColumn"] > div {{
+        display: flex !important;
+        align-items: center !important;
+        width: 100% !important;
+    }}
+
+    div[data-testid="stElementContainer"] {{
+        margin-top: 0px !important;
+        margin-bottom: 0px !important;
+        padding-top: 0px !important;
+        padding-bottom: 0px !important;
     }}
 
     /* SWITCH NEUTRO */
@@ -193,24 +217,23 @@ st.markdown(f"""
         pointer-events: auto;
     }}
 
-    /* ETIQUETA "FILTRAR POR :" ALINEADA AL BOTÓN */
+    /* NORMALIZACIÓN ALTURA EXACTA A 36px PARA TODA LA FILA */
     .filter-label-text {{
         color: {text_color} !important;
         font-weight: 700 !important;
-        font-size: 1rem !important;
-        margin: 22 !important;
-        display: flex;
+        font-size: 0.95rem !important;
+        margin: 0 !important;
+        display: flex !important;
         align-items: center !important;
-        justify-content: flex-start;
-        height: 32px;
+        height: 36px !important;
+        line-height: 1 !important;
         white-space: nowrap !important;
     }}
 
-    /* ESTILOS IDÉNTICOS Y CENTRADO ABSOLUTO PARA EL BOTÓN POP-OVER Y CHIP YOUTUBE */
     div[data-testid="stPopover"] {{
         display: flex !important;
         align-items: center !important;
-        height: 32px !important;
+        height: 36px !important;
     }}
 
     div[data-testid="stPopover"] > button,
@@ -219,10 +242,10 @@ st.markdown(f"""
         background: {btn_bg} !important;
         border: 1px solid {btn_border} !important;
         border-radius: 8px !important;
-        padding: 0 10px !important;
-        height: 32px !important;
-        min-height: 32px !important;
-        max-height: 32px !important;
+        padding: 0 12px !important;
+        height: 36px !important;
+        min-height: 36px !important;
+        max-height: 36px !important;
         box-shadow: 0 1px 3px rgba(0,0,0,0.05) !important;
         transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
         outline: none !important;
@@ -234,7 +257,6 @@ st.markdown(f"""
         box-sizing: border-box !important;
     }}
 
-    /* Reset de márgenes y flex para alineación vertical idéntica */
     div[data-testid="stPopover"] button *,
     div[data-testid="stPopover"] button p,
     div[data-testid="stPopover"] button span,
@@ -258,7 +280,6 @@ st.markdown(f"""
         flex-shrink: 0 !important;
     }}
 
-    /* HOVER MODERNO EN EL BOTÓN POP-OVER */
     div[data-testid="stPopover"] button:hover {{
         background-color: {btn_hover_bg} !important;
         border-color: #d83737 !important;
@@ -266,50 +287,57 @@ st.markdown(f"""
         box-shadow: 0 3px 8px rgba(0,0,0,0.08) !important;
     }}
 
-    /* CHIP DE YOUTUBE Y TEXTO ADYACENTE CON MISMA ALTURA Y ESTILO */
+    /* SECCIÓN DE RED SOCIAL CON ALINEACIÓN PERFECTA */
     .social-select-box {{
-        display: flex;
-        align-items: center;
-        gap: 8px;
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
         color: {text_color};
         font-size: 13px;
         width: 100%;
         box-sizing: border-box;
-        height: 32px;
+        height: 36px !important;
+        line-height: 1 !important;
     }}
 
     .social-label {{
         color: {subtext_color};
         font-weight: 600;
         white-space: nowrap;
+        display: inline-flex !important;
+        align-items: center !important;
+        height: 36px !important;
+        line-height: 1 !important;
+        margin: 0 !important;
     }}
 
     .yt-chip-btn {{
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
         gap: 6px;
         background-color: {btn_bg};
         border: 1px solid {btn_border};
         border-radius: 8px;
         padding: 0 10px;
-        height: 32px;
+        height: 36px !important;
         box-sizing: border-box;
         color: {text_color};
         font-weight: 700;
         font-size: 12px;
-        line-height: 1;
+        line-height: 1 !important;
         white-space: nowrap;
         cursor: pointer;
         transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
         outline: none;
         user-select: none;
+        margin: 0 !important;
     }}
 
     .yt-chip-btn span {{
-        display: inline-flex;
-        align-items: center;
-        line-height: 1;
+        display: inline-flex !important;
+        align-items: center !important;
+        line-height: 1 !important;
     }}
 
     .yt-chip-btn:hover {{
@@ -319,39 +347,15 @@ st.markdown(f"""
         box-shadow: 0 3px 8px rgba(216, 55, 55, 0.15);
     }}
 
-    .yt-chip-btn:active {{
-        transform: scale(0.96);
-    }}
-
-    .yt-bounce {{
-        animation: ytPulseBounce 0.4s ease;
-    }}
-
-    @keyframes ytPulseBounce {{
-        0% {{ transform: scale(1); }}
-        40% {{ transform: scale(1.12) rotate(-3deg); }}
-        80% {{ transform: scale(0.96) rotate(2deg); }}
-        100% {{ transform: scale(1); }}
-    }}
-
-    .yt-particle {{
-        position: fixed;
-        z-index: 99999;
-        pointer-events: none;
-        font-size: 18px;
-        animation: floatAndFade 0.85s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
-    }}
-
-    @keyframes floatAndFade {{
-        0% {{ opacity: 1; transform: translate(0, 0) scale(0.6) rotate(0deg); }}
-        100% {{ opacity: 0; transform: translate(var(--dx), var(--dy)) scale(1.4) rotate(360deg); }}
-    }}
-
     .social-desc {{
         font-size: 11px;
         color: {subtext_color};
         font-style: italic;
-        line-height: 1.2;
+        display: inline-flex !important;
+        align-items: center !important;
+        height: 36px !important;
+        line-height: 1 !important;
+        margin: 0 !important;
     }}
 
     .nav-back-link {{
@@ -401,25 +405,6 @@ st.markdown(f"""
     .hype-card:hover .rank-badge {{
         border-color: #d83737;
     }}
-
-    @keyframes minimalStarGlow {{
-        0%, 100% {{ transform: scale(1); filter: drop-shadow(0 0 2px rgba(216, 55, 55, 0.3)); opacity: 0.92; }}
-        50% {{ transform: scale(1.15); filter: drop-shadow(0 0 7px rgba(216, 55, 55, 0.75)); opacity: 1; }}
-    }}
-
-    @keyframes goldStarGlow {{
-        0%, 100% {{ transform: scale(1); filter: drop-shadow(0 0 2px rgba(212, 175, 55, 0.3)); opacity: 0.92; }}
-        50% {{ transform: scale(1.15); filter: drop-shadow(0 0 7px rgba(241, 196, 15, 0.75)); opacity: 1; }}
-    }}
-
-    @keyframes silverStarGlow {{
-        0%, 100% {{ transform: scale(1); filter: drop-shadow(0 0 2px rgba(148, 163, 184, 0.3)); opacity: 0.92; }}
-        50% {{ transform: scale(1.15); filter: drop-shadow(0 0 7px rgba(226, 232, 240, 0.75)); opacity: 1; }}
-    }}
-
-    .star-minimal-ruby {{ animation: minimalStarGlow 3s ease-in-out infinite; display: inline-flex; vertical-align: middle; }}
-    .star-minimal-gold {{ animation: goldStarGlow 3.2s ease-in-out infinite; display: inline-flex; vertical-align: middle; }}
-    .star-minimal-silver {{ animation: silverStarGlow 3.5s ease-in-out infinite; display: inline-flex; vertical-align: middle; }}
 
     .score-circle {{
         position: absolute; top: 10px; right: 10px; width: 56px; height: 56px; border-radius: 50%;
@@ -484,43 +469,7 @@ st.markdown(f"""
         box-shadow: 0 6px 18px rgba(216, 55, 55, 0.38) !important;
         color: #ffffff !important;
     }}
-
-    div[data-testid="stElementContainer"] > div.stButton > button:not([aria-label=" "]):active {{
-        transform: scale(0.98) translateY(0px) !important;
-    }}
     </style>
-
-    <script>
-    function triggerYtAnimation(event, btn) {{
-        btn.classList.add('yt-bounce');
-        setTimeout(() => btn.classList.remove('yt-bounce'), 400);
-
-        const emojis = ['▶️', '🔥', '✨', '🎵', '❤️', '🍿', '🚀', '⭐'];
-        const rect = btn.getBoundingClientRect();
-
-        for(let i=0; i<14; i++) {{
-            const particle = document.createElement('span');
-            particle.innerHTML = emojis[Math.floor(Math.random() * emojis.length)];
-            particle.className = 'yt-particle';
-            
-            const startX = event.clientX || (rect.left + rect.width / 2);
-            const startY = event.clientY || (rect.top + rect.height / 2);
-            
-            const angle = Math.random() * Math.PI * 2;
-            const distance = 45 + Math.random() * 85;
-            const destX = Math.cos(angle) * distance;
-            const destY = Math.sin(angle) * distance - 35;
-            
-            particle.style.left = startX + 'px';
-            particle.style.top = startY + 'px';
-            particle.style.setProperty('--dx', destX + 'px');
-            particle.style.setProperty('--dy', destY + 'px');
-            
-            document.body.appendChild(particle);
-            setTimeout(() => particle.remove(), 850);
-        }}
-    }}
-    </script>
 """, unsafe_allow_html=True)
 
 # 4. CABECERA CON LOGO Y TEMAS
@@ -575,8 +524,8 @@ with col_back_btn:
 
 st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
 
-# 5. FILTROS ALINEADOS Y PEGADOS CON MARGEN MÍNIMO
-col_title, col_fecha, col_red = st.columns([0.095, 0.125, 0.78], gap="small", vertical_alignment="center")
+# 5. FILTROS EN LÍNEA RECTA HORIZONTAL ABSOLUTA
+col_title, col_fecha, col_red = st.columns([0.10, 0.13, 0.77], gap="small", vertical_alignment="center")
 
 with col_title:
     st.markdown("<div class='filter-label-text'>Filtrado por :</div>", unsafe_allow_html=True)
@@ -593,7 +542,7 @@ with col_red:
     social_select_html = f"""
     <div class="social-select-box">
         <span class="social-label">Red social analizada:</span>
-        <button class="yt-chip-btn" onclick="triggerYtAnimation(event, this)">
+        <button class="yt-chip-btn">
             <svg width="16" height="12" viewBox="0 0 26 20" fill="none">
                 <rect x="1" y="1" width="24" height="18" rx="5" fill="#d83737" />
                 <polygon points="10,5 18,10 10,15" fill="#ffffff" />
