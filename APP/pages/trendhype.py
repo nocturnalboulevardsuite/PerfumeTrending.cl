@@ -1,151 +1,115 @@
 import streamlit as st
 
-# 1. CONFIGURACIÓN DE PÁGINA E INTEGRACIÓN DE TEMA
+# 1. CONFIGURACIÓN DE PÁGINA
 st.set_page_config(page_title="Radar del Hype - PerfumeTrending", layout="wide")
 
-# Heredamos el tema del session_state para que el botón de app.py funcione perfecto
-is_dark = st.session_state.get('theme', 'light') == 'dark'
+# 2. SISTEMA DE TEMA (CLARO / OSCURO) INTEGRADO
+if 'theme' not in st.session_state:
+    st.session_state.theme = 'light'
 
-# Paleta de colores dinámica (Claro / Oscuro)
-app_bg = "#0e1117" if is_dark else "#f6efe9"
-card_bg = "#1f242d" if is_dark else "#ffffff"
-text_color = "#ffffff" if is_dark else "#1a1a1a"
-subtext_color = "#cccccc" if is_dark else "#444444"
-border_color = "#555555" if is_dark else "#1a1a1a"
-badge_bg = "#2d3340" if is_dark else "#f0f0f0"
+def toggle_theme():
+    if st.session_state.theme == 'light':
+        st.session_state.theme = 'dark'
+    else:
+        st.session_state.theme = 'light'
 
-# 2. ESTILOS CSS REFINADOS (Estilo Mockup)
+is_dark = st.session_state.theme == 'dark'
+
+# Paleta de colores exacta para emular el mockup
+app_bg = "#121212" if is_dark else "#F5F2ED"
+card_bg = "#1E1E1E" if is_dark else "#FFFFFF"
+text_color = "#FFFFFF" if is_dark else "#1A1A1A"
+border_color = "#444444" if is_dark else "#1A1A1A"
+badge_bg = "#2A2A2A" if is_dark else "#F0F0F0"
+
+# 3. CSS GLOBAL Y ESTILOS
 st.markdown(f"""
     <style>
+    /* Ocultar barra superior por defecto de Streamlit */
     header[data-testid="stHeader"] {{ display: none !important; }}
-    .stApp {{ background-color: {app_bg} !important; }}
     
-    /* Contenedor principal de la tarjeta */
+    /* Forzar fondo de la aplicación */
+    .stApp {{
+        background-color: {app_bg} !important;
+    }}
+    
+    /* Textos globales de Streamlit */
+    .stMarkdown, .stText, h1, h2, h3, h4, h5, h6, label {{
+        color: {text_color} !important;
+    }}
+    
+    /* Estilos específicos de las tarjetas (Sin saltos de línea en el HTML después para evitar errores de Markdown) */
     .hype-card {{
         background-color: {card_bg};
         border: 2px solid {border_color};
         border-radius: 12px;
         padding: 20px;
         position: relative;
-        margin-top: 25px;
-        margin-bottom: 15px;
-        box-shadow: 2px 4px 10px rgba(0,0,0,0.1);
+        margin-top: 30px;
+        margin-bottom: 10px;
+        box-shadow: 4px 4px 0px {border_color};
         color: {text_color};
-        font-family: 'Inter', sans-serif;
+        font-family: sans-serif;
     }}
-    
-    /* Etiqueta de Ranking (#1, #2...) */
     .rank-badge {{
-        position: absolute;
-        top: -15px;
-        left: -10px;
-        background-color: {card_bg};
-        color: {text_color};
-        font-size: 24px;
-        font-weight: 900;
-        padding: 5px 12px;
-        border: 2px solid {border_color};
-        border-radius: 6px;
-        box-shadow: 2px 2px 0px {border_color};
-        z-index: 2;
+        position: absolute; top: -18px; left: -10px;
+        background-color: {card_bg}; color: {text_color};
+        font-size: 24px; font-weight: 900; padding: 4px 14px;
+        border: 2px solid {border_color}; border-radius: 8px;
     }}
-    
-    /* Círculo de HYPE SCORE */
     .score-circle {{
-        position: absolute;
-        top: 15px;
-        right: 15px;
-        width: 70px;
-        height: 70px;
-        border-radius: 50%;
-        border: 3px solid {border_color};
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
+        position: absolute; top: 15px; right: 15px;
+        width: 65px; height: 65px; border-radius: 50%;
+        border: 2px solid {border_color};
+        display: flex; flex-direction: column; justify-content: center; align-items: center;
         background-color: {card_bg};
-        padding: 2px;
-        box-shadow: inset 0 0 0 2px {card_bg}, inset 0 0 0 3px {border_color};
     }}
-    .score-title {{ font-size: 8px; font-weight: 800; line-height: 1.1; text-align: center; color: {text_color}; }}
+    .score-title {{ font-size: 8px; font-weight: 800; text-align: center; line-height: 1.1; color: {text_color}; }}
     .score-value {{ font-size: 18px; font-weight: 900; color: {text_color}; }}
-    
-    /* Contenedor de Imagen y Año */
-    .img-wrapper {{ text-align: center; margin-top: 15px; position: relative; }}
-    .img-wrapper img {{ width: 130px; height: 130px; object-fit: contain; }}
+    .img-wrapper {{ text-align: center; margin-top: 25px; position: relative; display: flex; justify-content: center; }}
+    .img-wrapper img {{ width: 140px; height: 140px; object-fit: contain; }}
     .year-badge {{
-        position: absolute;
-        bottom: 0;
-        right: 10px;
-        background: {card_bg};
-        border: 1px solid {border_color};
-        border-radius: 4px;
-        padding: 2px 8px;
-        font-size: 12px;
-        font-weight: bold;
+        position: absolute; bottom: 0; right: 20px;
+        background: {card_bg}; border: 1px solid {border_color}; border-radius: 4px;
+        padding: 2px 8px; font-size: 12px; font-weight: bold; color: {text_color};
     }}
-    
-    /* Título del Perfume */
-    .perfume-title {{ text-align: center; font-size: 16px; font-weight: bold; margin-top: 10px; margin-bottom: 15px; }}
-    
-    /* Fila de Estadísticas y Chile */
+    .perfume-title {{ text-align: center; font-size: 18px; font-weight: 900; margin-top: 15px; margin-bottom: 15px; color: {text_color}; }}
     .stats-row {{ display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-size: 11px; }}
-    .stats-text {{ width: 55%; color: {text_color}; line-height: 1.3; }}
+    .stats-text {{ width: 55%; line-height: 1.3; color: {text_color}; }}
     .chile-badge {{
-        display: flex;
-        align-items: center;
-        gap: 5px;
-        background-color: {badge_bg};
-        border: 1px solid {border_color};
-        border-radius: 20px;
-        padding: 4px 8px;
-        font-weight: bold;
-        font-size: 10px;
-        text-align: left;
-        line-height: 1.1;
+        display: flex; align-items: center; gap: 5px;
+        background-color: {badge_bg}; border: 1px solid {border_color}; border-radius: 20px;
+        padding: 4px 10px; font-weight: bold; font-size: 10px; line-height: 1.1; color: {text_color};
     }}
-    
-    /* Bloque de IA */
     .ai-box {{
-        display: flex;
-        gap: 10px;
-        align-items: center;
-        border: 1px solid {border_color};
-        border-radius: 8px;
-        padding: 10px;
-        margin-bottom: 15px;
-        font-size: 11px;
-        line-height: 1.3;
-        background-color: {badge_bg};
+        display: flex; gap: 10px; align-items: center;
+        border: 1px solid {border_color}; border-radius: 8px; padding: 10px; margin-bottom: 15px;
+        font-size: 11px; line-height: 1.3; background-color: {badge_bg}; color: {text_color};
     }}
     .ai-icon {{
-        min-width: 26px;
-        height: 26px;
-        border-radius: 50%;
-        border: 1px solid {border_color};
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        font-weight: bold;
-        font-size: 10px;
-        background-color: {card_bg};
+        min-width: 26px; height: 26px; border-radius: 50%; border: 1px solid {border_color};
+        display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 10px;
+        background-color: {card_bg}; color: {text_color};
     }}
-    
-    /* Precio */
-    .price-text {{ text-align: center; font-size: 12px; color: {text_color}; margin-bottom: 10px; }}
+    .price-text {{ text-align: center; font-size: 12px; color: {text_color}; margin-bottom: 5px; }}
     </style>
 """, unsafe_allow_html=True)
 
-# 3. NAVEGACIÓN SUPERIOR
-st.page_link("app.py", label="← Volver al Catálogo principal")
+# 4. NAVEGACIÓN Y BOTÓN DE TEMA
+col_nav, col_space, col_theme = st.columns([2, 6, 1.5], vertical_alignment="center")
+with col_nav:
+    st.page_link("app.py", label="← Volver al Catálogo principal")
+with col_theme:
+    # Botón Toggle nativo de Streamlit
+    st.toggle("☀️ / 🌙", value=is_dark, on_change=toggle_theme, key="theme_toggle")
 
-st.markdown(f"<h1 style='text-align: center; color: {text_color}; font-weight: 800; font-size: 2.5rem; margin-bottom: 30px;'>RADAR DEL HYPE - Viral Fragrances</h1>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align: center; font-weight: 900; font-size: 2.8rem; margin-bottom: 30px;'>RADAR DEL HYPE - Viral Fragrances</h1>", unsafe_allow_html=True)
 
-# 4. FILTROS (En Español, Solo YouTube)
-col_filtro1, col_filtro2, col_filtro3 = st.columns([1.2, 4, 2], vertical_alignment="center")
+# 5. FILTROS (Español, Solo YouTube)
+col_filtro1, col_filtro2, col_filtro3 = st.columns([1.5, 4, 2], vertical_alignment="center")
 
 with col_filtro1:
-    st.markdown(f"<h4 style='margin: 0; color: {text_color}; font-weight: bold;'>Filtrar por :</h4>", unsafe_allow_html=True)
+    st.markdown("<h4 style='margin: 0; font-weight: bold;'>Filtrar por :</h4>", unsafe_allow_html=True)
 
 with col_filtro2:
     st.caption("Marco Temporal")
@@ -155,9 +119,10 @@ with col_filtro3:
     st.caption("Plataforma Social")
     st.radio("Plataforma Social", ["▶️ YouTube"], horizontal=True, index=0, label_visibility="collapsed")
 
-st.divider()
+st.write("")
+st.write("")
 
-# 5. BASE DE DATOS
+# 6. BASE DE DATOS
 hype_data = [
     {
         "rank": "#1", "name": "Bleu de Chanel", "score": "95%", "year": "2010", "price": "$180,000 CLP",
@@ -179,44 +144,14 @@ hype_data = [
     }
 ]
 
-# 6. RENDERIZADO DE TARJETAS
-cols = st.columns(3, gap="medium")
+# 7. RENDERIZADO DE TARJETAS
+cols = st.columns(3, gap="large")
 
-# IMPORTANTE: El string de HTML se formatea SIN indentación al principio de cada línea
-# para evitar que Streamlit lo convierta en un bloque de código y muestre las etiquetas.
+# NOTA IMPORTANTE: El bloque HTML está comprimido sin líneas en blanco.
+# Esto es CRUCIAL para que Streamlit no lo convierta en un bloque de código negro.
 for i, data in enumerate(hype_data):
     with cols[i]:
-        html_card = f"""
-<div class="hype-card">
-    <div class="rank-badge">{data['rank']}</div>
-    
-    <div class="score-circle">
-        <div class="score-title">HYPE<br>SCORE:</div>
-        <div class="score-value">{data['score']}</div>
-    </div>
-    
-    <div class="img-wrapper">
-        <img src="{data['img']}">
-        <div class="year-badge">{data['year']}</div>
-    </div>
-    
-    <div class="perfume-title">{data['name']}</div>
-    
-    <div class="stats-row">
-        <div class="stats-text">{data['stats']}</div>
-        <div class="chile-badge">
-            <span style="font-size:14px;">👤</span>
-            <div>Disponible<br>en Chile 🇨🇱</div>
-        </div>
-    </div>
-    
-    <div class="ai-box">
-        <div class="ai-icon">AI</div>
-        <div>"{data['ai_text']}"</div>
-    </div>
-    
-    <div class="price-text">Average market price: <b>{data['price']}</b></div>
-</div>
-"""
+        html_card = f"""<div class="hype-card"><div class="rank-badge">{data['rank']}</div><div class="score-circle"><div class="score-title">HYPE<br>SCORE:</div><div class="score-value">{data['score']}</div></div><div class="img-wrapper"><img src="{data['img']}"><div class="year-badge">{data['year']}</div></div><div class="perfume-title">{data['name']}</div><div class="stats-row"><div class="stats-text">{data['stats']}</div><div class="chile-badge"><span style="font-size:14px;">👤</span><div>Disponible<br>en Chile 🇨🇱</div></div></div><div class="ai-box"><div class="ai-icon">AI</div><div>"{data['ai_text']}"</div></div><div class="price-text">Average market price: <b>{data['price']}</b></div></div>"""
+        
         st.markdown(html_card, unsafe_allow_html=True)
         st.button("Comparar Precios", key=f"btn_compare_{i}", use_container_width=True)
