@@ -42,7 +42,7 @@ bottle_svg = (
     "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 58'><rect x='18' y='2' width='14' height='7' rx='2' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><rect x='21' y='9' width='8' height='5' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='19' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='5' fill='none' stroke='%23111111' stroke-width='2'/><line x1='25' y1='23' x2='25' y2='26' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='25' y1='42' x2='25' y2='45' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='14' y1='34' x2='17' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='33' y1='34' x2='36' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='17' y1='26' x2='19' y2='28' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='31' y1='40' x2='33' y2='42' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='17' y1='42' x2='19' y2='40' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='31' y1='28' x2='33' y2='26' stroke='%23111111' stroke-width='2' stroke-linecap='round'/></svg>"
 )
 
-# 3. ESTILOS CSS REFINADOS - ALINEACIÓN HORIZONTAL RECTA PERFECTA
+# 3. ESTILOS CSS REFINADOS CON RESETEO DE ALINEACIÓN HORIZONTAL
 st.markdown(f"""
     <style>
     header[data-testid="stHeader"] {{ display: none !important; }}
@@ -60,7 +60,7 @@ st.markdown(f"""
         max-width: 1200px !important;
     }}
 
-    /* REGLAS DE ALINEACIÓN RECTA PARA COLUMNAS Y CONTENEDORES */
+    /* FIX DEFINITIVO DE ALINEACIÓN PARA FILTROS */
     div[data-testid="stHorizontalBlock"] {{
         align-items: center !important;
     }}
@@ -71,17 +71,29 @@ st.markdown(f"""
         justify-content: flex-start !important;
     }}
 
+    div[data-testid="stColumn"] > div[data-testid="stElementContainer"],
     div[data-testid="stColumn"] > div {{
-        display: flex !important;
-        align-items: center !important;
-        width: 100% !important;
-    }}
-
-    div[data-testid="stElementContainer"] {{
         margin-top: 0px !important;
         margin-bottom: 0px !important;
         padding-top: 0px !important;
         padding-bottom: 0px !important;
+        display: flex !important;
+        align-items: center !important;
+        height: 36px !important;
+    }}
+
+    div[data-testid="stMarkdownContainer"] {{
+        display: flex !important;
+        align-items: center !important;
+        height: 36px !important;
+    }}
+
+    div[data-testid="stMarkdownContainer"] p {{
+        margin: 0 !important;
+        padding: 0 !important;
+        line-height: 1 !important;
+        display: flex !important;
+        align-items: center !important;
     }}
 
     /* SWITCH NEUTRO */
@@ -217,7 +229,7 @@ st.markdown(f"""
         pointer-events: auto;
     }}
 
-    /* NORMALIZACIÓN ALTURA EXACTA A 36px PARA TODA LA FILA */
+    /* ETIQUETAS Y POPOVER */
     .filter-label-text {{
         color: {text_color} !important;
         font-weight: 700 !important;
@@ -234,6 +246,7 @@ st.markdown(f"""
         display: flex !important;
         align-items: center !important;
         height: 36px !important;
+        margin: 0 !important;
     }}
 
     div[data-testid="stPopover"] > button,
@@ -298,6 +311,7 @@ st.markdown(f"""
         box-sizing: border-box;
         height: 36px !important;
         line-height: 1 !important;
+        margin: 0 !important;
     }}
 
     .social-label {{
@@ -524,8 +538,8 @@ with col_back_btn:
 
 st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
 
-# 5. FILTROS EN LÍNEA RECTA HORIZONTAL ABSOLUTA
-col_title, col_fecha, col_red = st.columns([0.10, 0.13, 0.77], gap="small", vertical_alignment="center")
+# 5. FILTROS RE-ALINEADOS
+col_title, col_fecha, col_red = st.columns([0.11, 0.14, 0.75], gap="small", vertical_alignment="center")
 
 with col_title:
     st.markdown("<div class='filter-label-text'>Filtrado por :</div>", unsafe_allow_html=True)
