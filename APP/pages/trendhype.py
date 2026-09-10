@@ -134,7 +134,6 @@ st.markdown(f"""
         color: #8b121a !important;
     }}
 
-    /* POSICIÓN AJUSTADA: LIGERAMENTE MÁS ARRIBA Y A LA DERECHA */
     .info-icon-container {{
         position: relative;
         display: inline-block;
@@ -194,7 +193,6 @@ st.markdown(f"""
         pointer-events: auto;
     }}
 
-    /* SECCIÓN DE FILTROS ESTILO YOUTUBE CHIP */
     .filter-label-text {{
         color: {text_color} !important;
         font-weight: 800 !important;
@@ -205,42 +203,73 @@ st.markdown(f"""
         padding-right: 2px;
     }}
 
-    /* ESTILO BOTÓN CHIP FECHA (ESTADO NORMAL) */
+    /* 1. BOTÓN DE SELECCIÓN (TRANSPARENTE) */
     div[data-testid="stPopover"] > button {{
-        background-color: {"#282933" if is_dark else "#e8e0d7"} !important;
+        background: transparent !important;
+        background-color: transparent !important;
         color: {text_color} !important;
-        border: 1px solid {"#383946" if is_dark else "#d4cdc5"} !important;
+        border: 1.5px solid {"rgba(255, 255, 255, 0.2)" if is_dark else "rgba(0, 0, 0, 0.2)"} !important;
         border-radius: 20px !important;
         padding: 6px 16px !important;
         font-weight: 700 !important;
         font-size: 13px !important;
         height: 38px !important;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.05) !important;
+        box-shadow: none !important;
         transition: all 0.22s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
         outline: none !important;
+        backdrop-filter: blur(4px) !important;
+        -webkit-backdrop-filter: blur(4px) !important;
     }}
 
-    /* HOVER CON MINI ZOOM Y ROJO VIVO */
     div[data-testid="stPopover"] > button:hover,
     div[data-testid="stPopover"] > button:focus:not(:active) {{
         background-color: #d83737 !important;
         color: #ffffff !important;
         border-color: #d83737 !important;
-        transform: translateY(-1px) scale(1.05) !important;
+        transform: translateY(-1px) scale(1.03) !important;
         box-shadow: 0 4px 14px rgba(216, 55, 55, 0.35) !important;
     }}
 
-    /* CLICK / PRESIONADO / DESPLEGADO EN ROJO MATE FRÍO */
     div[data-testid="stPopover"] > button:active,
     div[data-testid="stPopover"] > button[aria-expanded="true"] {{
-        background-color: #8b1e24 !important;
-        color: #f0e6e6 !important;
-        border-color: #6e151a !important;
-        transform: scale(0.96) !important;
-        box-shadow: inset 0 2px 5px rgba(0,0,0,0.4) !important;
+        background-color: rgba(216, 55, 55, 0.2) !important;
+        color: {text_color} !important;
+        border-color: #d83737 !important;
+        transform: scale(0.97) !important;
     }}
 
-    /* INTERACTIVIDAD Y ANIMACIÓN DEL BOTÓN YOUTUBE */
+    /* 2. CUADRO DESPLEGABLE DE SELECCIÓN (DIFUMINADO Y TRASLÚCIDO) */
+    div[data-testid="stPopoverBody"] {{
+        background-color: {"rgba(18, 20, 26, 0.55)" if is_dark else "rgba(255, 255, 255, 0.55)"} !important;
+        backdrop-filter: blur(16px) saturate(180%) !important;
+        -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+        border: 1px solid {"rgba(255, 255, 255, 0.15)" if is_dark else "rgba(0, 0, 0, 0.12)"} !important;
+        border-radius: 16px !important;
+        box-shadow: 0 12px 32px 0 rgba(0, 0, 0, 0.3) !important;
+        padding: 10px !important;
+    }}
+
+    /* OPCIONES DENTRO DEL DESPLEGABLE */
+    div[data-testid="stPopoverBody"] button {{
+        background-color: {"rgba(255, 255, 255, 0.08)" if is_dark else "rgba(0, 0, 0, 0.04)"} !important;
+        color: {text_color} !important;
+        border: 1px solid {"rgba(255, 255, 255, 0.08)" if is_dark else "rgba(0, 0, 0, 0.06)"} !important;
+        border-radius: 10px !important;
+        font-weight: 600 !important;
+        font-size: 13px !important;
+        margin-bottom: 4px !important;
+        transition: all 0.2s ease !important;
+    }}
+
+    div[data-testid="stPopoverBody"] button:hover {{
+        background-color: #d83737 !important;
+        color: #ffffff !important;
+        border-color: #d83737 !important;
+        transform: translateY(-1px) !important;
+        box-shadow: 0 4px 12px rgba(216, 55, 55, 0.3) !important;
+    }}
+
+    /* RED SOCIAL YOUTUBE CHIP */
     .social-select-box {{
         display: flex;
         align-items: center;
@@ -358,7 +387,6 @@ st.markdown(f"""
         border-color: #d83737;
     }}
 
-    /* BADGES DE RANKING Y ESTRELLAS MINIMALISTAS */
     .rank-badge {{
         position: absolute; top: -12px; left: -8px;
         background-color: {btn_bg}; color: {text_color};
@@ -371,7 +399,6 @@ st.markdown(f"""
         border-color: #d83737;
     }}
 
-    /* ANIMACIÓN SUTIL Y ELEGANTE PARA ESTRELLAS MINIMALISTAS */
     @keyframes minimalStarGlow {{
         0%, 100% {{
             transform: scale(1);
@@ -488,7 +515,6 @@ st.markdown(f"""
     }}
     </style>
 
-    <!-- SCRIPT DE ANIMACIONES INTERACTIVAS EN YOUTUBE -->
     <script>
     function triggerYtAnimation(event, btn) {{
         btn.classList.add('yt-bounce');
@@ -574,7 +600,7 @@ with col_back_btn:
 
 st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
 
-# 5. FILTROS CENTRALIZADOS CON BOTÓN CHIP TIPO YOUTUBE
+# 5. FILTROS CENTRALIZADOS CON POP-OVER TRASLÚCIDO DIFUMINADO
 col_title, col_fecha, col_red = st.columns([0.65, 1.8, 4.55], vertical_alignment="center")
 
 with col_title:
@@ -606,7 +632,7 @@ with col_red:
 
 st.write("")
 
-# 6. ICONOS DE ESTRELLAS MINIMALISTAS Y PROFESIONALES (LUJO GEOMÉTRICO 4 PUNTAS)
+# 6. ICONOS DE ESTRELLAS MINIMALISTAS
 star_ruby_svg = """
 <div class="star-minimal-ruby">
     <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
@@ -653,7 +679,6 @@ star_silver_svg = """
 </div>
 """
 
-# BASE DE DATOS DE 6 PERFUMES
 hype_data = [
     {
         "rank": "#1", "star": star_ruby_svg, "name": "Bleu de Chanel", "score": "95%", "year": "2010", "price": "$180,000 CLP",
