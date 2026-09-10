@@ -40,7 +40,7 @@ bottle_svg = (
     "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 58'><rect x='18' y='2' width='14' height='7' rx='2' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><rect x='21' y='9' width='8' height='5' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='19' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='5' fill='none' stroke='%23111111' stroke-width='2'/><line x1='25' y1='23' x2='25' y2='26' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='25' y1='42' x2='25' y2='45' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='14' y1='34' x2='17' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='33' y1='34' x2='36' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='17' y1='26' x2='19' y2='28' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='31' y1='40' x2='33' y2='42' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='17' y1='42' x2='19' y2='40' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='31' y1='28' x2='33' y2='26' stroke='%23111111' stroke-width='2' stroke-linecap='round'/></svg>"
 )
 
-# 3. ESTILOS CSS REFINADOS
+# 3. ESTILOS CSS REFINADOS CON ZOOM DINÁMICO
 st.markdown(f"""
     <style>
     header[data-testid="stHeader"] {{ display: none !important; }}
@@ -111,7 +111,7 @@ st.markdown(f"""
         z-index: 2 !important;
     }}
 
-    /* FILTROS DESPLEGABLES */
+    /* FILTROS DESPLEGABLES Y BADGE YOUTUBE ARTESANAL */
     .filter-title {{
         color: {text_color} !important;
         font-weight: 800 !important;
@@ -142,6 +142,22 @@ st.markdown(f"""
         display: none !important;
     }}
 
+    .yt-badge {{
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background-color: #282933;
+        border: 1px solid #383946;
+        border-radius: 10px;
+        padding: 0 14px;
+        height: 38px;
+        color: #ffffff;
+        font-weight: 700;
+        font-size: 13px;
+        width: fit-content;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }}
+
     /* ENLACE DE NAVEGACIÓN A LA DERECHA */
     .nav-back-link {{
         text-align: right;
@@ -157,7 +173,7 @@ st.markdown(f"""
         color: {text_color} !important;
     }}
 
-    /* TARJETAS OPTIMIZADAS (MÁS COMPACTAS PARA 6 ITEMS) */
+    /* TARJETAS CON ZOOM Y ELEVACIÓN DINÁMICA PROFESIONAL */
     .hype-card {{
         background-color: {btn_bg};
         border: 2px solid {btn_border};
@@ -169,23 +185,53 @@ st.markdown(f"""
         box-shadow: 2px 4px 10px rgba(0,0,0,0.08);
         color: {text_color};
         font-family: 'Inter', sans-serif;
+        transition: transform 0.32s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.32s cubic-bezier(0.25, 0.8, 0.25, 1), border-color 0.32s ease;
+        will-change: transform, box-shadow;
     }}
+    
+    .hype-card:hover {{
+        transform: translateY(-8px) scale(1.025);
+        box-shadow: 0 16px 30px rgba(0,0,0,0.16);
+        border-color: #d93838;
+    }}
+
     .rank-badge {{
         position: absolute; top: -12px; left: -8px;
         background-color: {btn_bg}; color: {text_color};
         font-size: 18px; font-weight: 900; padding: 3px 10px;
         border: 2px solid {btn_border}; border-radius: 6px; box-shadow: 2px 2px 0px {btn_border}; z-index: 2;
+        transition: border-color 0.3s ease;
     }}
+    .hype-card:hover .rank-badge {{
+        border-color: #d93838;
+    }}
+
     .score-circle {{
         position: absolute; top: 10px; right: 10px; width: 56px; height: 56px; border-radius: 50%;
         border: 2px solid {btn_border}; display: flex; flex-direction: column; justify-content: center;
         align-items: center; background-color: {btn_bg}; padding: 2px;
         box-shadow: inset 0 0 0 2px {btn_bg}, inset 0 0 0 2px {btn_border};
+        transition: border-color 0.3s ease;
     }}
+    .hype-card:hover .score-circle {{
+        border-color: #d93838;
+    }}
+
     .score-title {{ font-size: 7px; font-weight: 800; line-height: 1.0; text-align: center; color: {text_color}; }}
     .score-value {{ font-size: 15px; font-weight: 900; color: {text_color}; }}
-    .img-wrapper {{ text-align: center; margin-top: 10px; position: relative; }}
-    .img-wrapper img {{ width: 105px; height: 105px; object-fit: contain; }}
+    
+    .img-wrapper {{ text-align: center; margin-top: 10px; position: relative; overflow: hidden; border-radius: 8px; }}
+    .img-wrapper img {{ 
+        width: 105px; 
+        height: 105px; 
+        object-fit: contain; 
+        transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }}
+    
+    .hype-card:hover .img-wrapper img {{
+        transform: scale(1.12);
+    }}
+
     .year-badge {{
         position: absolute; bottom: 0; right: 5px; background: {btn_bg}; border: 1px solid {btn_border};
         border-radius: 4px; padding: 1px 6px; font-size: 11px; font-weight: bold;
@@ -209,13 +255,13 @@ st.markdown(f"""
     </style>
 """, unsafe_allow_html=True)
 
-# 4. CABECERA Y BOTÓN DE RETORNO A LA DERECHA
+# 4. CABECERA CON LOGO REDIRIGIENDO AL HOME
 col_logo, col_theme = st.columns([6, 1], vertical_alignment="center")
 
 with col_logo:
     logo_color = "#8c7b6d"
     logo_html = f"""
-    <div style="display: flex; align-items: center; gap: 10px; cursor: pointer;" onclick="window.location.reload();">
+    <a href="app.py" target="_self" style="text-decoration: none; display: flex; align-items: center; gap: 10px; cursor: pointer;">
         <svg width="38" height="38" viewBox="0 0 36 36" fill="none" stroke-linecap="round" stroke-linejoin="round">
             <path d="M 6.8 21 L 29.2 21 C 30 25 27 32 18 32 C 9 32 6 25 6.8 21 Z" fill="{logo_color}" />
             <line x1="6.8" y1="21" x2="29.2" y2="21" stroke="{text_color}" stroke-width="2" />
@@ -230,7 +276,7 @@ with col_logo:
         <span style="font-family: 'Inter', sans-serif; font-size: 1.55rem; color: {text_color}; letter-spacing: -0.5px;">
             <span style="font-weight: 800;">Perfume</span><span style="font-weight: 400;">Trending</span>
         </span>
-    </div>
+    </a>
     """
     st.markdown(logo_html, unsafe_allow_html=True)
 
@@ -249,7 +295,7 @@ with col_back_btn:
 
 st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
 
-# 5. FILTROS CENTRALIZADOS
+# 5. FILTROS CENTRALIZADOS CON YOUTUBE CASERO ROJO
 col_title, col_fecha, col_red, col_empty = st.columns([1.1, 2.2, 2.2, 3.5], vertical_alignment="center")
 
 with col_title:
@@ -263,11 +309,16 @@ with col_fecha:
     )
 
 with col_red:
-    opcion_red = st.selectbox(
-        "Plataforma Social",
-        ["▶️ YouTube", "🎵 TikTok", "📸 Instagram"],
-        index=0
-    )
+    youtube_badge_html = f"""
+    <div class="yt-badge">
+        <svg width="22" height="18" viewBox="0 0 26 20" fill="none" stroke="{text_color}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="1" y="1" width="24" height="18" rx="5" fill="#d93838" />
+            <polygon points="10,5 18,10 10,15" fill="#ffffff" stroke="#ffffff" stroke-width="1" />
+        </svg>
+        <span>YouTube</span>
+    </div>
+    """
+    st.markdown(youtube_badge_html, unsafe_allow_html=True)
 
 st.write("")
 
@@ -295,7 +346,7 @@ hype_data = [
         "rank": "#4", "name": "Baccarat Rouge 540", "score": "86%", "year": "2015", "price": "$310,000 CLP",
         "img": "https://fimgs.net/mdig/rx_perfume/30/88/30886.jpg",
         "stats": "↗ 48 videos y 820k<br>visitas este mes",
-        "ai_text": "El aroma nicho dulzón y ambarado más clonado e influyente de TikTok."
+        "ai_text": "El aroma nicho dulzón y ambarado más clonado e influyente de YouTube."
     },
     {
         "rank": "#5", "name": "Club de Nuit Intense", "score": "84%", "year": "2015", "price": "$45,000 CLP",
