@@ -50,7 +50,6 @@ bottle_svg = (
     "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 58'><rect x='18' y='2' width='14' height='7' rx='2' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><rect x='21' y='9' width='8' height='5' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='19' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='5' fill='none' stroke='%23111111' stroke-width='2'/><line x1='25' y1='23' x2='25' y2='26' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='25' y1='42' x2='25' y2='45' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='14' y1='34' x2='17' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='33' y1='34' x2='36' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='17' y1='26' x2='19' y2='28' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='31' y1='40' x2='33' y2='42' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='17' y1='42' x2='19' y2='40' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='31' y1='28' x2='33' y2='26' stroke='%23111111' stroke-width='2' stroke-linecap='round'/></svg>"
 )
 
-# Icono de cámara genérico y limpio (estilo réflex/compacta)
 camera_icon_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z'/><circle cx='12' cy='13' r='4'/></svg>"
 
 st.markdown(f"""
@@ -63,7 +62,7 @@ st.markdown(f"""
         color: {text_color} !important;
     }}
 
-    /* NAVEGACIÓN PRINCIPAL SUPERIOR (ESTILO PESTAÑAS / TABS) */
+    /* NAVEGACIÓN PRINCIPAL SUPERIOR */
     .st-key-n_perfumes button, 
     .st-key-n_arabes button, 
     .st-key-n_marcas button, 
@@ -150,16 +149,17 @@ st.markdown(f"""
         padding: 0.4rem 0.2rem !important;
     }}
 
-    /* BOTÓN PHOTO SEARCH CON ÍCONO SVG GENÉRICO */
+    /* BOTÓN BÚSQUEDA CON FOTOGRAFÍA */
     .st-key-btn_photo_search button {{
         background-color: #1f242d !important;
         border: 1px solid #3a3f4d !important;
         border-radius: 8px !important;
-        padding: 0.4rem 0.4rem 0.4rem 2.1rem !important;
+        padding: 0.4rem 0.6rem 0.4rem 2.2rem !important;
         background-image: url("{camera_icon_svg}") !important;
         background-repeat: no-repeat !important;
         background-position: 10px center !important;
         background-size: 18px 18px !important;
+        font-size: 0.82rem !important;
     }}
     
     .stApp div[data-testid="stPopover"] button,
@@ -251,6 +251,95 @@ st.markdown(f"""
         filter: drop-shadow(2px 3px 4px rgba(0,0,0,0.4)) !important;
         z-index: 2 !important;
     }}
+
+    /* --- TARJETAS DE CATÁLOGO Y EFECTO HOVER DINÁMICO --- */
+    .catalog-card {{
+        background-color: {btn_bg};
+        border: 1px solid {btn_border};
+        border-radius: 12px;
+        overflow: hidden;
+        position: relative;
+        margin-bottom: 25px;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        font-family: 'Inter', sans-serif;
+    }}
+    .catalog-card:hover {{
+        transform: translateY(-6px);
+        box-shadow: 0 10px 22px rgba(0,0,0,0.22);
+    }}
+    .square-img-box {{
+        position: relative;
+        width: 100%;
+        aspect-ratio: 1 / 1;
+        background-color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        padding: 20px;
+        box-sizing: border-box;
+    }}
+    .square-img-box img {{
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+        transition: transform 0.4s ease;
+    }}
+    .catalog-card:hover .square-img-box img {{
+        transform: scale(1.08);
+    }}
+    .card-hover-overlay {{
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(18, 21, 28, 0.93);
+        color: #ffffff;
+        padding: 18px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.35s ease-in-out;
+        backdrop-filter: blur(4px);
+        text-align: left;
+    }}
+    .catalog-card:hover .card-hover-overlay {{
+        opacity: 1;
+    }}
+    .overlay-title {{
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: #d4af37;
+        margin-bottom: 10px;
+        border-bottom: 1px solid rgba(255,255,255,0.2);
+        padding-bottom: 6px;
+    }}
+    .overlay-info {{
+        font-size: 0.82rem;
+        line-height: 1.45;
+        color: #e0e0e0;
+        margin-bottom: 8px;
+    }}
+    .overlay-info b {{
+        color: #ffffff;
+    }}
+    .card-footer-info {{
+        padding: 12px 15px;
+        text-align: center;
+        background-color: {btn_bg};
+    }}
+    .card-perfume-name {{
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: {text_color};
+        margin-bottom: 2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }}
+    .card-perfume-brand {{
+        font-size: 0.8rem;
+        color: {subtext_color};
+    }}
     </style>
 """, unsafe_allow_html=True)
 
@@ -286,7 +375,7 @@ with col_actions:
     with btn_col2:
         st.button(" ", key="theme_toggle", on_click=toggle_theme)
 
-# 2. NAVEGACIÓN PRINCIPAL (UBICADA INMEDIATAMENTE DEBAJO DE LA CABECERA)
+# 2. NAVEGACIÓN PRINCIPAL
 st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
 col_nav1, col_nav2, col_nav3, col_nav4, col_nav_space = st.columns([1.2, 1.6, 1.2, 1.4, 4.6], vertical_alignment="center")
 
@@ -301,8 +390,8 @@ with col_nav4:
 
 st.markdown(f"<hr style='margin: 8px 0 25px 0; border: none; border-bottom: 1px solid {btn_border}; opacity: 0.5;'>", unsafe_allow_html=True)
 
-# 3. EL "HERO" DE BÚSQUEDA (CENTRO DE ATENCIÓN UNIFICADO)
-col_search, col_filter, col_separator, col_photo = st.columns([5.5, 1.8, 0.2, 2], vertical_alignment="center")
+# 3. EL "HERO" DE BÚSQUEDA
+col_search, col_filter, col_separator, col_photo = st.columns([5.2, 1.8, 0.2, 2.3], vertical_alignment="center")
 
 with col_search:
     search_query = st.text_input("🔍 Buscar", placeholder="🔍 Buscar perfume, marca o esencias...", label_visibility="collapsed")
@@ -331,9 +420,9 @@ with col_separator:
     st.markdown(f"<div style='border-left: 2px solid #ccc; height: 35px; margin: auto;'></div>", unsafe_allow_html=True)
 
 with col_photo:
-    st.button("PHOTO SEARCH", key="btn_photo_search", help="Buscar perfume por imagen", use_container_width=True)
+    st.button("Búsqueda con fotografía", key="btn_photo_search", help="Buscar perfume por imagen", use_container_width=True)
 
-# 4. HERRAMIENTAS RÁPIDAS (FILTROS DE CONFIANZA TIPO CHIPS DEBAJO DEL BUSCADOR)
+# 4. HERRAMIENTAS RÁPIDAS
 st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
 col_chip1, col_chip2, col_chip3, col_chip_space = st.columns([1.5, 1.8, 1.6, 5.1], vertical_alignment="center")
 
@@ -345,16 +434,94 @@ with col_chip2:
 with col_chip3:
     st.button("Comparar Precios", key="btn_compare", on_click=navigate_to, args=('compare_page',), use_container_width=True)
 
-st.markdown("<br><br>", unsafe_allow_html=True)
+st.markdown("<br>", unsafe_allow_html=True)
 
-# VISTAS DE PÁGINA Y CATÁLOGO
+# 5. VISTAS DE PÁGINA Y CATÁLOGO CON TARJETAS
 if st.session_state['current_page'] == 'home':
     st.markdown(f"<h3 style='text-align: center; margin-bottom: 25px; color: {text_color}; letter-spacing: 1px;'>CATÁLOGO Y TENDENCIAS</h3>", unsafe_allow_html=True)
     
     if selected_essences:
         st.write(f"**Filtrando por:** {', '.join(selected_essences)}")
-    else:
-        st.info("Catálogo en desarrollo...")
+
+    # BASE DE DATOS DE PERFUMES CON DETALLES DE HOVER
+    catalog_perfumes = [
+        {
+            "name": "Bleu de Chanel",
+            "brand": "Chanel",
+            "country": "Francia 🇫🇷",
+            "perfumer": "Jacques Polge",
+            "notes": "Toronja, Limón, Menta, Jengibre, Incienso, Cedro, Sándalo",
+            "img": "https://fimgs.net/mdig/rx_perfume/58/28/6005828.jpg"
+        },
+        {
+            "name": "Sauvage Elixir",
+            "brand": "Dior",
+            "country": "Francia 🇫🇷",
+            "perfumer": "François Demachy",
+            "notes": "Canela, Nuez Moscada, Lavanda, Regaliz, Sándalo, Ámbar",
+            "img": "https://fimgs.net/mdig/rx_perfume/31/86/31861.jpg"
+        },
+        {
+            "name": "Baccarat Rouge 540",
+            "brand": "Maison Francis Kurkdjian",
+            "country": "Francia 🇫🇷",
+            "perfumer": "Francis Kurkdjian",
+            "notes": "Azafrán, Jazmín, Ámbar Gris, Madera de Cedro, Resina de Abeto",
+            "img": "https://fimgs.net/mdig/rx_perfume/30/88/30886.jpg"
+        },
+        {
+            "name": "Club de Nuit Intense",
+            "brand": "Armaf",
+            "country": "Emiratos Árabes Unidos 🇦🇪",
+            "perfumer": "Christian Provenzano",
+            "notes": "Limón, Piña, Grosellas Negras, Abedul, Jasmine, Almizcle",
+            "img": "https://fimgs.net/mdig/rx_perfume/27/65/27656.jpg"
+        },
+        {
+            "name": "Angels' Share",
+            "brand": "Kilian",
+            "country": "Francia 🇫🇷",
+            "perfumer": "Benoist Lapouza",
+            "notes": "Cognac, Canela, Haba Tonka, Roble, Vainilla, Sándalo, Praliné",
+            "img": "https://fimgs.net/mdig/rx_perfume/62/61/62615.jpg"
+        },
+        {
+            "name": "YSL Libre EDP",
+            "brand": "Yves Saint Laurent",
+            "country": "Francia 🇫🇷",
+            "perfumer": "Anne Flipo & Carlos Benaïm",
+            "notes": "Lavanda, Mandarina, Grosellas Negras, Flor de Azahar, Vainilla",
+            "img": "https://fimgs.net/mdig/rx_perfume/56/55/5605655.jpg"
+        }
+    ]
+
+    # MOSTRAR EN REJILLA DE 3 COLUMNAS
+    cols_per_row = 3
+    for i in range(0, len(catalog_perfumes), cols_per_row):
+        cols = st.columns(cols_per_row, gap="medium")
+        for j in range(cols_per_row):
+            if i + j < len(catalog_perfumes):
+                p = catalog_perfumes[i + j]
+                card_html = f"""
+                <div class="catalog-card">
+                    <div class="square-img-box">
+                        <img src="{p['img']}" alt="{p['name']}">
+                        <div class="card-hover-overlay">
+                            <div class="overlay-title">{p['name']}</div>
+                            <div class="overlay-info"><b>📍 País de Origen:</b> {p['country']}</div>
+                            <div class="overlay-info"><b>👤 Creador:</b> {p['perfumer']}</div>
+                            <div class="overlay-info"><b>🌿 Notas / Esencias:</b> {p['notes']}</div>
+                        </div>
+                    </div>
+                    <div class="card-footer-info">
+                        <div class="card-perfume-name">{p['name']}</div>
+                        <div class="card-perfume-brand">{p['brand']}</div>
+                    </div>
+                </div>
+                """
+                with cols[j]:
+                    st.markdown(card_html, unsafe_allow_html=True)
+
 elif st.session_state['current_page'] == 'trust_page':
     st.markdown(f"<h3 style='text-align: center; color: {text_color};'>Páginas de Confianza (Próximamente)</h3>", unsafe_allow_html=True)
 elif st.session_state['current_page'] == 'compare_page':
