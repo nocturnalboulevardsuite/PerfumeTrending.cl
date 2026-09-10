@@ -113,11 +113,11 @@ st.markdown(f"""
         z-index: 2 !important;
     }}
 
-    /* TÍTULO Y TOOLTIP DE INFORMACIÓN RESTRUCTURADO */
+    /* TÍTULO Y TOOLTIP */
     .radar-title-container {{
         display: inline-flex;
         align-items: baseline;
-        gap: 1px;
+        gap: 6px;
     }}
 
     .radar-title-text {{
@@ -138,28 +138,26 @@ st.markdown(f"""
         position: relative;
         display: inline-block;
         vertical-align: super;
-        top: -16px; /* Más arriba */
-        left: 0px;  /* Pegado a la S */
+        top: -12px;
+        left: 3px;
     }}
 
     .info-btn-badge {{
-        width: 17px;
-        height: 17px;
+        width: 18px;
+        height: 18px;
         background: linear-gradient(135deg, #d83737 0%, #a81722 100%);
         color: #ffffff;
         border-radius: 50%;
         font-size: 11px;
-        font-weight: 700;
-        font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; /* 'i' Estándar y limpia */
-        font-style: normal;
+        font-weight: 900;
+        font-family: 'Georgia', serif;
+        font-style: italic;
         display: flex;
         align-items: center;
         justify-content: center;
         cursor: pointer;
         box-shadow: 0 2px 6px rgba(216, 55, 55, 0.35);
         transition: transform 0.25s ease, box-shadow 0.25s ease;
-        line-height: 1;
-        padding-bottom: 1px;
     }}
 
     .info-icon-container:hover .info-btn-badge {{
@@ -195,7 +193,7 @@ st.markdown(f"""
         pointer-events: auto;
     }}
 
-    /* ETIQUETA "FILTRAR POR :" */
+    /* ETIQUETA "FILTRAR POR :" PERFECTAMENTE ALINEADA */
     .filter-label-text {{
         color: {text_color} !important;
         font-weight: 800 !important;
@@ -208,12 +206,11 @@ st.markdown(f"""
         height: 32px;
     }}
 
-    /* BOTÓN POP-OVER CENTRADO */
+    /* ESTILOS IDÉNTICOS Y CENTRADO ABSOLUTO PARA EL BOTÓN POP-OVER Y CHIP YOUTUBE */
     div[data-testid="stPopover"] {{
         display: flex !important;
         align-items: center !important;
-        justify-content: center !important; /* Centrado dentro de su columna */
-        width: 100% !important;
+        height: 32px !important;
     }}
 
     div[data-testid="stPopover"] > button,
@@ -222,35 +219,46 @@ st.markdown(f"""
         background: {btn_bg} !important;
         border: 1px solid {btn_border} !important;
         border-radius: 8px !important;
-        padding: 4px 12px !important;
+        padding: 0 10px !important;
         height: 32px !important;
         min-height: 32px !important;
+        max-height: 32px !important;
         box-shadow: 0 1px 3px rgba(0,0,0,0.05) !important;
         transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
         outline: none !important;
         display: inline-flex !important;
         align-items: center !important;
         justify-content: center !important;
-        gap: 6px !important;
-        margin: 0 auto !important;
+        gap: 5px !important;
+        margin: 0 !important;
         box-sizing: border-box !important;
     }}
 
+    /* Reset de márgenes y flex para alineación vertical idéntica */
     div[data-testid="stPopover"] button *,
     div[data-testid="stPopover"] button p,
-    div[data-testid="stPopover"] button span {{
+    div[data-testid="stPopover"] button span,
+    div[data-testid="stPopover"] button div {{
         color: {text_color} !important;
         font-weight: 700 !important;
         font-size: 12px !important;
         line-height: 1 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
     }}
 
     div[data-testid="stPopover"] button svg {{
         fill: {text_color} !important;
         width: 12px !important;
         height: 12px !important;
+        margin: 0 !important;
+        flex-shrink: 0 !important;
     }}
 
+    /* HOVER MODERNO EN EL BOTÓN POP-OVER */
     div[data-testid="stPopover"] button:hover {{
         background-color: {btn_hover_bg} !important;
         border-color: #d83737 !important;
@@ -258,7 +266,7 @@ st.markdown(f"""
         box-shadow: 0 3px 8px rgba(0,0,0,0.08) !important;
     }}
 
-    /* CHIP DE YOUTUBE Y TEXTO ADYACENTE */
+    /* CHIP DE YOUTUBE Y TEXTO ADYACENTE CON MISMA ALTURA Y ESTILO */
     .social-select-box {{
         display: flex;
         align-items: center;
@@ -284,17 +292,24 @@ st.markdown(f"""
         background-color: {btn_bg};
         border: 1px solid {btn_border};
         border-radius: 8px;
-        padding: 4px 12px;
+        padding: 0 10px;
         height: 32px;
         box-sizing: border-box;
         color: {text_color};
         font-weight: 700;
         font-size: 12px;
+        line-height: 1;
         white-space: nowrap;
         cursor: pointer;
         transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
         outline: none;
         user-select: none;
+    }}
+
+    .yt-chip-btn span {{
+        display: inline-flex;
+        align-items: center;
+        line-height: 1;
     }}
 
     .yt-chip-btn:hover {{
@@ -536,7 +551,7 @@ with col_logo:
 with col_theme:
     st.button(" ", key="theme_toggle", on_click=toggle_theme)
 
-# SECCIÓN DEL TÍTULO CON BOTÓN 'i'
+# SECCIÓN DEL TÍTULO CON BOTÓN FLOTANTE 'i'
 st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
 col_header_title, col_back_btn = st.columns([3.4, 1], vertical_alignment="center")
 
@@ -560,8 +575,8 @@ with col_back_btn:
 
 st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
 
-# 5. FILTROS CENTRADOS Y ALINEADOS
-col_title, col_fecha, col_red = st.columns([1.0, 1.5, 4.5], vertical_alignment="center")
+# 5. FILTROS ALINEADOS Y BALANCEADOS
+col_title, col_fecha, col_red = st.columns([0.85, 1.25, 4.9], vertical_alignment="center")
 
 with col_title:
     st.markdown("<div class='filter-label-text'>Filtrar por :</div>", unsafe_allow_html=True)
