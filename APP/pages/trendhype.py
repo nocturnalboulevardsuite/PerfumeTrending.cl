@@ -24,7 +24,7 @@ btn_bg = "#1f242d" if is_dark else "#ffffff"
 btn_border = "#3a3f4d" if is_dark else "#d4cdc5"
 btn_hover_bg = "#2d3340" if is_dark else "#fcfaf8"
 
-# VARIABLES Y SVGS PARA EL SWITCH DE TEMA (FRASCO DE PERFUME)
+# SWITCH DE TEMA - ESTILO NEUTRO ORIGINAL
 bottle_left_pos = "42px" if is_dark else "-2px"
 static_icon_pos = "12px center" if is_dark else "calc(100% - 12px) center"
 
@@ -58,7 +58,7 @@ st.markdown(f"""
         max-width: 1200px !important;
     }}
 
-    /* SWITCH DE TEMA LIMPIO SIN BORDES ROJOS */
+    /* SWITCH NEUTRO ORIGINAL */
     .st-key-theme_toggle div[data-testid="stButton"] > button,
     .st-key-theme_toggle button {{
         background: transparent !important;
@@ -111,74 +111,86 @@ st.markdown(f"""
         z-index: 2 !important;
     }}
 
-    /* TÍTULO ANCHO, ROJIZO PERLADO Y CON HOVER OSCURO */
+    /* TÍTULO Y BOTÓN DE INFORMACIÓN HOVER 'i' */
+    .title-wrapper {{
+        position: relative;
+        display: inline-block;
+        padding-right: 20px;
+    }}
+
     .radar-title-text {{
         color: #d9787f !important;
         font-weight: 900 !important;
         font-size: 2.1rem !important;
         letter-spacing: 2.5px !important;
         margin: 0;
-        display: inline-block;
-        transition: color 0.3s ease, transform 0.3s ease !important;
-        cursor: pointer;
+        display: inline;
+        transition: color 0.3s ease !important;
     }}
 
     .radar-title-text:hover {{
-        color: #7a1c24 !important;
+        color: #8b121a !important;
     }}
 
-    /* INFORMACIÓN DEL RADAR DESPLEGABLE ANIMADO */
-    details.radar-dropdown {{
-        background-color: {btn_bg};
-        border: 1px solid {btn_border};
-        border-radius: 12px;
-        margin-top: 12px;
-        margin-bottom: 20px;
-        overflow: hidden;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+    .info-icon-container {{
+        position: absolute;
+        top: -4px;
+        right: -4px;
+        display: inline-block;
     }}
 
-    details.radar-dropdown summary {{
-        padding: 12px 18px;
-        font-size: 0.95rem;
-        font-weight: 700;
-        color: {text_color};
-        cursor: pointer;
-        list-style: none;
+    .info-btn-badge {{
+        width: 19px;
+        height: 19px;
+        background-color: #8b121a; /* ROJO BACCARAT ROUGE 540 EXTRAIT MATE */
+        color: #ffffff;
+        border-radius: 50%;
+        font-size: 11px;
+        font-weight: 900;
+        font-family: 'Inter', sans-serif;
         display: flex;
-        justify-content: space-between;
         align-items: center;
-        user-select: none;
-        transition: background-color 0.2s ease;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 2px 6px rgba(139, 18, 26, 0.35);
+        transition: transform 0.25s ease, background-color 0.25s ease;
+        font-style: italic;
     }}
 
-    details.radar-dropdown summary::-webkit-details-marker {{
-        display: none;
+    .info-icon-container:hover .info-btn-badge {{
+        transform: scale(1.2);
+        background-color: #a81722;
     }}
 
-    details.radar-dropdown summary:hover {{
-        background-color: {btn_hover_bg};
+    .info-tooltip-box {{
+        visibility: hidden;
+        opacity: 0;
+        width: 320px;
+        background-color: {"#181a20" if is_dark else "#ffffff"};
+        color: {text_color};
+        border: 1px solid {"#343846" if is_dark else "#e2dacd"};
+        border-radius: 12px;
+        padding: 14px 16px;
+        position: absolute;
+        top: 26px;
+        right: -10px;
+        z-index: 999;
+        box-shadow: 0 12px 30px rgba(0,0,0,0.25);
+        font-size: 0.86rem;
+        line-height: 1.45;
+        transition: opacity 0.25s ease, visibility 0.25s ease, transform 0.25s ease;
+        transform: translateY(-6px);
+        pointer-events: none;
     }}
 
-    details.radar-dropdown[open] summary {{
-        border-bottom: 1px solid {btn_border};
+    .info-icon-container:hover .info-tooltip-box {{
+        visibility: visible;
+        opacity: 1;
+        transform: translateY(0);
+        pointer-events: auto;
     }}
 
-    .radar-dropdown-content {{
-        padding: 14px 18px;
-        color: {subtext_color};
-        font-size: 0.88rem;
-        line-height: 1.5;
-        animation: fadeInSubtle 0.35s ease-in-out;
-    }}
-
-    @keyframes fadeInSubtle {{
-        from {{ opacity: 0; transform: translateY(-6px); }}
-        to {{ opacity: 1; transform: translateY(0); }}
-    }}
-
-    /* FILTROS DESPLEGABLES Y CONTENEDOR DE RED SOCIAL TRANSPARENTE */
+    /* FILTROS Y CONTENEDORES */
     .filter-title {{
         color: {text_color} !important;
         font-weight: 800 !important;
@@ -238,7 +250,6 @@ st.markdown(f"""
         font-weight: 700;
     }}
 
-    /* ENLACE DE NAVEGACIÓN A LA DERECHA */
     .nav-back-link {{
         text-align: right;
         display: block;
@@ -253,7 +264,7 @@ st.markdown(f"""
         color: {text_color} !important;
     }}
 
-    /* TARJETAS CON ZOOM Y ELEVACIÓN DINÁMICA PROFESIONAL */
+    /* TARJETAS DE PERFUME */
     .hype-card {{
         background-color: {btn_bg};
         border: 2px solid {btn_border};
@@ -272,7 +283,7 @@ st.markdown(f"""
     .hype-card:hover {{
         transform: translateY(-8px) scale(1.025);
         box-shadow: 0 16px 30px rgba(0,0,0,0.16);
-        border-color: #7a1c24;
+        border-color: #8b121a;
     }}
 
     .rank-badge {{
@@ -283,7 +294,7 @@ st.markdown(f"""
         transition: border-color 0.3s ease;
     }}
     .hype-card:hover .rank-badge {{
-        border-color: #7a1c24;
+        border-color: #8b121a;
     }}
 
     .score-circle {{
@@ -294,7 +305,7 @@ st.markdown(f"""
         transition: border-color 0.3s ease;
     }}
     .hype-card:hover .score-circle {{
-        border-color: #7a1c24;
+        border-color: #8b121a;
     }}
 
     .score-title {{ font-size: 7px; font-weight: 800; line-height: 1.0; text-align: center; color: {text_color}; }}
@@ -333,24 +344,24 @@ st.markdown(f"""
     }}
     .price-text {{ text-align: center; font-size: 11px; color: {text_color}; margin-bottom: 6px; }}
 
-    /* BOTONES COMPARAR PRECIOS EN ROJO VINO MATE */
+    /* BOTONES EN ROJO BACCARAT ROUGE 540 EXTRAIT MATE */
     div[data-testid="stElementContainer"] > div.stButton > button:not([aria-label=" "]) {{
-        background-color: #7a1c24 !important;
+        background-color: #8b121a !important;
         color: #ffffff !important;
         border: none !important;
         border-radius: 10px !important;
         font-weight: 700 !important;
         font-size: 13px !important;
         padding: 10px 16px !important;
-        box-shadow: 0 3px 10px rgba(122, 28, 36, 0.25) !important;
+        box-shadow: 0 3px 10px rgba(139, 18, 26, 0.25) !important;
         transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s ease, box-shadow 0.25s ease !important;
         width: 100% !important;
     }}
 
     div[data-testid="stElementContainer"] > div.stButton > button:not([aria-label=" "]):hover {{
-        background-color: #5c131a !important;
+        background-color: #6a0b12 !important;
         transform: scale(1.04) translateY(-2px) !important;
-        box-shadow: 0 6px 16px rgba(122, 28, 36, 0.4) !important;
+        box-shadow: 0 6px 16px rgba(139, 18, 26, 0.4) !important;
         color: #ffffff !important;
     }}
 
@@ -360,7 +371,7 @@ st.markdown(f"""
     </style>
 """, unsafe_allow_html=True)
 
-# 4. CABECERA CON LOGO REDIRIGIENDO AL HOME
+# 4. CABECERA CON LOGO
 col_logo, col_theme = st.columns([6, 1], vertical_alignment="center")
 
 with col_logo:
@@ -388,30 +399,31 @@ with col_logo:
 with col_theme:
     st.button(" ", key="theme_toggle", on_click=toggle_theme)
 
-# SECCIÓN DEL TÍTULO CON TEXTO ROJIZO PERLADO Y BOTÓN VOLVER
+# SECCIÓN DEL TÍTULO CON BOTÓN FLOTANTE 'i' EN LA 'S' FINAL
 st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
 col_header_title, col_back_btn = st.columns([3.2, 1], vertical_alignment="center")
 
 with col_header_title:
-    st.markdown("<h1 class='radar-title-text'>RADAR DEL HYPE - VIRAL FRAGRANCES</h1>", unsafe_allow_html=True)
+    title_html = f"""
+    <div class="title-wrapper">
+        <h1 class="radar-title-text">RADAR DEL HYPE - VIRAL FRAGRANCES</h1>
+        <div class="info-icon-container">
+            <div class="info-btn-badge">i</div>
+            <div class="info-tooltip-box">
+                <div style="font-weight: 800; color: #d9787f; margin-bottom: 6px; font-size: 0.92rem;">📡 ¿Qué es el Radar del Hype?</div>
+                Es nuestro sistema inteligente que detecta qué fragancias se están volviendo virales en tiempo real a través de <b>YouTube</b>. Una herramienta clave para <b>revendedores, influencers y entusiastas</b> que buscan adelantarse al mercado y adquirir un perfume antes de que se agote o suba de precio.
+            </div>
+        </div>
+    </div>
+    """
+    st.markdown(title_html, unsafe_allow_html=True)
 
 with col_back_btn:
     st.markdown('<a href="app.py" target="_self" class="nav-back-link">← Volver al Catálogo principal</a>', unsafe_allow_html=True)
 
-# BANNER INFORMATIVO DESPLEGABLE Y SUAVE (RADAR DEL HYPE)
-st.markdown(f"""
-    <details class="radar-dropdown">
-        <summary>
-            <span>📡 ¿Qué es el Radar del Hype?</span>
-            <span style="font-size: 0.8rem; opacity: 0.7;">▼ ver detalle</span>
-        </summary>
-        <div class="radar-dropdown-content">
-            Es nuestro sistema inteligente que detecta qué fragancias se están volviendo virales en tiempo real a través de <b>YouTube</b>. Una herramienta clave para <b>revendedores, influencers y entusiastas</b> que buscan adelantarse al mercado y adquirir un perfume antes de que se agote o suba de precio.
-        </div>
-    </details>
-""", unsafe_allow_html=True)
+st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
 
-# 5. FILTROS CENTRALIZADOS BIEN DISTRIBUIDOS
+# 5. FILTROS CENTRALIZADOS
 col_title, col_fecha, col_red = st.columns([1.1, 2.8, 3.8], vertical_alignment="center")
 
 with col_title:
@@ -430,7 +442,7 @@ with col_red:
         <span style="color: {subtext_color}; font-size: 13px;">Red social seleccionada:</span>
         <div class="yt-chip">
             <svg width="18" height="14" viewBox="0 0 26 20" fill="none">
-                <rect x="1" y="1" width="24" height="18" rx="5" fill="#7a1c24" />
+                <rect x="1" y="1" width="24" height="18" rx="5" fill="#8b121a" />
                 <polygon points="10,5 18,10 10,15" fill="#ffffff" />
             </svg>
             <span>YouTube</span>
@@ -481,7 +493,7 @@ hype_data = [
     }
 ]
 
-# 7. RENDERIZADO DE 6 TARJETAS EN REJILLA (2 FILAS DE 3 COLUMNAS)
+# 7. RENDERIZADO DE TARJETAS EN REJILLA
 cols_per_row = 3
 for row in range(0, len(hype_data), cols_per_row):
     cols = st.columns(cols_per_row, gap="medium")
