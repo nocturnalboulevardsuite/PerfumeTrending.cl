@@ -575,8 +575,8 @@ with col_back_btn:
 
 st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
 
-# 5. FILTROS ALINEADOS Y PEGADOS ("Filtrado por :" + Popover)
-col_title, col_fecha, col_red = st.columns([0.6, 0.5, 2.9], gap="small", vertical_alignment="center")
+# 5. FILTROS ALINEADOS Y PEGADOS CON MARGEN MÍNIMO
+col_title, col_fecha, col_red = st.columns([0.095, 0.125, 0.78], gap="small", vertical_alignment="center")
 
 with col_title:
     st.markdown("<div class='filter-label-text'>Filtrado por :</div>", unsafe_allow_html=True)
