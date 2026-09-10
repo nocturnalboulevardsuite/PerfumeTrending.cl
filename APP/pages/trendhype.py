@@ -196,14 +196,14 @@ st.markdown(f"""
     /* ETIQUETA "FILTRAR POR :" ALINEADA AL BOTÓN */
     .filter-label-text {{
         color: {text_color} !important;
-        font-weight: 700 !important;
+        font-weight: 669 !important;
         font-size: 1rem !important;
         margin: 0 !important;
         display: flex;
         align-items: center !important;
         justify-content: flex-start;
         height: 32px;
-
+        white-space: nowrap !important;
     }}
 
     /* ESTILOS IDÉNTICOS Y CENTRADO ABSOLUTO PARA EL BOTÓN POP-OVER Y CHIP YOUTUBE */
