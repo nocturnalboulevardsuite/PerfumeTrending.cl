@@ -205,7 +205,7 @@ st.markdown(f"""
         height: 32px;
     }}
 
-    /* ESTILOS IDÉNTICOS Y CENTRADO ABSOLUTO PARA EL BOTÓN POP-OVER Y CHIP YOUTUBE */
+    /* ESTILOS PARA EL BOTÓN PRINCIPAL DEL POPOVER */
     div[data-testid="stPopover"] {{
         display: flex !important;
         align-items: center !important;
@@ -233,7 +233,6 @@ st.markdown(f"""
         box-sizing: border-box !important;
     }}
 
-    /* Reset de márgenes y flex para alineación vertical idéntica */
     div[data-testid="stPopover"] button *,
     div[data-testid="stPopover"] button p,
     div[data-testid="stPopover"] button span,
@@ -257,7 +256,6 @@ st.markdown(f"""
         flex-shrink: 0 !important;
     }}
 
-    /* HOVER MODERNO EN EL BOTÓN POP-OVER */
     div[data-testid="stPopover"] button:hover {{
         background-color: {btn_hover_bg} !important;
         border-color: #d83737 !important;
@@ -265,7 +263,49 @@ st.markdown(f"""
         box-shadow: 0 3px 8px rgba(0,0,0,0.08) !important;
     }}
 
-    /* CHIP DE YOUTUBE Y TEXTO ADYACENTE CON MISMA ALTURA Y ESTILO */
+    /* MENÚ DESPLEGABLE CONVENCIONAL Y COMPACTO */
+    div[data-testid="stPopoverBody"] {{
+        padding: 6px !important;
+        min-width: 160px !important;
+        border-radius: 10px !important;
+        background-color: {btn_bg} !important;
+        border: 1px solid {btn_border} !important;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.2) !important;
+    }}
+
+    div[data-testid="stPopoverBody"] div.stButton > button {{
+        background-color: transparent !important;
+        color: {text_color} !important;
+        border: none !important;
+        border-radius: 6px !important;
+        font-weight: 600 !important;
+        font-size: 13px !important;
+        padding: 6px 12px !important;
+        height: 32px !important;
+        min-height: 32px !important;
+        max-height: 32px !important;
+        box-shadow: none !important;
+        width: 100% !important;
+        justify-content: flex-start !important;
+        text-align: left !important;
+        margin: 2px 0 !important;
+        transition: background-color 0.15s ease, color 0.15s ease !important;
+    }}
+
+    div[data-testid="stPopoverBody"] div.stButton > button:hover {{
+        background-color: {btn_hover_bg} !important;
+        color: #d83737 !important;
+        transform: none !important;
+        box-shadow: none !important;
+    }}
+
+    div[data-testid="stPopoverBody"] div.stButton > button p {{
+        font-size: 13px !important;
+        font-weight: 600 !important;
+        color: inherit !important;
+    }}
+
+    /* CHIP DE YOUTUBE */
     .social-select-box {{
         display: flex;
         align-items: center;
@@ -527,7 +567,6 @@ col_logo, col_theme = st.columns([6, 1], vertical_alignment="center")
 
 with col_logo:
     logo_color = "#8c7b6d"
-    # Se añade display: inline-flex y width: fit-content para acotar el área cliqueable sólo al logo + texto
     logo_html = f"""
     <a href="/" target="_self" style="text-decoration: none; display: inline-flex; align-items: center; gap: 10px; cursor: pointer; width: fit-content;">
         <svg width="38" height="38" viewBox="0 0 36 36" fill="none" stroke-linecap="round" stroke-linejoin="round">
