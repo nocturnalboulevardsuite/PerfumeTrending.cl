@@ -40,16 +40,15 @@ bottle_svg = (
     "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 58'><rect x='18' y='2' width='14' height='7' rx='2' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><rect x='21' y='9' width='8' height='5' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='19' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='5' fill='none' stroke='%23111111' stroke-width='2'/><line x1='25' y1='23' x2='25' y2='26' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='25' y1='42' x2='25' y2='45' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='14' y1='34' x2='17' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='33' y1='34' x2='36' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='17' y1='26' x2='19' y2='28' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='31' y1='40' x2='33' y2='42' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='17' y1='42' x2='19' y2='40' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='31' y1='28' x2='33' y2='26' stroke='%23111111' stroke-width='2' stroke-linecap='round'/></svg>"
 )
 
-# 3. ESTILOS CSS REFINADOS (POSICIONAMIENTO PERFECTO)
+# 3. ESTILOS CSS REFINADOS Y RESPONSIVOS
 st.markdown(f"""
     <style>
-    /* Ocultar encabezados predeterminados de Streamlit */
+    /* Ocultar encabezados predeterminados */
     header[data-testid="stHeader"] {{ display: none !important; }}
     div[data-testid="stAppViewContainer"] {{ padding-top: 0px !important; }}
     
     .stApp {{ {app_bg_css} }}
     
-    /* Contenedor principal alineado al tope sin recortes */
     .main .block-container,
     div.block-container,
     [data-testid="stMainBlockContainer"],
@@ -157,7 +156,7 @@ st.markdown(f"""
         color: {text_color} !important;
     }}
 
-    /* --- ESTILOS DE LAS TARJETAS --- */
+    /* --- ESTILOS DE LAS TARJETAS Y ANIMACIÓN HOVER --- */
     .hype-card {{
         background-color: {btn_bg};
         border: 2px solid {btn_border};
@@ -169,7 +168,13 @@ st.markdown(f"""
         box-shadow: 2px 4px 10px rgba(0,0,0,0.1);
         color: {text_color};
         font-family: 'Inter', sans-serif;
+        transition: transform 0.3s ease, box-shadow 0.3s ease !important;
     }}
+    .hype-card:hover {{
+        transform: translateY(-6px) !important;
+        box-shadow: 4px 10px 20px rgba(0,0,0,0.2) !important;
+    }}
+
     .rank-badge {{
         position: absolute; top: -15px; left: -10px;
         background-color: {btn_bg}; color: {text_color};
@@ -206,6 +211,41 @@ st.markdown(f"""
         justify-content: center; align-items: center; font-weight: bold; font-size: 10px; background-color: {btn_bg};
     }}
     .price-text {{ text-align: center; font-size: 12px; color: {text_color}; margin-bottom: 10px; }}
+
+    /* --- DISEÑO RESPONSIVE (MEDIA QUERIES) --- */
+    @media (max-width: 768px) {{
+        .main .block-container,
+        div.block-container,
+        [data-testid="stMainBlockContainer"],
+        [data-testid="stAppViewBlockContainer"] {{
+            padding-top: 1rem !important;
+            padding-left: 0.8rem !important;
+            padding-right: 0.8rem !important;
+        }}
+        .filter-title {{
+            text-align: center !important;
+            margin-bottom: 5px !important;
+        }}
+        .nav-back-link {{
+            margin: 8px 0 !important;
+        }}
+        .hype-card {{
+            margin-top: 20px !important;
+            padding: 15px !important;
+        }}
+        .stats-row {{
+            flex-direction: column !important;
+            gap: 10px !important;
+            align-items: flex-start !important;
+        }}
+        .stats-text {{
+            width: 100% !important;
+        }}
+        .chile-badge {{
+            width: 100% !important;
+            justify-content: center !important;
+        }}
+    }}
     </style>
 """, unsafe_allow_html=True)
 
