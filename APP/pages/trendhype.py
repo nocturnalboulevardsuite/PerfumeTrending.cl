@@ -196,9 +196,9 @@ st.markdown(f"""
     /* ETIQUETA "FILTRAR POR :" ALINEADA AL BOTÓN */
     .filter-label-text {{
         color: {text_color} !important;
-        font-weight: 669 !important;
+        font-weight: 700 !important;
         font-size: 1rem !important;
-        margin: 0 !important;
+        margin: 22 !important;
         display: flex;
         align-items: center !important;
         justify-content: flex-start;
