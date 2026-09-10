@@ -193,7 +193,7 @@ st.markdown(f"""
         pointer-events: auto;
     }}
 
-    /* ETIQUETA "FILTRAR POR :" CENTRADA DE FORMA IMPECABLE */
+    /* ETIQUETA "FILTRAR POR :" PERFECTAMENTE ALINEADA */
     .filter-label-text {{
         color: {text_color} !important;
         font-weight: 800 !important;
@@ -206,72 +206,56 @@ st.markdown(f"""
         height: 32px;
     }}
 
-    /* BOTÓN BEIGE POP-OVER: TAMAÑO IDÉNTICO AL DE YOUTUBE (CHIP ELEGANTE) */
+    /* ESTILOS IDÉNTICOS PARA EL BOTÓN POP-OVER Y EL CHIP DE YOUTUBE */
     div[data-testid="stPopover"] {{
         display: flex !important;
         align-items: center !important;
     }}
 
-    div[data-testid="stPopover"] button,
     div[data-testid="stPopover"] > button,
-    div[data-testid="stPopover"] [data-testid="stBaseButton-secondary"] {{
-        background-color: #f3ece3 !important;
-        background: #f3ece3 !important;
-        border: 1px solid #dcd1c4 !important;
+    div[data-testid="stPopover"] button {{
+        background-color: {btn_bg} !important;
+        background: {btn_bg} !important;
+        border: 1px solid {btn_border} !important;
         border-radius: 8px !important;
-        padding: 5px 12px !important;
+        padding: 4px 12px !important;
         height: 32px !important;
         min-height: 32px !important;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.04) !important;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05) !important;
         transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
         outline: none !important;
         display: inline-flex !important;
         align-items: center !important;
         justify-content: center !important;
+        gap: 6px !important;
         margin: 0 !important;
+        box-sizing: border-box !important;
     }}
 
     div[data-testid="stPopover"] button *,
     div[data-testid="stPopover"] button p,
     div[data-testid="stPopover"] button span {{
-        color: #2b2623 !important;
+        color: {text_color} !important;
         font-weight: 700 !important;
         font-size: 12px !important;
         line-height: 1 !important;
     }}
 
-    /* HOVER ROJIZO ELEGANTE EN EL BOTÓN BEIGE */
-    div[data-testid="stPopover"] button:hover,
-    div[data-testid="stPopover"] button:focus:not(:active) {{
-        background: linear-gradient(135deg, #d96b6b 0%, #b83b49 100%) !important;
-        background-color: #b83b49 !important;
-        border-color: #a82e3c !important;
-        transform: translateY(-2px) scale(1.04) !important;
-        box-shadow: 0 4px 12px rgba(184, 59, 73, 0.3) !important;
+    div[data-testid="stPopover"] button svg {{
+        fill: {text_color} !important;
+        width: 12px !important;
+        height: 12px !important;
     }}
 
-    div[data-testid="stPopover"] button:hover *,
-    div[data-testid="stPopover"] button:hover p,
-    div[data-testid="stPopover"] button:hover span {{
-        color: #ffffff !important;
+    /* HOVER MODERNO EN EL BOTÓN POP-OVER */
+    div[data-testid="stPopover"] button:hover {{
+        background-color: {btn_hover_bg} !important;
+        border-color: #d83737 !important;
+        transform: translateY(-1px) !important;
+        box-shadow: 0 3px 8px rgba(0,0,0,0.08) !important;
     }}
 
-    /* ESTADO ACTIVO / ABIERTO */
-    div[data-testid="stPopover"] button:active,
-    div[data-testid="stPopover"] button[aria-expanded="true"] {{
-        background: #8b1e24 !important;
-        background-color: #8b1e24 !important;
-        border-color: #6e151a !important;
-        transform: scale(0.96) !important;
-    }}
-
-    div[data-testid="stPopover"] button[aria-expanded="true"] *,
-    div[data-testid="stPopover"] button[aria-expanded="true"] p,
-    div[data-testid="stPopover"] button[aria-expanded="true"] span {{
-        color: #ffffff !important;
-    }}
-
-    /* CHIP DE YOUTUBE Y TEXTO ADYACENTE */
+    /* CHIP DE YOUTUBE Y TEXTO ADYACENTE CON MISMA ALTURA Y ESTILO */
     .social-select-box {{
         display: flex;
         align-items: center;
@@ -292,11 +276,12 @@ st.markdown(f"""
     .yt-chip-btn {{
         display: inline-flex;
         align-items: center;
+        justify-content: center;
         gap: 6px;
-        background-color: {btn_hover_bg};
+        background-color: {btn_bg};
         border: 1px solid {btn_border};
         border-radius: 8px;
-        padding: 5px 12px;
+        padding: 4px 12px;
         height: 32px;
         box-sizing: border-box;
         color: {text_color};
@@ -310,13 +295,14 @@ st.markdown(f"""
     }}
 
     .yt-chip-btn:hover {{
-        transform: translateY(-2px) scale(1.04);
+        transform: translateY(-1px);
         border-color: #d83737;
-        box-shadow: 0 4px 12px rgba(216, 55, 55, 0.25);
+        background-color: {btn_hover_bg};
+        box-shadow: 0 3px 8px rgba(216, 55, 55, 0.15);
     }}
 
     .yt-chip-btn:active {{
-        transform: scale(0.94);
+        transform: scale(0.96);
     }}
 
     .yt-bounce {{
@@ -325,8 +311,8 @@ st.markdown(f"""
 
     @keyframes ytPulseBounce {{
         0% {{ transform: scale(1); }}
-        40% {{ transform: scale(1.18) rotate(-4deg); }}
-        80% {{ transform: scale(0.95) rotate(3deg); }}
+        40% {{ transform: scale(1.12) rotate(-3deg); }}
+        80% {{ transform: scale(0.96) rotate(2deg); }}
         100% {{ transform: scale(1); }}
     }}
 
@@ -571,7 +557,7 @@ with col_back_btn:
 
 st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
 
-# 5. FILTROS PERFECTAMENTE ALINEADOS Y BALANCEADOS
+# 5. FILTROS ALINEADOS Y BALANCEADOS
 col_title, col_fecha, col_red = st.columns([0.85, 1.25, 4.9], vertical_alignment="center")
 
 with col_title:
@@ -579,7 +565,8 @@ with col_title:
 
 with col_fecha:
     opciones_fecha = ["Este Mes", "Hoy / Día", "Esta Semana", "Este Año", "Año Pasado"]
-    with st.popover(f"📅 {st.session_state['selected_month']} ▾", use_container_width=False):
+    # Se eliminó la flecha adicional manual ('▾') ya que Streamlit añade nativamente su propia flecha SVG
+    with st.popover(f"📅 {st.session_state['selected_month']}", use_container_width=False):
         for opt in opciones_fecha:
             if st.button(opt, key=f"btn_m_{opt}", use_container_width=True):
                 st.session_state['selected_month'] = opt
