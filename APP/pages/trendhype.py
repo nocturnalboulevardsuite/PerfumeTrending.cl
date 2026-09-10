@@ -18,7 +18,7 @@ is_dark = st.session_state['theme'] == 'dark'
 
 app_bg_css = "background-color: #f6efe9 !important;" if not is_dark else "background-color: #0e1117 !important;"
 text_color = "#ffffff" if is_dark else "#1a1a1a"
-subtext_color = "#888888" if is_dark else "#777777"
+subtext_color = "#a0a0a0" if is_dark else "#c4b8ab"
 
 btn_bg = "#1f242d" if is_dark else "#ffffff"
 btn_border = "#3a3f4d" if is_dark else "#d4cdc5"
@@ -40,18 +40,23 @@ bottle_svg = (
     "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 58'><rect x='18' y='2' width='14' height='7' rx='2' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><rect x='21' y='9' width='8' height='5' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='19' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='5' fill='none' stroke='%23111111' stroke-width='2'/><line x1='25' y1='23' x2='25' y2='26' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='25' y1='42' x2='25' y2='45' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='14' y1='34' x2='17' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='33' y1='34' x2='36' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='17' y1='26' x2='19' y2='28' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='31' y1='40' x2='33' y2='42' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='17' y1='42' x2='19' y2='40' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='31' y1='28' x2='33' y2='26' stroke='%23111111' stroke-width='2' stroke-linecap='round'/></svg>"
 )
 
-# 3. ESTILOS CSS REFINADOS (AJUSTE DE MARGEN Y CENTRALIZACIÓN)
+# 3. ESTILOS CSS REFINADOS (ELIMINACIÓN TOTAL DE MARGEN SUPERIOR)
 st.markdown(f"""
     <style>
-    /* Ocultar encabezados predeterminados y elevar el contenido */
+    /* Ocultar encabezados predeterminados y colapsar espacio superior */
     header[data-testid="stHeader"] {{ display: none !important; }}
+    div[data-testid="stAppViewContainer"] {{ padding-top: 0px !important; }}
+    
     .stApp {{ {app_bg_css} }}
     
-    .main .block-container {{
-        padding-top: 1rem !important;
+    .main .block-container,
+    div.block-container,
+    [data-testid="stMainBlockContainer"],
+    [data-testid="stAppViewBlockContainer"] {{
+        padding-top: 0.5rem !important;
+        margin-top: -3.5rem !important;
         padding-bottom: 2rem !important;
         max-width: 1200px !important;
-        margin: 0 auto !important;
     }}
 
     /* --- SWITCH DE TEMA ANIMADO EN FORMA DE BOTELLA --- */
@@ -106,7 +111,7 @@ st.markdown(f"""
         z-index: 2 !important;
     }}
 
-    /* --- ESTILO OSCURO DE FILTROS DESPLEGABLES (PILL STYLE ORIGINAL) --- */
+    /* --- ESTILO DE FILTROS DESPLEGABLES --- */
     .filter-title {{
         color: {text_color} !important;
         font-weight: 800 !important;
@@ -137,18 +142,18 @@ st.markdown(f"""
         display: none !important;
     }}
 
-    /* Estilo del enlace superior central */
+    /* Estilo del enlace superior central idéntico al original */
     .nav-back-link {{
         text-align: center;
         display: block;
-        color: {subtext_color};
-        text-decoration: none;
+        color: {subtext_color} !important;
+        text-decoration: none !important;
         font-size: 0.95rem;
         font-weight: 500;
         transition: color 0.2s ease;
     }}
     .nav-back-link:hover {{
-        color: {text_color};
+        color: {text_color} !important;
     }}
 
     /* --- ESTILOS DE LAS TARJETAS --- */
@@ -203,7 +208,7 @@ st.markdown(f"""
     </style>
 """, unsafe_allow_html=True)
 
-# 4. CABECERA SUPERIOR (LOGO + VOLVER AL CATÁLOGO AL CENTRO + TEMA A LA DERECHA)
+# 4. CABECERA SUPERIOR
 col_logo, col_back, col_theme = st.columns([3, 4, 1], vertical_alignment="center")
 
 with col_logo:
@@ -234,7 +239,7 @@ with col_back:
 with col_theme:
     st.button(" ", key="theme_toggle", on_click=toggle_theme)
 
-# 5. TÍTULO Y FILTROS MINIMALISTAS CENTRALIZADOS
+# 5. TÍTULO Y FILTROS CENTRALIZADOS
 st.markdown(f"<h1 style='text-align: center; color: {text_color}; font-weight: 800; font-size: 2.3rem; margin-top: 35px; margin-bottom: 35px;'>RADAR DEL HYPE - Viral Fragrances</h1>", unsafe_allow_html=True)
 
 col_title, col_fecha, col_red, col_empty = st.columns([1.2, 2.2, 2.2, 3.5], vertical_alignment="center")
