@@ -197,9 +197,8 @@ st.markdown(f"""
     .filter-label-text {{
         color: {text_color} !important;
         font-weight: 700 !important;
-        font-size: 0.95rem !important;
+        font-size: 0.69rem !important;
         margin: 0 !important;
-        white-space: nowrap;
         display: flex;
         align-items: center !important;
         justify-content: flex-start;
