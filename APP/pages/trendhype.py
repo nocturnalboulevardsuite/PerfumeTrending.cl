@@ -3,38 +3,63 @@ import streamlit as st
 # 1. CONFIGURACIÓN DE PÁGINA
 st.set_page_config(page_title="Radar del Hype - PerfumeTrending", layout="wide")
 
-# Heredamos el tema
-is_dark = st.session_state.get('theme', 'light') == 'dark'
+# 2. MANEJO DE ESTADO (Navegación y Tema)
+if 'current_page' not in st.session_state:
+    st.session_state['current_page'] = 'home'
+if 'theme' not in st.session_state:
+    st.session_state['theme'] = 'light'
+if 'selected_perfume' not in st.session_state:
+    st.session_state['selected_perfume'] = None
 
-# Paleta de colores para las tarjetas
-app_bg = "#0e1117" if is_dark else "#f6efe9"
-card_bg = "#1f242d" if is_dark else "#ffffff"
+def toggle_theme():
+    st.session_state['theme'] = 'dark' if st.session_state['theme'] == 'light' else 'light'
+
+def navigate_to(page, perfume_data=None):
+    st.session_state['current_page'] = page
+    if perfume_data:
+        st.session_state['selected_perfume'] = perfume_data
+
+is_dark = st.session_state['theme'] == 'dark'
+
+app_bg_css = "background-color: #f6efe9 !important;" if not is_dark else "background-color: #0e1117 !important;"
 text_color = "#ffffff" if is_dark else "#1a1a1a"
-border_color = "#555555" if is_dark else "#1a1a1a"
-badge_bg = "#2d3340" if is_dark else "#f0f0f0"
+subtext_color = "#a0a0a0" if is_dark else "#666666"
 
-# 2. ESTILOS CSS REFINADOS (Tarjetas + Nuevos Filtros Dinámicos)
+btn_bg = "#1f242d" if is_dark else "#ffffff"
+btn_text = "#ffffff" if is_dark else "#2c2c2c"
+btn_border = "#3a3f4d" if is_dark else "#d4cdc5"
+btn_hover_bg = "#2d3340" if is_dark else "#fcfaf8"
+
+input_bg = "#1f242d" if is_dark else "#252b36"
+input_text = "#ffffff" if is_dark else "#ffffff"
+input_border = "#3a3f4d" if is_dark else "#1a1a1a"
+
+bottle_left_pos = "42px" if is_dark else "-2px"
+static_icon_pos = "12px center" if is_dark else "calc(100% - 12px) center"
+
+static_icon_svg = (
+    "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='4'/><line x1='12' y1='1' x2='12' y2='3'/><line x1='12' y1='21' x2='12' y2='23'/><line x1='4.22' y1='4.22' x2='5.64' y2='5.64'/><line x1='18.36' y1='18.36' x2='19.78' y2='19.78'/><line x1='1' y1='12' x2='3' y2='12'/><line x1='21' y1='12' x2='23' y2='12'/><line x1='4.22' y1='19.78' x2='5.64' y2='18.36'/><line x1='18.36' y1='5.64' x2='19.78' y2='4.22'/></svg>"
+    if is_dark else
+    "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z'/></svg>"
+)
+
+bottle_svg = (
+    "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 58'><rect x='18' y='2' width='14' height='7' rx='2' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><rect x='21' y='9' width='8' height='5' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='19' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><path d='M21 28a8 8 0 0 0 9 10.5 8.5 8.5 0 0 1-9-10.5z' fill='none' stroke='%23111111' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/></svg>"
+    if is_dark else
+    "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 58'><rect x='18' y='2' width='14' height='7' rx='2' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><rect x='21' y='9' width='8' height='5' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='19' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='5' fill='none' stroke='%23111111' stroke-width='2'/><line x1='25' y1='23' x2='25' y2='26' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='25' y1='42' x2='25' y2='45' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='14' y1='34' x2='17' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='33' y1='34' x2='36' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='17' y1='26' x2='19' y2='28' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='31' y1='40' x2='33' y2='42' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='17' y1='42' x2='19' y2='40' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='31' y1='28' x2='33' y2='26' stroke='%23111111' stroke-width='2' stroke-linecap='round'/></svg>"
+)
+
+# 3. ESTILOS CSS REFINADOS
 st.markdown(f"""
     <style>
     header[data-testid="stHeader"] {{ display: none !important; }}
-    .stApp {{ background-color: {app_bg} !important; }}
+    .stApp {{ {app_bg_css} }}
     
     /* --- ESTILO PARA FILTROS DINÁMICOS (PILLS) --- */
-    
-    /* Forzar color negro en todos los textos de los filtros */
     .filter-label, div[role="radiogroup"] p {{
         color: #000000 !important;
     }}
-    
-    /* Contenedor principal de las opciones */
-    div[role="radiogroup"] {{
-        display: flex;
-        flex-direction: row;
-        gap: 12px;
-        align-items: center;
-    }}
-    
-    /* Estilo del botón inactivo */
+    div[role="radiogroup"] {{ display: flex; flex-direction: row; gap: 12px; align-items: center; }}
     div[role="radiogroup"] > label {{
         background-color: #ffffff !important;
         border: 1px solid #cccccc !important;
@@ -44,34 +69,23 @@ st.markdown(f"""
         transition: all 0.2s ease-in-out;
         box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     }}
-    
-    /* Efecto Hover al pasar el mouse */
     div[role="radiogroup"] > label:hover {{
         border-color: #000000 !important;
         box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         transform: translateY(-2px);
     }}
-    
-    /* Estilo del botón ACTIVO (Seleccionado) */
     div[role="radiogroup"] > label[data-checked="true"] {{
         background-color: #f8f9fa !important;
         border: 2px solid #000000 !important;
-        padding: 7px 17px !important; /* Ajuste por el borde más grueso */
+        padding: 7px 17px !important; 
     }}
+    div[role="radiogroup"] > label[data-checked="true"] p {{ font-weight: 800 !important; }}
+    div[role="radiogroup"] > label > div:first-child {{ display: none !important; }}
     
-    div[role="radiogroup"] > label[data-checked="true"] p {{
-        font-weight: 800 !important;
-    }}
-    
-    /* Ocultar el círculo nativo de Streamlit */
-    div[role="radiogroup"] > label > div:first-child {{
-        display: none !important;
-    }}
-    
-    /* --- ESTILOS DE LAS TARJETAS (Intactos y seguros) --- */
+    /* --- ESTILOS DE LAS TARJETAS INTEGRADOS CON NUEVO TEMA --- */
     .hype-card {{
-        background-color: {card_bg};
-        border: 2px solid {border_color};
+        background-color: {btn_bg};
+        border: 2px solid {btn_border};
         border-radius: 12px;
         padding: 20px;
         position: relative;
@@ -83,49 +97,51 @@ st.markdown(f"""
     }}
     .rank-badge {{
         position: absolute; top: -15px; left: -10px;
-        background-color: {card_bg}; color: {text_color};
+        background-color: {btn_bg}; color: {text_color};
         font-size: 24px; font-weight: 900; padding: 5px 12px;
-        border: 2px solid {border_color}; border-radius: 6px; box-shadow: 2px 2px 0px {border_color}; z-index: 2;
+        border: 2px solid {btn_border}; border-radius: 6px; box-shadow: 2px 2px 0px {btn_border}; z-index: 2;
     }}
     .score-circle {{
         position: absolute; top: 15px; right: 15px; width: 70px; height: 70px; border-radius: 50%;
-        border: 3px solid {border_color}; display: flex; flex-direction: column; justify-content: center;
-        align-items: center; background-color: {card_bg}; padding: 2px;
-        box-shadow: inset 0 0 0 2px {card_bg}, inset 0 0 0 3px {border_color};
+        border: 3px solid {btn_border}; display: flex; flex-direction: column; justify-content: center;
+        align-items: center; background-color: {btn_bg}; padding: 2px;
+        box-shadow: inset 0 0 0 2px {btn_bg}, inset 0 0 0 3px {btn_border};
     }}
     .score-title {{ font-size: 8px; font-weight: 800; line-height: 1.1; text-align: center; color: {text_color}; }}
     .score-value {{ font-size: 18px; font-weight: 900; color: {text_color}; }}
     .img-wrapper {{ text-align: center; margin-top: 15px; position: relative; }}
     .img-wrapper img {{ width: 130px; height: 130px; object-fit: contain; }}
     .year-badge {{
-        position: absolute; bottom: 0; right: 10px; background: {card_bg}; border: 1px solid {border_color};
+        position: absolute; bottom: 0; right: 10px; background: {btn_bg}; border: 1px solid {btn_border};
         border-radius: 4px; padding: 2px 8px; font-size: 12px; font-weight: bold;
     }}
     .perfume-title {{ text-align: center; font-size: 16px; font-weight: bold; margin-top: 10px; margin-bottom: 15px; }}
     .stats-row {{ display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-size: 11px; }}
     .stats-text {{ width: 55%; color: {text_color}; line-height: 1.3; }}
     .chile-badge {{
-        display: flex; align-items: center; gap: 5px; background-color: {badge_bg}; border: 1px solid {border_color};
+        display: flex; align-items: center; gap: 5px; background-color: {btn_hover_bg}; border: 1px solid {btn_border};
         border-radius: 20px; padding: 4px 8px; font-weight: bold; font-size: 10px; text-align: left; line-height: 1.1;
     }}
     .ai-box {{
-        display: flex; gap: 10px; align-items: center; border: 1px solid {border_color}; border-radius: 8px;
-        padding: 10px; margin-bottom: 15px; font-size: 11px; line-height: 1.3; background-color: {badge_bg};
+        display: flex; gap: 10px; align-items: center; border: 1px solid {btn_border}; border-radius: 8px;
+        padding: 10px; margin-bottom: 15px; font-size: 11px; line-height: 1.3; background-color: {btn_hover_bg};
     }}
     .ai-icon {{
-        min-width: 26px; height: 26px; border-radius: 50%; border: 1px solid {border_color}; display: flex;
-        justify-content: center; align-items: center; font-weight: bold; font-size: 10px; background-color: {card_bg};
+        min-width: 26px; height: 26px; border-radius: 50%; border: 1px solid {btn_border}; display: flex;
+        justify-content: center; align-items: center; font-weight: bold; font-size: 10px; background-color: {btn_bg};
     }}
     .price-text {{ text-align: center; font-size: 12px; color: {text_color}; margin-bottom: 10px; }}
     </style>
 """, unsafe_allow_html=True)
 
-# 3. NAVEGACIÓN SUPERIOR
+# 4. NAVEGACIÓN SUPERIOR
+# Si deseas que el botón use la función nativa de tu nuevo estado, descomenta la de abajo y borra el page_link.
 st.page_link("app.py", label="← Volver al Catálogo principal")
+# st.button("← Volver al Catálogo principal", on_click=lambda: navigate_to('home'))
 
 st.markdown(f"<h1 style='text-align: center; color: {text_color}; font-weight: 800; font-size: 2.5rem; margin-bottom: 30px;'>RADAR DEL HYPE - Viral Fragrances</h1>", unsafe_allow_html=True)
 
-# 4. FILTROS DINÁMICOS
+# 5. FILTROS DINÁMICOS
 col_filtro1, col_filtro2, col_filtro3 = st.columns([1.2, 4, 2], vertical_alignment="center")
 
 with col_filtro1:
@@ -141,7 +157,7 @@ with col_filtro3:
 
 st.divider()
 
-# 5. BASE DE DATOS
+# 6. BASE DE DATOS
 hype_data = [
     {
         "rank": "#1", "name": "Bleu de Chanel", "score": "95%", "year": "2010", "price": "$180,000 CLP",
@@ -163,7 +179,7 @@ hype_data = [
     }
 ]
 
-# 6. RENDERIZADO DE TARJETAS (Comprimido para evitar errores de Markdown)
+# 7. RENDERIZADO DE TARJETAS
 cols = st.columns(3, gap="medium")
 
 for i, data in enumerate(hype_data):
