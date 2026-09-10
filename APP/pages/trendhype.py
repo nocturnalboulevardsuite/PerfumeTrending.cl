@@ -131,6 +131,39 @@ st.markdown(f"""
     }}
     .price-text {{ text-align: center; font-size: 12px; color: {text_color}; margin-bottom: 10px; }}
     </style>
+
+    # 1. LA CABECERA (LOGO + USER / THEME)
+col_logo, col_espacio, col_actions = st.columns([4, 3, 2.5], vertical_alignment="center")
+
+with col_logo:
+    logo_color = "#8c7b6d"
+    logo_html = f"""
+    <div style="display: flex; align-items: center; gap: 10px; cursor: pointer;" onclick="window.location.reload();">
+        <svg width="42" height="42" viewBox="0 0 36 36" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M 6.8 21 L 29.2 21 C 30 25 27 32 18 32 C 9 32 6 25 6.8 21 Z" fill="{logo_color}" />
+            <line x1="6.8" y1="21" x2="29.2" y2="21" stroke="{text_color}" stroke-width="2" />
+            <line x1="18" y1="10" x2="18" y2="30" stroke="{text_color}" stroke-width="1.5" />
+            <path d="M 18 32 C 9 32 5 24 7.5 17 C 9 12 13 10 15 10 L 21 10 C 23 10 27 12 28.5 17 C 31 24 27 32 18 32 Z" stroke="{text_color}" stroke-width="2.5" />
+            <rect x="15" y="7" width="6" height="3" stroke="{text_color}" stroke-width="2.5" />
+            <rect x="13" y="3" width="10" height="4" rx="1" stroke="{text_color}" stroke-width="2.5" />
+            <rect x="16" y="0" width="4" height="3" rx="1" fill="{logo_color}" stroke="{text_color}" stroke-width="1.5" />
+            <path d="M 23 5 L 26 4" stroke="{text_color}" stroke-width="2.5" />
+            <ellipse cx="29" cy="3" rx="3.5" ry="2.5" transform="rotate(-25 29 3)" fill="{logo_color}" stroke="{text_color}" stroke-width="1.5" />
+        </svg>
+        <span style="font-family: 'Inter', sans-serif; font-size: 1.55rem; color: {text_color}; letter-spacing: -0.5px;">
+            <span style="font-weight: 800;">Perfume</span><span style="font-weight: 400;">Trending</span>
+        </span>
+    </div>
+    """
+    st.markdown(logo_html, unsafe_allow_html=True)
+
+with col_actions:
+    btn_col1, btn_col2 = st.columns([1.5, 1], vertical_alignment="center")
+    with btn_col1:
+        st.button("👤 Ingresar", key="login_btn", use_container_width=True)
+    with btn_col2:
+        st.button(" ", key="theme_toggle", on_click=toggle_theme)
+    
 """, unsafe_allow_html=True)
 
 # 4. NAVEGACIÓN SUPERIOR
