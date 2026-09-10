@@ -199,7 +199,7 @@ st.markdown(f"""
         font-weight: 800 !important;
         font-size: 0.88rem !important;
         margin: 0 !important;
-        display: flex;
+        display: flex !important;
         align-items: center !important
         justify-content: flex-end;
         height: 32px;
