@@ -203,7 +203,7 @@ st.markdown(f"""
         align-items: center !important;
         justify-content: flex-start;
         height: 32px;
-        white-space: nowrap !important;
+
     }}
 
     /* ESTILOS IDÉNTICOS Y CENTRADO ABSOLUTO PARA EL BOTÓN POP-OVER Y CHIP YOUTUBE */
