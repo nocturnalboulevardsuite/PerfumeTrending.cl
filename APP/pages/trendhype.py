@@ -203,9 +203,13 @@ st.markdown(f"""
         padding-right: 2px;
     }}
 
-    /* BOTÓN DE FECHA: COLOR BEIGE (ESTADO NORMAL) */
-    div[data-testid="stPopover"] > button {{
+    /* BOTÓN DE FECHA (POPOVER) COLOR BEIGE */
+    div[data-testid="stPopover"] > button,
+    div[data-testid="stPopover"] > button:focus,
+    div[data-testid="stPopover"] > button:active,
+    div[data-testid="stPopover"] > button[aria-expanded="true"] {{
         background-color: #f3ece3 !important;
+        background: #f3ece3 !important;
         color: #2b2623 !important;
         border: 1px solid #dcd1c4 !important;
         border-radius: 20px !important;
@@ -214,28 +218,43 @@ st.markdown(f"""
         font-size: 13px !important;
         height: 38px !important;
         box-shadow: 0 2px 6px rgba(0,0,0,0.06) !important;
-        transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+        transition: all 0.2s ease !important;
         outline: none !important;
+        transform: none !important;
     }}
 
-    /* HOVER EN ROJIZO PERLA CON DEGRADADO SUAVE Y GLOW */
-    div[data-testid="stPopover"] > button:hover,
-    div[data-testid="stPopover"] > button:focus:not(:active) {{
-        background: linear-gradient(135deg, #d96b6b 0%, #b83b49 100%) !important;
-        color: #ffffff !important;
-        border-color: #a82e3c !important;
-        transform: translateY(-1px) scale(1.04) !important;
-        box-shadow: 0 4px 14px rgba(184, 59, 73, 0.4) !important;
+    div[data-testid="stPopover"] > button:hover {{
+        background-color: #e8ded2 !important;
+        background: #e8ded2 !important;
+        border-color: #c8bba8 !important;
+        color: #2b2623 !important;
     }}
 
-    /* CLICK / PRESIONADO EN ROJO MATE */
-    div[data-testid="stPopover"] > button:active,
-    div[data-testid="stPopover"] > button[aria-expanded="true"] {{
-        background: #8b1e24 !important;
-        color: #ffffff !important;
-        border-color: #6e151a !important;
-        transform: scale(0.96) !important;
-        box-shadow: inset 0 2px 5px rgba(0,0,0,0.4) !important;
+    /* CUADRO DE SELECCIONES (CONTENEDOR DEL DESPLEGABLE) EN COLOR BEIGE */
+    div[data-testid="stPopoverBody"] {{
+        background-color: #f3ece3 !important;
+        border: 1px solid #dcd1c4 !important;
+        border-radius: 12px !important;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.18) !important;
+        padding: 8px !important;
+    }}
+
+    /* OPCIONES / BOTONES DENTRO DEL CUADRO DE SELECCIONES */
+    div[data-testid="stPopoverBody"] button {{
+        background-color: #f3ece3 !important;
+        color: #2b2623 !important;
+        border: 1px solid transparent !important;
+        border-radius: 8px !important;
+        font-weight: 600 !important;
+        font-size: 13px !important;
+        margin-bottom: 2px !important;
+        transition: all 0.2s ease !important;
+    }}
+
+    div[data-testid="stPopoverBody"] button:hover {{
+        background-color: #e4d8c9 !important;
+        color: #2b2623 !important;
+        border-color: #c8bba8 !important;
     }}
 
     /* INTERACTIVIDAD Y ANIMACIÓN DEL BOTÓN YOUTUBE */
