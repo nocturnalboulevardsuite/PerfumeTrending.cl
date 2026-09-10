@@ -42,7 +42,7 @@ bottle_svg = (
     "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 58'><rect x='18' y='2' width='14' height='7' rx='2' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><rect x='21' y='9' width='8' height='5' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='19' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='5' fill='none' stroke='%23111111' stroke-width='2'/><line x1='25' y1='23' x2='25' y2='26' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='25' y1='42' x2='25' y2='45' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='14' y1='34' x2='17' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='33' y1='34' x2='36' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='17' y1='26' x2='19' y2='28' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='31' y1='40' x2='33' y2='42' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='17' y1='42' x2='19' y2='40' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='31' y1='28' x2='33' y2='26' stroke='%23111111' stroke-width='2' stroke-linecap='round'/></svg>"
 )
 
-# 3. ESTILOS CSS REFINADOS Y ANIMACIONES MINIMALISTAS
+# 3. ESTILOS CSS REFINADOS Y ALINEACIÓN PERFECTA
 st.markdown(f"""
     <style>
     header[data-testid="stHeader"] {{ display: none !important; }}
@@ -60,7 +60,7 @@ st.markdown(f"""
         max-width: 1200px !important;
     }}
 
-    /* SWITCH NEUTRO ORIGINAL */
+    /* SWITCH NEUTRO */
     .st-key-theme_toggle div[data-testid="stButton"] > button,
     .st-key-theme_toggle button {{
         background: transparent !important;
@@ -113,7 +113,7 @@ st.markdown(f"""
         z-index: 2 !important;
     }}
 
-    /* TÍTULO Y BOTÓN DE INFORMACIÓN */
+    /* TÍTULO Y TOOLTIP */
     .radar-title-container {{
         display: inline-flex;
         align-items: baseline;
@@ -193,48 +193,61 @@ st.markdown(f"""
         pointer-events: auto;
     }}
 
+    /* ETIQUETA "FILTRAR POR :" CENTRADA DE FORMA IMPECABLE */
     .filter-label-text {{
         color: {text_color} !important;
         font-weight: 800 !important;
-        font-size: 0.95rem;
-        margin: 0;
+        font-size: 0.88rem !important;
+        margin: 0 !important;
         white-space: nowrap;
-        text-align: right;
-        padding-right: 2px;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        height: 32px;
     }}
 
-    /* BOTÓN DE FECHA POP-OVER (ESTADO BASE BEIGE REFORZADO) */
+    /* BOTÓN BEIGE POP-OVER: TAMAÑO IDÉNTICO AL DE YOUTUBE (CHIP ELEGANTE) */
+    div[data-testid="stPopover"] {{
+        display: flex !important;
+        align-items: center !important;
+    }}
+
     div[data-testid="stPopover"] button,
     div[data-testid="stPopover"] > button,
     div[data-testid="stPopover"] [data-testid="stBaseButton-secondary"] {{
         background-color: #f3ece3 !important;
         background: #f3ece3 !important;
         border: 1px solid #dcd1c4 !important;
-        border-radius: 20px !important;
-        padding: 6px 16px !important;
-        height: 38px !important;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.06) !important;
-        transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+        border-radius: 8px !important;
+        padding: 5px 12px !important;
+        height: 32px !important;
+        min-height: 32px !important;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.04) !important;
+        transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
         outline: none !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        margin: 0 !important;
     }}
 
-    /* FUERZA EL COLOR DEL TEXTO E ICONOS DENTRO DEL BOTÓN BEIGE */
     div[data-testid="stPopover"] button *,
     div[data-testid="stPopover"] button p,
     div[data-testid="stPopover"] button span {{
         color: #2b2623 !important;
         font-weight: 700 !important;
-        font-size: 13px !important;
+        font-size: 12px !important;
+        line-height: 1 !important;
     }}
 
-    /* HOVER EN ROJIZO PERLA CON DEGRADADO SUAVE */
+    /* HOVER ROJIZO ELEGANTE EN EL BOTÓN BEIGE */
     div[data-testid="stPopover"] button:hover,
     div[data-testid="stPopover"] button:focus:not(:active) {{
         background: linear-gradient(135deg, #d96b6b 0%, #b83b49 100%) !important;
         background-color: #b83b49 !important;
         border-color: #a82e3c !important;
-        transform: translateY(-1px) scale(1.04) !important;
-        box-shadow: 0 4px 14px rgba(184, 59, 73, 0.4) !important;
+        transform: translateY(-2px) scale(1.04) !important;
+        box-shadow: 0 4px 12px rgba(184, 59, 73, 0.3) !important;
     }}
 
     div[data-testid="stPopover"] button:hover *,
@@ -243,14 +256,13 @@ st.markdown(f"""
         color: #ffffff !important;
     }}
 
-    /* CLICK / PRESIONADO EN ROJO MATE */
+    /* ESTADO ACTIVO / ABIERTO */
     div[data-testid="stPopover"] button:active,
     div[data-testid="stPopover"] button[aria-expanded="true"] {{
         background: #8b1e24 !important;
         background-color: #8b1e24 !important;
         border-color: #6e151a !important;
         transform: scale(0.96) !important;
-        box-shadow: inset 0 2px 5px rgba(0,0,0,0.4) !important;
     }}
 
     div[data-testid="stPopover"] button[aria-expanded="true"] *,
@@ -259,7 +271,7 @@ st.markdown(f"""
         color: #ffffff !important;
     }}
 
-    /* INTERACTIVIDAD Y ANIMACIÓN DEL BOTÓN YOUTUBE */
+    /* CHIP DE YOUTUBE Y TEXTO ADYACENTE */
     .social-select-box {{
         display: flex;
         align-items: center;
@@ -268,6 +280,7 @@ st.markdown(f"""
         font-size: 13px;
         width: 100%;
         box-sizing: border-box;
+        height: 32px;
     }}
 
     .social-label {{
@@ -284,6 +297,8 @@ st.markdown(f"""
         border: 1px solid {btn_border};
         border-radius: 8px;
         padding: 5px 12px;
+        height: 32px;
+        box-sizing: border-box;
         color: {text_color};
         font-weight: 700;
         font-size: 12px;
@@ -324,14 +339,8 @@ st.markdown(f"""
     }}
 
     @keyframes floatAndFade {{
-        0% {{
-            opacity: 1;
-            transform: translate(0, 0) scale(0.6) rotate(0deg);
-        }}
-        100% {{
-            opacity: 0;
-            transform: translate(var(--dx), var(--dy)) scale(1.4) rotate(360deg);
-        }}
+        0% {{ opacity: 1; transform: translate(0, 0) scale(0.6) rotate(0deg); }}
+        100% {{ opacity: 0; transform: translate(var(--dx), var(--dy)) scale(1.4) rotate(360deg); }}
     }}
 
     .social-desc {{
@@ -390,42 +399,18 @@ st.markdown(f"""
     }}
 
     @keyframes minimalStarGlow {{
-        0%, 100% {{
-            transform: scale(1);
-            filter: drop-shadow(0 0 2px rgba(216, 55, 55, 0.3));
-            opacity: 0.92;
-        }}
-        50% {{
-            transform: scale(1.15);
-            filter: drop-shadow(0 0 7px rgba(216, 55, 55, 0.75));
-            opacity: 1;
-        }}
+        0%, 100% {{ transform: scale(1); filter: drop-shadow(0 0 2px rgba(216, 55, 55, 0.3)); opacity: 0.92; }}
+        50% {{ transform: scale(1.15); filter: drop-shadow(0 0 7px rgba(216, 55, 55, 0.75)); opacity: 1; }}
     }}
 
     @keyframes goldStarGlow {{
-        0%, 100% {{
-            transform: scale(1);
-            filter: drop-shadow(0 0 2px rgba(212, 175, 55, 0.3));
-            opacity: 0.92;
-        }}
-        50% {{
-            transform: scale(1.15);
-            filter: drop-shadow(0 0 7px rgba(241, 196, 15, 0.75));
-            opacity: 1;
-        }}
+        0%, 100% {{ transform: scale(1); filter: drop-shadow(0 0 2px rgba(212, 175, 55, 0.3)); opacity: 0.92; }}
+        50% {{ transform: scale(1.15); filter: drop-shadow(0 0 7px rgba(241, 196, 15, 0.75)); opacity: 1; }}
     }}
 
     @keyframes silverStarGlow {{
-        0%, 100% {{
-            transform: scale(1);
-            filter: drop-shadow(0 0 2px rgba(148, 163, 184, 0.3));
-            opacity: 0.92;
-        }}
-        50% {{
-            transform: scale(1.15);
-            filter: drop-shadow(0 0 7px rgba(226, 232, 240, 0.75));
-            opacity: 1;
-        }}
+        0%, 100% {{ transform: scale(1); filter: drop-shadow(0 0 2px rgba(148, 163, 184, 0.3)); opacity: 0.92; }}
+        50% {{ transform: scale(1.15); filter: drop-shadow(0 0 7px rgba(226, 232, 240, 0.75)); opacity: 1; }}
     }}
 
     .star-minimal-ruby {{ animation: minimalStarGlow 3s ease-in-out infinite; display: inline-flex; vertical-align: middle; }}
@@ -439,9 +424,7 @@ st.markdown(f"""
         box-shadow: inset 0 0 0 2px {btn_bg}, inset 0 0 0 2px {btn_border};
         transition: border-color 0.3s ease;
     }}
-    .hype-card:hover .score-circle {{
-        border-color: #d83737;
-    }}
+    .hype-card:hover .score-circle {{ border-color: #d83737; }}
 
     .score-title {{ font-size: 7px; font-weight: 800; line-height: 1.0; text-align: center; color: {text_color}; }}
     .score-value {{ font-size: 15px; font-weight: 900; color: {text_color}; }}
@@ -454,9 +437,7 @@ st.markdown(f"""
         transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
     }}
     
-    .hype-card:hover .img-wrapper img {{
-        transform: scale(1.12);
-    }}
+    .hype-card:hover .img-wrapper img {{ transform: scale(1.12); }}
 
     .year-badge {{
         position: absolute; bottom: 0; right: 5px; background: {btn_bg}; border: 1px solid {btn_border};
@@ -538,7 +519,7 @@ st.markdown(f"""
     </script>
 """, unsafe_allow_html=True)
 
-# 4. CABECERA CON LOGO
+# 4. CABECERA CON LOGO Y TEMAS
 col_logo, col_theme = st.columns([6, 1], vertical_alignment="center")
 
 with col_logo:
@@ -590,15 +571,15 @@ with col_back_btn:
 
 st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
 
-# 5. FILTROS CENTRALIZADOS
-col_title, col_fecha, col_red = st.columns([0.65, 1.8, 4.55], vertical_alignment="center")
+# 5. FILTROS PERFECTAMENTE ALINEADOS Y BALANCEADOS
+col_title, col_fecha, col_red = st.columns([0.85, 1.25, 4.9], vertical_alignment="center")
 
 with col_title:
-    st.markdown("<p class='filter-label-text'>Filtrar por :</p>", unsafe_allow_html=True)
+    st.markdown("<div class='filter-label-text'>Filtrar por :</div>", unsafe_allow_html=True)
 
 with col_fecha:
     opciones_fecha = ["Este Mes", "Hoy / Día", "Esta Semana", "Este Año", "Año Pasado"]
-    with st.popover(f"📅 {st.session_state['selected_month']} ▾", use_container_width=True):
+    with st.popover(f"📅 {st.session_state['selected_month']} ▾", use_container_width=False):
         for opt in opciones_fecha:
             if st.button(opt, key=f"btn_m_{opt}", use_container_width=True):
                 st.session_state['selected_month'] = opt
@@ -622,7 +603,7 @@ with col_red:
 
 st.write("")
 
-# 6. ICONOS DE ESTRELLAS MINIMALISTAS Y PROFESIONALES
+# 6. ICONOS DE ESTRELLAS
 star_ruby_svg = """
 <div class="star-minimal-ruby">
     <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
