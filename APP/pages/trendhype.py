@@ -203,73 +203,42 @@ st.markdown(f"""
         padding-right: 2px;
     }}
 
-    /* 1. BOTÓN DE SELECCIÓN (TRANSPARENTE) */
+    /* BOTÓN DE FECHA: COLOR BEIGE (ESTADO NORMAL) */
     div[data-testid="stPopover"] > button {{
-        background: transparent !important;
-        background-color: transparent !important;
-        color: {text_color} !important;
-        border: 1.5px solid {"rgba(255, 255, 255, 0.2)" if is_dark else "rgba(0, 0, 0, 0.2)"} !important;
+        background-color: #f3ece3 !important;
+        color: #2b2623 !important;
+        border: 1px solid #dcd1c4 !important;
         border-radius: 20px !important;
         padding: 6px 16px !important;
         font-weight: 700 !important;
         font-size: 13px !important;
         height: 38px !important;
-        box-shadow: none !important;
-        transition: all 0.22s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.06) !important;
+        transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
         outline: none !important;
-        backdrop-filter: blur(4px) !important;
-        -webkit-backdrop-filter: blur(4px) !important;
     }}
 
+    /* HOVER EN ROJIZO PERLA CON DEGRADADO SUAVE Y GLOW */
     div[data-testid="stPopover"] > button:hover,
     div[data-testid="stPopover"] > button:focus:not(:active) {{
-        background-color: #d83737 !important;
+        background: linear-gradient(135deg, #d96b6b 0%, #b83b49 100%) !important;
         color: #ffffff !important;
-        border-color: #d83737 !important;
-        transform: translateY(-1px) scale(1.03) !important;
-        box-shadow: 0 4px 14px rgba(216, 55, 55, 0.35) !important;
+        border-color: #a82e3c !important;
+        transform: translateY(-1px) scale(1.04) !important;
+        box-shadow: 0 4px 14px rgba(184, 59, 73, 0.4) !important;
     }}
 
+    /* CLICK / PRESIONADO EN ROJO MATE */
     div[data-testid="stPopover"] > button:active,
     div[data-testid="stPopover"] > button[aria-expanded="true"] {{
-        background-color: rgba(216, 55, 55, 0.2) !important;
-        color: {text_color} !important;
-        border-color: #d83737 !important;
-        transform: scale(0.97) !important;
-    }}
-
-    /* 2. CUADRO DESPLEGABLE DE SELECCIÓN (DIFUMINADO Y TRASLÚCIDO) */
-    div[data-testid="stPopoverBody"] {{
-        background-color: {"rgba(18, 20, 26, 0.55)" if is_dark else "rgba(255, 255, 255, 0.55)"} !important;
-        backdrop-filter: blur(16px) saturate(180%) !important;
-        -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
-        border: 1px solid {"rgba(255, 255, 255, 0.15)" if is_dark else "rgba(0, 0, 0, 0.12)"} !important;
-        border-radius: 16px !important;
-        box-shadow: 0 12px 32px 0 rgba(0, 0, 0, 0.3) !important;
-        padding: 10px !important;
-    }}
-
-    /* OPCIONES DENTRO DEL DESPLEGABLE */
-    div[data-testid="stPopoverBody"] button {{
-        background-color: {"rgba(255, 255, 255, 0.08)" if is_dark else "rgba(0, 0, 0, 0.04)"} !important;
-        color: {text_color} !important;
-        border: 1px solid {"rgba(255, 255, 255, 0.08)" if is_dark else "rgba(0, 0, 0, 0.06)"} !important;
-        border-radius: 10px !important;
-        font-weight: 600 !important;
-        font-size: 13px !important;
-        margin-bottom: 4px !important;
-        transition: all 0.2s ease !important;
-    }}
-
-    div[data-testid="stPopoverBody"] button:hover {{
-        background-color: #d83737 !important;
+        background: #8b1e24 !important;
         color: #ffffff !important;
-        border-color: #d83737 !important;
-        transform: translateY(-1px) !important;
-        box-shadow: 0 4px 12px rgba(216, 55, 55, 0.3) !important;
+        border-color: #6e151a !important;
+        transform: scale(0.96) !important;
+        box-shadow: inset 0 2px 5px rgba(0,0,0,0.4) !important;
     }}
 
-    /* RED SOCIAL YOUTUBE CHIP */
+    /* INTERACTIVIDAD Y ANIMACIÓN DEL BOTÓN YOUTUBE */
     .social-select-box {{
         display: flex;
         align-items: center;
@@ -600,7 +569,7 @@ with col_back_btn:
 
 st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
 
-# 5. FILTROS CENTRALIZADOS CON POP-OVER TRASLÚCIDO DIFUMINADO
+# 5. FILTROS CENTRALIZADOS
 col_title, col_fecha, col_red = st.columns([0.65, 1.8, 4.55], vertical_alignment="center")
 
 with col_title:
@@ -632,7 +601,7 @@ with col_red:
 
 st.write("")
 
-# 6. ICONOS DE ESTRELLAS MINIMALISTAS
+# 6. ICONOS DE ESTRELLAS MINIMALISTAS Y PROFESIONALES
 star_ruby_svg = """
 <div class="star-minimal-ruby">
     <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
