@@ -176,7 +176,7 @@ js_color_script = f"""
 
 components.html(js_color_script, height=0, width=0)
 
-# 3. CSS PROFESIONAL Y NÍTIDO (SIN BLUR NI GLOW)
+# 3. CSS PROFESIONAL Y NÍTIDO
 st.markdown(f"""
     <style>
     html, body, .stApp {{
@@ -202,7 +202,7 @@ st.markdown(f"""
         text-shadow: none !important;
     }}
 
-    /* Estilizado global de botones sin animaciones que vuelvan borroso el texto */
+    /* Estilizado global de botones */
     div.stButton > button,
     div.stDownloadButton > button,
     div[data-testid="stPopover"] > button,
@@ -217,7 +217,11 @@ st.markdown(f"""
         outline: none !important;
     }}
 
-    /* Corrección de Blur y Glow en Hover */
+    div.stButton > button p {{
+        color: #ffffff !important;
+    }}
+
+    /* Corrección de Hover */
     div.stButton > button:hover,
     div[data-testid="stPopover"] > button:hover,
     button[data-testid="stPopoverButton"]:hover,
@@ -247,7 +251,7 @@ st.markdown(f"""
 
     .st-key-login_btn button {{
         background-color: {btn_bg} !important;
-        color: {btn_text} !important;
+        color: #ffffff !important;
         border: 1px solid {btn_border} !important;
         border-radius: 6px !important;
         height: 36px !important;
@@ -267,8 +271,11 @@ st.markdown(f"""
         font-size: 0.8rem !important;
         line-height: 1 !important;
         margin: 0 !important;
+        color: #ffffff !important;
+        font-weight: 600 !important;
     }}
 
+    /* Texto de botones de navegación superior */
     .st-key-n_perfumes button, 
     .st-key-n_remates button,
     .st-key-n_disenador button,
@@ -279,7 +286,7 @@ st.markdown(f"""
         border: none !important;
         border-bottom: 1px solid transparent !important;
         border-radius: 0px !important;
-        font-weight: 500 !important;
+        font-weight: 600 !important;
         font-size: 0.78rem !important;
         padding: 0.2rem 0rem !important;
         box-shadow: none !important;
@@ -294,7 +301,8 @@ st.markdown(f"""
     .st-key-n_nicho button p,
     .st-key-n_arabes button p, 
     .st-key-n_esencias button p {{
-        color: {subtext_color} !important;
+        color: #ffffff !important;
+        font-weight: 600 !important;
         white-space: nowrap !important;
         font-size: 0.78rem !important;
     }}
@@ -305,11 +313,11 @@ st.markdown(f"""
     .st-key-n_nicho button:hover p,
     .st-key-n_arabes button:hover p, 
     .st-key-n_esencias button:hover p {{
-        color: {text_color} !important;
+        color: #ffffff !important;
         text-shadow: none !important;
     }}
 
-    /* Botones tipo Chip ("Páginas de Confianza", "Trend Del Hype", "Comparar Precios") */
+    /* Botones tipo Chip (Trend Del Hype, Comparar Precios, etc.) */
     .st-key-btn_trend button, 
     .st-key-btn_trust button, 
     .st-key-btn_compare button {{
@@ -328,8 +336,8 @@ st.markdown(f"""
     .st-key-btn_trust button p, 
     .st-key-btn_compare button p {{
         font-size: 0.74rem !important;
-        font-weight: 400 !important;
-        color: {subtext_color} !important;
+        font-weight: 600 !important;
+        color: #ffffff !important;
         letter-spacing: 0.2px;
         white-space: nowrap !important;
         text-overflow: clip !important;
@@ -351,7 +359,7 @@ st.markdown(f"""
     .st-key-btn_trend button:hover p, 
     .st-key-btn_trust button:hover p, 
     .st-key-btn_compare button:hover p {{
-        color: {text_color} !important;
+        color: #ffffff !important;
         text-shadow: none !important;
         filter: none !important;
     }}
@@ -371,7 +379,7 @@ st.markdown(f"""
         min-height: 36px !important;
     }}
 
-    /* FORZADO DE TRANSPARENCIA PARA EL BOTÓN DE CAMBIO DE TEMA */
+    /* TRANSPARENCIA PARA BOTÓN DE TEMA */
     .st-key-theme_toggle,
     .st-key-theme_toggle button,
     .st-key-theme_toggle button[data-testid="stBaseButton-secondary"],
@@ -458,7 +466,8 @@ st.markdown(f"""
     
     .stApp .st-key-btn_photo_search button p {{
         font-size: 0.82rem !important;
-        color: {text_color} !important;
+        color: #ffffff !important;
+        font-weight: 600 !important;
     }}
 
     .catalog-card {{
@@ -654,7 +663,7 @@ with col_chip1:
     if st.button("Trend Del Hype", key="btn_trend", use_container_width=True):
         st.switch_page("pages/trendhype.py")
 with col_chip2:
-    st.page_link("pages/trustpage.py", label="Páginas de Confianza", icon="🛡️")
+    st.page_link("pages/trustpage.py", label="Páginas de Confianza", icon="🛡️", use_container_width=True)
 with col_chip3:
     st.button("Comparar Precios", key="btn_compare", on_click=navigate_to, args=('compare_page',), use_container_width=True)
 
