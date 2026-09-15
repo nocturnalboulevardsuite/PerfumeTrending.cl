@@ -36,7 +36,7 @@ input_text = "#f0f0f0" if is_dark else "#18181b"
 input_border = "#2a2e39" if is_dark else "#e2e2e8"
 
 # Posicionamiento del Switch de Tema
-bottle_left_pos = "32px" if is_dark else "-2px"
+bottle_left_pos = "35px" if is_dark else "-2px"
 static_icon_pos = "10px center" if is_dark else "calc(100% - 10px) center"
 
 static_icon_svg = (
@@ -95,7 +95,7 @@ js_color_script = f"""
                     el.style.borderRadius = '3px';
                     el.style.padding = '2px 6px';
                     el.style.margin = '1px 0';
-                    el.style.fontSize = '0.72rem';
+                    el.style.fontSize = '0.75rem';
                     el.dataset.colored = 'true';
                     el.querySelectorAll('*').forEach(child => {{ child.style.color = rule.text; }});
                     break;
@@ -113,27 +113,27 @@ js_color_script = f"""
 
 components.html(js_color_script, height=0, width=0)
 
-# 3. CSS COMPACTO Y AJUSTADO (ESCALA LIGERAMENTE REDUCIDA Y BOTONES ALINEADOS)
+# 3. CSS PROFESIONAL Y EQUILIBRADO
 st.markdown(f"""
     <style>
-    /* ESCALA GLOBAL LIGERAMENTE MÁS CHICA (0.92) */
+    /* NAVEGADOR NORMALIZADO */
     html, body, .stApp {{
-        zoom: 0.92;
+        zoom: 1.0;
     }}
 
     header[data-testid="stHeader"] {{ display: none !important; }}
     
     .block-container {{ 
-        padding-top: 0.8rem !important; 
-        padding-bottom: 1.5rem !important; 
-        max-width: 1100px !important;
+        padding-top: 1rem !important; 
+        padding-bottom: 2rem !important; 
+        max-width: 1140px !important;
     }}
     
     .stApp {{ {app_bg_css} color: {text_color} !important; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }}
 
     .stApp p, .stApp span, .stApp label, .stMarkdown p {{
         color: {text_color} !important;
-        font-size: 0.82rem !important;
+        font-size: 0.88rem !important;
     }}
 
     /* EFECTO MINI-ZOOM SUTIL PARA BOTONES */
@@ -164,40 +164,40 @@ st.markdown(f"""
         height: 100% !important;
     }}
 
-    /* BOTÓN INGRESAR ALINEADO */
+    /* BOTÓN INGRESAR ALINEADO Y PROPORCIONADO */
     .st-key-login_btn button {{
         background-color: {btn_bg} !important;
         color: {btn_text} !important;
         border: 1px solid {btn_border} !important;
-        border-radius: 4px !important;
-        height: 32px !important;
-        min-height: 32px !important;
-        padding: 0 0.6rem 0 1.8rem !important;
+        border-radius: 6px !important;
+        height: 36px !important;
+        min-height: 36px !important;
+        padding: 0 0.8rem 0 2.1rem !important;
         display: inline-flex !important;
         align-items: center !important;
         justify-content: center !important;
         background-image: url("{user_icon_svg}") !important;
         background-repeat: no-repeat !important;
-        background-position: 8px center !important;
-        background-size: 13px 13px !important;
-        font-size: 0.72rem !important;
+        background-position: 10px center !important;
+        background-size: 15px 15px !important;
+        font-size: 0.8rem !important;
         margin: 0 !important;
     }}
     .st-key-login_btn button p {{
-        font-size: 0.72rem !important;
+        font-size: 0.8rem !important;
         line-height: 1 !important;
         margin: 0 !important;
     }}
 
-    /* SWITCH DE TEMA ALINEADO CON INGRESAR (MISMA ALTURA DE 32px) */
+    /* SWITCH DE TEMA ALINEADO (ALTURA DE 36px) */
     .st-key-theme_toggle button {{
         background: transparent !important;
         border: none !important;
         box-shadow: none !important;
         padding: 0 !important;
-        width: 64px !important;
-        height: 32px !important;
-        min-height: 32px !important;
+        width: 68px !important;
+        height: 36px !important;
+        min-height: 36px !important;
         position: relative !important;
         cursor: pointer !important;
         margin: 0 auto !important;
@@ -209,23 +209,23 @@ st.markdown(f"""
     .st-key-theme_toggle button::before {{
         content: '' !important;
         position: absolute !important;
-        top: 3px !important; left: 0 !important;
-        width: 60px !important; height: 26px !important;
+        top: 4px !important; left: 0 !important;
+        width: 64px !important; height: 28px !important;
         background-color: {"#1c1f26" if is_dark else "#eae8e6"} !important;
         border: 1px solid {btn_border} !important;
-        border-radius: 13px !important;
+        border-radius: 14px !important;
         background-image: url("{static_icon_svg}") !important;
         background-repeat: no-repeat !important;
         background-position: {static_icon_pos} !important;
-        background-size: 13px 13px !important;
+        background-size: 14px 14px !important;
     }}
     
     .st-key-theme_toggle button::after {{
         content: '' !important;
         position: absolute !important;
-        top: -1px !important;
+        top: 0px !important;
         left: {bottle_left_pos} !important;
-        width: 30px !important; height: 34px !important;
+        width: 32px !important; height: 36px !important;
         background-image: url("{bottle_svg}") !important;
         background-repeat: no-repeat !important;
         background-size: contain !important;
@@ -245,8 +245,8 @@ st.markdown(f"""
         border-bottom: 1px solid transparent !important;
         border-radius: 0px !important;
         font-weight: 500 !important;
-        font-size: 0.72rem !important;
-        padding: 0.15rem 0rem !important;
+        font-size: 0.78rem !important;
+        padding: 0.2rem 0rem !important;
         box-shadow: none !important;
         letter-spacing: 0.8px !important;
         min-height: 0px !important;
@@ -261,7 +261,7 @@ st.markdown(f"""
     .st-key-n_esencias button p {{
         color: {subtext_color} !important;
         white-space: nowrap !important;
-        font-size: 0.72rem !important;
+        font-size: 0.78rem !important;
     }}
 
     .st-key-n_perfumes button:hover p, 
@@ -279,8 +279,8 @@ st.markdown(f"""
     .st-key-btn_compare button {{
         background-color: transparent !important;
         border: 1px solid {btn_border} !important;
-        border-radius: 14px !important;
-        padding: 0.15rem 0.6rem !important;
+        border-radius: 16px !important;
+        padding: 0.25rem 0.75rem !important;
         box-shadow: none !important;
         width: 100% !important;
         min-height: 0px !important;
@@ -290,7 +290,7 @@ st.markdown(f"""
     .st-key-btn_trend button p, 
     .st-key-btn_trust button p, 
     .st-key-btn_compare button p {{
-        font-size: 0.68rem !important;
+        font-size: 0.74rem !important;
         font-weight: 400 !important;
         color: {subtext_color} !important;
         letter-spacing: 0.2px;
@@ -299,7 +299,7 @@ st.markdown(f"""
         overflow: visible !important;
     }}
 
-    /* INPUTS Y SELECTS COMPACTOS */
+    /* INPUTS Y SELECTS PROPORCIONADOS */
     div[data-baseweb="input"],
     div[data-baseweb="base-input"],
     div[data-baseweb="select"] > div,
@@ -308,39 +308,39 @@ st.markdown(f"""
     button[data-testid="stBaseButton-secondary"] {{
         background-color: {input_bg} !important;
         border: 1px solid {input_border} !important;
-        border-radius: 4px !important;
+        border-radius: 6px !important;
         box-shadow: none !important;
-        padding-top: 2px !important;
-        padding-bottom: 2px !important;
-        min-height: 32px !important;
+        padding-top: 3px !important;
+        padding-bottom: 3px !important;
+        min-height: 36px !important;
     }}
 
     div[data-baseweb="input"] input,
     div[data-baseweb="base-input"] input {{
-        font-size: 0.78rem !important;
-        padding: 4px 8px !important;
+        font-size: 0.85rem !important;
+        padding: 6px 10px !important;
     }}
 
     div[data-baseweb="input"] input::placeholder {{
         color: {subtext_color} !important;
-        font-size: 0.75rem !important;
+        font-size: 0.82rem !important;
     }}
 
     .st-key-btn_photo_search button {{
         background-color: {input_bg} !important;
         border: 1px solid {input_border} !important;
-        border-radius: 4px !important;
-        padding: 0.25rem 0.5rem 0.25rem 1.8rem !important;
+        border-radius: 6px !important;
+        padding: 0.3rem 0.6rem 0.3rem 2.1rem !important;
         background-image: url("{camera_icon_svg}") !important;
         background-repeat: no-repeat !important;
-        background-position: 8px center !important;
-        background-size: 13px 13px !important;
-        font-size: 0.75rem !important;
-        min-height: 32px !important;
+        background-position: 10px center !important;
+        background-size: 15px 15px !important;
+        font-size: 0.82rem !important;
+        min-height: 36px !important;
     }}
     
     .stApp .st-key-btn_photo_search button p {{
-        font-size: 0.75rem !important;
+        font-size: 0.82rem !important;
         color: {text_color} !important;
     }}
 
@@ -348,7 +348,7 @@ st.markdown(f"""
     .catalog-card {{
         background-color: transparent;
         border: 1px solid {btn_border};
-        border-radius: 4px;
+        border-radius: 6px;
         overflow: hidden;
         position: relative;
         margin-bottom: 16px;
@@ -366,7 +366,7 @@ st.markdown(f"""
         align-items: center;
         justify-content: center;
         overflow: hidden;
-        padding: 12px;
+        padding: 14px;
         box-sizing: border-box;
     }}
     .square-img-box img {{
@@ -379,7 +379,7 @@ st.markdown(f"""
         top: 0; left: 0; right: 0; bottom: 0;
         background: rgba(12, 14, 18, 0.94);
         color: #ffffff;
-        padding: 12px;
+        padding: 14px;
         display: flex;
         flex-direction: column;
         justify-content: center;
@@ -389,22 +389,22 @@ st.markdown(f"""
     }}
     .catalog-card:hover .card-hover-overlay {{ opacity: 1; }}
     .overlay-title {{
-        font-size: 0.82rem;
+        font-size: 0.88rem;
         font-weight: 600;
         color: #d4c2a5;
         margin-bottom: 6px;
         border-bottom: 1px solid rgba(255,255,255,0.1);
         padding-bottom: 4px;
     }}
-    .overlay-info {{ font-size: 0.7rem; font-weight: 300; line-height: 1.4; color: #b8b8b8; margin-bottom: 4px; }}
-    .card-footer-info {{ padding: 8px 10px; text-align: center; background-color: {btn_bg}; }}
-    .card-perfume-name {{ font-size: 0.78rem; font-weight: 500; color: {text_color}; margin-bottom: 2px; }}
-    .card-perfume-brand {{ font-size: 0.65rem; font-weight: 300; color: {subtext_color}; text-transform: uppercase; letter-spacing: 0.5px; }}
+    .overlay-info {{ font-size: 0.76rem; font-weight: 300; line-height: 1.4; color: #b8b8b8; margin-bottom: 4px; }}
+    .card-footer-info {{ padding: 10px 12px; text-align: center; background-color: {btn_bg}; }}
+    .card-perfume-name {{ font-size: 0.85rem; font-weight: 500; color: {text_color}; margin-bottom: 3px; }}
+    .card-perfume-brand {{ font-size: 0.7rem; font-weight: 300; color: {subtext_color}; text-transform: uppercase; letter-spacing: 0.5px; }}
 
     /* DICCIONARIO DE ESENCIAS */
-    .essence-card {{ border-radius: 4px; padding: 10px 12px; margin-bottom: 8px; border-width: 1px; border-style: solid; }}
-    .essence-title {{ font-size: 0.78rem; font-weight: 600; margin-bottom: 3px; letter-spacing: 0.3px; }}
-    .essence-desc {{ font-size: 0.72rem; font-weight: 400; line-height: 1.35; opacity: 0.88; }}
+    .essence-card {{ border-radius: 6px; padding: 12px 14px; margin-bottom: 10px; border-width: 1px; border-style: solid; }}
+    .essence-title {{ font-size: 0.85rem; font-weight: 600; margin-bottom: 4px; letter-spacing: 0.3px; }}
+    .essence-desc {{ font-size: 0.78rem; font-weight: 400; line-height: 1.4; opacity: 0.9; }}
     </style>
 """, unsafe_allow_html=True)
 
@@ -414,8 +414,8 @@ col_logo, col_espacio, col_actions = st.columns([5, 1.8, 2.4], vertical_alignmen
 with col_logo:
     logo_color = "#8c7b6d"
     logo_html = f"""
-    <div style="display: inline-flex; align-items: center; gap: 8px; cursor: pointer; width: fit-content;" onclick="window.location.reload();">
-        <svg width="24" height="24" viewBox="0 0 36 36" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <div style="display: inline-flex; align-items: center; gap: 10px; cursor: pointer; width: fit-content;" onclick="window.location.reload();">
+        <svg width="28" height="28" viewBox="0 0 36 36" fill="none" stroke-linecap="round" stroke-linejoin="round">
             <path d="M 6.8 21 L 29.2 21 C 30 25 27 32 18 32 C 9 32 6 25 6.8 21 Z" fill="{logo_color}" />
             <line x1="6.8" y1="21" x2="29.2" y2="21" stroke="{text_color}" stroke-width="1.5" />
             <line x1="18" y1="10" x2="18" y2="30" stroke="{text_color}" stroke-width="1" />
@@ -424,7 +424,7 @@ with col_logo:
             <rect x="13" y="3" width="10" height="4" rx="1" stroke="{text_color}" stroke-width="1.5" />
             <rect x="16" y="0" width="4" height="3" rx="1" fill="{logo_color}" stroke="{text_color}" stroke-width="1" />
         </svg>
-        <span style="font-size: 1.05rem; color: {text_color}; letter-spacing: 0.5px;">
+        <span style="font-size: 1.15rem; color: {text_color}; letter-spacing: 0.5px;">
             <span style="font-weight: 300;">Perfume</span><span style="font-weight: 600;">Trending</span>
         </span>
     </div>
@@ -439,7 +439,7 @@ with col_actions:
         st.button(" ", key="theme_toggle", on_click=toggle_theme)
 
 # 5. NAVEGACIÓN
-st.markdown("<div style='margin-top: 8px;'></div>", unsafe_allow_html=True)
+st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
 nav_cols = st.columns([1, 1, 1, 1, 1, 1], vertical_alignment="center")
 
 with nav_cols[0]: st.button("PERFUMES", key="n_perfumes", on_click=navigate_to, args=('home',), use_container_width=True)
@@ -449,7 +449,7 @@ with nav_cols[3]: st.button("NICHO", key="n_nicho", on_click=navigate_to, args=(
 with nav_cols[4]: st.button("ÁRABES", key="n_arabes", on_click=navigate_to, args=('home',), use_container_width=True)
 with nav_cols[5]: st.button("ESENCIAS", key="n_esencias", on_click=navigate_to, args=('esencias_page',), use_container_width=True)
 
-st.markdown(f"<hr style='margin: 4px 0 16px 0; border: none; border-bottom: 1px solid {btn_border}; opacity: 0.3;'>", unsafe_allow_html=True)
+st.markdown(f"<hr style='margin: 6px 0 18px 0; border: none; border-bottom: 1px solid {btn_border}; opacity: 0.3;'>", unsafe_allow_html=True)
 
 # 6. BÚSQUEDA Y SELECCIÓN DE ESENCIAS
 col_search, col_filter, col_separator, col_photo = st.columns([5.5, 1.8, 0.1, 2.0], vertical_alignment="center")
@@ -485,13 +485,13 @@ with col_filter:
         )
 
 with col_separator:
-    st.markdown(f"<div style='border-left: 1px solid {btn_border}; height: 24px; margin: auto;'></div>", unsafe_allow_html=True)
+    st.markdown(f"<div style='border-left: 1px solid {btn_border}; height: 26px; margin: auto;'></div>", unsafe_allow_html=True)
 
 with col_photo:
     st.button("Búsqueda visual", key="btn_photo_search", help="Buscar por imagen", use_container_width=True)
 
 # 7. CHIPS DE NAVEGACIÓN RÁPIDA
-st.markdown("<div style='margin-top: 8px;'></div>", unsafe_allow_html=True)
+st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
 col_chip1, col_chip2, col_chip3, col_chip_space = st.columns([1.3, 2.0, 1.7, 4.0], vertical_alignment="center")
 
 with col_chip1:
@@ -502,11 +502,11 @@ with col_chip2:
 with col_chip3:
     st.button("Comparar Precios", key="btn_compare", on_click=navigate_to, args=('compare_page',), use_container_width=True)
 
-st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
+st.markdown("<div style='margin-top: 18px;'></div>", unsafe_allow_html=True)
 
 # 8. VISTAS DE PÁGINA
 if st.session_state['current_page'] == 'home':
-    st.markdown(f"<div style='text-align: center; margin-bottom: 20px; color: {text_color}; letter-spacing: 1.5px; font-weight: 300; font-size: 0.95rem; text-transform: uppercase;'>CATÁLOGO Y TENDENCIAS</div>", unsafe_allow_html=True)
+    st.markdown(f"<div style='text-align: center; margin-bottom: 24px; color: {text_color}; letter-spacing: 1.5px; font-weight: 300; font-size: 1.05rem; text-transform: uppercase;'>CATÁLOGO Y TENDENCIAS</div>", unsafe_allow_html=True)
     
     if selected_essences:
         st.write(f"**Filtro activo:** {', '.join(selected_essences)}")
@@ -589,7 +589,7 @@ if st.session_state['current_page'] == 'home':
                     st.markdown(card_html, unsafe_allow_html=True)
 
 elif st.session_state['current_page'] == 'esencias_page':
-    st.markdown(f"<div style='text-align: center; color: {text_color}; letter-spacing: 1px; font-weight: 300; margin-bottom: 20px; font-size: 0.95rem; text-transform: uppercase;'>DICCIONARIO DE ESENCIAS Y NOTAS</div>", unsafe_allow_html=True)
+    st.markdown(f"<div style='text-align: center; color: {text_color}; letter-spacing: 1px; font-weight: 300; margin-bottom: 24px; font-size: 1.05rem; text-transform: uppercase;'>DICCIONARIO DE ESENCIAS Y NOTAS</div>", unsafe_allow_html=True)
     
     def get_essence_colors(name):
         n = name.lower()
@@ -749,6 +749,6 @@ elif st.session_state['current_page'] == 'esencias_page':
                 st.markdown(tarjeta_html, unsafe_allow_html=True)
 
 elif st.session_state['current_page'] == 'trust_page':
-    st.markdown(f"<div style='text-align: center; color: {text_color}; font-weight: 300; font-size: 0.9rem;'>Páginas de Confianza (Próximamente)</div>", unsafe_allow_html=True)
+    st.markdown(f"<div style='text-align: center; color: {text_color}; font-weight: 300; font-size: 0.95rem;'>Páginas de Confianza (Próximamente)</div>", unsafe_allow_html=True)
 elif st.session_state['current_page'] == 'compare_page':
-    st.markdown(f"<div style='text-align: center; color: {text_color}; font-weight: 300; font-size: 0.9rem;'>Comparador de Precios (Próximamente)</div>", unsafe_allow_html=True)
+    st.markdown(f"<div style='text-align: center; color: {text_color}; font-weight: 300; font-size: 0.95rem;'>Comparador de Precios (Próximamente)</div>", unsafe_allow_html=True)
