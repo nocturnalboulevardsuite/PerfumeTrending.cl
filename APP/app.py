@@ -29,11 +29,11 @@ subtext_color = "#888890" if is_dark else "#666670"
 
 btn_bg = "#161920" if is_dark else "#ffffff"
 btn_text = "#e0e0e0" if is_dark else "#18181b"
-btn_border = "#2a2e39" if is_dark else "#e2e2e8"
+btn_border = "rgba(255, 255, 255, 0.08)" if is_dark else "rgba(0, 0, 0, 0.08)"
 
-input_bg = "#14171d" if is_dark else "#ffffff"
+input_bg = "#13161c" if is_dark else "#ffffff"
 input_text = "#f0f0f0" if is_dark else "#18181b"
-input_border = "#2a2e39" if is_dark else "#e2e2e8"
+input_border = "rgba(255, 255, 255, 0.1)" if is_dark else "rgba(0, 0, 0, 0.12)"
 
 # Posicionamiento del Switch de Tema
 bottle_left_pos = "35px" if is_dark else "-2px"
@@ -61,7 +61,6 @@ js_color_script = f"""
     const doc = window.parent.document;
     const isDark = {str(is_dark).lower()};
     
-    // Configuración de audio y mute
     window.parent.soundMuted = window.parent.soundMuted || false;
     
     window.parent.playBubbleSound = function() {{
@@ -137,8 +136,8 @@ js_color_script = f"""
                     el.style.backgroundColor = rule.bg;
                     el.style.border = '1px solid ' + rule.border;
                     el.style.color = rule.text; 
-                    el.style.borderRadius = '3px';
-                    el.style.padding = '2px 6px';
+                    el.style.borderRadius = '6px';
+                    el.style.padding = '2px 8px';
                     el.style.margin = '1px 0';
                     el.style.fontSize = '0.75rem';
                     el.dataset.colored = 'true';
@@ -177,7 +176,7 @@ js_color_script = f"""
 
 components.html(js_color_script, height=0, width=0)
 
-# 3. CSS PROFESIONAL Y NÍTIDO (SIN BLUR NI GLOW)
+# 3. CSS MINIMALISTA, NÍTIDO Y PROFESIONAL
 st.markdown(f"""
     <style>
     html, body, .stApp {{
@@ -189,7 +188,7 @@ st.markdown(f"""
     header[data-testid="stHeader"] {{ display: none !important; }}
     
     .block-container {{ 
-        padding-top: 1rem !important; 
+        padding-top: 1.2rem !important; 
         padding-bottom: 2rem !important; 
         max-width: 1140px !important;
     }}
@@ -203,28 +202,21 @@ st.markdown(f"""
         text-shadow: none !important;
     }}
 
-    /* Estilizado global de botones sin animaciones que vuelvan borroso el texto */
+    /* Estilizado de Botones: Sin marcos pesados, respuesta suave */
     div.stButton > button,
     div.stDownloadButton > button,
     div[data-testid="stPopover"] > button,
-    button[data-testid="stPopoverButton"],
-    .st-key-btn_photo_search button,
-    .st-key-login_btn button,
-    .st-key-theme_toggle button {{
-        transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease !important;
+    button[data-testid="stPopoverButton"] {{
+        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
         -webkit-font-smoothing: antialiased !important;
-        -moz-osx-font-smoothing: grayscale !important;
         text-shadow: none !important;
         box-shadow: none !important;
         outline: none !important;
     }}
 
-    /* Corrección de Blur y Glow en Hover */
     div.stButton > button:hover,
     div[data-testid="stPopover"] > button:hover,
     button[data-testid="stPopoverButton"]:hover,
-    .st-key-btn_photo_search button:hover,
-    .st-key-login_btn button:hover,
     div.stButton > button:focus,
     div.stButton > button:active {{
         cursor: pointer !important;
@@ -233,48 +225,46 @@ st.markdown(f"""
         outline: none !important;
     }}
 
-    div.stButton > button:hover p,
-    div.stButton > button:focus p,
-    div.stButton > button:active p {{
-        text-shadow: none !important;
-        filter: none !important;
-        -webkit-font-smoothing: antialiased !important;
-    }}
-
-    .st-key-login_btn, .st-key-theme_toggle {{
+    /* BOTÓN INGRESAR: Redondeado elegante */
+    .st-key-login_btn {{
         display: flex !important;
         align-items: center !important;
         height: 100% !important;
     }}
 
     .st-key-login_btn button {{
-        background-color: {btn_bg} !important;
+        background-color: {"rgba(255, 255, 255, 0.05)" if is_dark else "rgba(0, 0, 0, 0.04)"} !important;
         color: {btn_text} !important;
         border: 1px solid {btn_border} !important;
-        border-radius: 6px !important;
+        border-radius: 20px !important;
         height: 36px !important;
         min-height: 36px !important;
-        padding: 0 0.8rem 0 2.1rem !important;
+        padding: 0 1rem 0 2.2rem !important;
         display: inline-flex !important;
         align-items: center !important;
         justify-content: center !important;
         background-image: url("{user_icon_svg}") !important;
         background-repeat: no-repeat !important;
-        background-position: 10px center !important;
-        background-size: 15px 15px !important;
+        background-position: 12px center !important;
+        background-size: 14px 14px !important;
         font-size: 0.8rem !important;
+        font-weight: 500 !important;
         margin: 0 !important;
     }}
-    .st-key-login_btn button p {{
-        font-size: 0.8rem !important;
-        line-height: 1 !important;
-        margin: 0 !important;
+    .st-key-login_btn button:hover {{
+        background-color: {"rgba(255, 255, 255, 0.1)" if is_dark else "rgba(0, 0, 0, 0.08)"} !important;
+        border-color: {"rgba(255, 255, 255, 0.2)" if is_dark else "rgba(0, 0, 0, 0.2)"} !important;
     }}
 
-    .st-key-theme_toggle button {{
+    /* SWITCH DE TEMA: Totalmente Transparente (Sin cuadro posterior) */
+    .st-key-theme_toggle,
+    .st-key-theme_toggle > button,
+    div.st-key-theme_toggle > button {{
         background: transparent !important;
+        background-color: transparent !important;
         border: none !important;
         box-shadow: none !important;
+        outline: none !important;
         padding: 0 !important;
         width: 68px !important;
         height: 36px !important;
@@ -285,6 +275,15 @@ st.markdown(f"""
         display: block !important;
     }}
 
+    .st-key-theme_toggle button:hover,
+    .st-key-theme_toggle button:focus,
+    .st-key-theme_toggle button:active {{
+        background: transparent !important;
+        background-color: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+    }}
+
     .st-key-theme_toggle button * {{ display: none !important; }}
     
     .st-key-theme_toggle button::before {{
@@ -292,8 +291,8 @@ st.markdown(f"""
         position: absolute !important;
         top: 4px !important; left: 0 !important;
         width: 64px !important; height: 28px !important;
-        background-color: {"#1c1f26" if is_dark else "#eae8e6"} !important;
-        border: 1px solid {btn_border} !important;
+        background-color: {"#181b22" if is_dark else "#e5e3e1"} !important;
+        border: 1px solid {"rgba(255,255,255,0.08)" if is_dark else "rgba(0,0,0,0.08)"} !important;
         border-radius: 14px !important;
         background-image: url("{static_icon_svg}") !important;
         background-repeat: no-repeat !important;
@@ -314,6 +313,7 @@ st.markdown(f"""
         z-index: 2 !important;
     }}
 
+    /* BOTONES DE NAVEGACIÓN PRINCIPAL: Limpios estilo Minimalista */
     .st-key-n_perfumes button, 
     .st-key-n_remates button,
     .st-key-n_disenador button,
@@ -321,16 +321,16 @@ st.markdown(f"""
     .st-key-n_arabes button, 
     .st-key-n_esencias button {{
         background-color: transparent !important;
+        background: transparent !important;
         border: none !important;
-        border-bottom: 1px solid transparent !important;
-        border-radius: 0px !important;
+        border-radius: 18px !important;
         font-weight: 500 !important;
         font-size: 0.78rem !important;
-        padding: 0.2rem 0rem !important;
+        padding: 0.4rem 0.6rem !important;
         box-shadow: none !important;
         letter-spacing: 0.8px !important;
-        min-height: 0px !important;
-        height: auto !important;
+        min-height: 32px !important;
+        height: 32px !important;
     }}
 
     .st-key-n_perfumes button p, 
@@ -342,6 +342,16 @@ st.markdown(f"""
         color: {subtext_color} !important;
         white-space: nowrap !important;
         font-size: 0.78rem !important;
+        transition: color 0.15s ease !important;
+    }}
+
+    .st-key-n_perfumes button:hover, 
+    .st-key-n_remates button:hover,
+    .st-key-n_disenador button:hover,
+    .st-key-n_nicho button:hover,
+    .st-key-n_arabes button:hover, 
+    .st-key-n_esencias button:hover {{
+        background-color: {"rgba(255, 255, 255, 0.05)" if is_dark else "rgba(0, 0, 0, 0.04)"} !important;
     }}
 
     .st-key-n_perfumes button:hover p, 
@@ -351,75 +361,64 @@ st.markdown(f"""
     .st-key-n_arabes button:hover p, 
     .st-key-n_esencias button:hover p {{
         color: {text_color} !important;
-        text-shadow: none !important;
     }}
 
-    /* Botones tipo Chip ("Páginas de Confianza", "Trend Del Hype", "Comparar Precios") */
+    /* BOTONES TIPO CHIP ("Trend Del Hype", "Páginas de Confianza", "Comparar Precios") */
     .st-key-btn_trend button, 
     .st-key-btn_trust button, 
     .st-key-btn_compare button {{
-        background-color: transparent !important;
+        background-color: {"rgba(255, 255, 255, 0.03)" if is_dark else "rgba(0, 0, 0, 0.03)"} !important;
         border: 1px solid {btn_border} !important;
-        border-radius: 16px !important;
-        padding: 0.25rem 0.75rem !important;
+        border-radius: 20px !important;
+        padding: 0.3rem 0.8rem !important;
         box-shadow: none !important;
         width: 100% !important;
-        min-height: 0px !important;
-        height: auto !important;
-        filter: none !important;
+        min-height: 32px !important;
+        height: 32px !important;
     }}
     
     .st-key-btn_trend button p, 
     .st-key-btn_trust button p, 
     .st-key-btn_compare button p {{
-        font-size: 0.74rem !important;
+        font-size: 0.76rem !important;
         font-weight: 400 !important;
         color: {subtext_color} !important;
         letter-spacing: 0.2px;
         white-space: nowrap !important;
-        text-overflow: clip !important;
-        overflow: visible !important;
-        text-shadow: none !important;
-        filter: none !important;
-        -webkit-font-smoothing: antialiased !important;
     }}
 
     .st-key-btn_trend button:hover, 
     .st-key-btn_trust button:hover, 
     .st-key-btn_compare button:hover {{
-        border-color: {"#4a5061" if is_dark else "#b5b5c0"} !important;
-        background-color: {"#1a1d26" if is_dark else "#f0f0f5"} !important;
-        box-shadow: none !important;
-        filter: none !important;
+        border-color: {"rgba(255, 255, 255, 0.18)" if is_dark else "rgba(0, 0, 0, 0.18)"} !important;
+        background-color: {"rgba(255, 255, 255, 0.08)" if is_dark else "rgba(0, 0, 0, 0.06)"} !important;
     }}
 
     .st-key-btn_trend button:hover p, 
     .st-key-btn_trust button:hover p, 
     .st-key-btn_compare button:hover p {{
         color: {text_color} !important;
-        text-shadow: none !important;
-        filter: none !important;
     }}
 
+    /* INPUTS Y POPOVER REDONDEADOS Y LIMPIOS */
     div[data-baseweb="input"],
     div[data-baseweb="base-input"],
     div[data-baseweb="select"] > div,
     div[data-testid="stPopover"] > button,
-    button[data-testid="stPopoverButton"],
-    button[data-testid="stBaseButton-secondary"] {{
+    button[data-testid="stPopoverButton"] {{
         background-color: {input_bg} !important;
         border: 1px solid {input_border} !important;
-        border-radius: 6px !important;
+        border-radius: 12px !important;
         box-shadow: none !important;
-        padding-top: 3px !important;
-        padding-bottom: 3px !important;
-        min-height: 36px !important;
+        padding-top: 2px !important;
+        padding-bottom: 2px !important;
+        min-height: 38px !important;
     }}
 
     div[data-baseweb="input"] input,
     div[data-baseweb="base-input"] input {{
         font-size: 0.85rem !important;
-        padding: 6px 10px !important;
+        padding: 6px 12px !important;
     }}
 
     div[data-baseweb="input"] input::placeholder {{
@@ -430,14 +429,14 @@ st.markdown(f"""
     .st-key-btn_photo_search button {{
         background-color: {input_bg} !important;
         border: 1px solid {input_border} !important;
-        border-radius: 6px !important;
-        padding: 0.3rem 0.6rem 0.3rem 2.1rem !important;
+        border-radius: 12px !important;
+        padding: 0.3rem 0.6rem 0.3rem 2.2rem !important;
         background-image: url("{camera_icon_svg}") !important;
         background-repeat: no-repeat !important;
-        background-position: 10px center !important;
+        background-position: 12px center !important;
         background-size: 15px 15px !important;
         font-size: 0.82rem !important;
-        min-height: 36px !important;
+        min-height: 38px !important;
     }}
     
     .stApp .st-key-btn_photo_search button p {{
@@ -445,17 +444,18 @@ st.markdown(f"""
         color: {text_color} !important;
     }}
 
+    /* TARGETAS DE CATÁLOGO Y DICCIONARIO */
     .catalog-card {{
         background-color: transparent;
         border: 1px solid {btn_border};
-        border-radius: 6px;
+        border-radius: 10px;
         overflow: hidden;
         position: relative;
         margin-bottom: 16px;
         transition: border-color 0.2s ease;
     }}
     .catalog-card:hover {{
-        border-color: #7a6a5d;
+        border-color: #8c7b6d;
     }}
     .square-img-box {{
         position: relative;
@@ -513,11 +513,11 @@ st.markdown(f"""
         will-change: transform;
     }}
     .essence-card:hover {{
-        transform: translateY(-4px) scale(1.025);
+        transform: translateY(-3px) scale(1.015);
         box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
     }}
     .essence-card:active {{
-        transform: translateY(0px) scale(0.97);
+        transform: translateY(0px) scale(0.98);
         box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
     }}
     .essence-title {{ font-size: 0.85rem; font-weight: 600; margin-bottom: 4px; letter-spacing: 0.3px; }}
@@ -539,11 +539,8 @@ st.markdown(f"""
         margin-bottom: 24px;
     }}
     .sound-mute-btn:hover {{
-        transform: scale(1.1);
-        background-color: {btn_bg};
-    }}
-    .sound-mute-btn:active {{
-        transform: scale(0.95);
+        transform: scale(1.08);
+        background-color: {"rgba(255,255,255,0.05)" if is_dark else "rgba(0,0,0,0.05)"};
     }}
     </style>
 """, unsafe_allow_html=True)
@@ -578,7 +575,7 @@ with col_actions:
     with btn_col2:
         st.button(" ", key="theme_toggle", on_click=toggle_theme)
 
-# 5. NAVEGACIÓN
+# 5. NAVEGACIÓN PRINCIPAL
 st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
 nav_cols = st.columns([1, 1, 1, 1, 1, 1], vertical_alignment="center")
 
@@ -589,7 +586,7 @@ with nav_cols[3]: st.button("NICHO", key="n_nicho", on_click=navigate_to, args=(
 with nav_cols[4]: st.button("ÁRABES", key="n_arabes", on_click=navigate_to, args=('home',), use_container_width=True)
 with nav_cols[5]: st.button("ESENCIAS", key="n_esencias", on_click=navigate_to, args=('esencias_page',), use_container_width=True)
 
-st.markdown(f"<hr style='margin: 6px 0 18px 0; border: none; border-bottom: 1px solid {btn_border}; opacity: 0.3;'>", unsafe_allow_html=True)
+st.markdown(f"<hr style='margin: 8px 0 18px 0; border: none; border-bottom: 1px solid {btn_border}; opacity: 0.5;'>", unsafe_allow_html=True)
 
 # 6. BÚSQUEDA Y SELECCIÓN DE ESENCIAS
 col_search, col_filter, col_separator, col_photo = st.columns([5.5, 1.8, 0.1, 2.0], vertical_alignment="center")
