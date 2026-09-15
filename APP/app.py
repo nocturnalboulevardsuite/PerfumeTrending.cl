@@ -1,6 +1,5 @@
 import streamlit as st
 import streamlit.components.v1 as components
-import pandas as pd
 
 # 1. CONFIGURACIÓN DE LA PÁGINA Y ESTADO
 st.set_page_config(page_title="PerfumeTrending", layout="wide", initial_sidebar_state="collapsed")
@@ -22,21 +21,21 @@ def navigate_to(page, perfume_data=None):
 
 is_dark = st.session_state['theme'] == 'dark'
 
-# Colores generales (Ajustados para perfecta visibilidad en ambos temas)
-app_bg_css = "background-color: #0e1117 !important;" if is_dark else "background-color: #f8f6f3 !important;"
-text_color = "#ffffff" if is_dark else "#1a1a1a"
-subtext_color = "#a0a0a0" if is_dark else "#444444"
+# Colores generales refinados (Estilo Sobrio y Profesional)
+app_bg_css = "background-color: #0d0f12 !important;" if is_dark else "background-color: #f7f6f4 !important;"
+text_color = "#f1f5f9" if is_dark else "#1c1917"
+subtext_color = "#94a3b8" if is_dark else "#57534e"
 
-btn_bg = "#1f242d" if is_dark else "#ffffff"
-btn_text = "#ffffff" if is_dark else "#1a1a1a"
-btn_border = "#3a3f4d" if is_dark else "#d4cdc5"
-btn_hover_bg = "#2d3340" if is_dark else "#f2ebe4"
+btn_bg = "#181b20" if is_dark else "#ffffff"
+btn_text = "#f1f5f9" if is_dark else "#1c1917"
+btn_border = "#2a2e37" if is_dark else "#e7e5e4"
+btn_hover_bg = "#222630" if is_dark else "#f0ede9"
 
-input_bg = "#1f242d" if is_dark else "#ffffff"
-input_text = "#ffffff" if is_dark else "#1a1a1a"
-input_border = "#3a3f4d" if is_dark else "#d4cdc5"
+input_bg = "#181b20" if is_dark else "#ffffff"
+input_text = "#f1f5f9" if is_dark else "#1c1917"
+input_border = "#2a2e37" if is_dark else "#d6d3d1"
 
-# Posicionamiento del Switch de Tema (CONSERVADO 100% INTACTO)
+# Posicionamiento del Switch de Tema
 bottle_left_pos = "42px" if is_dark else "-2px"
 static_icon_pos = "12px center" if is_dark else "calc(100% - 12px) center"
 
@@ -54,7 +53,7 @@ bottle_svg = (
 
 camera_icon_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23{text_color[1:]}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z'/><circle cx='12' cy='13' r='4'/></svg>"
 
-# 2. SCRIPT DE INYECCIÓN JAVASCRIPT PARA CHIPS DE ESENCIAS
+# 2. SCRIPT DE INYECCIÓN JAVASCRIPT PARA CHIPS DE ESENCIAS (TONOS MÁS ELEGANTES Y LUXURY)
 js_color_script = f"""
 <script>
 function applyEssenceColors() {{
@@ -62,53 +61,53 @@ function applyEssenceColors() {{
     const isDark = {str(is_dark).lower()};
     
     const colorRules = [
-        // Rojos / Rosas
+        // Frutos Rojos / Rosa Empties (Tono Palo Rosa / Burdeos Elegante)
         {{ keywords: ['sangre', 'cereza', 'frambuesa', 'pimienta rosa', 'rosa', 'ruibarbo', 'lichi', 'ciruela', 'grosella'], 
-          bg: isDark ? 'rgba(168, 50, 75, 0.25)' : '#ffe4e6', 
-          border: isDark ? 'rgba(200, 70, 95, 0.6)' : '#f43f5e',
-          text: isDark ? '#ffffff' : '#881337' }},
+          bg: isDark ? 'rgba(85, 45, 55, 0.4)' : '#f9f1f2', 
+          border: isDark ? 'rgba(160, 80, 100, 0.5)' : '#e2b6c1',
+          text: isDark ? '#f4dfe4' : '#6b2d3e' }},
         
-        // Marinas / Acuáticas
+        // Marinas / Acuáticas (Azul Pizarra Oceánico)
         {{ keywords: ['marina', 'marinas', 'agua', 'océano'], 
-          bg: isDark ? 'rgba(20, 110, 140, 0.25)' : '#e0f2fe', 
-          border: isDark ? 'rgba(40, 150, 180, 0.6)' : '#0284c7',
-          text: isDark ? '#ffffff' : '#075985' }},
+          bg: isDark ? 'rgba(40, 60, 75, 0.4)' : '#edf3f7', 
+          border: isDark ? 'rgba(80, 120, 150, 0.5)' : '#b5cbd8',
+          text: isDark ? '#dbe8f0' : '#2c4a5e' }},
         
-        // Verdes
+        // Verdes (Verde Salvia / Musgo Sobrio)
         {{ keywords: ['albahaca', 'bergamota', 'cardamomo', 'higo', 'manzana', 'menta', 'pachulí', 'pera', 'romero', 'salvia', 'té verde', 'vetiver'], 
-          bg: isDark ? 'rgba(35, 110, 60, 0.25)' : '#dcfce7', 
-          border: isDark ? 'rgba(50, 160, 85, 0.6)' : '#16a34a',
-          text: isDark ? '#ffffff' : '#14532d' }},
+          bg: isDark ? 'rgba(45, 65, 50, 0.4)' : '#f0f4f1', 
+          border: isDark ? 'rgba(80, 130, 95, 0.5)' : '#b8d1c0',
+          text: isDark ? '#e0efe4' : '#2d4d36' }},
         
-        // Cítricos / Ámbar
+        // Cítricos / Ámbar (Tono Champaña / Ámbar Ahumado)
         {{ keywords: ['azafrán', 'ámbar', 'mandarina', 'melocotón', 'mirra', 'naranjo', 'pomelo', 'cítrico', 'cítricos', 'limón', 'piña'], 
-          bg: isDark ? 'rgba(180, 100, 30, 0.25)' : '#ffedd5', 
-          border: isDark ? 'rgba(210, 130, 50, 0.6)' : '#ea580c',
-          text: isDark ? '#ffffff' : '#7c2d12' }},
+          bg: isDark ? 'rgba(80, 60, 40, 0.4)' : '#f7f4ee', 
+          border: isDark ? 'rgba(150, 110, 60, 0.5)' : '#dccbb5',
+          text: isDark ? '#f4ebd9' : '#5c4528' }},
         
-        // Dulces / Gourmet
+        // Dulces / Gourmand (Café / Avellana / Caramelo Tostado)
         {{ keywords: ['caramelo', 'miel', 'solares', 'vainilla', 'ylang', 'cacao', 'café', 'canela', 'tonka', 'nuez moscada', 'praliné'], 
-          bg: isDark ? 'rgba(110, 60, 40, 0.3)' : '#fef3c7', 
-          border: isDark ? 'rgba(160, 90, 60, 0.6)' : '#d97706',
-          text: isDark ? '#ffffff' : '#78350f' }},
+          bg: isDark ? 'rgba(70, 50, 40, 0.4)' : '#f6f2ee', 
+          border: isDark ? 'rgba(140, 95, 70, 0.5)' : '#d8c4b6',
+          text: isDark ? '#f0e6df' : '#4d3324' }},
         
-        // Florales Violeta
+        // Florales Violeta (Malva Polvoso)
         {{ keywords: ['iris', 'lavanda', 'jazmín', 'nardos', 'neroli'], 
-          bg: isDark ? 'rgba(110, 60, 150, 0.25)' : '#f3e8ff', 
-          border: isDark ? 'rgba(150, 90, 190, 0.6)' : '#9333ea',
-          text: isDark ? '#ffffff' : '#581c87' }},
+          bg: isDark ? 'rgba(65, 50, 80, 0.4)' : '#f5f2f8', 
+          border: isDark ? 'rgba(125, 95, 155, 0.5)' : '#cdbece',
+          text: isDark ? '#ebdcf2' : '#473154' }},
         
-        // Maderas / Cuero
+        // Maderas / Cuero (Gris Grafito / Ebano)
         {{ keywords: ['cedro', 'sándalo', 'tabaco', 'abedul', 'cuero', 'oud', 'ámbar gris', 'incienso'], 
-          bg: isDark ? 'rgba(80, 85, 95, 0.3)' : '#f1f5f9', 
-          border: isDark ? 'rgba(130, 135, 145, 0.6)' : '#475569',
-          text: isDark ? '#ffffff' : '#0f172a' }},
+          bg: isDark ? 'rgba(50, 55, 65, 0.4)' : '#f1f3f5', 
+          border: isDark ? 'rgba(100, 110, 125, 0.5)' : '#c7ced6',
+          text: isDark ? '#e2e8f0' : '#2b3440' }},
         
-        // Almizcle / Neutro
+        // Almizcle / Neutro (Lino Purificado)
         {{ keywords: ['almizcle', 'coco', 'civeta', 'pimienta blanca', 'pimienta negra'], 
-          bg: isDark ? 'rgba(255, 255, 255, 0.1)' : '#f8fafc', 
-          border: isDark ? 'rgba(255, 255, 255, 0.3)' : '#94a3b8',
-          text: isDark ? '#ffffff' : '#1e293b' }}
+          bg: isDark ? 'rgba(255, 255, 255, 0.05)' : '#fafafa', 
+          border: isDark ? 'rgba(255, 255, 255, 0.15)' : '#e2e8f0',
+          text: isDark ? '#f8fafc' : '#334155' }}
     ];
 
     const targets = doc.querySelectorAll('li[role="option"], div[role="option"], span[data-baseweb="tag"]');
@@ -121,9 +120,10 @@ function applyEssenceColors() {{
                 el.style.border = `1px solid ${{rule.border}}`;
                 el.style.color = rule.text; 
                 el.style.borderRadius = '4px';
-                el.style.padding = '2px 8px';
+                el.style.padding = '3px 9px';
                 el.style.marginTop = '3px';
                 el.style.marginBottom = '3px';
+                el.style.fontSize = '0.82rem';
                 el.style.transition = 'all 0.2s ease';
                 break;
             }}
@@ -142,7 +142,7 @@ st.markdown(f"""
     <style>
     header[data-testid="stHeader"] {{ display: none !important; }}
     .block-container {{ padding-top: 1.5rem !important; padding-bottom: 2rem !important; }}
-    .stApp {{ {app_bg_css} color: {text_color} !important; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; }}
+    .stApp {{ {app_bg_css} color: {text_color} !important; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }}
 
     .stApp p, .stApp span, .stApp label, .stMarkdown p, .stTextInput label p, .stMultiSelect label p {{
         color: {text_color} !important;
@@ -219,7 +219,7 @@ st.markdown(f"""
         letter-spacing: 0.5px;
     }}
 
-    /* INPUTS, SELECTS Y BOTÓN ESENCIAS (CORRECCIÓN TOTAL DE VISIBILIDAD) */
+    /* INPUTS, SELECTS Y POPOVERS */
     div[data-baseweb="input"],
     div[data-baseweb="base-input"],
     div[data-baseweb="select"] > div,
@@ -231,7 +231,6 @@ st.markdown(f"""
         border-radius: 6px !important;
     }}
 
-    /* TEXTO INTERNO DE BUSCADOR Y BOTÓN ESENCIAS */
     div[data-baseweb="input"] input,
     div[data-baseweb="base-input"] input,
     div[data-baseweb="select"] span[data-baseweb="tag"] span,
@@ -249,7 +248,6 @@ st.markdown(f"""
         white-space: nowrap !important;
     }}
 
-    /* ÍCONO DE FLECHA DE POPOVER Y BUSCADOR */
     div[data-testid="stPopover"] button svg,
     button[data-testid="stPopoverButton"] svg {{
         stroke: {input_text} !important;
@@ -279,7 +277,7 @@ st.markdown(f"""
         white-space: nowrap !important;
     }}
 
-    /* SWITCH DE TEMA INTERACTIVO (SIN CAMBIOS, TOTALMENTE CONSERVADO) */
+    /* SWITCH DE TEMA INTERACTIVO */
     .st-key-theme_toggle button {{
         background: transparent !important;
         border: none !important;
@@ -388,10 +386,19 @@ st.markdown(f"""
     .card-perfume-name {{ font-size: 0.9rem; font-weight: 600; color: {text_color}; margin-bottom: 4px; letter-spacing: 0.5px; }}
     .card-perfume-brand {{ font-size: 0.75rem; font-weight: 300; color: {subtext_color}; text-transform: uppercase; letter-spacing: 1px; }}
 
-    /* TARJETAS DE DICCIONARIO DE ESENCIAS */
-    .essence-card {{ border-radius: 6px; padding: 20px; margin-bottom: 15px; transition: all 0.3s ease; }}
-    .essence-title {{ font-size: 1rem; font-weight: 600; color: {text_color} !important; margin-bottom: 8px; letter-spacing: 0.5px; }}
-    .essence-desc {{ font-size: 0.88rem; font-weight: 400; color: {subtext_color} !important; line-height: 1.6; }}
+    /* TARJETAS DICCIONARIO DE ESENCIAS */
+    .essence-card {{
+        border-radius: 8px;
+        padding: 18px 22px;
+        margin-bottom: 18px;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(4px);
+    }}
+    .essence-card:hover {{
+        transform: translateY(-2px);
+    }}
+    .essence-title {{ font-size: 1.05rem; font-weight: 600; margin-bottom: 6px; letter-spacing: 0.5px; }}
+    .essence-desc {{ font-size: 0.88rem; font-weight: 400; line-height: 1.65; }}
     </style>
 """, unsafe_allow_html=True)
 
@@ -441,7 +448,25 @@ with nav_cols[6]: st.button("ESENCIAS", key="n_esencias", on_click=navigate_to, 
 
 st.markdown(f"<hr style='margin: 8px 0 30px 0; border: none; border-bottom: 1px solid {btn_border}; opacity: 0.3;'>", unsafe_allow_html=True)
 
-# 6. BÚSQUEDA Y SELECCIÓN DE ESENCIAS
+# 6. LISTADO OFICIAL DE ESENCIAS (62 NOTAS OLFATIVAS COMPLETAS)
+raw_notes = [
+    "Abedul", "Albahaca", "Almizcle (Blanco/Musk)", "Ámbar (Cálido)", "Ámbar Gris",
+    "Azafrán", "Bergamota", "Cacao", "Café", "Canela",
+    "Caramelo", "Cardamomo", "Cedro", "Cereza", "Ciruela", "Cítricos",
+    "Civeta", "Coco", "Cuero", "Frambuesa", "Grosellas Negras",
+    "Haba Tonka", "Higo", "Incienso", "Iris", "Jazmín", "Jengibre",
+    "Lavanda", "Lichi", "Limón", "Mandarina", "Manzana", "Melocotón",
+    "Menta", "Miel", "Mirra", "Naranjo", "Nardos", "Neroli",
+    "Notas Marinas", "Notas Solares", "Nuez Moscada", "Oud",
+    "Pachulí", "Pera", "Pimienta Blanca", "Pimienta Negra", "Pimienta Rosa",
+    "Piña", "Pomelo", "Praliné", "Romero", "Rosa", "Ruibarbo",
+    "Salvia", "Sándalo", "Sangre (Metálica)", "Tabaco", "Té Verde",
+    "Vainilla", "Vetiver", "Ylang-Ylang"
+]
+
+all_notes = sorted(raw_notes)
+
+# 7. BÚSQUEDA Y SELECCIÓN DE ESENCIAS
 col_search, col_filter, col_separator, col_photo = st.columns([5.2, 1.8, 0.2, 2.3], vertical_alignment="center")
 
 with col_search:
@@ -449,23 +474,6 @@ with col_search:
 
 with col_filter:
     with st.popover("Esencias", use_container_width=True):
-        raw_notes = [
-            "Abedul", "Albahaca", "Almizcle (Blanco/Musk)", "Ámbar (Cálido)", "Ámbar Gris",
-            "Azafrán", "Bergamota", "Cacao", "Café", "Canela",
-            "Caramelo", "Cardamomo", "Cedro", "Cereza", "Ciruela", "Cítricos",
-            "Civeta", "Coco", "Cuero", "Frambuesa", "Grosellas Negras",
-            "Haba Tonka", "Higo", "Incienso", "Iris", "Jazmín", "Jengibre",
-            "Lavanda", "Lichi", "Limón", "Mandarina", "Manzana", "Melocotón",
-            "Menta", "Miel", "Mirra", "Naranjo", "Nardos", "Neroli",
-            "Notas Marinas", "Notas Solares", "Nuez Moscada", "Oud",
-            "Pachulí", "Pera", "Pimienta Blanca", "Pimienta Negra", "Pimienta Rosa",
-            "Piña", "Pomelo", "Praliné", "Romero", "Rosa", "Ruibarbo",
-            "Salvia", "Sándalo", "Sangre (Metálica)", "Tabaco", "Té Verde",
-            "Vainilla", "Vetiver", "Ylang-Ylang"
-        ]
-        
-        all_notes = sorted(raw_notes)
-        
         selected_essences = st.multiselect(
             "Selecciona notas olfativas:",
             options=all_notes,
@@ -479,7 +487,7 @@ with col_separator:
 with col_photo:
     st.button("Búsqueda visual", key="btn_photo_search", help="Buscar perfume por imagen", use_container_width=True)
 
-# 7. CHIPS DE NAVEGACIÓN RÁPIDA
+# 8. CHIPS DE NAVEGACIÓN RÁPIDA
 st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
 col_chip1, col_chip2, col_chip3, col_chip_space = st.columns([1.5, 1.8, 1.6, 5.1], vertical_alignment="center")
 
@@ -493,7 +501,7 @@ with col_chip3:
 
 st.markdown("<br>", unsafe_allow_html=True)
 
-# 8. VISTAS DE PÁGINA
+# 9. VISTAS DE PÁGINA
 if st.session_state['current_page'] == 'home':
     st.markdown(f"<h3 style='text-align: center; margin-bottom: 35px; color: {text_color}; letter-spacing: 2px; font-weight: 300;'>CATÁLOGO Y TENDENCIAS</h3>", unsafe_allow_html=True)
     
@@ -578,43 +586,111 @@ if st.session_state['current_page'] == 'home':
                     st.markdown(card_html, unsafe_allow_html=True)
 
 elif st.session_state['current_page'] == 'esencias_page':
-    st.markdown(f"<h3 style='text-align: center; color: {text_color}; letter-spacing: 1px; font-weight: 300; margin-bottom: 30px;'>DICCIONARIO DE ESENCIAS</h3>", unsafe_allow_html=True)
-    st.write("Descubre qué significa cada nota olfativa y cómo aporta personalidad a tus fragancias favoritas.")
+    st.markdown(f"<h3 style='text-align: center; color: {text_color}; letter-spacing: 1px; font-weight: 300; margin-bottom: 10px;'>DICCIONARIO COMPLETO DE ESENCIAS</h3>", unsafe_allow_html=True)
+    st.markdown(f"<p style='text-align: center; color: {subtext_color}; margin-bottom: 40px; font-size: 0.95rem;'>Guía exhaustiva con las 62 notas olfativas más influyentes de la alta perfumería.</p>", unsafe_allow_html=True)
     
-    esencias_dict = [
-        {
-            "title": "Notas Marinas (Acuáticas)", 
-            "color_border": "rgba(40, 150, 180, 0.6)" if is_dark else "rgba(2, 132, 199, 0.5)", 
-            "color_bg": "rgba(20, 110, 140, 0.25)" if is_dark else "rgba(224, 242, 254, 0.85)", 
-            "desc": "Las notas marinas capturan el aroma del océano, la brisa marina, la sal y el yodo. Aportan una frescura ozónica, limpia y cristalina."
-        },
-        {
-            "title": "Almizcle (Blanco / Musk)", 
-            "color_border": "rgba(180, 180, 180, 0.4)" if is_dark else "rgba(148, 163, 184, 0.5)", 
-            "color_bg": "rgba(160, 160, 160, 0.15)" if is_dark else "rgba(248, 250, 252, 0.95)", 
-            "desc": "El almizcle blanco recrea una sensación pura de 'piel limpia', suavidad algodonosa y aporta fijación duradera."
-        },
-        {
-            "title": "Sangre (Metálica)", 
-            "color_border": "rgba(200, 70, 95, 0.6)" if is_dark else "rgba(244, 63, 94, 0.5)", 
-            "color_bg": "rgba(168, 50, 75, 0.25)" if is_dark else "rgba(255, 228, 230, 0.85)", 
-            "desc": "Una nota vanguardista y nicho que evoca el hierro. Aporta una sensación carnal, férrea, salada y metálica muy distintiva."
-        },
-        {
-            "title": "Café (Gourmand)", 
-            "color_border": "rgba(160, 90, 60, 0.6)" if is_dark else "rgba(217, 119, 6, 0.5)", 
-            "color_bg": "rgba(110, 60, 40, 0.3)" if is_dark else "rgba(254, 243, 199, 0.85)", 
-            "desc": "Aporta un matiz tostado, cálido, energizante y vagamente amargo. Ideal para perfumes con carácter adictivo."
-        }
-    ]
+    # DICCIONARIO CON LAS 62 ESENCIAS DEFINIDAS DE FORMA PROFESIONAL Y ESTILIZADAS
+    dict_details = {
+        "Abedul": ("Maderas / Ahumados", "Nota amaderada, ahumada y alquitranada; fundamental para otorgar un carácter leñoso intenso y matices de cuero refinado."),
+        "Albahaca": ("Verdes / Herbales", "Hierba aromática vibrante y ligeramente picante que aporta un dulzor balsámico, herbal y energizante."),
+        "Almizcle (Blanco/Musk)": ("Almizclados / Limpios", "Acorde puro, sedoso y envolvente que evoca la sensación de piel limpia y proporciona una fijación excepcional."),
+        "Ámbar (Cálido)": ("Ámbar / Orientales", "Mezcla resinosa, dulzona y cálida de resinas que añade cuerpo, sensualidad y misterio al fondo de la fragancia."),
+        "Ámbar Gris": ("Marinos / Exóticos", "Nota marina y animal refinada de aroma salado y aterciopelado que maximiza la fijación y longevidad."),
+        "Azafrán": ("Especiados / Lujo", "El 'oro rojo' de las especias; picante, amaderado y levemente amargo con lujosos matices de gamuza."),
+        "Bergamota": ("Cítricos / Frescos", "Cítrico noble de la Calabria; efervescente, amargo y con destellos florales que ilumina las salidas."),
+        "Cacao": ("Gourmand / Calidos", "Nota dulce y amarga de gran profundidad que evoca el chocolate negro, aportando una calidez adictiva."),
+        "Café": ("Gourmand / Tostados", "Acorde tostado, amargo y energizante de personalidad vanguardista que aporta un toque oscuro y sensual."),
+        "Canela": ("Especiados / Cálidos", "Especia aromática dulce y picante que transmite confort oriental y gran calidez envolvente."),
+        "Caramelo": ("Gourmand / Dulces", "Nota golosa y tostada que aporta una textura untuosa y un matiz reconfortante e inductivo."),
+        "Cardamomo": ("Especiados / Frescos", "Especia de gran lujo con matices resinosos, cítricos y alcanforados sumamente elegantes."),
+        "Cedro": ("Maderas Noble", "Madera seca, estructurada y limpia con recuerdos de lápiz de grafito que brinda solidez atemporal."),
+        "Cereza": ("Frutales / Licorosos", "Fruta oscura, jugosa y dulce que aporta un carácter nocturno, maduro y carnal a los acordes gourmand."),
+        "Ciruela": ("Frutales / Opulentos", "Nota frutal aterciopelada y licorosa que aporta riqueza, opulencia y sensualidad a fragancias orientales."),
+        "Cítricos": ("Cítricos / Chispeantes", "Acorde efervescente de hespérides que insufla aire puro, vitalidad y frescor inmediato."),
+        "Civeta": ("Animales / Clásicos", "Nota animal pulida (sintética) que otorga volumen, calor, densidad y una textura altamente seductora."),
+        "Coco": ("Exóticos / Gourmand", "Nota láctea, cremosa y tropical que transmite un espíritu solar, relajado y veraniego."),
+        "Cuero": ("Maderas / Ahumados", "Acorde ahumado y sofisticado que evoca gamuza fina o piel noble; aporta distinción y firmeza."),
+        "Frambuesa": ("Frutales / Chispeantes", "Fruta agridulce y radiante que armoniza perfectamente con notas de rosa, azafrán y maderas oscuras."),
+        "Grosellas Negras": ("Frutales / Verdes", "Frutal ácida, verdosa y licorosa que ofrece un matiz frutal silvestre de alta intensidad."),
+        "Haba Tonka": ("Gourmand / Bálsamos", "Semilla aromática rica en cumarina con recuerdos de vainilla, almendra tostada y tabaco dulce."),
+        "Higo": ("Frutales / Mediterráneos", "Nota dual que combina la frescura verde de la hoja con la cremosidad láctea del fruto maduro."),
+        "Incienso": ("Resinas / Místicos", "Resina mística que otorga facetas minerales, frías, ahumadas y balsámicas de gran sobriedad."),
+        "Iris": ("Florales / Empolvados", "Nota mantecosa, terrosa y aristocrática que proyecta elegancia polvosa y sobriedad sofisticada."),
+        "Jazmín": ("Florales / Opulentos", "Flor blanca reina de la perfumería; radiante, magnética, indólica y profundamente sensual."),
+        "Jengibre": ("Especiados / Tónicos", "Especia vibrante, efervescente y cítrica que proporciona un choque inicial de energía limpia."),
+        "Lavanda": ("Aromáticos / Herbales", "Aromática, limpia y herbal; pilar atemporal de la perfumería masculina de refinamiento clásico."),
+        "Lichi": ("Frutales / Exóticos", "Fruta exótica cristalina y acuosa que añade una faceta frutal dulzona muy cercana a la rosa fresca."),
+        "Limón": ("Cítricos / Tónicos", "Nota cítrica ácida, limpia y radiante que aporta luminosidad e higiene cristalina."),
+        "Mandarina": ("Cítricos / Dulces", "Cítrico frutal y jugoso de carácter festivo que dulcifica la apertura con calidez solar."),
+        "Manzana": ("Frutales / Frescos", "Nota crujiente, verde y jugosa que aporta ligereza, juventud y espontaneidad."),
+        "Melocotón": ("Frutales / Aterciopelados", "Frutal carnoso y suave que envuelve la fragancia en una textura aterciopelada y sutil."),
+        "Menta": ("Aromáticos / Helados", "Hierba ultra-fresca de impacto helado que vigoriza las notas superiores al instante."),
+        "Miel": ("Gourmand / Dorados", "Nota rica, dorada y viscosa que ofrece un dulzor profundo con matices animales y reconfortantes."),
+        "Mirra": ("Resinas / Orientales", "Resina antigua cálida y balsámica con destellos levemente especiados y amaderados."),
+        "Naranjo": ("Verdes / Sol", "Acorde vegetal integral que evoca tanto la hoja verde picante como la flor efervescente."),
+        "Nardos": ("Florales / Carnales", "Flor blanca narcótica, embriagadora y cremosa que exhibe una presencia inolvidable."),
+        "Neroli": ("Florales / Frescos", "Aceite extraído del azahar; cítrico, verdoso, transparente y delicadamente floral."),
+        "Notas Marinas": ("Marinos / Ozónicos", "Acorde acuático salino y ozónico que evoca el soplo de la brisa marina y la libertad oceánica."),
+        "Notas Solares": ("Exóticos / Calidos", "Sensación abstracta de la calidez del sol bronceando la piel y la arena tibia."),
+        "Nuez Moscada": ("Especiados / Cálidos", "Especia amaderada y seca que proporciona un matiz picante sofisticado al corazón olfativo."),
+        "Oud": ("Maderas / Lujo", "Madera de agar resinosa y mística; opulenta, leñosa, ahumada y referencia absoluta del lujo."),
+        "Pachulí": ("Maderas / Terrosos", "Nota amaderada, humeda y terrosa con matices de chocolate oscuro y estética bohemia."),
+        "Pera": ("Frutales / Acuosos", "Fruta acuosa, suave y crujiente que equilibra arreglos florales con su dulzor transparente."),
+        "Pimienta Blanca": ("Especiados / Secos", "Picante suave y seco que aporta una pátina de sofisticación ligera y refinada."),
+        "Pimienta Negra": ("Especiados / Picantes", "Especia cálida, picante y estimulante que añade empuje e intensidad en la salida."),
+        "Pimienta Rosa": ("Especiados / Rosados", "Especia chispeante, rosada y levemente cítrica de gran versatilidad moderna."),
+        "Piña": ("Frutales / Tropícales", "Fruta tropical ácida y jugosa emblemática por su energía radiante y muy adictiva."),
+        "Pomelo": ("Cítricos / Amargos", "Cítrico tónico y levemente amargo de perfil efervescente extremadamente limpio."),
+        "Praliné": ("Gourmand / Dulces", "Nota crujiente de frutos secos garrapiñados y azúcar tostado que añade un matiz goloso."),
+        "Romero": ("Aromáticos / Herbales", "Aromática mediterránea de matices leñosos y alcanforados que infunde vigor natural."),
+        "Rosa": ("Florales / Clásicos", "La reina floral por excelencia; poética, atemporal, delicada o intensamente sensual."),
+        "Ruibarbo": ("Verdes / Vanguardistas", "Nota vegetal agridulce y crujiente que aporta un contraste verde moderno y vibrante."),
+        "Salvia": ("Aromáticos / Secos", "Herbal suave de facetas amaderadas y recuerdos de té con fondo ligeramente ambarino."),
+        "Sándalo": ("Maderas / Cremositos", "Madera mística suave, balsámica y cremosa que aporta paz, confort y notable persistencia."),
+        "Sangre (Metálica)": ("Vanguardistas / Metálicos", "Acorde conceptual metálico con matices salados e ferrosos de propuesta arriesgada."),
+        "Tabaco": ("Maderas / Cálidos", "Hoja seca, rica y dulce con notas de miel y madera ahumada de notable distinción."),
+        "Té Verde": ("Verdes / Zen", "Acorde cristalino, herbal y desintoxicante que aporta serenidad y calma sofisticada."),
+        "Vainilla": ("Gourmand / Cremosos", "Nota oriental dulce, licorosa y reconfortante; arquetipo de la adicción gourmand."),
+        "Vetiver": ("Maderas / Terrosos", "Raíz profunda, terrosa, verde y ahumada que otorga elegancia seca y madura."),
+        "Ylang-Ylang": ("Florales / Exóticos", "Flor tropical cremosa y solar de matriz exótica que aporta riqueza voluptuosa.")
+    }
+
+    # Asignación de paleta tonal sofisticada para tarjetas
+    def get_card_style(category, is_dark_mode):
+        if any(w in category for w in ["Cítricos", "Marinos", "Verdes", "Aromáticos"]):
+            border = "rgba(70, 130, 110, 0.45)" if is_dark_mode else "rgba(160, 195, 180, 0.8)"
+            bg = "rgba(25, 45, 38, 0.35)" if is_dark_mode else "#f0f4f2"
+            text_t = "#80e6b8" if is_dark_mode else "#244d3b"
+        elif any(w in category for w in ["Gourmand", "Ámbar", "Especiados"]):
+            border = "rgba(150, 100, 60, 0.45)" if is_dark_mode else "rgba(215, 185, 150, 0.8)"
+            bg = "rgba(45, 32, 22, 0.35)" if is_dark_mode else "#f8f4ef"
+            text_t = "#f5c996" if is_dark_mode else "#5c3d23"
+        elif any(w in category for w in ["Florales", "Frutales"]):
+            border = "rgba(140, 80, 100, 0.45)" if is_dark_mode else "rgba(210, 170, 185, 0.8)"
+            bg = "rgba(40, 24, 30, 0.35)" if is_dark_mode else "#f9f2f4"
+            text_t = "#f5b8cc" if is_dark_mode else "#632d41"
+        else: # Maderas, Almizclados, Vanguardistas
+            border = "rgba(100, 110, 125, 0.45)" if is_dark_mode else "rgba(190, 198, 208, 0.8)"
+            bg = "rgba(28, 32, 38, 0.4)" if is_dark_mode else "#f2f4f6"
+            text_t = "#cbd5e1" if is_dark_mode else "#334155"
+            
+        return border, bg, text_t
 
     col_es_1, col_es_2 = st.columns(2, gap="large")
     
-    for i, item in enumerate(esencias_dict):
+    sorted_dict_keys = sorted(dict_details.keys())
+    
+    for i, name in enumerate(sorted_dict_keys):
+        cat, desc = dict_details[name]
+        b_color, bg_color, t_color = get_card_style(cat, is_dark)
+        
         tarjeta_html = f"""
-        <div class="essence-card" style="border: 1px solid {item['color_border']}; background-color: {item['color_bg']};">
-            <div class="essence-title">{item['title']}</div>
-            <div class="essence-desc">{item['desc']}</div>
+        <div class="essence-card" style="border: 1px solid {b_color}; background-color: {bg_color};">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <span class="essence-title" style="color: {text_color};">{name}</span>
+                <span style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.8px; padding: 2px 7px; border-radius: 4px; background: rgba(0,0,0,0.15); color: {t_color}; font-weight: 500;">{cat}</span>
+            </div>
+            <div class="essence-desc" style="color: {subtext_color};">{desc}</div>
         </div>
         """
         if i % 2 == 0:
