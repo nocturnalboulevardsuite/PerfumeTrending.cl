@@ -60,51 +60,42 @@ js_color_script = f"""
     const doc = window.parent.document;
     const isDark = {str(is_dark).lower()};
     
-    // PALETA DE COLORES MATES (SIN EFECTOS, BRILLOS NI MOVIMIENTOS)
     const colorRules = [
-        // Mate Rojo (Frutas / Rosas)
         {{ keywords: ['sangre', 'cereza', 'frambuesa', 'pimienta rosa', 'rosa', 'ruibarbo', 'lichi', 'ciruela', 'grosella', 'grosellas', 'peonía', 'geranio'], 
           bg: isDark ? '#4a1f24' : '#f5e6e8', 
           border: isDark ? '#7a333c' : '#d49b9e',
           text: isDark ? '#f2b6bc' : '#6b2029' }},
         
-        // Mate Azul (Acuáticas / Marinas)
         {{ keywords: ['marina', 'marinas', 'agua', 'océano', 'mar', 'ozónica', 'ozónicas'], 
           bg: isDark ? '#1a3340' : '#e6f0f5', 
           border: isDark ? '#2c5266' : '#9bbecf',
           text: isDark ? '#a3d5eb' : '#1c4558' }},
         
-        // Mate Verde (Herbal / Higo / Menta)
         {{ keywords: ['albahaca', 'bergamota', 'cardamomo', 'higo', 'manzana', 'menta', 'pachulí', 'pera', 'romero', 'salvia', 'té verde', 'té blanco', 'vetiver', 'abedul', 'eucalipto', 'gálbano', 'hojas de violeta'], 
           bg: isDark ? '#1c3625' : '#e7f2eb', 
           border: isDark ? '#2e573c' : '#9ec4aa',
           text: isDark ? '#a4dbb5' : '#1f482d' }},
         
-        // Mate Púrpura (Flores / Violetas)
         {{ keywords: ['iris', 'lavanda', 'jazmín', 'nardos', 'neroli', 'violeta', 'fresia', 'heliotropo', 'mimosa', 'lila', 'magnolia', 'azahar', 'frangipani', 'gardenia', 'ylang'], 
           bg: isDark ? '#33233b' : '#efe8f5', 
           border: isDark ? '#543a61' : '#beacc9',
           text: isDark ? '#d4bde3' : '#452654' }},
 
-        // Mate Café / Gourmand (Vainilla / Cacao / Frutos Secos)
         {{ keywords: ['caramelo', 'miel', 'solares', 'vainilla', 'cacao', 'café', 'canela', 'tonka', 'nuez moscada', 'praliné', 'haba tonka', 'almendra', 'avellana', 'leche', 'malvavisco', 'chocolate', 'ron', 'cognac', 'whisky'], 
           bg: isDark ? '#3d281a' : '#f5eae1', 
           border: isDark ? '#63422b' : '#cbb3a1',
           text: isDark ? '#e6c3a5' : '#52331c' }},
 
-        // Mate Gris Slate / Amaderado (Maderas / Oud / Musgo)
         {{ keywords: ['ámbar gris', 'cedro', 'sándalo', 'tabaco', 'cuero', 'oud', 'incienso', 'ciprés', 'ébano', 'guayac', 'musgo', 'estoraque', 'ládano', 'benjuí'], 
           bg: isDark ? '#2b3038' : '#eaecee', 
           border: isDark ? '#454e5b' : '#b3b9c1',
           text: isDark ? '#c0c7d1' : '#323943' }},
 
-        // Mate Terracota / Naranja (Cítricos / Ámbar)
         {{ keywords: ['azafrán', 'ámbar', 'mandarina', 'melocotón', 'durazno', 'mirra', 'naranjo', 'pomelo', 'cítrico', 'cítricos', 'limón', 'lima', 'clementina', 'yuzu', 'petit grain', 'piña', 'jengibre'], 
           bg: isDark ? '#422718' : '#f9eee6', 
           border: isDark ? '#6b4027' : '#d9b7a3',
           text: isDark ? '#eabf9e' : '#5e3219' }},
         
-        // Mate Neutro (Sintéticos / Almizcles)
         {{ keywords: ['almizcle', 'coco', 'civeta', 'castóreo', 'pimienta blanca', 'pimienta negra', 'iso e super', 'ambroxan', 'aldehídos', 'cachemira'], 
           bg: isDark ? '#262930' : '#f0f2f5', 
           border: isDark ? '#3f4450' : '#c3c8cf',
@@ -127,7 +118,7 @@ js_color_script = f"""
                     el.style.borderRadius = '4px';
                     el.style.padding = '3px 9px';
                     el.style.margin = '2px 0';
-                    el.style.transition = 'none'; // Elimina animaciones raras al scrollear
+                    el.style.transition = 'none';
                     el.dataset.colored = 'true';
                     
                     el.querySelectorAll('*').forEach(child => {{
@@ -139,7 +130,6 @@ js_color_script = f"""
         }});
     }}
 
-    // Observador eficiente que previene el bugeo de la lista en desplazamientos rápidos
     const observer = new MutationObserver(() => {{
         applyEssenceColors();
     }});
@@ -400,7 +390,7 @@ st.markdown(f"""
         align-items: center;
         justify-content: center;
         overflow: hidden;
-        padding: 30px;
+        padding: 20px;
         box-sizing: border-box;
     }}
     .square-img-box img {{
@@ -494,37 +484,25 @@ with nav_cols[6]: st.button("ESENCIAS", key="n_esencias", on_click=navigate_to, 
 
 st.markdown(f"<hr style='margin: 8px 0 30px 0; border: none; border-bottom: 1px solid {btn_border}; opacity: 0.3;'>", unsafe_allow_html=True)
 
-# 6. BÚSQUEDA Y SELECCIÓN DE ESENCIAS COMPLETA (FRAGRANTICA)
+# 6. BÚSQUEDA Y SELECCIÓN DE ESENCIAS COMPLETA
 col_search, col_filter, col_separator, col_photo = st.columns([5.2, 1.8, 0.2, 2.3], vertical_alignment="center")
 
 with col_search:
     search_query = st.text_input("🔍 Buscar", placeholder="🔍 Buscar perfume, marca o esencias...", label_visibility="collapsed")
 
 raw_notes = [
-    # Cítricos
     "Bergamota", "Clementina", "Limón", "Lima", "Mandarina", "Neroli", "Petit Grain", "Pomelo (Toronja)", "Yuzu",
-    # Frutas, verduras y nueces
     "Almendra", "Avellana", "Ciruela", "Coco", "Durazno (Melocotón)", "Frambuesa", "Grosellas Negras", 
     "Higo", "Lichi", "Manzana", "Melón", "Pera", "Piña", "Ruibarbo", "Sandía",
-    # Flores
     "Fresia", "Geranio", "Heliotropo", "Iris (Orris)", "Lavanda", "Lilium (Lirio)", "Mimosa", "Peonía", "Rosa", "Violeta",
-    # Flores Blancas
     "Flor de Azahar del Naranjo", "Flor de Frangipani", "Gardenia", "Jazmín", "Magnolia", "Tuberosa (Nardo)", "Ylang-Ylang",
-    # Hierbas, verdes y fougères
     "Abedul", "Albahaca", "Eucalipto", "Gálbano", "Hojas de Violeta", "Menta", "Pachulí", "Romero", "Salvia", "Té Blanco", "Té Negro", "Té Verde", "Vetiver",
-    # Especias
     "Anís Estrellado", "Azafrán", "Canela", "Cardamomo", "Clavo de Olor", "Jengibre", "Nuez Moscada", "Pimienta Blanca", "Pimienta Negra", "Pimienta Rosa",
-    # Dulces y Aromas Golosos (Gourmand)
     "Cacao / Chocolate", "Café", "Caramelo", "Haba Tonka", "Leche", "Malvavisco", "Miel", "Praliné", "Vainilla",
-    # Maderas y Musgos
     "Cedro", "Ciprés", "Ébano", "Guayac", "Musgo de Roble", "Oud (Madera de Agar)", "Sándalo",
-    # Resinas y Balsámicos
     "Ámbar (Cálido)", "Bálsamo del Perú", "Benjuí", "Estoraque", "Incienso (Olíbano)", "Ládano", "Mirra",
-    # Almizcle, Ámbar y Notas Animales
     "Almizcle (Blanco/Musk)", "Almizcle Vegetal", "Ámbar Gris", "Castóreo", "Civeta",
-    # Bebidas
     "Amaretto", "Champán", "Cognac", "Ginebra", "Mojito", "Ron", "Whisky",
-    # Sintéticos y Abstractos
     "Aldehídos", "Ambroxan", "Cachemira (Cashmeran)", "Cuero", "Iso E Super", "Notas Marinas", "Notas Solares", "Sangre (Metálica)"
 ]
 
@@ -573,7 +551,7 @@ if st.session_state['current_page'] == 'home':
             "country": "Francia 🇫🇷",
             "perfumer": "Jacques Polge",
             "notes": "Toronja, Limón, Menta, Jengibre, Incienso, Cedro, Sándalo",
-            "img": "https://fimgs.net/mdig/rx_perfume/58/28/6005828.jpg"
+            "img": "https://m.media-amazon.com/images/I/71R2e1U3JYL._SL1500_.jpg"
         },
         {
             "name": "Sauvage Elixir",
@@ -581,7 +559,7 @@ if st.session_state['current_page'] == 'home':
             "country": "Francia 🇫🇷",
             "perfumer": "François Demachy",
             "notes": "Canela, Nuez Moscada, Lavanda, Regaliz, Sándalo, Ámbar",
-            "img": "https://fimgs.net/mdig/rx_perfume/31/86/31861.jpg"
+            "img": "https://m.media-amazon.com/images/I/71xSg5Wf0-L._SL1500_.jpg"
         },
         {
             "name": "Baccarat Rouge 540",
@@ -589,7 +567,7 @@ if st.session_state['current_page'] == 'home':
             "country": "Francia 🇫🇷",
             "perfumer": "Francis Kurkdjian",
             "notes": "Azafrán, Jazmín, Ámbar Gris, Madera de Cedro, Resina de Abeto",
-            "img": "https://fimgs.net/mdig/rx_perfume/30/88/30886.jpg"
+            "img": "https://m.media-amazon.com/images/I/61yD-8sK6yL._SL1500_.jpg"
         },
         {
             "name": "Club de Nuit Intense",
@@ -597,7 +575,7 @@ if st.session_state['current_page'] == 'home':
             "country": "Emiratos Árabes Unidos 🇦🇪",
             "perfumer": "Christian Provenzano",
             "notes": "Limón, Piña, Grosellas Negras, Abedul, Jazmín, Almizcle",
-            "img": "https://fimgs.net/mdig/rx_perfume/27/65/27656.jpg"
+            "img": "https://m.media-amazon.com/images/I/61Yg40gX3mL._SL1500_.jpg"
         },
         {
             "name": "Angels' Share",
@@ -605,7 +583,7 @@ if st.session_state['current_page'] == 'home':
             "country": "Francia 🇫🇷",
             "perfumer": "Benoist Lapouza",
             "notes": "Cognac, Canela, Haba Tonka, Roble, Vainilla, Sándalo, Praliné",
-            "img": "https://fimgs.net/mdig/rx_perfume/62/61/62615.jpg"
+            "img": "https://m.media-amazon.com/images/I/61sN52z4wEL._SL1500_.jpg"
         },
         {
             "name": "YSL Libre EDP",
@@ -613,7 +591,7 @@ if st.session_state['current_page'] == 'home':
             "country": "Francia 🇫🇷",
             "perfumer": "Anne Flipo & Carlos Benaïm",
             "notes": "Lavanda, Mandarina, Grosellas Negras, Flor de Azahar, Vainilla",
-            "img": "https://fimgs.net/mdig/rx_perfume/56/55/5605655.jpg"
+            "img": "https://m.media-amazon.com/images/I/61A+-0V2VFL._SL1500_.jpg"
         }
     ]
 
@@ -626,7 +604,7 @@ if st.session_state['current_page'] == 'home':
                 card_html = f"""
                 <div class="catalog-card">
                     <div class="square-img-box">
-                        <img src="{p['img']}" alt="{p['name']}">
+                        <img src="{p['img']}" alt="{p['name']}" referrerpolicy="no-referrer">
                         <div class="card-hover-overlay">
                             <div class="overlay-title">{p['name']}</div>
                             <div class="overlay-info"><b>📍 Origen:</b> {p['country']}</div>
@@ -667,7 +645,6 @@ elif st.session_state['current_page'] == 'esencias_page':
             return ("#3f4450" if is_dark else "#c3c8cf", "#262930" if is_dark else "#f0f2f5", "#d0d5dd" if is_dark else "#343a40")
 
     essence_descriptions = {
-        # Cítricos
         "Bergamota": "Cítrico efervescente y luminoso con delicados matices florales, imprescindible en las salidas clásicas.",
         "Clementina": "Cítrico dulce, jugoso y chispeante que transmite alegría inmediata.",
         "Limón": "Ácido, limpio y deslumbrante; inyección de luz y energía viva.",
@@ -677,8 +654,6 @@ elif st.session_state['current_page'] == 'esencias_page':
         "Petit Grain": "Verde, amargo y leñoso; destilado de las hojas y ramas del naranjo amargo.",
         "Pomelo (Toronja)": "Cítrico amargo, efervescente y vigorizante con un toque seco sofisticado.",
         "Yuzu": "Cítrico japonés con matices entre pomelo y mandarina, con un perfil exótico y cristalino.",
-
-        # Frutas, verduras y nueces
         "Almendra": "Nota cremosa, suavemente amarga y avainillada con textura Aterciopelada.",
         "Avellana": "Cálida, tostada y lactónica; evoca la riqueza cremosa de la praliné.",
         "Ciruela": "Frutal, rica y aterciopelada; añade una profundidad oscura, madura y opulenta.",
@@ -694,8 +669,6 @@ elif st.session_state['current_page'] == 'esencias_page':
         "Piña": "Tropical, efervescente y jugosa; añade una salida radiante y adictiva.",
         "Ruibarbo": "Ácido, verde y chispeante; aporta un contraste vanguardista inusualmente fresco.",
         "Sandía": "Fresca, ozónica y dulce; transmite ligereza acuosa perfecta para días cálidos.",
-
-        # Flores
         "Fresia": "Floral suave, limpio y ligeramente afrutado que ilumina el corazón del perfume.",
         "Geranio": "Verde, floral y rosado con matices aromáticos y mentolados.",
         "Heliotropo": "Polvoso, avainillado y meloso con ecos de almendra dulce.",
@@ -706,8 +679,6 @@ elif st.session_state['current_page'] == 'esencias_page':
         "Peonía": "Floral delicado, fresco y acuático similar a la rosa joven.",
         "Rosa": "La reina de las flores; romántica, atemporal, rica y de matices infinitos.",
         "Violeta": "Floral verde, polvoso y dulce; evoca nostalgia elegante.",
-
-        # Flores Blancas
         "Flor de Azahar del Naranjo": "Radiante, solar y limpia, enriquecida con matices mielados.",
         "Flor de Frangipani": "Exótica, cremosa y embriagadora con acentos solares.",
         "Gardenia": "Floral opulento, cremoso y verde de gran sensualidad.",
@@ -715,8 +686,6 @@ elif st.session_state['current_page'] == 'esencias_page':
         "Magnolia": "Floral fresca, cítrica y cerosa de una elegancia luminosa.",
         "Tuberosa (Nardo)": "Flor blanca intensa, carnal y dramática; el epítome de la provocación olfativa.",
         "Ylang-Ylang": "Flor exótica, embriagadora y marcadamente sensual.",
-
-        # Hierbas, verdes y fougères
         "Abedul": "Nota ahumada, leñosa y balsámica que evoca cuero suave y aire fresco de bosque.",
         "Albahaca": "Aromática, fresca y picante; infunde una energía mentolada y vivaz.",
         "Eucalipto": "Helado, mentolado y balsámico; despeja la composición al instante.",
@@ -730,8 +699,6 @@ elif st.session_state['current_page'] == 'esencias_page':
         "Té Negro": "Ahumado, tanino y profundo; aporta estructura seca y elegante.",
         "Té Verde": "Herbal, sereno y reconfortante; infunde frescura limpia.",
         "Vetiver": "Terroso, leñoso y con matices ahumados; clásico de la elegancia masculina.",
-
-        # Especias
         "Anís Estrellado": "Especiado, dulce y licoroso con destellos mentolados.",
         "Azafrán": "El 'oro rojo' de la perfumería; especiado, leñoso y de elegancia amarga.",
         "Canela": "Especiada, dulce y cálida; añade una presencia penetrante y reconfortante.",
@@ -742,8 +709,6 @@ elif st.session_state['current_page'] == 'esencias_page':
         "Pimienta Blanca": "Especiada suave, seca y sutil; aporta calidez sin saturar.",
         "Pimienta Negra": "Vigorosa, picante y aromática; infunde un dinamismo directo.",
         "Pimienta Rosa": "Especiada, brillante y frutal; aporta un matiz efervescente.",
-
-        # Dulces (Gourmand)
         "Cacao / Chocolate": "Profundo, amargo y reconfortante; aporta una calidez adictiva.",
         "Café": "Tostado, energizante y oscuro; perfecto para fragancias audaces.",
         "Caramelo": "Dulce, cremoso y tentador; agrega un toque goloso aterciopelado.",
@@ -753,8 +718,6 @@ elif st.session_state['current_page'] == 'esencias_page':
         "Miel": "Dorada, viscosa y melosa; envuelve en una riqueza cálida.",
         "Praliné": "Dulce de frutos secos y azúcar caramelizada; cremosidad apetitosa.",
         "Vainilla": "Dulce, sensual y reconfortante; reina indiscutible de la adicción olfativa.",
-
-        # Maderas y Musgos
         "Cedro": "Seco, noble y leñoso; estructura la base aportando fuerza atemporal.",
         "Ciprés": "Resinoso, verde y seco; proyecta serenidad de arboleda.",
         "Ébano": "Madera oscura, densa y refinada de gran presencia misteriosa.",
@@ -762,8 +725,6 @@ elif st.session_state['current_page'] == 'esencias_page':
         "Musgo de Roble": "Terroso, boscoso y húmedo; esencial para la estructura Chipre.",
         "Oud (Madera de Agar)": "Profundo, resinoso y complejo; el valioso tesoro de Oriente.",
         "Sándalo": "Madera cremosa, suave y balsámica; transmite serenidad envolvente.",
-
-        # Resinas y Balsámicos
         "Ámbar (Cálido)": "Nota resinosa y dorada que envuelve la fragancia en riqueza dulzona.",
         "Bálsamo del Perú": "Balsámico, dulce y acanelado de rica densidad.",
         "Benjuí": "Resina dulce con olor a vainilla tostada e incienso suave.",
@@ -771,15 +732,11 @@ elif st.session_state['current_page'] == 'esencias_page':
         "Incienso (Olíbano)": "Místico, resinoso y ahumado; añade solemnidad y profundidad.",
         "Ládano": "Ambarino, denso y profundamente cuero-resinoso.",
         "Mirra": "Balsámica, cálida y milenaria; ofrece un aura mística rica.",
-
-        # Almizcle y Animales
         "Almizcle (Blanco/Musk)": "Piel limpia, suavidad algodonosa y fijación sensual duradera.",
         "Almizcle Vegetal": "Alternativa botánica limpia de perfil suave y transparente.",
         "Ámbar Gris": "Marino, terroso y aterciopelado; fija la fragancia con lujo oceánico.",
         "Castóreo": "Nota animalic ahumada y abrigadora que evoca cuero profundo.",
         "Civeta": "Sensualidad animalica cálida que aporta densidad al fondo.",
-
-        # Bebidas
         "Amaretto": "Licoroso, dulce y almendrado de perfil tentador.",
         "Champán": "Burbujeante, efervescente y festivo de tono cristalino.",
         "Cognac": "Embriagador, leñoso y ambarino con refinada distinción.",
@@ -787,8 +744,6 @@ elif st.session_state['current_page'] == 'esencias_page':
         "Mojito": "Cítrico, mentolado y azucarado de máxima frescura.",
         "Ron": "Licoroso, dulce y especiado con notas de barrica.",
         "Whisky": "Malteado, ahumado y cálido con presencia elegante.",
-
-        # Sintéticos y Abstractos
         "Aldehídos": "Chispeantes, jabonosos y efervescentes; elevan el perfume con aire limpio.",
         "Ambroxan": "Ambarino, leñoso y salino de proyección moderna insuperable.",
         "Cachemira (Cashmeran)": "Suave como la lana, leñoso, ambarino y almizclado.",
