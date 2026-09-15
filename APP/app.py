@@ -163,7 +163,6 @@ js_color_script = f"""
         }}
     }}
 
-    // Debounce para evitar bloqueos del navegador durante renderizados masivos
     let debounceTimer = null;
     const observer = new MutationObserver(() => {{
         if (debounceTimer) clearTimeout(debounceTimer);
@@ -332,6 +331,7 @@ st.markdown(f"""
         color: {text_color} !important;
     }}
 
+    /* BOTONES DE TENDENCIAS / CHIPS Y SUS EFECTOS HOVER */
     .st-key-btn_trend button, 
     .st-key-btn_trust button, 
     .st-key-btn_compare button {{
@@ -343,6 +343,16 @@ st.markdown(f"""
         width: 100% !important;
         min-height: 0px !important;
         height: auto !important;
+        transition: transform 0.15s ease, background-color 0.15s ease, border-color 0.15s ease !important;
+    }}
+
+    .st-key-btn_trend button:hover, 
+    .st-key-btn_trust button:hover, 
+    .st-key-btn_compare button:hover {{
+        background-color: {btn_bg} !important;
+        border-color: {"#5c6275" if is_dark else "#b0b0bc"} !important;
+        transform: translateY(-1px) !important;
+        cursor: pointer !important;
     }}
     
     .st-key-btn_trend button p, 
@@ -355,6 +365,13 @@ st.markdown(f"""
         white-space: nowrap !important;
         text-overflow: clip !important;
         overflow: visible !important;
+        transition: color 0.15s ease !important;
+    }}
+
+    .st-key-btn_trend button:hover p, 
+    .st-key-btn_trust button:hover p, 
+    .st-key-btn_compare button:hover p {{
+        color: {text_color} !important;
     }}
 
     div[data-baseweb="input"],
@@ -847,7 +864,6 @@ elif st.session_state['current_page'] == 'esencias_page':
         else:
             html_col2.append(tarjeta_html)
 
-    # Renderizado en lote para evitar sobrecarga del DOM
     with col_es_1:
         st.markdown("\n".join(html_col1), unsafe_allow_html=True)
     with col_es_2:
