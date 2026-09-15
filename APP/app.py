@@ -62,17 +62,20 @@ st.markdown(f"""
         color: {text_color} !important;
     }}
 
-    /* NAVEGACIÓN PRINCIPAL SUPERIOR */
+    /* NAVEGACIÓN PRINCIPAL SUPERIOR ACTUALIZADA */
     .st-key-n_perfumes button, 
     .st-key-n_arabes button, 
     .st-key-n_marcas button, 
-    .st-key-n_remates button {{
+    .st-key-n_remates button,
+    .st-key-n_disenador button,
+    .st-key-n_nicho button,
+    .st-key-n_esencias button {{
         background-color: transparent !important;
         border: none !important;
         border-bottom: 2px solid transparent !important;
         border-radius: 0px !important;
         font-weight: 600 !important;
-        font-size: 0.9rem !important;
+        font-size: 0.85rem !important;
         padding: 0.4rem 0.2rem !important;
         box-shadow: none !important;
     }}
@@ -80,7 +83,10 @@ st.markdown(f"""
     .st-key-n_perfumes button p, 
     .st-key-n_arabes button p, 
     .st-key-n_marcas button p, 
-    .st-key-n_remates button p {{
+    .st-key-n_remates button p,
+    .st-key-n_disenador button p,
+    .st-key-n_nicho button p,
+    .st-key-n_esencias button p {{
         color: {text_color} !important;
         white-space: nowrap !important;
     }}
@@ -88,7 +94,10 @@ st.markdown(f"""
     .st-key-n_perfumes button:hover, 
     .st-key-n_arabes button:hover, 
     .st-key-n_marcas button:hover, 
-    .st-key-n_remates button:hover {{
+    .st-key-n_remates button:hover,
+    .st-key-n_disenador button:hover,
+    .st-key-n_nicho button:hover,
+    .st-key-n_esencias button:hover {{
         background-color: transparent !important;
         border-bottom: 2px solid #8c7b6d !important;
     }}
@@ -96,7 +105,10 @@ st.markdown(f"""
     .st-key-n_perfumes button:hover p, 
     .st-key-n_arabes button:hover p, 
     .st-key-n_marcas button:hover p, 
-    .st-key-n_remates button:hover p {{
+    .st-key-n_remates button:hover p,
+    .st-key-n_disenador button:hover p,
+    .st-key-n_nicho button:hover p,
+    .st-key-n_esencias button:hover p {{
         color: #8c7b6d !important;
     }}
 
@@ -340,6 +352,26 @@ st.markdown(f"""
         font-size: 0.8rem;
         color: {subtext_color};
     }}
+
+    /* ESTILOS PARA LA SECCIÓN DE ESENCIAS */
+    .essence-card {{
+        background-color: {btn_bg};
+        border: 1px solid {btn_border};
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 15px;
+    }}
+    .essence-title {{
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #8c7b6d;
+        margin-bottom: 5px;
+    }}
+    .essence-desc {{
+        font-size: 0.9rem;
+        color: {text_color};
+        line-height: 1.5;
+    }}
     </style>
 """, unsafe_allow_html=True)
 
@@ -375,18 +407,17 @@ with col_actions:
     with btn_col2:
         st.button(" ", key="theme_toggle", on_click=toggle_theme)
 
-# 2. NAVEGACIÓN PRINCIPAL
+# 2. NAVEGACIÓN PRINCIPAL (Actualizada con Diseñador, Nicho y Esencias)
 st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
-col_nav1, col_nav2, col_nav3, col_nav4, col_nav_space = st.columns([1.2, 1.6, 1.2, 1.4, 4.6], vertical_alignment="center")
+nav_cols = st.columns([1.1, 1.6, 0.9, 1.0, 1.1, 0.9, 1.0, 1.5], vertical_alignment="center")
 
-with col_nav1: 
-    st.button("PERFUMES", key="n_perfumes", on_click=navigate_to, args=('home',), use_container_width=True)
-with col_nav2: 
-    st.button("PERFUMES ÁRABES", key="n_arabes", on_click=navigate_to, args=('home',), use_container_width=True)
-with col_nav3: 
-    st.button("MARCAS", key="n_marcas", on_click=navigate_to, args=('home',), use_container_width=True)
-with col_nav4: 
-    st.button("REMATES", key="n_remates", on_click=navigate_to, args=('hype',), use_container_width=True)
+with nav_cols[0]: st.button("PERFUMES", key="n_perfumes", on_click=navigate_to, args=('home',), use_container_width=True)
+with nav_cols[1]: st.button("PERFUMES ÁRABES", key="n_arabes", on_click=navigate_to, args=('home',), use_container_width=True)
+with nav_cols[2]: st.button("MARCAS", key="n_marcas", on_click=navigate_to, args=('home',), use_container_width=True)
+with nav_cols[3]: st.button("REMATES", key="n_remates", on_click=navigate_to, args=('hype',), use_container_width=True)
+with nav_cols[4]: st.button("DISEÑADOR", key="n_disenador", on_click=navigate_to, args=('home',), use_container_width=True)
+with nav_cols[5]: st.button("NICHO", key="n_nicho", on_click=navigate_to, args=('home',), use_container_width=True)
+with nav_cols[6]: st.button("ESENCIAS", key="n_esencias", on_click=navigate_to, args=('esencias_page',), use_container_width=True)
 
 st.markdown(f"<hr style='margin: 8px 0 25px 0; border: none; border-bottom: 1px solid {btn_border}; opacity: 0.5;'>", unsafe_allow_html=True)
 
@@ -398,16 +429,20 @@ with col_search:
 
 with col_filter:
     with st.popover("Esencias", use_container_width=True):
+        # NOTAS ACTUALIZADAS CON COLORES Y CATEGORÍAS
         all_notes = sorted([
-            "Abedul", "Albahaca", "Almizcle (Musk)", "Ámbar", "Ámbar Gris", "Azafrán", "Bergamota",
-            "Cacao", "Café", "Canela", "Caramelo", "Cardamomo", "Cedro", "Cereza", "Ciruela", 
-            "Cítricos", "Civeta", "Coco", "Cuero", "Frambuesa", "Grosellas Negras", "Haba Tonka", 
-            "Higo", "Incienso", "Iris", "Jazmín", "Jengibre", "Lavanda", "Lichi", "Limón", 
-            "Mandarina", "Manzana", "Melocotón", "Menta", "Miel", "Mirra", "Naranjo", "Nardos", 
-            "Neroli", "Notas Marinas", "Notas Solares", "Nuez Moscada", "Oud", "Pachulí", "Pera", 
-            "Pimienta Blanca", "Pimienta Negra", "Pimienta Rosa", "Piña", "Pomelo", "Praliné", 
-            "Romero", "Rosa", "Ruibarbo", "Salvia", "Sándalo", "Sangre", "Tabaco", "Té Verde", 
-            "Vainilla", "Vetiver", "Ylang-Ylang"
+            "🟤 Abedul", "🟢 Albahaca", "⚪ Almizcle (Blanco/Musk)", "🟤 Ámbar (Cálido)", "🌊 Ámbar Gris", 
+            "🔴 Azafrán (Rojo)", "🟢 Bergamota (Verde Cítrico)", "🟤 Cacao", "⚫ Café", "🟤 Canela", 
+            "🟠 Caramelo", "🟢 Cardamomo", "🟤 Cedro", "🔴 Cereza", "🟣 Ciruela", "🟡 Cítricos (Amarillo)", 
+            "⚫ Civeta", "⚪ Coco", "⚫ Cuero (Oscuro)", "🔴 Frambuesa", "🟣 Grosellas Negras", 
+            "⚫ Haba Tonka", "🟣 Higo", "⚪ Incienso (Blanco)", "🟣 Iris", "⚪ Jazmín", "🟡 Jengibre", 
+            "🟣 Lavanda (Morado)", "🔴 Lichi", "🟡 Limón", "🟠 Mandarina", "🟢 Manzana", "🟠 Melocotón", 
+            "🟢 Menta", "🟡 Miel", "🟤 Mirra", "🟢 Naranjo", "⚪ Nardos", "⚪ Neroli", 
+            "🔵 Notas Marinas (Azules)", "🟡 Notas Solares", "🟤 Nuez Moscada", "⚫ Oud (Madera Oscura)", 
+            "🟢 Pachulí", "🟢 Pera", "⚪ Pimienta Blanca", "⚫ Pimienta Negra", "🔴 Pimienta Rosa", 
+            "🟡 Piña", "🟠 Pomelo", "🟤 Praliné", "🟢 Romero", "🔴 Rosa", "🔴 Ruibarbo", 
+            "🟢 Salvia", "🟤 Sándalo", "🔴 Sangre (Metálica/Roja)", "🟤 Tabaco", "🟢 Té Verde", 
+            "🟡 Vainilla (Amarilla/Dulce)", "🟢 Vetiver", "🟡 Ylang-Ylang"
         ])
         selected_essences = st.multiselect(
             "Selecciona notas olfativas:",
@@ -521,6 +556,42 @@ if st.session_state['current_page'] == 'home':
                 """
                 with cols[j]:
                     st.markdown(card_html, unsafe_allow_html=True)
+
+# PÁGINA DE ESENCIAS (DICCIONARIO OLFATIVO)
+elif st.session_state['current_page'] == 'esencias_page':
+    st.markdown(f"<h2 style='text-align: center; color: {text_color}; margin-bottom: 30px;'>Diccionario de Esencias</h2>", unsafe_allow_html=True)
+    st.write("Descubre qué significa cada nota olfativa y cómo aporta personalidad a tus fragancias favoritas. Hemos categorizado visualmente las notas por colores y sensaciones.")
+    
+    esencias_dict = {
+        "🔵 Notas Marinas (Azules)": "Las notas marinas intentan capturar el aroma del océano, la brisa marina, la sal y el yodo. Se logran frecuentemente mediante moléculas sintéticas como el *Calone*. Aportan una frescura ozónica, limpia y acuática a los perfumes.",
+        "⚪ Almizcle (Blanco / Musk)": "El almizcle blanco moderno es una recreación sintética del almizcle animal. Aporta una sensación de 'piel limpia', pureza, suavidad algodonosa y actúa como un excelente fijador que hace que la fragancia dure más tiempo en la piel.",
+        "🔴 Sangre (Rojas / Metálicas)": "Una nota conceptual, nicho y audaz que evoca el hierro. En perfumería, se recrea con moléculas específicas (como el óxido de rosa) para dar una sensación carnal, férrea, salada y metálica. Añade un toque misterioso o 'vampírico'.",
+        "🟤 Ámbar (Marrón / Cálido)": "El ámbar no es una resina fosilizada real en perfumería, sino un 'acorde' (una mezcla) tradicionalmente dulce, cálido y resinoso creado combinando ládano, benjuí y vainilla. Evoca calidez, lujo, misterio y sensualidad.",
+        "⚫ Oud (Madera Oscura)": "El Oud o madera de Agar es una de las materias primas más caras. Se extrae de la madera infectada por un hongo del árbol Aquilaria. Su aroma es profundo, oscuro, amaderado, ahumado y, a menudo, con matices animálicos o a cuero.",
+        "🟡 Vainilla (Amarilla / Dulce)": "Una de las notas más populares del mundo. Extraída de las vainas de la orquídea vainilla, aporta dulzura, confort, sensualidad y toques 'gourmand' (comestibles). Es un pilar fundamental en fragancias orientales.",
+        "🟢 Bergamota (Verde Cítrico)": "Es la nota de salida por excelencia. Un cítrico cultivado principalmente en Italia que es chispeante, brillante, fresco, verde y con un ligero matiz floral y especiado. Es lo que le da el aroma característico al té Earl Grey.",
+        "⚫ Cuero (Oscuro)": "Una nota de fantasía que recrea el olor de chaquetas, botas o el interior de un auto de lujo. Se logra combinando abedul, enebro, isobutil quinolina y otras notas ahumadas. Aporta carácter, masculinidad y rebeldía.",
+        "🔴 Azafrán (Rojo / Especiado)": "Conocido como el 'oro rojo', aporta un aroma especiado, ligeramente dulce, terroso y con un fondo que a veces recuerda sutilmente al cuero o al yodo (muy famoso por su presencia en Baccarat Rouge 540)."
+    }
+
+    # Mostrar en columnas para mejor lectura
+    col_es_1, col_es_2 = st.columns(2, gap="large")
+    
+    for i, (titulo, descripcion) in enumerate(esencias_dict.items()):
+        tarjeta_html = f"""
+        <div class="essence-card">
+            <div class="essence-title">{titulo}</div>
+            <div class="essence-desc">{descripcion}</div>
+        </div>
+        """
+        if i % 2 == 0:
+            with col_es_1:
+                st.markdown(tarjeta_html, unsafe_allow_html=True)
+        else:
+            with col_es_2:
+                st.markdown(tarjeta_html, unsafe_allow_html=True)
+                
+    st.markdown("<br><p style='text-align: center; color: #888;'>Próximamente agregaremos más esencias a nuestro catálogo...</p>", unsafe_allow_html=True)
 
 elif st.session_state['current_page'] == 'trust_page':
     st.markdown(f"<h3 style='text-align: center; color: {text_color};'>Páginas de Confianza (Próximamente)</h3>", unsafe_allow_html=True)
