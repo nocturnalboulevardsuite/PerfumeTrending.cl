@@ -35,8 +35,8 @@ input_bg = "#14171d" if is_dark else "#ffffff"
 input_text = "#f0f0f0" if is_dark else "#18181b"
 input_border = "#2a2e39" if is_dark else "#e2e2e8"
 
-# Posicionamiento del Switch de Tema (Tamaño normal)
-bottle_left_pos = "36px" if is_dark else "-2px"
+# Posicionamiento del Switch de Tema
+bottle_left_pos = "32px" if is_dark else "-2px"
 static_icon_pos = "10px center" if is_dark else "calc(100% - 10px) center"
 
 static_icon_svg = (
@@ -113,17 +113,16 @@ js_color_script = f"""
 
 components.html(js_color_script, height=0, width=0)
 
-# 3. CSS ULTRA MINIMALISTA CON ZOOM GLOBAL (+10%)
+# 3. CSS COMPACTO Y AJUSTADO (ESCALA LIGERAMENTE REDUCIDA Y BOTONES ALINEADOS)
 st.markdown(f"""
     <style>
-    /* ZOOM GLOBAL DEL 10% A TODA LA PÁGINA */
+    /* ESCALA GLOBAL LIGERAMENTE MÁS CHICA (0.92) */
     html, body, .stApp {{
-        zoom: 1.1;
+        zoom: 0.92;
     }}
 
     header[data-testid="stHeader"] {{ display: none !important; }}
     
-    /* Reducción de márgenes globales de la página */
     .block-container {{ 
         padding-top: 0.8rem !important; 
         padding-bottom: 1.5rem !important; 
@@ -137,7 +136,7 @@ st.markdown(f"""
         font-size: 0.82rem !important;
     }}
 
-    /* EFECTO MINI-ZOOM SUTIL Y SOBERANO PARA BOTONES */
+    /* EFECTO MINI-ZOOM SUTIL PARA BOTONES */
     div.stButton > button,
     div.stDownloadButton > button,
     div[data-testid="stPopover"] > button,
@@ -147,8 +146,6 @@ st.markdown(f"""
     .st-key-theme_toggle button {{
         transition: transform 0.15s ease, background-color 0.15s ease, border-color 0.15s ease !important;
         will-change: transform;
-        min-height: 0px !important;
-        height: auto !important;
     }}
 
     div.stButton > button:hover,
@@ -160,7 +157,83 @@ st.markdown(f"""
         cursor: pointer !important;
     }}
 
-    /* NAVEGACIÓN PRINCIPAL (MINIMALISTA) */
+    /* CONTENEDORES DE BOTÓN INGRESAR Y SWITCH DE TEMA PARA ALINEACIÓN PERFECTA */
+    .st-key-login_btn, .st-key-theme_toggle {{
+        display: flex !important;
+        align-items: center !important;
+        height: 100% !important;
+    }}
+
+    /* BOTÓN INGRESAR ALINEADO */
+    .st-key-login_btn button {{
+        background-color: {btn_bg} !important;
+        color: {btn_text} !important;
+        border: 1px solid {btn_border} !important;
+        border-radius: 4px !important;
+        height: 32px !important;
+        min-height: 32px !important;
+        padding: 0 0.6rem 0 1.8rem !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        background-image: url("{user_icon_svg}") !important;
+        background-repeat: no-repeat !important;
+        background-position: 8px center !important;
+        background-size: 13px 13px !important;
+        font-size: 0.72rem !important;
+        margin: 0 !important;
+    }}
+    .st-key-login_btn button p {{
+        font-size: 0.72rem !important;
+        line-height: 1 !important;
+        margin: 0 !important;
+    }}
+
+    /* SWITCH DE TEMA ALINEADO CON INGRESAR (MISMA ALTURA DE 32px) */
+    .st-key-theme_toggle button {{
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        width: 64px !important;
+        height: 32px !important;
+        min-height: 32px !important;
+        position: relative !important;
+        cursor: pointer !important;
+        margin: 0 auto !important;
+        display: block !important;
+    }}
+
+    .st-key-theme_toggle button * {{ display: none !important; }}
+    
+    .st-key-theme_toggle button::before {{
+        content: '' !important;
+        position: absolute !important;
+        top: 3px !important; left: 0 !important;
+        width: 60px !important; height: 26px !important;
+        background-color: {"#1c1f26" if is_dark else "#eae8e6"} !important;
+        border: 1px solid {btn_border} !important;
+        border-radius: 13px !important;
+        background-image: url("{static_icon_svg}") !important;
+        background-repeat: no-repeat !important;
+        background-position: {static_icon_pos} !important;
+        background-size: 13px 13px !important;
+    }}
+    
+    .st-key-theme_toggle button::after {{
+        content: '' !important;
+        position: absolute !important;
+        top: -1px !important;
+        left: {bottle_left_pos} !important;
+        width: 30px !important; height: 34px !important;
+        background-image: url("{bottle_svg}") !important;
+        background-repeat: no-repeat !important;
+        background-size: contain !important;
+        transition: left 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        z-index: 2 !important;
+    }}
+
+    /* NAVEGACIÓN PRINCIPAL */
     .st-key-n_perfumes button, 
     .st-key-n_remates button,
     .st-key-n_disenador button,
@@ -176,6 +249,8 @@ st.markdown(f"""
         padding: 0.15rem 0rem !important;
         box-shadow: none !important;
         letter-spacing: 0.8px !important;
+        min-height: 0px !important;
+        height: auto !important;
     }}
 
     .st-key-n_perfumes button p, 
@@ -198,7 +273,7 @@ st.markdown(f"""
         color: {text_color} !important;
     }}
 
-    /* CHIPS Y HERRAMIENTAS RÁPIDAS COMPACTAS (CORREGIDOS SIN RECORTE '...') */
+    /* CHIPS Y HERRAMIENTAS RÁPIDAS */
     .st-key-btn_trend button, 
     .st-key-btn_trust button, 
     .st-key-btn_compare button {{
@@ -208,6 +283,8 @@ st.markdown(f"""
         padding: 0.15rem 0.6rem !important;
         box-shadow: none !important;
         width: 100% !important;
+        min-height: 0px !important;
+        height: auto !important;
     }}
     
     .st-key-btn_trend button p, 
@@ -220,23 +297,6 @@ st.markdown(f"""
         white-space: nowrap !important;
         text-overflow: clip !important;
         overflow: visible !important;
-    }}
-
-    /* BOTÓN INGRESAR COMPACTO CON ÍCONO DE PERSONA */
-    .st-key-login_btn button {{
-        background-color: {btn_bg} !important;
-        color: {btn_text} !important;
-        border: 1px solid {btn_border} !important;
-        border-radius: 4px !important;
-        padding: 0.2rem 0.6rem 0.2rem 1.8rem !important;
-        background-image: url("{user_icon_svg}") !important;
-        background-repeat: no-repeat !important;
-        background-position: 8px center !important;
-        background-size: 13px 13px !important;
-        font-size: 0.72rem !important;
-    }}
-    .st-key-login_btn button p {{
-        font-size: 0.72rem !important;
     }}
 
     /* INPUTS Y SELECTS COMPACTOS */
@@ -276,6 +336,7 @@ st.markdown(f"""
         background-position: 8px center !important;
         background-size: 13px 13px !important;
         font-size: 0.75rem !important;
+        min-height: 32px !important;
     }}
     
     .stApp .st-key-btn_photo_search button p {{
@@ -283,50 +344,7 @@ st.markdown(f"""
         color: {text_color} !important;
     }}
 
-    /* SWITCH DE TEMA REFINADO (TAMAÑO NORMAL) */
-    .st-key-theme_toggle button {{
-        background: transparent !important;
-        border: none !important;
-        box-shadow: none !important;
-        padding: 0 !important;
-        width: 72px !important;
-        height: 36px !important;
-        position: relative !important;
-        cursor: pointer !important;
-        margin: 0 auto !important;
-        display: block !important;
-    }}
-
-    .st-key-theme_toggle button * {{ display: none !important; }}
-    
-    .st-key-theme_toggle button::before {{
-        content: '' !important;
-        position: absolute !important;
-        top: 3px !important; left: 0 !important;
-        width: 68px !important; height: 30px !important;
-        background-color: {"#1c1f26" if is_dark else "#eae8e6"} !important;
-        border: 1px solid {btn_border} !important;
-        border-radius: 15px !important;
-        background-image: url("{static_icon_svg}") !important;
-        background-repeat: no-repeat !important;
-        background-position: {static_icon_pos} !important;
-        background-size: 14px 14px !important;
-    }}
-    
-    .st-key-theme_toggle button::after {{
-        content: '' !important;
-        position: absolute !important;
-        top: -1px !important;
-        left: {bottle_left_pos} !important;
-        width: 34px !important; height: 38px !important;
-        background-image: url("{bottle_svg}") !important;
-        background-repeat: no-repeat !important;
-        background-size: contain !important;
-        transition: left 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
-        z-index: 2 !important;
-    }}
-
-    /* TARJETAS DE CATÁLOGO COMPACTAS */
+    /* TARJETAS DE CATÁLOGO */
     .catalog-card {{
         background-color: transparent;
         border: 1px solid {btn_border};
@@ -383,20 +401,20 @@ st.markdown(f"""
     .card-perfume-name {{ font-size: 0.78rem; font-weight: 500; color: {text_color}; margin-bottom: 2px; }}
     .card-perfume-brand {{ font-size: 0.65rem; font-weight: 300; color: {subtext_color}; text-transform: uppercase; letter-spacing: 0.5px; }}
 
-    /* DICCIONARIO DE ESENCIAS COMPACTO */
+    /* DICCIONARIO DE ESENCIAS */
     .essence-card {{ border-radius: 4px; padding: 10px 12px; margin-bottom: 8px; border-width: 1px; border-style: solid; }}
     .essence-title {{ font-size: 0.78rem; font-weight: 600; margin-bottom: 3px; letter-spacing: 0.3px; }}
     .essence-desc {{ font-size: 0.72rem; font-weight: 400; line-height: 1.35; opacity: 0.88; }}
     </style>
 """, unsafe_allow_html=True)
 
-# 4. CABECERA
+# 4. CABECERA CON ÁREA DE CLIC MÍNIMA EN EL LOGO
 col_logo, col_espacio, col_actions = st.columns([5, 1.8, 2.4], vertical_alignment="center")
 
 with col_logo:
     logo_color = "#8c7b6d"
     logo_html = f"""
-    <div style="display: flex; align-items: center; gap: 8px; cursor: pointer;" onclick="window.location.reload();">
+    <div style="display: inline-flex; align-items: center; gap: 8px; cursor: pointer; width: fit-content;" onclick="window.location.reload();">
         <svg width="24" height="24" viewBox="0 0 36 36" fill="none" stroke-linecap="round" stroke-linejoin="round">
             <path d="M 6.8 21 L 29.2 21 C 30 25 27 32 18 32 C 9 32 6 25 6.8 21 Z" fill="{logo_color}" />
             <line x1="6.8" y1="21" x2="29.2" y2="21" stroke="{text_color}" stroke-width="1.5" />
@@ -472,7 +490,7 @@ with col_separator:
 with col_photo:
     st.button("Búsqueda visual", key="btn_photo_search", help="Buscar por imagen", use_container_width=True)
 
-# 7. CHIPS DE NAVEGACIÓN RÁPIDA (ANCHO PROPOCIONAL AMPLIADO PARA EVITAR TRUNCO)
+# 7. CHIPS DE NAVEGACIÓN RÁPIDA
 st.markdown("<div style='margin-top: 8px;'></div>", unsafe_allow_html=True)
 col_chip1, col_chip2, col_chip3, col_chip_space = st.columns([1.3, 2.0, 1.7, 4.0], vertical_alignment="center")
 
