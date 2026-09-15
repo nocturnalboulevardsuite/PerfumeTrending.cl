@@ -82,11 +82,9 @@ js_color_script = f"""
             osc.type = 'sine';
             const now = ctx.currentTime;
 
-            // Barrido de tono tipo burbuja (baja a alta frecuencia en ms)
             osc.frequency.setValueAtTime(220, now);
             osc.frequency.exponentialRampToValueAtTime(750, now + 0.07);
 
-            // Envolvente de volumen (ataque rápido y caída tenue)
             gain.gain.setValueAtTime(0.25, now);
             gain.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
 
@@ -109,7 +107,7 @@ js_color_script = f"""
     }};
 
     const colorRules = [
-        {{ keywords: ['sangre', 'cereza', 'frambuesa', 'pimienta rosa', 'rosa', 'ruibarbo', 'lichi', 'ciruela', 'grosella', 'grosellas', 'peonía', 'geranio'], 
+        {{ keywords: ['sangre', 'cereza', 'frambuesa', 'pimienta rosa', 'rosa', 'ruibarbo', 'lichi', 'ciruela', 'grosella', 'peonía', 'geranio'], 
           bg: isDark ? '#3d1a1e' : '#f7eaec', border: isDark ? '#5c282e' : '#e2b3b7', text: isDark ? '#f0adb4' : '#5c1b22' }},
         {{ keywords: ['marina', 'marinas', 'agua', 'océano', 'mar', 'ozónica', 'ozónicas'], 
           bg: isDark ? '#152933' : '#eaf2f7', border: isDark ? '#224052' : '#a8c7da', text: isDark ? '#92ccdb' : '#173a4b' }},
@@ -150,7 +148,6 @@ js_color_script = f"""
             }}
         }});
 
-        // Eventos de clic para sonido de burbuja en las esencias
         const essenceCards = doc.querySelectorAll('.essence-card');
         essenceCards.forEach(card => {{
             if (!card.dataset.soundAttached) {{
@@ -159,7 +156,6 @@ js_color_script = f"""
             }}
         }});
 
-        // Actualizar estado visual del botón mute si ya existe
         const btn = doc.getElementById('sound-toggle-btn');
         if (btn) {{
             btn.innerHTML = window.parent.soundMuted ? '🔇' : '🔊';
@@ -167,7 +163,13 @@ js_color_script = f"""
         }}
     }}
 
-    const observer = new MutationObserver(() => applyEssenceColorsAndEvents());
+    // Debounce para evitar bloqueos del navegador durante renderizados masivos
+    let debounceTimer = null;
+    const observer = new MutationObserver(() => {{
+        if (debounceTimer) clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(applyEssenceColorsAndEvents, 100);
+    }});
+    
     observer.observe(doc.body, {{ childList: true, subtree: true }});
     applyEssenceColorsAndEvents();
 }})();
@@ -179,7 +181,6 @@ components.html(js_color_script, height=0, width=0)
 # 3. CSS PROFESIONAL Y EQUILIBRADO
 st.markdown(f"""
     <style>
-    /* NAVEGADOR NORMALIZADO */
     html, body, .stApp {{
         zoom: 1.0;
     }}
@@ -199,7 +200,6 @@ st.markdown(f"""
         font-size: 0.88rem !important;
     }}
 
-    /* EFECTO MINI-ZOOM SUTIL PARA BOTONES */
     div.stButton > button,
     div.stDownloadButton > button,
     div[data-testid="stPopover"] > button,
@@ -220,14 +220,12 @@ st.markdown(f"""
         cursor: pointer !important;
     }}
 
-    /* CONTENEDORES DE BOTÓN INGRESAR Y SWITCH DE TEMA PARA ALINEACIÓN PERFECTA */
     .st-key-login_btn, .st-key-theme_toggle {{
         display: flex !important;
         align-items: center !important;
         height: 100% !important;
     }}
 
-    /* BOTÓN INGRESAR ALINEADO Y PROPORCIONADO */
     .st-key-login_btn button {{
         background-color: {btn_bg} !important;
         color: {btn_text} !important;
@@ -252,7 +250,6 @@ st.markdown(f"""
         margin: 0 !important;
     }}
 
-    /* SWITCH DE TEMA ALINEADO (ALTURA DE 36px) */
     .st-key-theme_toggle button {{
         background: transparent !important;
         border: none !important;
@@ -296,7 +293,6 @@ st.markdown(f"""
         z-index: 2 !important;
     }}
 
-    /* NAVEGACIÓN PRINCIPAL */
     .st-key-n_perfumes button, 
     .st-key-n_remates button,
     .st-key-n_disenador button,
@@ -336,7 +332,6 @@ st.markdown(f"""
         color: {text_color} !important;
     }}
 
-    /* CHIPS Y HERRAMIENTAS RÁPIDAS */
     .st-key-btn_trend button, 
     .st-key-btn_trust button, 
     .st-key-btn_compare button {{
@@ -362,7 +357,6 @@ st.markdown(f"""
         overflow: visible !important;
     }}
 
-    /* INPUTS Y SELECTS PROPORCIONADOS */
     div[data-baseweb="input"],
     div[data-baseweb="base-input"],
     div[data-baseweb="select"] > div,
@@ -407,7 +401,6 @@ st.markdown(f"""
         color: {text_color} !important;
     }}
 
-    /* TARJETAS DE CATÁLOGO */
     .catalog-card {{
         background-color: transparent;
         border: 1px solid {btn_border};
@@ -464,7 +457,6 @@ st.markdown(f"""
     .card-perfume-name {{ font-size: 0.85rem; font-weight: 500; color: {text_color}; margin-bottom: 3px; }}
     .card-perfume-brand {{ font-size: 0.7rem; font-weight: 300; color: {subtext_color}; text-transform: uppercase; letter-spacing: 0.5px; }}
 
-    /* DICCIONARIO DE ESENCIAS CON MINI ZOOM, HOVER Y CLIC */
     .essence-card {{ 
         border-radius: 8px; 
         padding: 12px 14px; 
@@ -487,7 +479,6 @@ st.markdown(f"""
     .essence-title {{ font-size: 0.85rem; font-weight: 600; margin-bottom: 4px; letter-spacing: 0.3px; }}
     .essence-desc {{ font-size: 0.78rem; font-weight: 400; line-height: 1.4; opacity: 0.9; }}
 
-    /* BOTÓN DE SONIDO MUTE EN CABECERA DE DICCIONARIO */
     .sound-mute-btn {{
         background: transparent;
         border: 1px solid {btn_border};
@@ -513,7 +504,7 @@ st.markdown(f"""
     </style>
 """, unsafe_allow_html=True)
 
-# 4. CABECERA CON ÁREA DE CLIC MÍNIMA EN EL LOGO
+# 4. CABECERA
 col_logo, col_espacio, col_actions = st.columns([5, 1.8, 2.4], vertical_alignment="center")
 
 with col_logo:
@@ -694,7 +685,6 @@ if st.session_state['current_page'] == 'home':
                     st.markdown(card_html, unsafe_allow_html=True)
 
 elif st.session_state['current_page'] == 'esencias_page':
-    # CABECERA DEL DICCIONARIO CON BOTÓN DE MUTEAR SONIDO DE BURBUJA
     col_dict_title, col_dict_mute = st.columns([9, 1], vertical_alignment="center")
     
     with col_dict_title:
@@ -838,33 +828,30 @@ elif st.session_state['current_page'] == 'esencias_page':
         "Sangre (Metálica)": "Nota vanguardista nicho; evoca hierro y un matiz salado."
     }
 
-    esencias_dict = []
-    for note in all_notes:
+    col_es_1, col_es_2 = st.columns(2, gap="medium")
+    html_col1 = []
+    html_col2 = []
+    
+    for i, note in enumerate(all_notes):
         border_col, bg_col, text_c = get_essence_colors(note)
         desc = essence_descriptions.get(note, "Nota olfativa distintiva que aporta carácter y equilibrio.")
-        esencias_dict.append({
-            "title": note,
-            "color_border": border_col,
-            "color_bg": bg_col,
-            "color_text": text_c,
-            "desc": desc
-        })
-
-    col_es_1, col_es_2 = st.columns(2, gap="medium")
-    
-    for i, item in enumerate(esencias_dict):
+        
         tarjeta_html = f"""
-        <div class="essence-card" onclick="window.parent.playBubbleSound && window.parent.playBubbleSound()" style="border-color: {item['color_border']}; background-color: {item['color_bg']}; color: {item['color_text']};">
-            <div class="essence-title" style="color: {item['color_text']} !important;">{item['title']}</div>
-            <div class="essence-desc" style="color: {item['color_text']} !important;">{item['desc']}</div>
+        <div class="essence-card" onclick="window.parent.playBubbleSound && window.parent.playBubbleSound()" style="border-color: {border_col}; background-color: {bg_col}; color: {text_c};">
+            <div class="essence-title" style="color: {text_c} !important;">{note}</div>
+            <div class="essence-desc" style="color: {text_c} !important;">{desc}</div>
         </div>
         """
         if i % 2 == 0:
-            with col_es_1:
-                st.markdown(tarjeta_html, unsafe_allow_html=True)
+            html_col1.append(tarjeta_html)
         else:
-            with col_es_2:
-                st.markdown(tarjeta_html, unsafe_allow_html=True)
+            html_col2.append(tarjeta_html)
+
+    # Renderizado en lote para evitar sobrecarga del DOM
+    with col_es_1:
+        st.markdown("\n".join(html_col1), unsafe_allow_html=True)
+    with col_es_2:
+        st.markdown("\n".join(html_col2), unsafe_allow_html=True)
 
 elif st.session_state['current_page'] == 'trust_page':
     st.markdown(f"<div style='text-align: center; color: {text_color}; font-weight: 300; font-size: 0.95rem;'>Páginas de Confianza (Próximamente)</div>", unsafe_allow_html=True)
