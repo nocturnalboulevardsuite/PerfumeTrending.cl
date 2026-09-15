@@ -177,11 +177,13 @@ js_color_script = f"""
 
 components.html(js_color_script, height=0, width=0)
 
-# 3. CSS PROFESIONAL Y EQUILIBRADO
+# 3. CSS PROFESIONAL Y NÍTIDO (SIN BLUR NI GLOW)
 st.markdown(f"""
     <style>
     html, body, .stApp {{
         zoom: 1.0;
+        -webkit-font-smoothing: antialiased !important;
+        -moz-osx-font-smoothing: grayscale !important;
     }}
 
     header[data-testid="stHeader"] {{ display: none !important; }}
@@ -197,8 +199,11 @@ st.markdown(f"""
     .stApp p, .stApp span, .stApp label, .stMarkdown p {{
         color: {text_color} !important;
         font-size: 0.88rem !important;
+        -webkit-font-smoothing: antialiased !important;
+        text-shadow: none !important;
     }}
 
+    /* Estilizado global de botones sin animaciones que vuelvan borroso el texto */
     div.stButton > button,
     div.stDownloadButton > button,
     div[data-testid="stPopover"] > button,
@@ -206,17 +211,34 @@ st.markdown(f"""
     .st-key-btn_photo_search button,
     .st-key-login_btn button,
     .st-key-theme_toggle button {{
-        transition: transform 0.15s ease, background-color 0.15s ease, border-color 0.15s ease !important;
-        will-change: transform;
+        transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease !important;
+        -webkit-font-smoothing: antialiased !important;
+        -moz-osx-font-smoothing: grayscale !important;
+        text-shadow: none !important;
+        box-shadow: none !important;
+        outline: none !important;
     }}
 
+    /* Corrección de Blur y Glow en Hover */
     div.stButton > button:hover,
     div[data-testid="stPopover"] > button:hover,
     button[data-testid="stPopoverButton"]:hover,
     .st-key-btn_photo_search button:hover,
-    .st-key-login_btn button:hover {{
-        transform: translateY(-1px) !important;
+    .st-key-login_btn button:hover,
+    div.stButton > button:focus,
+    div.stButton > button:active {{
         cursor: pointer !important;
+        box-shadow: none !important;
+        filter: none !important;
+        outline: none !important;
+    }}
+
+    div.stButton > button:hover p,
+    div.stButton > button:focus p,
+    div.stButton > button:active p {{
+        text-shadow: none !important;
+        filter: none !important;
+        -webkit-font-smoothing: antialiased !important;
     }}
 
     .st-key-login_btn, .st-key-theme_toggle {{
@@ -329,9 +351,10 @@ st.markdown(f"""
     .st-key-n_arabes button:hover p, 
     .st-key-n_esencias button:hover p {{
         color: {text_color} !important;
+        text-shadow: none !important;
     }}
 
-    /* BOTONES DE TENDENCIAS / CHIPS Y SUS EFECTOS HOVER */
+    /* Botones tipo Chip ("Páginas de Confianza", "Trend Del Hype", "Comparar Precios") */
     .st-key-btn_trend button, 
     .st-key-btn_trust button, 
     .st-key-btn_compare button {{
@@ -343,16 +366,7 @@ st.markdown(f"""
         width: 100% !important;
         min-height: 0px !important;
         height: auto !important;
-        transition: transform 0.15s ease, background-color 0.15s ease, border-color 0.15s ease !important;
-    }}
-
-    .st-key-btn_trend button:hover, 
-    .st-key-btn_trust button:hover, 
-    .st-key-btn_compare button:hover {{
-        background-color: {btn_bg} !important;
-        border-color: {"#5c6275" if is_dark else "#b0b0bc"} !important;
-        transform: translateY(-1px) !important;
-        cursor: pointer !important;
+        filter: none !important;
     }}
     
     .st-key-btn_trend button p, 
@@ -365,13 +379,26 @@ st.markdown(f"""
         white-space: nowrap !important;
         text-overflow: clip !important;
         overflow: visible !important;
-        transition: color 0.15s ease !important;
+        text-shadow: none !important;
+        filter: none !important;
+        -webkit-font-smoothing: antialiased !important;
+    }}
+
+    .st-key-btn_trend button:hover, 
+    .st-key-btn_trust button:hover, 
+    .st-key-btn_compare button:hover {{
+        border-color: {"#4a5061" if is_dark else "#b5b5c0"} !important;
+        background-color: {"#1a1d26" if is_dark else "#f0f0f5"} !important;
+        box-shadow: none !important;
+        filter: none !important;
     }}
 
     .st-key-btn_trend button:hover p, 
     .st-key-btn_trust button:hover p, 
     .st-key-btn_compare button:hover p {{
         color: {text_color} !important;
+        text-shadow: none !important;
+        filter: none !important;
     }}
 
     div[data-baseweb="input"],
