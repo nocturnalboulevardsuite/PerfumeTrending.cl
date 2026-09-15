@@ -30,7 +30,6 @@ subtext_color = "#a0a0a0" if is_dark else "#444444"
 btn_bg = "#1f242d" if is_dark else "#ffffff"
 btn_text = "#ffffff" if is_dark else "#1a1a1a"
 btn_border = "#3a3f4d" if is_dark else "#d4cdc5"
-btn_hover_bg = "#2d3340" if is_dark else "#f2ebe4"
 
 input_bg = "#1f242d" if is_dark else "#ffffff"
 input_text = "#ffffff" if is_dark else "#1a1a1a"
@@ -54,79 +53,100 @@ bottle_svg = (
 
 camera_icon_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23{text_color[1:]}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z'/><circle cx='12' cy='13' r='4'/></svg>"
 
-# 2. SCRIPT DE INYECCIÓN JAVASCRIPT PARA CHIPS DE ESENCIAS (DESPLEGABLE Y TAGS)
+# 2. SCRIPT DE OPTIMIZACIÓN Y COLORES MATES PARA ESENCIAS
 js_color_script = f"""
 <script>
-function applyEssenceColors() {{
+(function() {{
     const doc = window.parent.document;
     const isDark = {str(is_dark).lower()};
     
+    // PALETA DE COLORES MATES (SIN EFECTOS, BRILLOS NI MOVIMIENTOS)
     const colorRules = [
+        // Mate Rojo (Frutas / Rosas)
         {{ keywords: ['sangre', 'cereza', 'frambuesa', 'pimienta rosa', 'rosa', 'ruibarbo', 'lichi', 'ciruela', 'grosella', 'grosellas', 'peonía', 'geranio'], 
-          bg: isDark ? 'rgba(168, 50, 75, 0.35)' : '#ffe4e6', 
-          border: isDark ? 'rgba(244, 63, 94, 0.7)' : '#f43f5e',
-          text: isDark ? '#fecdd3' : '#881337' }},
+          bg: isDark ? '#4a1f24' : '#f5e6e8', 
+          border: isDark ? '#7a333c' : '#d49b9e',
+          text: isDark ? '#f2b6bc' : '#6b2029' }},
         
+        // Mate Azul (Acuáticas / Marinas)
         {{ keywords: ['marina', 'marinas', 'agua', 'océano', 'mar', 'ozónica', 'ozónicas'], 
-          bg: isDark ? 'rgba(14, 116, 144, 0.35)' : '#e0f2fe', 
-          border: isDark ? 'rgba(56, 189, 248, 0.7)' : '#0284c7',
-          text: isDark ? '#bae6fd' : '#075985' }},
+          bg: isDark ? '#1a3340' : '#e6f0f5', 
+          border: isDark ? '#2c5266' : '#9bbecf',
+          text: isDark ? '#a3d5eb' : '#1c4558' }},
         
+        // Mate Verde (Herbal / Higo / Menta)
         {{ keywords: ['albahaca', 'bergamota', 'cardamomo', 'higo', 'manzana', 'menta', 'pachulí', 'pera', 'romero', 'salvia', 'té verde', 'té blanco', 'vetiver', 'abedul', 'eucalipto', 'gálbano', 'hojas de violeta'], 
-          bg: isDark ? 'rgba(21, 128, 61, 0.35)' : '#dcfce7', 
-          border: isDark ? 'rgba(74, 222, 128, 0.7)' : '#16a34a',
-          text: isDark ? '#bbf7d0' : '#14532d' }},
+          bg: isDark ? '#1c3625' : '#e7f2eb', 
+          border: isDark ? '#2e573c' : '#9ec4aa',
+          text: isDark ? '#a4dbb5' : '#1f482d' }},
         
+        // Mate Púrpura (Flores / Violetas)
         {{ keywords: ['iris', 'lavanda', 'jazmín', 'nardos', 'neroli', 'violeta', 'fresia', 'heliotropo', 'mimosa', 'lila', 'magnolia', 'azahar', 'frangipani', 'gardenia', 'ylang'], 
-          bg: isDark ? 'rgba(126, 34, 206, 0.35)' : '#f3e8ff', 
-          border: isDark ? 'rgba(192, 132, 252, 0.7)' : '#9333ea',
-          text: isDark ? '#f3e8ff' : '#581c87' }},
+          bg: isDark ? '#33233b' : '#efe8f5', 
+          border: isDark ? '#543a61' : '#beacc9',
+          text: isDark ? '#d4bde3' : '#452654' }},
 
+        // Mate Café / Gourmand (Vainilla / Cacao / Frutos Secos)
         {{ keywords: ['caramelo', 'miel', 'solares', 'vainilla', 'cacao', 'café', 'canela', 'tonka', 'nuez moscada', 'praliné', 'haba tonka', 'almendra', 'avellana', 'leche', 'malvavisco', 'chocolate', 'ron', 'cognac', 'whisky'], 
-          bg: isDark ? 'rgba(180, 83, 9, 0.35)' : '#fef3c7', 
-          border: isDark ? 'rgba(245, 158, 11, 0.7)' : '#d97706',
-          text: isDark ? '#fef3c7' : '#78350f' }},
+          bg: isDark ? '#3d281a' : '#f5eae1', 
+          border: isDark ? '#63422b' : '#cbb3a1',
+          text: isDark ? '#e6c3a5' : '#52331c' }},
 
+        // Mate Gris Slate / Amaderado (Maderas / Oud / Musgo)
         {{ keywords: ['ámbar gris', 'cedro', 'sándalo', 'tabaco', 'cuero', 'oud', 'incienso', 'ciprés', 'ébano', 'guayac', 'musgo', 'estoraque', 'ládano', 'benjuí'], 
-          bg: isDark ? 'rgba(71, 85, 105, 0.4)' : '#f1f5f9', 
-          border: isDark ? 'rgba(148, 163, 184, 0.7)' : '#64748b',
-          text: isDark ? '#f1f5f9' : '#0f172a' }},
+          bg: isDark ? '#2b3038' : '#eaecee', 
+          border: isDark ? '#454e5b' : '#b3b9c1',
+          text: isDark ? '#c0c7d1' : '#323943' }},
 
+        // Mate Terracota / Naranja (Cítricos / Ámbar)
         {{ keywords: ['azafrán', 'ámbar', 'mandarina', 'melocotón', 'durazno', 'mirra', 'naranjo', 'pomelo', 'cítrico', 'cítricos', 'limón', 'lima', 'clementina', 'yuzu', 'petit grain', 'piña', 'jengibre'], 
-          bg: isDark ? 'rgba(194, 65, 12, 0.35)' : '#ffedd5', 
-          border: isDark ? 'rgba(251, 146, 60, 0.7)' : '#ea580c',
-          text: isDark ? '#ffedd5' : '#7c2d12' }},
+          bg: isDark ? '#422718' : '#f9eee6', 
+          border: isDark ? '#6b4027' : '#d9b7a3',
+          text: isDark ? '#eabf9e' : '#5e3219' }},
         
+        // Mate Neutro (Sintéticos / Almizcles)
         {{ keywords: ['almizcle', 'coco', 'civeta', 'castóreo', 'pimienta blanca', 'pimienta negra', 'iso e super', 'ambroxan', 'aldehídos', 'cachemira'], 
-          bg: isDark ? 'rgba(255, 255, 255, 0.12)' : '#f8fafc', 
-          border: isDark ? 'rgba(255, 255, 255, 0.35)' : '#cbd5e1',
-          text: isDark ? '#ffffff' : '#1e293b' }}
+          bg: isDark ? '#262930' : '#f0f2f5', 
+          border: isDark ? '#3f4450' : '#c3c8cf',
+          text: isDark ? '#d0d5dd' : '#343a40' }}
     ];
 
-    const targets = doc.querySelectorAll('li[role="option"], div[role="option"], span[data-baseweb="tag"], div[data-baseweb="option"]');
+    function applyEssenceColors() {{
+        const targets = doc.querySelectorAll('li[role="option"], div[role="option"], span[data-baseweb="tag"], div[data-baseweb="option"]');
 
-    targets.forEach(el => {{
-        const text = el.innerText.toLowerCase();
-        for (const rule of colorRules) {{
-            if (rule.keywords.some(kw => text.includes(kw))) {{
-                el.style.backgroundColor = rule.bg;
-                el.style.border = `1px solid ${{rule.border}}`;
-                el.style.color = rule.text; 
-                el.style.borderRadius = '6px';
-                el.style.padding = '3px 10px';
-                el.style.marginTop = '2px';
-                el.style.marginBottom = '2px';
-                el.style.transition = 'all 0.2s ease';
-                el.querySelectorAll('*').forEach(child => {{
-                    child.style.color = rule.text;
-                }});
-                break;
+        targets.forEach(el => {{
+            if (el.dataset.colored === 'true') return;
+            const text = (el.innerText || '').toLowerCase();
+            if (!text) return;
+
+            for (const rule of colorRules) {{
+                if (rule.keywords.some(kw => text.includes(kw))) {{
+                    el.style.backgroundColor = rule.bg;
+                    el.style.border = '1px solid ' + rule.border;
+                    el.style.color = rule.text; 
+                    el.style.borderRadius = '4px';
+                    el.style.padding = '3px 9px';
+                    el.style.margin = '2px 0';
+                    el.style.transition = 'none'; // Elimina animaciones raras al scrollear
+                    el.dataset.colored = 'true';
+                    
+                    el.querySelectorAll('*').forEach(child => {{
+                        child.style.color = rule.text;
+                    }});
+                    break;
+                }}
             }}
-        }}
-    }});
-}}
+        }});
+    }}
 
-setInterval(applyEssenceColors, 150);
+    // Observador eficiente que previene el bugeo de la lista en desplazamientos rápidos
+    const observer = new MutationObserver(() => {{
+        applyEssenceColors();
+    }});
+
+    observer.observe(doc.body, {{ childList: true, subtree: true }});
+    applyEssenceColors();
+}})();
 </script>
 """
 
@@ -422,9 +442,9 @@ st.markdown(f"""
     .card-perfume-brand {{ font-size: 0.75rem; font-weight: 300; color: {subtext_color}; text-transform: uppercase; letter-spacing: 1px; }}
 
     /* TARJETAS DE DICCIONARIO DE ESENCIAS */
-    .essence-card {{ border-radius: 6px; padding: 20px; margin-bottom: 15px; transition: all 0.3s ease; }}
-    .essence-title {{ font-size: 1rem; font-weight: 600; color: {text_color} !important; margin-bottom: 8px; letter-spacing: 0.5px; }}
-    .essence-desc {{ font-size: 0.88rem; font-weight: 400; color: {subtext_color} !important; line-height: 1.6; }}
+    .essence-card {{ border-radius: 6px; padding: 20px; margin-bottom: 15px; border-width: 1px; border-style: solid; }}
+    .essence-title {{ font-size: 1rem; font-weight: 600; margin-bottom: 8px; letter-spacing: 0.5px; }}
+    .essence-desc {{ font-size: 0.88rem; font-weight: 400; line-height: 1.6; opacity: 0.9; }}
     </style>
 """, unsafe_allow_html=True)
 
@@ -630,29 +650,21 @@ elif st.session_state['current_page'] == 'esencias_page':
     def get_essence_colors(name):
         n = name.lower()
         if any(k in n for k in ['sangre', 'cereza', 'frambuesa', 'pimienta rosa', 'rosa', 'ruibarbo', 'lichi', 'ciruela', 'grosella', 'peonía', 'geranio']):
-            return ("rgba(200, 70, 95, 0.6)" if is_dark else "rgba(244, 63, 94, 0.5)",
-                    "rgba(168, 50, 75, 0.25)" if is_dark else "rgba(255, 228, 230, 0.85)")
+            return ("#7a333c" if is_dark else "#d49b9e", "#4a1f24" if is_dark else "#f5e6e8", "#f2b6bc" if is_dark else "#6b2029")
         elif any(k in n for k in ['marina', 'marinas', 'agua', 'océano', 'ozónica']):
-            return ("rgba(40, 150, 180, 0.6)" if is_dark else "rgba(2, 132, 199, 0.5)",
-                    "rgba(20, 110, 140, 0.25)" if is_dark else "rgba(224, 242, 254, 0.85)")
+            return ("#2c5266" if is_dark else "#9bbecf", "#1a3340" if is_dark else "#e6f0f5", "#a3d5eb" if is_dark else "#1c4558")
         elif any(k in n for k in ['albahaca', 'bergamota', 'cardamomo', 'higo', 'manzana', 'menta', 'pachulí', 'pera', 'romero', 'salvia', 'té verde', 'té blanco', 'vetiver', 'abedul', 'eucalipto', 'gálbano']):
-            return ("rgba(74, 222, 128, 0.6)" if is_dark else "rgba(22, 163, 74, 0.5)",
-                    "rgba(21, 128, 61, 0.25)" if is_dark else "rgba(220, 252, 231, 0.85)")
+            return ("#2e573c" if is_dark else "#9ec4aa", "#1c3625" if is_dark else "#e7f2eb", "#a4dbb5" if is_dark else "#1f482d")
         elif any(k in n for k in ['iris', 'lavanda', 'jazmín', 'nardos', 'neroli', 'violeta', 'fresia', 'gardenia', 'ylang', 'magnolia', 'azahar']):
-            return ("rgba(192, 132, 252, 0.6)" if is_dark else "rgba(147, 51, 234, 0.5)",
-                    "rgba(126, 34, 206, 0.25)" if is_dark else "rgba(243, 232, 255, 0.85)")
+            return ("#543a61" if is_dark else "#beacc9", "#33233b" if is_dark else "#efe8f5", "#d4bde3" if is_dark else "#452654")
         elif any(k in n for k in ['caramelo', 'miel', 'solares', 'vainilla', 'cacao', 'café', 'canela', 'tonka', 'nuez moscada', 'praliné', 'almendra', 'avellana', 'ron', 'cognac', 'whisky']):
-            return ("rgba(245, 158, 11, 0.6)" if is_dark else "rgba(217, 119, 6, 0.5)",
-                    "rgba(180, 83, 9, 0.25)" if is_dark else "rgba(254, 243, 199, 0.85)")
+            return ("#63422b" if is_dark else "#cbb3a1", "#3d281a" if is_dark else "#f5eae1", "#e6c3a5" if is_dark else "#52331c")
         elif any(k in n for k in ['ámbar gris', 'cedro', 'sándalo', 'tabaco', 'cuero', 'oud', 'incienso', 'ciprés', 'ébano', 'guayac', 'musgo', 'benjuí', 'ládano']):
-            return ("rgba(148, 163, 184, 0.6)" if is_dark else "rgba(100, 116, 139, 0.5)",
-                    "rgba(71, 85, 105, 0.25)" if is_dark else "rgba(241, 245, 249, 0.85)")
+            return ("#454e5b" if is_dark else "#b3b9c1", "#2b3038" if is_dark else "#eaecee", "#c0c7d1" if is_dark else "#323943")
         elif any(k in n for k in ['azafrán', 'ámbar', 'mandarina', 'melocotón', 'durazno', 'mirra', 'naranjo', 'pomelo', 'cítrico', 'cítricos', 'limón', 'lima', 'piña', 'jengibre', 'yuzu']):
-            return ("rgba(251, 146, 60, 0.6)" if is_dark else "rgba(234, 88, 12, 0.5)",
-                    "rgba(194, 65, 12, 0.25)" if is_dark else "rgba(255, 237, 213, 0.85)")
+            return ("#6b4027" if is_dark else "#d9b7a3", "#422718" if is_dark else "#f9eee6", "#eabf9e" if is_dark else "#5e3219")
         else:
-            return ("rgba(180, 180, 180, 0.4)" if is_dark else "rgba(148, 163, 184, 0.5)",
-                    "rgba(160, 160, 160, 0.15)" if is_dark else "rgba(248, 250, 252, 0.95)")
+            return ("#3f4450" if is_dark else "#c3c8cf", "#262930" if is_dark else "#f0f2f5", "#d0d5dd" if is_dark else "#343a40")
 
     essence_descriptions = {
         # Cítricos
@@ -789,12 +801,13 @@ elif st.session_state['current_page'] == 'esencias_page':
 
     esencias_dict = []
     for note in all_notes:
-        border_col, bg_col = get_essence_colors(note)
+        border_col, bg_col, text_c = get_essence_colors(note)
         desc = essence_descriptions.get(note, "Nota olfativa distintiva que aporta carácter y equilibrio a la fragancia.")
         esencias_dict.append({
             "title": note,
             "color_border": border_col,
             "color_bg": bg_col,
+            "color_text": text_c,
             "desc": desc
         })
 
@@ -802,9 +815,9 @@ elif st.session_state['current_page'] == 'esencias_page':
     
     for i, item in enumerate(esencias_dict):
         tarjeta_html = f"""
-        <div class="essence-card" style="border: 1px solid {item['color_border']}; background-color: {item['color_bg']};">
-            <div class="essence-title">{item['title']}</div>
-            <div class="essence-desc">{item['desc']}</div>
+        <div class="essence-card" style="border-color: {item['color_border']}; background-color: {item['color_bg']}; color: {item['color_text']};">
+            <div class="essence-title" style="color: {item['color_text']} !important;">{item['title']}</div>
+            <div class="essence-desc" style="color: {item['color_text']} !important;">{item['desc']}</div>
         </div>
         """
         if i % 2 == 0:
