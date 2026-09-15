@@ -35,9 +35,9 @@ input_bg = "#14171d" if is_dark else "#ffffff"
 input_text = "#f0f0f0" if is_dark else "#18181b"
 input_border = "#2a2e39" if is_dark else "#e2e2e8"
 
-# Posicionamiento del Switch de Tema (Versión compacta)
-bottle_left_pos = "32px" if is_dark else "-2px"
-static_icon_pos = "9px center" if is_dark else "calc(100% - 9px) center"
+# Posicionamiento del Switch de Tema (Proporciones ajustadas)
+bottle_left_pos = "36px" if is_dark else "-2px"
+static_icon_pos = "10px center" if is_dark else "calc(100% - 10px) center"
 
 static_icon_svg = (
     "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='4'/><line x1='12' y1='1' x2='12' y2='3'/><line x1='12' y1='21' x2='12' y2='23'/><line x1='4.22' y1='4.22' x2='5.64' y2='5.64'/><line x1='18.36' y1='18.36' x2='19.78' y2='19.78'/><line x1='1' y1='12' x2='3' y2='12'/><line x1='21' y1='12' x2='23' y2='12'/><line x1='4.22' y1='19.78' x2='5.64' y2='18.36'/><line x1='18.36' y1='5.64' x2='19.78' y2='4.22'/></svg>"
@@ -269,14 +269,14 @@ st.markdown(f"""
         color: {text_color} !important;
     }}
 
-    /* SWITCH DE TEMA REDUCIDO */
+    /* SWITCH DE TEMA REFINADO Y LIGERAMENTE MÁS GRANDE */
     .st-key-theme_toggle button {{
         background: transparent !important;
         border: none !important;
         box-shadow: none !important;
         padding: 0 !important;
-        width: 62px !important;
-        height: 32px !important;
+        width: 72px !important;
+        height: 36px !important;
         position: relative !important;
         cursor: pointer !important;
         margin: 0 auto !important;
@@ -289,26 +289,26 @@ st.markdown(f"""
         content: '' !important;
         position: absolute !important;
         top: 3px !important; left: 0 !important;
-        width: 60px !important; height: 26px !important;
+        width: 68px !important; height: 30px !important;
         background-color: {"#1c1f26" if is_dark else "#eae8e6"} !important;
         border: 1px solid {btn_border} !important;
-        border-radius: 14px !important;
+        border-radius: 15px !important;
         background-image: url("{static_icon_svg}") !important;
         background-repeat: no-repeat !important;
         background-position: {static_icon_pos} !important;
-        background-size: 12px 12px !important;
+        background-size: 14px 14px !important;
     }}
     
     .st-key-theme_toggle button::after {{
         content: '' !important;
         position: absolute !important;
-        top: -3px !important;
+        top: -1px !important;
         left: {bottle_left_pos} !important;
-        width: 30px !important; height: 34px !important;
+        width: 34px !important; height: 38px !important;
         background-image: url("{bottle_svg}") !important;
         background-repeat: no-repeat !important;
         background-size: contain !important;
-        transition: left 0.25s ease !important;
+        transition: left 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
         z-index: 2 !important;
     }}
 
