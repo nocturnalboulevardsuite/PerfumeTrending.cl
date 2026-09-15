@@ -1,14 +1,14 @@
 import streamlit as st
+import streamlit.components.v1 as components
 import pandas as pd
 
-# 1. CONFIGURACIÓN DE LA PÁGINA Y CSS CUSTOM 
+# 1. CONFIGURACIÓN DE LA PÁGINA Y ESTADO
 st.set_page_config(page_title="PerfumeTrending", layout="wide", initial_sidebar_state="collapsed")
 
-# 2. MANEJO DE ESTADO (Navegación y Tema)
 if 'current_page' not in st.session_state:
     st.session_state['current_page'] = 'home'
 if 'theme' not in st.session_state:
-    st.session_state['theme'] = 'light'
+    st.session_state['theme'] = 'dark'
 if 'selected_perfume' not in st.session_state:
     st.session_state['selected_perfume'] = None
 
@@ -52,56 +52,55 @@ bottle_svg = (
 
 camera_icon_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z'/><circle cx='12' cy='13' r='4'/></svg>"
 
-# GENERACIÓN DINÁMICA DE ESTILOS DE COLOR SUTILES PARA CADA ESENCIA
-essence_colors = {
-    # Rojos (Sangre, Cereza, Rosa, etc.)
-    ("Sangre", "Cereza", "Frambuesa", "Pimienta Rosa", "Rosa", "Ruibarbo", "Lichi"): 
-        ("rgba(220, 38, 38, 0.22)", "rgba(239, 68, 68, 0.6)"),
-    # Azules (Notas Marinas)
-    ("Notas Marinas",): 
-        ("rgba(2, 132, 199, 0.22)", "rgba(56, 189, 248, 0.6)"),
-    # Verdes (Albahaca, Bergamota, Menta, etc.)
-    ("Albahaca", "Bergamota", "Cardamomo", "Higo", "Manzana", "Menta", "Pachulí", "Pera", "Romero", "Salvia", "Té Verde", "Vetiver"): 
-        ("rgba(22, 163, 74, 0.22)", "rgba(74, 222, 128, 0.6)"),
-    # Amarillos / Dorados (Vainilla, Cítricos, Miel, Piña, etc.)
-    ("Caramelo", "Cítricos", "Jengibre", "Limón", "Miel", "Notas Solares", "Piña", "Vainilla", "Ylang-Ylang"): 
-        ("rgba(202, 138, 4, 0.22)", "rgba(250, 204, 21, 0.6)"),
-    # Naranjas (Ámbar, Azafrán, Mandarina, etc.)
-    ("Ámbar", "Azafrán", "Mandarina", "Melocotón", "Mirra", "Naranjo", "Pomelo"): 
-        ("rgba(234, 88, 12, 0.22)", "rgba(251, 146, 60, 0.6)"),
-    # Púrpura / Violeta (Iris, Lavanda, Ciruela, etc.)
-    ("Ciruela", "Grosellas Negras", "Iris", "Lavanda"): 
-        ("rgba(147, 51, 234, 0.22)", "rgba(192, 132, 252, 0.6)"),
-    # Marrón / Café / Especias (Café, Cacao, Cedro, Tabaco, etc.)
-    ("Cacao", "Café", "Canela", "Cedro", "Haba Tonka", "Nuez Moscada", "Praliné", "Sándalo", "Tabaco"): 
-        ("rgba(146, 64, 14, 0.25)", "rgba(217, 119, 6, 0.6)"),
-    # Gris / Humo (Incienso, Ámbar Gris)
-    ("Ámbar Gris", "Incienso"): 
-        ("rgba(100, 116, 139, 0.25)", "rgba(148, 163, 184, 0.6)"),
-    # Cuero / Oscuro (Oud, Cuero, Abedul, Civeta)
-    ("Abedul", "Civeta", "Cuero", "Oud", "Pimienta Negra"): 
-        ("rgba(55, 65, 81, 0.35)", "rgba(156, 163, 175, 0.6)"),
-    # Blancos / Florales (Almizcle, Jazmín, Coco, etc.)
-    ("Almizcle", "Coco", "Jazmín", "Nardos", "Neroli", "Pimienta Blanca"): 
-        ("rgba(255, 255, 255, 0.12)", "rgba(255, 255, 255, 0.4)"),
+# 2. SCRIPT DE INYECCIÓN JAVASCRIPT PARA COLOREAR CADA OPCIÓN DEL DESPLEGABLE
+js_color_script = """
+<script>
+function applyEssenceColors() {
+    const doc = window.parent.document;
+    
+    // Reglas de color por palabra clave de esencia
+    const colorRules = [
+        { keywords: ['sangre', 'cereza', 'frambuesa', 'pimienta rosa', 'rosa', 'ruibarbo', 'lichi'], bg: 'rgba(220, 38, 38, 0.35)', border: 'rgba(239, 68, 68, 0.8)' },
+        { keywords: ['marina', 'marinas', 'agua', 'océano'], bg: 'rgba(2, 132, 199, 0.35)', border: 'rgba(56, 189, 248, 0.8)' },
+        { keywords: ['albahaca', 'bergamota', 'cardamomo', 'higo', 'manzana', 'menta', 'pachulí', 'pera', 'romero', 'salvia', 'té verde', 'vetiver'], bg: 'rgba(22, 163, 74, 0.35)', border: 'rgba(74, 222, 128, 0.8)' },
+        { keywords: ['azafrán', 'ámbar', 'mandarina', 'melocotón', 'mirra', 'naranjo', 'pomelo'], bg: 'rgba(234, 88, 12, 0.35)', border: 'rgba(251, 146, 60, 0.8)' },
+        { keywords: ['caramelo', 'cítrico', 'cítricos', 'jengibre', 'limón', 'miel', 'solares', 'piña', 'vainilla', 'ylang'], bg: 'rgba(202, 138, 4, 0.35)', border: 'rgba(250, 204, 21, 0.8)' },
+        { keywords: ['ciruela', 'grosella', 'grosellas', 'iris', 'lavanda'], bg: 'rgba(147, 51, 234, 0.35)', border: 'rgba(192, 132, 252, 0.8)' },
+        { keywords: ['cacao', 'café', 'canela', 'cedro', 'tonka', 'nuez moscada', 'praliné', 'sándalo', 'tabaco'], bg: 'rgba(146, 64, 14, 0.4)', border: 'rgba(217, 119, 6, 0.8)' },
+        { keywords: ['ámbar gris', 'incienso'], bg: 'rgba(100, 116, 139, 0.4)', border: 'rgba(148, 163, 184, 0.8)' },
+        { keywords: ['abedul', 'civeta', 'cuero', 'oud', 'pimienta negra'], bg: 'rgba(55, 65, 81, 0.45)', border: 'rgba(156, 163, 175, 0.8)' },
+        { keywords: ['almizcle', 'coco', 'jazmín', 'nardos', 'neroli', 'pimienta blanca'], bg: 'rgba(255, 255, 255, 0.18)', border: 'rgba(255, 255, 255, 0.6)' }
+    ];
+
+    // Seleccionar tanto las opciones abiertas del dropdown como los botones seleccionados
+    const targets = doc.querySelectorAll('li[role="option"], div[role="option"], span[data-baseweb="tag"]');
+
+    targets.forEach(el => {
+        const text = el.innerText.toLowerCase();
+        for (const rule of colorRules) {
+            if (rule.keywords.some(kw => text.includes(kw))) {
+                el.style.backgroundColor = rule.bg;
+                el.style.border = `1px solid ${rule.border}`;
+                el.style.color = '#ffffff';
+                el.style.borderRadius = '6px';
+                el.style.marginTop = '2px';
+                el.style.marginBottom = '2px';
+                el.style.transition = 'all 0.2s ease';
+                break;
+            }
+        }
+    });
 }
 
-dynamic_essence_css = ""
-for names, (bg_color, border_color) in essence_colors.items():
-    for name in names:
-        dynamic_essence_css += f"""
-        span[data-baseweb="tag"][title*="{name}"],
-        div[role="option"][aria-label*="{name}"],
-        li[role="option"][aria-label*="{name}"],
-        li[title*="{name}"] {{
-            background-color: {bg_color} !important;
-            border: 1px solid {border_color} !important;
-            color: #ffffff !important;
-            border-radius: 6px !important;
-            transition: all 0.2s ease !important;
-        }}
-        """
+// Ejecutar continuamente para aplicar estilos a medida que el usuario abre o se desplaza por el desplegable
+setInterval(applyEssenceColors, 150);
+</script>
+"""
 
+# Inject JS execution silently
+components.html(js_color_script, height=0, width=0)
+
+# 3. CSS GLOBAL Y CONFIGURACIÓN VISUAL
 st.markdown(f"""
     <style>
     header[data-testid="stHeader"] {{ display: none !important; }}
@@ -112,7 +111,7 @@ st.markdown(f"""
         color: {text_color} !important;
     }}
 
-    /* NAVEGACIÓN PRINCIPAL SUPERIOR */
+    /* NAVEGACIÓN PRINCIPAL */
     .st-key-n_perfumes button, 
     .st-key-n_arabes button, 
     .st-key-n_marcas button, 
@@ -141,17 +140,6 @@ st.markdown(f"""
         white-space: nowrap !important;
     }}
 
-    .st-key-n_perfumes button:hover, 
-    .st-key-n_arabes button:hover, 
-    .st-key-n_marcas button:hover, 
-    .st-key-n_remates button:hover,
-    .st-key-n_disenador button:hover,
-    .st-key-n_nicho button:hover,
-    .st-key-n_esencias button:hover {{
-        background-color: transparent !important;
-        border-bottom: 2px solid #8c7b6d !important;
-    }}
-
     .st-key-n_perfumes button:hover p, 
     .st-key-n_arabes button:hover p, 
     .st-key-n_marcas button:hover p, 
@@ -162,7 +150,7 @@ st.markdown(f"""
         color: #8c7b6d !important;
     }}
 
-    /* HERRAMIENTAS RÁPIDAS (CHIPS DEBAJO DEL HERO SEARCH) */
+    /* HERRAMIENTAS RÁPIDAS */
     .st-key-btn_trend button, 
     .st-key-btn_trust button, 
     .st-key-btn_compare button {{
@@ -181,19 +169,6 @@ st.markdown(f"""
         color: {subtext_color} !important;
     }}
 
-    .st-key-btn_trend button:hover, 
-    .st-key-btn_trust button:hover, 
-    .st-key-btn_compare button:hover {{
-        border-color: #8c7b6d !important;
-        background-color: {btn_hover_bg} !important;
-    }}
-    
-    .st-key-btn_trend button:hover p, 
-    .st-key-btn_trust button:hover p, 
-    .st-key-btn_compare button:hover p {{
-        color: #8c7b6d !important;
-    }}
-
     /* BOTÓN INGRESAR */
     .st-key-login_btn button {{
         background-color: {btn_bg} !important;
@@ -203,7 +178,7 @@ st.markdown(f"""
         font-weight: 500 !important;
     }}
 
-    /* POPOVER ESENCIAS */
+    /* POPOVER Y BÚSQUEDA FOTO */
     div[data-testid="stPopover"] > button {{
         background-color: #1f242d !important;
         border: 1px solid #3a3f4d !important;
@@ -211,7 +186,6 @@ st.markdown(f"""
         padding: 0.4rem 0.2rem !important;
     }}
 
-    /* BOTÓN BÚSQUEDA CON FOTOGRAFÍA */
     .st-key-btn_photo_search button {{
         background-color: #1f242d !important;
         border: 1px solid #3a3f4d !important;
@@ -227,17 +201,10 @@ st.markdown(f"""
     .stApp div[data-testid="stPopover"] button,
     .stApp div[data-testid="stPopover"] button p,
     .stApp div[data-testid="stPopover"] button span,
-    .stApp div[data-testid="stPopover"] button div,
     .stApp .st-key-btn_photo_search button,
-    .stApp .st-key-btn_photo_search button p,
-    .stApp .st-key-btn_photo_search button span {{
+    .stApp .st-key-btn_photo_search button p {{
         color: #ffffff !important;
         white-space: nowrap !important;
-    }}
-
-    div[data-testid="stPopover"] > button:hover,
-    .st-key-btn_photo_search button:hover {{
-        background-color: #2d3340 !important;
     }}
 
     /* INPUTS Y SELECTS */
@@ -256,24 +223,16 @@ st.markdown(f"""
     
     div[data-baseweb="input"] input::placeholder {{ color: #9e9e9e !important; }}
 
-    /* APLICACIÓN DE COLORES SUTILES PARA CADA OPCIÓN DE ESENCIA */
-    {dynamic_essence_css}
-
     /* SWITCH DE TEMA */
-    .st-key-theme_toggle div[data-testid="stButton"] > button,
     .st-key-theme_toggle button {{
         background: transparent !important;
-        background-color: transparent !important;
         border: none !important;
         box-shadow: none !important;
-        outline: none !important;
         padding: 0 !important;
         width: 82px !important;
         height: 48px !important;
-        min-height: 48px !important;
         position: relative !important;
         cursor: pointer !important;
-        overflow: visible !important;
         margin: 0 auto !important;
         display: block !important;
     }}
@@ -289,7 +248,6 @@ st.markdown(f"""
         border: 2px solid #111111 !important;
         border-radius: 20px !important;
         box-shadow: inset 0 2px 5px rgba(0,0,0,0.6) !important;
-        box-sizing: border-box !important;
         background-image: url("{static_icon_svg}") !important;
         background-repeat: no-repeat !important;
         background-position: {static_icon_pos} !important;
@@ -307,11 +265,10 @@ st.markdown(f"""
         background-repeat: no-repeat !important;
         background-size: contain !important;
         transition: left 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
-        filter: drop-shadow(2px 3px 4px rgba(0,0,0,0.4)) !important;
         z-index: 2 !important;
     }}
 
-    /* TARJETAS DE CATÁLOGO Y EFECTO HOVER */
+    /* TARJETAS DE CATÁLOGO */
     .catalog-card {{
         background-color: {btn_bg};
         border: 1px solid {btn_border};
@@ -361,9 +318,7 @@ st.markdown(f"""
         backdrop-filter: blur(4px);
         text-align: left;
     }}
-    .catalog-card:hover .card-hover-overlay {{
-        opacity: 1;
-    }}
+    .catalog-card:hover .card-hover-overlay {{ opacity: 1; }}
     .overlay-title {{
         font-size: 1.05rem;
         font-weight: 800;
@@ -372,60 +327,18 @@ st.markdown(f"""
         border-bottom: 1px solid rgba(255,255,255,0.2);
         padding-bottom: 6px;
     }}
-    .overlay-info {{
-        font-size: 0.82rem;
-        line-height: 1.45;
-        color: #e0e0e0;
-        margin-bottom: 8px;
-    }}
-    .overlay-info b {{
-        color: #ffffff;
-    }}
-    .card-footer-info {{
-        padding: 12px 15px;
-        text-align: center;
-        background-color: {btn_bg};
-    }}
-    .card-perfume-name {{
-        font-size: 0.95rem;
-        font-weight: 700;
-        color: {text_color};
-        margin-bottom: 2px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }}
-    .card-perfume-brand {{
-        font-size: 0.8rem;
-        color: {subtext_color};
-    }}
+    .overlay-info {{ font-size: 0.82rem; line-height: 1.45; color: #e0e0e0; margin-bottom: 8px; }}
+    .card-footer-info {{ padding: 12px 15px; text-align: center; background-color: {btn_bg}; }}
+    .card-perfume-name {{ font-size: 0.95rem; font-weight: 700; color: {text_color}; margin-bottom: 2px; }}
+    .card-perfume-brand {{ font-size: 0.8rem; color: {subtext_color}; }}
 
-    /* ESTILOS PARA LA SECCIÓN DE DICCIONARIO DE ESENCIAS */
-    .essence-card {{
-        border-radius: 8px;
-        padding: 18px;
-        margin-bottom: 15px;
-        transition: transform 0.2s ease;
-    }}
-    .essence-card:hover {{
-        transform: scale(1.01);
-    }}
-    .essence-title {{
-        font-size: 1.1rem;
-        font-weight: 700;
-        color: {text_color};
-        margin-bottom: 6px;
-        letter-spacing: 0.3px;
-    }}
-    .essence-desc {{
-        font-size: 0.9rem;
-        color: {subtext_color};
-        line-height: 1.5;
-    }}
+    .essence-card {{ border-radius: 8px; padding: 18px; margin-bottom: 15px; }}
+    .essence-title {{ font-size: 1.1rem; font-weight: 700; color: {text_color}; margin-bottom: 6px; }}
+    .essence-desc {{ font-size: 0.9rem; color: {subtext_color}; line-height: 1.5; }}
     </style>
 """, unsafe_allow_html=True)
 
-# 1. CABECERA (LOGO + USER / THEME)
+# 4. CABECERA
 col_logo, col_espacio, col_actions = st.columns([4, 3, 2.5], vertical_alignment="center")
 
 with col_logo:
@@ -457,7 +370,7 @@ with col_actions:
     with btn_col2:
         st.button(" ", key="theme_toggle", on_click=toggle_theme)
 
-# 2. NAVEGACIÓN PRINCIPAL 
+# 5. NAVEGACIÓN
 st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
 nav_cols = st.columns([1.1, 1.6, 0.9, 1.0, 1.1, 0.9, 1.0, 1.5], vertical_alignment="center")
 
@@ -471,7 +384,7 @@ with nav_cols[6]: st.button("ESENCIAS", key="n_esencias", on_click=navigate_to, 
 
 st.markdown(f"<hr style='margin: 8px 0 25px 0; border: none; border-bottom: 1px solid {btn_border}; opacity: 0.5;'>", unsafe_allow_html=True)
 
-# 3. EL "HERO" DE BÚSQUEDA CON ESENCIAS COLOREADAS SUTILMENTE
+# 6. BÚSQUEDA Y SELECCIÓN DE ESENCIAS COLOREADAS
 col_search, col_filter, col_separator, col_photo = st.columns([5.2, 1.8, 0.2, 2.3], vertical_alignment="center")
 
 with col_search:
@@ -479,7 +392,6 @@ with col_search:
 
 with col_filter:
     with st.popover("Esencias", use_container_width=True):
-        # LISTA DE ESENCIAS SIN ÍCONOS DE COLOR EN EL TEXTO
         raw_notes = [
             "Abedul", "Albahaca", "Almizcle (Blanco/Musk)", "Ámbar (Cálido)", "Ámbar Gris",
             "Azafrán", "Bergamota", "Cacao", "Café", "Canela",
@@ -510,7 +422,7 @@ with col_separator:
 with col_photo:
     st.button("Búsqueda con fotografía", key="btn_photo_search", help="Buscar perfume por imagen", use_container_width=True)
 
-# 4. HERRAMIENTAS RÁPIDAS
+# 7. CHIPS DE NAVEGACIÓN RÁPIDA
 st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
 col_chip1, col_chip2, col_chip3, col_chip_space = st.columns([1.5, 1.8, 1.6, 5.1], vertical_alignment="center")
 
@@ -524,14 +436,13 @@ with col_chip3:
 
 st.markdown("<br>", unsafe_allow_html=True)
 
-# 5. VISTAS DE PÁGINA Y CATÁLOGO CON TARJETAS
+# 8. VISTAS DE PÁGINA
 if st.session_state['current_page'] == 'home':
     st.markdown(f"<h3 style='text-align: center; margin-bottom: 25px; color: {text_color}; letter-spacing: 1px;'>CATÁLOGO Y TENDENCIAS</h3>", unsafe_allow_html=True)
     
     if selected_essences:
         st.write(f"**Filtrando por:** {', '.join(selected_essences)}")
 
-    # BASE DE DATOS DE PERFUMES
     catalog_perfumes = [
         {
             "name": "Bleu de Chanel",
@@ -583,7 +494,6 @@ if st.session_state['current_page'] == 'home':
         }
     ]
 
-    # MOSTRAR EN REJILLA DE 3 COLUMNAS
     cols_per_row = 3
     for i in range(0, len(catalog_perfumes), cols_per_row):
         cols = st.columns(cols_per_row, gap="medium")
@@ -610,7 +520,6 @@ if st.session_state['current_page'] == 'home':
                 with cols[j]:
                     st.markdown(card_html, unsafe_allow_html=True)
 
-# PÁGINA DE ESENCIAS (DICCIONARIO OLFATIVO CON COLORES SUTILES)
 elif st.session_state['current_page'] == 'esencias_page':
     st.markdown(f"<h2 style='text-align: center; color: {text_color}; margin-bottom: 30px;'>Diccionario de Esencias</h2>", unsafe_allow_html=True)
     st.write("Descubre qué significa cada nota olfativa y cómo aporta personalidad a tus fragancias favoritas.")
@@ -620,49 +529,25 @@ elif st.session_state['current_page'] == 'esencias_page':
             "title": "Notas Marinas (Acuáticas)", 
             "color_border": "rgba(56, 189, 248, 0.8)", 
             "color_bg": "rgba(2, 132, 199, 0.15)", 
-            "desc": "Las notas marinas capturan el aroma del océano, la brisa marina, la sal y el yodo. Se logran con moléculas sintéticas como el <i>Calone</i>. Aportan una frescura ozónica, limpia y cristalina."
+            "desc": "Las notas marinas capturan el aroma del océano, la brisa marina, la sal y el yodo. Aportan una frescura ozónica, limpia y cristalina."
         },
         {
             "title": "Almizcle (Blanco / Musk)", 
             "color_border": "rgba(255, 255, 255, 0.5)", 
             "color_bg": "rgba(255, 255, 255, 0.08)", 
-            "desc": "El almizcle blanco recrea una sensación pura de 'piel limpia', suavidad algodonosa y aporta fijación duradera a cualquier composición perfumada."
+            "desc": "El almizcle blanco recrea una sensación pura de 'piel limpia', suavidad algodonosa y aporta fijación duradera."
         },
         {
             "title": "Sangre (Metálica)", 
             "color_border": "rgba(239, 68, 68, 0.8)", 
             "color_bg": "rgba(220, 38, 38, 0.15)", 
-            "desc": "Una nota vanguardista y nicho que evoca el hierro. Aporta una sensación carnal, férrea, salada y metálica muy distintiva en fragancias conceptuales."
+            "desc": "Una nota vanguardista y nicho que evoca el hierro. Aporta una sensación carnal, férrea, salada y metálica muy distintiva."
         },
         {
             "title": "Café (Gourmand)", 
             "color_border": "rgba(217, 119, 6, 0.8)", 
             "color_bg": "rgba(146, 64, 14, 0.18)", 
-            "desc": "Aporta un matiz tostado, cálido, energizante y vagamente amargo. Ideal para perfumes de invierno que buscan una faceta adictiva y acogedora."
-        },
-        {
-            "title": "Ámbar (Cálido)", 
-            "color_border": "rgba(251, 146, 60, 0.8)", 
-            "color_bg": "rgba(234, 88, 12, 0.15)", 
-            "desc": "Un acorde tradicionalmente dulce, resinoso y envolvente (ládano, benjuí y vainilla). Evoca elegancia, misterio, calidez y opulencia."
-        },
-        {
-            "title": "Oud (Madera Oscura)", 
-            "color_border": "rgba(156, 163, 175, 0.8)", 
-            "color_bg": "rgba(55, 65, 81, 0.25)", 
-            "desc": "Extraído de la madera infectada de Aquilaria, es una de las notas más exclusivas del mundo oriental. Su perfil es profundo, amaderado, ahumado y complejo."
-        },
-        {
-            "title": "Vainilla (Dulce)", 
-            "color_border": "rgba(250, 204, 21, 0.8)", 
-            "color_bg": "rgba(202, 138, 4, 0.15)", 
-            "desc": "Aporta dulzura, confort, voluptuosidad y toques golosos. Pilar fundamental de la familia oriental y gourmand."
-        },
-        {
-            "title": "Bergamota (Cítrico Verde)", 
-            "color_border": "rgba(74, 222, 128, 0.8)", 
-            "color_bg": "rgba(22, 163, 74, 0.15)", 
-            "desc": "Un cítrico brillante, efervescente y verde con matices florales sutiles. Es la nota de salida por excelencia para abrir una fragancia con frescura."
+            "desc": "Aporta un matiz tostado, cálido, energizante y vagamente amargo. Ideal para perfumes con carácter adictivo."
         }
     ]
 
@@ -681,8 +566,6 @@ elif st.session_state['current_page'] == 'esencias_page':
         else:
             with col_es_2:
                 st.markdown(tarjeta_html, unsafe_allow_html=True)
-                
-    st.markdown("<br><p style='text-align: center; color: #888;'>Próximamente agregaremos más esencias a nuestro catálogo...</p>", unsafe_allow_html=True)
 
 elif st.session_state['current_page'] == 'trust_page':
     st.markdown(f"<h3 style='text-align: center; color: {text_color};'>Páginas de Confianza (Próximamente)</h3>", unsafe_allow_html=True)
