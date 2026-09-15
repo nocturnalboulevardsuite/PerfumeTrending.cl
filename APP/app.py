@@ -23,21 +23,21 @@ def navigate_to(page, perfume_data=None):
 is_dark = st.session_state['theme'] == 'dark'
 
 # Colores generales
-app_bg_css = "background-color: #0e1117 !important;" if is_dark else "background-color: #f8f6f3 !important;"
-text_color = "#ffffff" if is_dark else "#1a1a1a"
-subtext_color = "#a0a0a0" if is_dark else "#444444"
+app_bg_css = "background-color: #0c0e12 !important;" if is_dark else "background-color: #f9f9fb !important;"
+text_color = "#f0f0f0" if is_dark else "#18181b"
+subtext_color = "#888890" if is_dark else "#666670"
 
-btn_bg = "#1f242d" if is_dark else "#ffffff"
-btn_text = "#ffffff" if is_dark else "#1a1a1a"
-btn_border = "#3a3f4d" if is_dark else "#d4cdc5"
+btn_bg = "#161920" if is_dark else "#ffffff"
+btn_text = "#e0e0e0" if is_dark else "#18181b"
+btn_border = "#2a2e39" if is_dark else "#e2e2e8"
 
-input_bg = "#1f242d" if is_dark else "#ffffff"
-input_text = "#ffffff" if is_dark else "#1a1a1a"
-input_border = "#3a3f4d" if is_dark else "#d4cdc5"
+input_bg = "#14171d" if is_dark else "#ffffff"
+input_text = "#f0f0f0" if is_dark else "#18181b"
+input_border = "#2a2e39" if is_dark else "#e2e2e8"
 
-# Posicionamiento del Switch de Tema
-bottle_left_pos = "42px" if is_dark else "-2px"
-static_icon_pos = "12px center" if is_dark else "calc(100% - 12px) center"
+# Posicionamiento del Switch de Tema (Versión compacta)
+bottle_left_pos = "32px" if is_dark else "-2px"
+static_icon_pos = "9px center" if is_dark else "calc(100% - 9px) center"
 
 static_icon_svg = (
     "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='4'/><line x1='12' y1='1' x2='12' y2='3'/><line x1='12' y1='21' x2='12' y2='23'/><line x1='4.22' y1='4.22' x2='5.64' y2='5.64'/><line x1='18.36' y1='18.36' x2='19.78' y2='19.78'/><line x1='1' y1='12' x2='3' y2='12'/><line x1='21' y1='12' x2='23' y2='12'/><line x1='4.22' y1='19.78' x2='5.64' y2='18.36'/><line x1='18.36' y1='5.64' x2='19.78' y2='4.22'/></svg>"
@@ -53,7 +53,7 @@ bottle_svg = (
 
 camera_icon_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23{text_color[1:]}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z'/><circle cx='12' cy='13' r='4'/></svg>"
 
-# 2. SCRIPT DE OPTIMIZACIÓN Y COLORES MATES PARA ESENCIAS
+# 2. SCRIPT DE COLORES COMPACTO
 js_color_script = f"""
 <script>
 (function() {{
@@ -62,49 +62,25 @@ js_color_script = f"""
     
     const colorRules = [
         {{ keywords: ['sangre', 'cereza', 'frambuesa', 'pimienta rosa', 'rosa', 'ruibarbo', 'lichi', 'ciruela', 'grosella', 'grosellas', 'peonía', 'geranio'], 
-          bg: isDark ? '#4a1f24' : '#f5e6e8', 
-          border: isDark ? '#7a333c' : '#d49b9e',
-          text: isDark ? '#f2b6bc' : '#6b2029' }},
-        
+          bg: isDark ? '#3d1a1e' : '#f7eaec', border: isDark ? '#5c282e' : '#e2b3b7', text: isDark ? '#f0adb4' : '#5c1b22' }},
         {{ keywords: ['marina', 'marinas', 'agua', 'océano', 'mar', 'ozónica', 'ozónicas'], 
-          bg: isDark ? '#1a3340' : '#e6f0f5', 
-          border: isDark ? '#2c5266' : '#9bbecf',
-          text: isDark ? '#a3d5eb' : '#1c4558' }},
-        
+          bg: isDark ? '#152933' : '#eaf2f7', border: isDark ? '#224052' : '#a8c7da', text: isDark ? '#92ccdb' : '#173a4b' }},
         {{ keywords: ['albahaca', 'bergamota', 'cardamomo', 'higo', 'manzana', 'menta', 'pachulí', 'pera', 'romero', 'salvia', 'té verde', 'té blanco', 'vetiver', 'abedul', 'eucalipto', 'gálbano', 'hojas de violeta'], 
-          bg: isDark ? '#1c3625' : '#e7f2eb', 
-          border: isDark ? '#2e573c' : '#9ec4aa',
-          text: isDark ? '#a4dbb5' : '#1f482d' }},
-        
+          bg: isDark ? '#162b1e' : '#ebf5ee', border: isDark ? '#234530' : '#a4cca2', text: isDark ? '#93d1a3' : '#193d25' }},
         {{ keywords: ['iris', 'lavanda', 'jazmín', 'nardos', 'neroli', 'violeta', 'fresia', 'heliotropo', 'mimosa', 'lila', 'magnolia', 'azahar', 'frangipani', 'gardenia', 'ylang'], 
-          bg: isDark ? '#33233b' : '#efe8f5', 
-          border: isDark ? '#543a61' : '#beacc9',
-          text: isDark ? '#d4bde3' : '#452654' }},
-
+          bg: isDark ? '#2b1d33' : '#f2ebf7', border: isDark ? '#432d52' : '#c3b1d4', text: isDark ? '#c7a9db' : '#391c47' }},
         {{ keywords: ['caramelo', 'miel', 'solares', 'vainilla', 'cacao', 'café', 'canela', 'tonka', 'nuez moscada', 'praliné', 'haba tonka', 'almendra', 'avellana', 'leche', 'malvavisco', 'chocolate', 'ron', 'cognac', 'whisky'], 
-          bg: isDark ? '#3d281a' : '#f5eae1', 
-          border: isDark ? '#63422b' : '#cbb3a1',
-          text: isDark ? '#e6c3a5' : '#52331c' }},
-
+          bg: isDark ? '#332115' : '#f7ede6', border: isDark ? '#523522' : '#d8bca7', text: isDark ? '#dbb193' : '#452914' }},
         {{ keywords: ['ámbar gris', 'cedro', 'sándalo', 'tabaco', 'cuero', 'oud', 'incienso', 'ciprés', 'ébano', 'guayac', 'musgo', 'estoraque', 'ládano', 'benjuí'], 
-          bg: isDark ? '#2b3038' : '#eaecee', 
-          border: isDark ? '#454e5b' : '#b3b9c1',
-          text: isDark ? '#c0c7d1' : '#323943' }},
-
+          bg: isDark ? '#23272e' : '#edeef0', border: isDark ? '#373d47' : '#bdc1c9', text: isDark ? '#aeb5c2' : '#292e36' }},
         {{ keywords: ['azafrán', 'ámbar', 'mandarina', 'melocotón', 'durazno', 'mirra', 'naranjo', 'pomelo', 'cítrico', 'cítricos', 'limón', 'lima', 'clementina', 'yuzu', 'petit grain', 'piña', 'jengibre'], 
-          bg: isDark ? '#422718' : '#f9eee6', 
-          border: isDark ? '#6b4027' : '#d9b7a3',
-          text: isDark ? '#eabf9e' : '#5e3219' }},
-        
+          bg: isDark ? '#382013' : '#f9ede6', border: isDark ? '#59331e' : '#debca8', text: isDark ? '#dfab8c' : '#4f2711' }},
         {{ keywords: ['almizcle', 'coco', 'civeta', 'castóreo', 'pimienta blanca', 'pimienta negra', 'iso e super', 'ambroxan', 'aldehídos', 'cachemira'], 
-          bg: isDark ? '#262930' : '#f0f2f5', 
-          border: isDark ? '#3f4450' : '#c3c8cf',
-          text: isDark ? '#d0d5dd' : '#343a40' }}
+          bg: isDark ? '#1f2228' : '#f2f4f7', border: isDark ? '#333842' : '#cad0d9', text: isDark ? '#bcc2cc' : '#2b3038' }}
     ];
 
     function applyEssenceColors() {{
         const targets = doc.querySelectorAll('li[role="option"], div[role="option"], span[data-baseweb="tag"], div[data-baseweb="option"]');
-
         targets.forEach(el => {{
             if (el.dataset.colored === 'true') return;
             const text = (el.innerText || '').toLowerCase();
@@ -115,25 +91,19 @@ js_color_script = f"""
                     el.style.backgroundColor = rule.bg;
                     el.style.border = '1px solid ' + rule.border;
                     el.style.color = rule.text; 
-                    el.style.borderRadius = '4px';
-                    el.style.padding = '3px 9px';
-                    el.style.margin = '2px 0';
-                    el.style.transition = 'none';
+                    el.style.borderRadius = '3px';
+                    el.style.padding = '2px 6px';
+                    el.style.margin = '1px 0';
+                    el.style.fontSize = '0.72rem';
                     el.dataset.colored = 'true';
-                    
-                    el.querySelectorAll('*').forEach(child => {{
-                        child.style.color = rule.text;
-                    }});
+                    el.querySelectorAll('*').forEach(child => {{ child.style.color = rule.text; }});
                     break;
                 }}
             }}
         }});
     }}
 
-    const observer = new MutationObserver(() => {{
-        applyEssenceColors();
-    }});
-
+    const observer = new MutationObserver(() => applyEssenceColors());
     observer.observe(doc.body, {{ childList: true, subtree: true }});
     applyEssenceColors();
 }})();
@@ -142,18 +112,26 @@ js_color_script = f"""
 
 components.html(js_color_script, height=0, width=0)
 
-# 3. CSS GLOBAL Y CONFIGURACIÓN VISUAL
+# 3. CSS ULTRA MINIMALISTA Y COMPACTO
 st.markdown(f"""
     <style>
     header[data-testid="stHeader"] {{ display: none !important; }}
-    .block-container {{ padding-top: 1.5rem !important; padding-bottom: 2rem !important; }}
-    .stApp {{ {app_bg_css} color: {text_color} !important; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; }}
+    
+    /* Reducción de márgenes globales de la página */
+    .block-container {{ 
+        padding-top: 0.8rem !important; 
+        padding-bottom: 1.5rem !important; 
+        max-width: 1100px !important;
+    }}
+    
+    .stApp {{ {app_bg_css} color: {text_color} !important; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }}
 
-    .stApp p, .stApp span, .stApp label, .stMarkdown p, .stTextInput label p, .stMultiSelect label p {{
+    .stApp p, .stApp span, .stApp label, .stMarkdown p {{
         color: {text_color} !important;
+        font-size: 0.82rem !important;
     }}
 
-    /* EFECTO MINI-ZOOM PRO Y MINIMALISTA PARA TODOS LOS BOTONES */
+    /* EFECTO MINI-ZOOM SUTIL Y SOBERANO PARA BOTONES */
     div.stButton > button,
     div.stDownloadButton > button,
     div[data-testid="stPopover"] > button,
@@ -161,30 +139,22 @@ st.markdown(f"""
     .st-key-btn_photo_search button,
     .st-key-login_btn button,
     .st-key-theme_toggle button {{
-        transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.22s ease, background-color 0.22s ease, border-color 0.22s ease !important;
+        transition: transform 0.15s ease, background-color 0.15s ease, border-color 0.15s ease !important;
         will-change: transform;
+        min-height: 0px !important;
+        height: auto !important;
     }}
 
     div.stButton > button:hover,
-    div.stDownloadButton > button:hover,
     div[data-testid="stPopover"] > button:hover,
     button[data-testid="stPopoverButton"]:hover,
     .st-key-btn_photo_search button:hover,
     .st-key-login_btn button:hover {{
-        transform: scale(1.035) !important;
+        transform: translateY(-1px) !important;
         cursor: pointer !important;
     }}
 
-    div.stButton > button:active,
-    div.stDownloadButton > button:active,
-    div[data-testid="stPopover"] > button:active,
-    button[data-testid="stPopoverButton"]:active,
-    .st-key-btn_photo_search button:active,
-    .st-key-login_btn button:active {{
-        transform: scale(0.98) !important;
-    }}
-
-    /* NAVEGACIÓN PRINCIPAL */
+    /* NAVEGACIÓN PRINCIPAL (MINIMALISTA) */
     .st-key-n_perfumes button, 
     .st-key-n_remates button,
     .st-key-n_disenador button,
@@ -193,13 +163,13 @@ st.markdown(f"""
     .st-key-n_esencias button {{
         background-color: transparent !important;
         border: none !important;
-        border-bottom: 2px solid transparent !important;
+        border-bottom: 1px solid transparent !important;
         border-radius: 0px !important;
         font-weight: 500 !important;
-        font-size: 0.85rem !important;
-        padding: 0.4rem 0.2rem !important;
+        font-size: 0.72rem !important;
+        padding: 0.15rem 0rem !important;
         box-shadow: none !important;
-        letter-spacing: 0.5px;
+        letter-spacing: 0.8px !important;
     }}
 
     .st-key-n_perfumes button p, 
@@ -210,7 +180,7 @@ st.markdown(f"""
     .st-key-n_esencias button p {{
         color: {subtext_color} !important;
         white-space: nowrap !important;
-        transition: color 0.3s ease;
+        font-size: 0.72rem !important;
     }}
 
     .st-key-n_perfumes button:hover p, 
@@ -222,37 +192,40 @@ st.markdown(f"""
         color: {text_color} !important;
     }}
 
-    /* HERRAMIENTAS RÁPIDAS */
+    /* CHIPS Y HERRAMIENTAS RÁPIDAS COMPACTAS */
     .st-key-btn_trend button, 
     .st-key-btn_trust button, 
     .st-key-btn_compare button {{
         background-color: transparent !important;
         border: 1px solid {btn_border} !important;
-        border-radius: 20px !important;
-        padding: 0.2rem 0.8rem !important;
+        border-radius: 14px !important;
+        padding: 0.1rem 0.5rem !important;
         box-shadow: none !important;
     }}
     
     .st-key-btn_trend button p, 
     .st-key-btn_trust button p, 
     .st-key-btn_compare button p {{
-        font-size: 0.75rem !important;
+        font-size: 0.68rem !important;
         font-weight: 400 !important;
         color: {subtext_color} !important;
-        letter-spacing: 0.3px;
+        letter-spacing: 0.2px;
     }}
 
-    /* BOTÓN INGRESAR */
+    /* BOTÓN INGRESAR COMPACTO */
     .st-key-login_btn button {{
         background-color: {btn_bg} !important;
         color: {btn_text} !important;
         border: 1px solid {btn_border} !important;
-        border-radius: 6px !important;
-        font-weight: 500 !important;
-        letter-spacing: 0.5px;
+        border-radius: 4px !important;
+        padding: 0.2rem 0.6rem !important;
+        font-size: 0.72rem !important;
+    }}
+    .st-key-login_btn button p {{
+        font-size: 0.72rem !important;
     }}
 
-    /* INPUTS, SELECTS Y BOTÓN POPOVER */
+    /* INPUTS Y SELECTS COMPACTOS */
     div[data-baseweb="input"],
     div[data-baseweb="base-input"],
     div[data-baseweb="select"] > div,
@@ -261,72 +234,49 @@ st.markdown(f"""
     button[data-testid="stBaseButton-secondary"] {{
         background-color: {input_bg} !important;
         border: 1px solid {input_border} !important;
-        border-radius: 6px !important;
+        border-radius: 4px !important;
         box-shadow: none !important;
-        outline: none !important;
-    }}
-
-    div[data-baseweb="select"] > div:focus-within,
-    div[data-baseweb="base-input"]:focus-within,
-    div[data-baseweb="input"]:focus-within {{
-        border-color: #8c7b6d !important;
-        box-shadow: 0 0 0 1px #8c7b6d !important;
+        padding-top: 2px !important;
+        padding-bottom: 2px !important;
+        min-height: 32px !important;
     }}
 
     div[data-baseweb="input"] input,
-    div[data-baseweb="base-input"] input,
-    div[data-baseweb="select"] span[data-baseweb="tag"] span,
-    div[data-baseweb="select"] div,
-    div[data-testid="stPopover"] button,
-    div[data-testid="stPopover"] button *,
-    div[data-testid="stPopover"] button p,
-    div[data-testid="stPopover"] button span,
-    div[data-testid="stPopover"] button div,
-    button[data-testid="stPopoverButton"],
-    button[data-testid="stPopoverButton"] *,
-    button[data-testid="stPopoverButton"] p,
-    button[data-testid="stPopoverButton"] span {{
-        color: {input_text} !important;
-        white-space: nowrap !important;
-    }}
-
-    div[data-testid="stPopover"] button svg,
-    button[data-testid="stPopoverButton"] svg {{
-        stroke: {input_text} !important;
-        fill: {input_text} !important;
+    div[data-baseweb="base-input"] input {{
+        font-size: 0.78rem !important;
+        padding: 4px 8px !important;
     }}
 
     div[data-baseweb="input"] input::placeholder {{
         color: {subtext_color} !important;
-        font-weight: 300;
+        font-size: 0.75rem !important;
     }}
 
     .st-key-btn_photo_search button {{
         background-color: {input_bg} !important;
         border: 1px solid {input_border} !important;
-        border-radius: 6px !important;
-        padding: 0.4rem 0.6rem 0.4rem 2.2rem !important;
+        border-radius: 4px !important;
+        padding: 0.25rem 0.5rem 0.25rem 1.8rem !important;
         background-image: url("{camera_icon_svg}") !important;
         background-repeat: no-repeat !important;
-        background-position: 10px center !important;
-        background-size: 16px 16px !important;
-        font-size: 0.82rem !important;
+        background-position: 8px center !important;
+        background-size: 13px 13px !important;
+        font-size: 0.75rem !important;
     }}
     
-    .stApp .st-key-btn_photo_search button,
     .stApp .st-key-btn_photo_search button p {{
+        font-size: 0.75rem !important;
         color: {text_color} !important;
-        white-space: nowrap !important;
     }}
 
-    /* SWITCH DE TEMA INTERACTIVO */
+    /* SWITCH DE TEMA REDUCIDO */
     .st-key-theme_toggle button {{
         background: transparent !important;
         border: none !important;
         box-shadow: none !important;
         padding: 0 !important;
-        width: 82px !important;
-        height: 48px !important;
+        width: 62px !important;
+        height: 32px !important;
         position: relative !important;
         cursor: pointer !important;
         margin: 0 auto !important;
@@ -338,45 +288,42 @@ st.markdown(f"""
     .st-key-theme_toggle button::before {{
         content: '' !important;
         position: absolute !important;
-        top: 7px !important; left: 0 !important;
-        width: 80px !important; height: 36px !important;
-        background-color: {"#262626" if is_dark else "#e5ded7"} !important;
+        top: 3px !important; left: 0 !important;
+        width: 60px !important; height: 26px !important;
+        background-color: {"#1c1f26" if is_dark else "#eae8e6"} !important;
         border: 1px solid {btn_border} !important;
-        border-radius: 20px !important;
-        box-shadow: inset 0 2px 5px rgba(0,0,0,0.2) !important;
+        border-radius: 14px !important;
         background-image: url("{static_icon_svg}") !important;
         background-repeat: no-repeat !important;
         background-position: {static_icon_pos} !important;
-        background-size: 16px 16px !important;
-        transition: all 0.3s ease !important;
+        background-size: 12px 12px !important;
     }}
     
     .st-key-theme_toggle button::after {{
         content: '' !important;
         position: absolute !important;
-        top: -1px !important;
+        top: -3px !important;
         left: {bottle_left_pos} !important;
-        width: 40px !important; height: 46px !important;
+        width: 30px !important; height: 34px !important;
         background-image: url("{bottle_svg}") !important;
         background-repeat: no-repeat !important;
         background-size: contain !important;
-        transition: left 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+        transition: left 0.25s ease !important;
         z-index: 2 !important;
     }}
 
-    /* TARJETAS DE CATÁLOGO */
+    /* TARJETAS DE CATÁLOGO COMPACTAS */
     .catalog-card {{
         background-color: transparent;
         border: 1px solid {btn_border};
         border-radius: 4px;
         overflow: hidden;
         position: relative;
-        margin-bottom: 25px;
-        transition: transform 0.4s ease, border-color 0.4s ease;
+        margin-bottom: 16px;
+        transition: border-color 0.2s ease;
     }}
     .catalog-card:hover {{
-        transform: translateY(-4px);
-        border-color: #8c7b6d;
+        border-color: #7a6a5d;
     }}
     .square-img-box {{
         position: relative;
@@ -387,62 +334,56 @@ st.markdown(f"""
         align-items: center;
         justify-content: center;
         overflow: hidden;
-        padding: 20px;
+        padding: 12px;
         box-sizing: border-box;
     }}
     .square-img-box img {{
         max-width: 100%;
         max-height: 100%;
         object-fit: contain;
-        transition: transform 0.6s ease;
-    }}
-    .catalog-card:hover .square-img-box img {{
-        transform: scale(1.05);
     }}
     .card-hover-overlay {{
         position: absolute;
         top: 0; left: 0; right: 0; bottom: 0;
-        background: rgba(18, 21, 28, 0.95);
+        background: rgba(12, 14, 18, 0.94);
         color: #ffffff;
-        padding: 20px;
+        padding: 12px;
         display: flex;
         flex-direction: column;
         justify-content: center;
         opacity: 0;
-        transition: opacity 0.4s ease;
-        backdrop-filter: blur(2px);
+        transition: opacity 0.2s ease;
         text-align: left;
     }}
     .catalog-card:hover .card-hover-overlay {{ opacity: 1; }}
     .overlay-title {{
-        font-size: 1rem;
+        font-size: 0.82rem;
         font-weight: 600;
-        color: #e3d3b3;
-        margin-bottom: 12px;
+        color: #d4c2a5;
+        margin-bottom: 6px;
         border-bottom: 1px solid rgba(255,255,255,0.1);
-        padding-bottom: 8px;
-        letter-spacing: 0.5px;
+        padding-bottom: 4px;
     }}
-    .overlay-info {{ font-size: 0.8rem; font-weight: 300; line-height: 1.6; color: #d0d0d0; margin-bottom: 8px; }}
-    .card-footer-info {{ padding: 16px; text-align: center; background-color: {btn_bg}; }}
-    .card-perfume-name {{ font-size: 0.9rem; font-weight: 600; color: {text_color}; margin-bottom: 4px; letter-spacing: 0.5px; }}
-    .card-perfume-brand {{ font-size: 0.75rem; font-weight: 300; color: {subtext_color}; text-transform: uppercase; letter-spacing: 1px; }}
+    .overlay-info {{ font-size: 0.7rem; font-weight: 300; line-height: 1.4; color: #b8b8b8; margin-bottom: 4px; }}
+    .card-footer-info {{ padding: 8px 10px; text-align: center; background-color: {btn_bg}; }}
+    .card-perfume-name {{ font-size: 0.78rem; font-weight: 500; color: {text_color}; margin-bottom: 2px; }}
+    .card-perfume-brand {{ font-size: 0.65rem; font-weight: 300; color: {subtext_color}; text-transform: uppercase; letter-spacing: 0.5px; }}
 
-    /* TARJETAS DE DICCIONARIO DE ESENCIAS */
-    .essence-card {{ border-radius: 6px; padding: 20px; margin-bottom: 15px; border-width: 1px; border-style: solid; }}
-    .essence-title {{ font-size: 1rem; font-weight: 600; margin-bottom: 8px; letter-spacing: 0.5px; }}
-    .essence-desc {{ font-size: 0.88rem; font-weight: 400; line-height: 1.6; opacity: 0.9; }}
+    /* DICCIONARIO DE ESENCIAS COMPACTO */
+    .essence-card {{ border-radius: 4px; padding: 10px 12px; margin-bottom: 8px; border-width: 1px; border-style: solid; }}
+    .essence-title {{ font-size: 0.78rem; font-weight: 600; margin-bottom: 3px; letter-spacing: 0.3px; }}
+    .essence-desc {{ font-size: 0.72rem; font-weight: 400; line-height: 1.35; opacity: 0.88; }}
     </style>
 """, unsafe_allow_html=True)
 
 # 4. CABECERA
-col_logo, col_espacio, col_actions = st.columns([4, 3, 2.5], vertical_alignment="center")
+col_logo, col_espacio, col_actions = st.columns([5, 2, 2.2], vertical_alignment="center")
 
 with col_logo:
     logo_color = "#8c7b6d"
     logo_html = f"""
-    <div style="display: flex; align-items: center; gap: 12px; cursor: pointer;" onclick="window.location.reload();">
-        <svg width="36" height="36" viewBox="0 0 36 36" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <div style="display: flex; align-items: center; gap: 8px; cursor: pointer;" onclick="window.location.reload();">
+        <svg width="24" height="24" viewBox="0 0 36 36" fill="none" stroke-linecap="round" stroke-linejoin="round">
             <path d="M 6.8 21 L 29.2 21 C 30 25 27 32 18 32 C 9 32 6 25 6.8 21 Z" fill="{logo_color}" />
             <line x1="6.8" y1="21" x2="29.2" y2="21" stroke="{text_color}" stroke-width="1.5" />
             <line x1="18" y1="10" x2="18" y2="30" stroke="{text_color}" stroke-width="1" />
@@ -450,10 +391,8 @@ with col_logo:
             <rect x="15" y="7" width="6" height="3" stroke="{text_color}" stroke-width="1.5" />
             <rect x="13" y="3" width="10" height="4" rx="1" stroke="{text_color}" stroke-width="1.5" />
             <rect x="16" y="0" width="4" height="3" rx="1" fill="{logo_color}" stroke="{text_color}" stroke-width="1" />
-            <path d="M 23 5 L 26 4" stroke="{text_color}" stroke-width="1.5" />
-            <ellipse cx="29" cy="3" rx="3.5" ry="2.5" transform="rotate(-25 29 3)" fill="{logo_color}" stroke="{text_color}" stroke-width="1" />
         </svg>
-        <span style="font-size: 1.4rem; color: {text_color}; letter-spacing: 1px;">
+        <span style="font-size: 1.05rem; color: {text_color}; letter-spacing: 0.5px;">
             <span style="font-weight: 300;">Perfume</span><span style="font-weight: 600;">Trending</span>
         </span>
     </div>
@@ -461,15 +400,15 @@ with col_logo:
     st.markdown(logo_html, unsafe_allow_html=True)
 
 with col_actions:
-    btn_col1, btn_col2 = st.columns([1.5, 1], vertical_alignment="center")
+    btn_col1, btn_col2 = st.columns([1.3, 1], vertical_alignment="center")
     with btn_col1:
-        st.button("👤 Ingresar", key="login_btn", use_container_width=True)
+        st.button("Ingresar", key="login_btn", use_container_width=True)
     with btn_col2:
         st.button(" ", key="theme_toggle", on_click=toggle_theme)
 
 # 5. NAVEGACIÓN
-st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
-nav_cols = st.columns([1.2, 1.1, 1.2, 1.0, 1.0, 1.2], vertical_alignment="center")
+st.markdown("<div style='margin-top: 8px;'></div>", unsafe_allow_html=True)
+nav_cols = st.columns([1, 1, 1, 1, 1, 1], vertical_alignment="center")
 
 with nav_cols[0]: st.button("PERFUMES", key="n_perfumes", on_click=navigate_to, args=('home',), use_container_width=True)
 with nav_cols[1]: st.button("REMATES", key="n_remates", on_click=navigate_to, args=('hype',), use_container_width=True)
@@ -478,13 +417,13 @@ with nav_cols[3]: st.button("NICHO", key="n_nicho", on_click=navigate_to, args=(
 with nav_cols[4]: st.button("ÁRABES", key="n_arabes", on_click=navigate_to, args=('home',), use_container_width=True)
 with nav_cols[5]: st.button("ESENCIAS", key="n_esencias", on_click=navigate_to, args=('esencias_page',), use_container_width=True)
 
-st.markdown(f"<hr style='margin: 8px 0 30px 0; border: none; border-bottom: 1px solid {btn_border}; opacity: 0.3;'>", unsafe_allow_html=True)
+st.markdown(f"<hr style='margin: 4px 0 16px 0; border: none; border-bottom: 1px solid {btn_border}; opacity: 0.3;'>", unsafe_allow_html=True)
 
-# 6. BÚSQUEDA Y SELECCIÓN DE ESENCIAS COMPLETA
-col_search, col_filter, col_separator, col_photo = st.columns([5.2, 1.8, 0.2, 2.3], vertical_alignment="center")
+# 6. BÚSQUEDA Y SELECCIÓN DE ESENCIAS
+col_search, col_filter, col_separator, col_photo = st.columns([5.5, 1.8, 0.1, 2.0], vertical_alignment="center")
 
 with col_search:
-    search_query = st.text_input("🔍 Buscar", placeholder="🔍 Buscar perfume, marca o esencias...", label_visibility="collapsed")
+    search_query = st.text_input("Buscar", placeholder="Buscar perfume, marca o esencias...", label_visibility="collapsed")
 
 raw_notes = [
     "Bergamota", "Clementina", "Limón", "Lima", "Mandarina", "Neroli", "Petit Grain", "Pomelo (Toronja)", "Yuzu",
@@ -509,19 +448,19 @@ with col_filter:
         selected_essences = st.multiselect(
             "Selecciona notas olfativas:",
             options=all_notes,
-            placeholder="Elige esencias...",
+            placeholder="Filtrar...",
             label_visibility="collapsed"
         )
 
 with col_separator:
-    st.markdown(f"<div style='border-left: 1px solid {btn_border}; height: 35px; margin: auto;'></div>", unsafe_allow_html=True)
+    st.markdown(f"<div style='border-left: 1px solid {btn_border}; height: 24px; margin: auto;'></div>", unsafe_allow_html=True)
 
 with col_photo:
-    st.button("Búsqueda visual", key="btn_photo_search", help="Buscar perfume por imagen", use_container_width=True)
+    st.button("Búsqueda visual", key="btn_photo_search", help="Buscar por imagen", use_container_width=True)
 
 # 7. CHIPS DE NAVEGACIÓN RÁPIDA
-st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
-col_chip1, col_chip2, col_chip3, col_chip_space = st.columns([1.5, 1.8, 1.6, 5.1], vertical_alignment="center")
+st.markdown("<div style='margin-top: 8px;'></div>", unsafe_allow_html=True)
+col_chip1, col_chip2, col_chip3, col_chip_space = st.columns([1.2, 1.4, 1.3, 5.5], vertical_alignment="center")
 
 with col_chip1:
     if st.button("Trend Del Hype", key="btn_trend", use_container_width=True):
@@ -531,11 +470,11 @@ with col_chip2:
 with col_chip3:
     st.button("Comparar Precios", key="btn_compare", on_click=navigate_to, args=('compare_page',), use_container_width=True)
 
-st.markdown("<br>", unsafe_allow_html=True)
+st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
 
 # 8. VISTAS DE PÁGINA
 if st.session_state['current_page'] == 'home':
-    st.markdown(f"<h3 style='text-align: center; margin-bottom: 35px; color: {text_color}; letter-spacing: 2px; font-weight: 300;'>CATÁLOGO Y TENDENCIAS</h3>", unsafe_allow_html=True)
+    st.markdown(f"<div style='text-align: center; margin-bottom: 20px; color: {text_color}; letter-spacing: 1.5px; font-weight: 300; font-size: 0.95rem; text-transform: uppercase;'>CATÁLOGO Y TENDENCIAS</div>", unsafe_allow_html=True)
     
     if selected_essences:
         st.write(f"**Filtro activo:** {', '.join(selected_essences)}")
@@ -568,7 +507,7 @@ if st.session_state['current_page'] == 'home':
         {
             "name": "Club de Nuit Intense",
             "brand": "Armaf",
-            "country": "Emiratos Árabes Unidos 🇦🇪",
+            "country": "Emiratos Árabes 🇦🇪",
             "perfumer": "Christian Provenzano",
             "notes": "Limón, Piña, Grosellas Negras, Abedul, Jazmín, Almizcle",
             "img": "https://m.media-amazon.com/images/I/61Yg40gX3mL._SL1500_.jpg"
@@ -593,7 +532,7 @@ if st.session_state['current_page'] == 'home':
 
     cols_per_row = 3
     for i in range(0, len(catalog_perfumes), cols_per_row):
-        cols = st.columns(cols_per_row, gap="large")
+        cols = st.columns(cols_per_row, gap="medium")
         for j in range(cols_per_row):
             if i + j < len(catalog_perfumes):
                 p = catalog_perfumes[i + j]
@@ -603,9 +542,9 @@ if st.session_state['current_page'] == 'home':
                         <img src="{p['img']}" alt="{p['name']}" referrerpolicy="no-referrer">
                         <div class="card-hover-overlay">
                             <div class="overlay-title">{p['name']}</div>
-                            <div class="overlay-info"><b>📍 Origen:</b> {p['country']}</div>
-                            <div class="overlay-info"><b>👤 Nariz:</b> {p['perfumer']}</div>
-                            <div class="overlay-info" style="margin-top: 8px;"><b>🌿 Notas:</b> {p['notes']}</div>
+                            <div class="overlay-info"><b>Orígenes:</b> {p['country']}</div>
+                            <div class="overlay-info"><b>Perfumista:</b> {p['perfumer']}</div>
+                            <div class="overlay-info" style="margin-top: 4px;"><b>Notas:</b> {p['notes']}</div>
                         </div>
                     </div>
                     <div class="card-footer-info">
@@ -618,142 +557,141 @@ if st.session_state['current_page'] == 'home':
                     st.markdown(card_html, unsafe_allow_html=True)
 
 elif st.session_state['current_page'] == 'esencias_page':
-    st.markdown(f"<h3 style='text-align: center; color: {text_color}; letter-spacing: 1px; font-weight: 300; margin-bottom: 30px;'>DICCIONARIO DE ESENCIAS Y NOTAS</h3>", unsafe_allow_html=True)
-    st.write("Descubre las notas olfativas más célebres de la perfumería mundial y sus características únicas:")
+    st.markdown(f"<div style='text-align: center; color: {text_color}; letter-spacing: 1px; font-weight: 300; margin-bottom: 20px; font-size: 0.95rem; text-transform: uppercase;'>DICCIONARIO DE ESENCIAS Y NOTAS</div>", unsafe_allow_html=True)
     
     def get_essence_colors(name):
         n = name.lower()
         if any(k in n for k in ['sangre', 'cereza', 'frambuesa', 'pimienta rosa', 'rosa', 'ruibarbo', 'lichi', 'ciruela', 'grosella', 'peonía', 'geranio']):
-            return ("#7a333c" if is_dark else "#d49b9e", "#4a1f24" if is_dark else "#f5e6e8", "#f2b6bc" if is_dark else "#6b2029")
+            return ("#5c282e" if is_dark else "#e2b3b7", "#3d1a1e" if is_dark else "#f7eaec", "#f0adb4" if is_dark else "#5c1b22")
         elif any(k in n for k in ['marina', 'marinas', 'agua', 'océano', 'ozónica']):
-            return ("#2c5266" if is_dark else "#9bbecf", "#1a3340" if is_dark else "#e6f0f5", "#a3d5eb" if is_dark else "#1c4558")
+            return ("#224052" if is_dark else "#a8c7da", "#152933" if is_dark else "#eaf2f7", "#92ccdb" if is_dark else "#173a4b")
         elif any(k in n for k in ['albahaca', 'bergamota', 'cardamomo', 'higo', 'manzana', 'menta', 'pachulí', 'pera', 'romero', 'salvia', 'té verde', 'té blanco', 'vetiver', 'abedul', 'eucalipto', 'gálbano']):
-            return ("#2e573c" if is_dark else "#9ec4aa", "#1c3625" if is_dark else "#e7f2eb", "#a4dbb5" if is_dark else "#1f482d")
+            return ("#234530" if is_dark else "#a4cca2", "#162b1e" if is_dark else "#ebf5ee", "#93d1a3" if is_dark else "#193d25")
         elif any(k in n for k in ['iris', 'lavanda', 'jazmín', 'nardos', 'neroli', 'violeta', 'fresia', 'gardenia', 'ylang', 'magnolia', 'azahar']):
-            return ("#543a61" if is_dark else "#beacc9", "#33233b" if is_dark else "#efe8f5", "#d4bde3" if is_dark else "#452654")
+            return ("#432d52" if is_dark else "#c3b1d4", "#2b1d33" if is_dark else "#f2ebf7", "#c7a9db" if is_dark else "#391c47")
         elif any(k in n for k in ['caramelo', 'miel', 'solares', 'vainilla', 'cacao', 'café', 'canela', 'tonka', 'nuez moscada', 'praliné', 'almendra', 'avellana', 'ron', 'cognac', 'whisky']):
-            return ("#63422b" if is_dark else "#cbb3a1", "#3d281a" if is_dark else "#f5eae1", "#e6c3a5" if is_dark else "#52331c")
+            return ("#523522" if is_dark else "#d8bca7", "#332115" if is_dark else "#f7ede6", "#dbb193" if is_dark else "#452914")
         elif any(k in n for k in ['ámbar gris', 'cedro', 'sándalo', 'tabaco', 'cuero', 'oud', 'incienso', 'ciprés', 'ébano', 'guayac', 'musgo', 'benjuí', 'ládano']):
-            return ("#454e5b" if is_dark else "#b3b9c1", "#2b3038" if is_dark else "#eaecee", "#c0c7d1" if is_dark else "#323943")
+            return ("#373d47" if is_dark else "#bdc1c9", "#23272e" if is_dark else "#edeef0", "#aeb5c2" if is_dark else "#292e36")
         elif any(k in n for k in ['azafrán', 'ámbar', 'mandarina', 'melocotón', 'durazno', 'mirra', 'naranjo', 'pomelo', 'cítrico', 'cítricos', 'limón', 'lima', 'piña', 'jengibre', 'yuzu']):
-            return ("#6b4027" if is_dark else "#d9b7a3", "#422718" if is_dark else "#f9eee6", "#eabf9e" if is_dark else "#5e3219")
+            return ("#59331e" if is_dark else "#debca8", "#382013" if is_dark else "#f9ede6", "#dfab8c" if is_dark else "#4f2711")
         else:
-            return ("#3f4450" if is_dark else "#c3c8cf", "#262930" if is_dark else "#f0f2f5", "#d0d5dd" if is_dark else "#343a40")
+            return ("#333842" if is_dark else "#cad0d9", "#1f2228" if is_dark else "#f2f4f7", "#bcc2cc" if is_dark else "#2b3038")
 
     essence_descriptions = {
-        "Bergamota": "Cítrico efervescente y luminoso con delicados matices florales, imprescindible en las salidas clásicas.",
+        "Bergamota": "Cítrico efervescente y luminoso con delicados matices florales.",
         "Clementina": "Cítrico dulce, jugoso y chispeante que transmite alegría inmediata.",
         "Limón": "Ácido, limpio y deslumbrante; inyección de luz y energía viva.",
         "Lima": "Verde, amarga y brillante; aporta un matiz tropical muy refrescante.",
         "Mandarina": "Frutal dulce y suave que brinda una frescura risueña y festiva.",
-        "Neroli": "Fresco, cítrico y floral blanco; evoca la elegancia mediterránea y la pureza solar.",
-        "Petit Grain": "Verde, amargo y leñoso; destilado de las hojas y ramas del naranjo amargo.",
-        "Pomelo (Toronja)": "Cítrico amargo, efervescente y vigorizante con un toque seco sofisticado.",
-        "Yuzu": "Cítrico japonés con matices entre pomelo y mandarina, con un perfil exótico y cristalino.",
-        "Almendra": "Nota cremosa, suavemente amarga y avainillada con textura Aterciopelada.",
-        "Avellana": "Cálida, tostada y lactónica; evoca la riqueza cremosa de la praliné.",
-        "Ciruela": "Frutal, rica y aterciopelada; añade una profundidad oscura, madura y opulenta.",
-        "Coco": "Cremoso, exótico y lácteo; transmite una sensación solar, relajante y paradisíaca.",
+        "Neroli": "Fresco, cítrico y floral blanco; evoca la elegancia mediterránea.",
+        "Petit Grain": "Verde, amargo y leñoso; destilado de las hojas del naranjo amargo.",
+        "Pomelo (Toronja)": "Cítrico amargo, efervescente y vigorizante con un toque seco.",
+        "Yuzu": "Cítrico japonés con matices entre pomelo y mandarina.",
+        "Almendra": "Nota cremosa, suavemente amarga y avainillada.",
+        "Avellana": "Cálida, tostada y lactónica; evoca la riqueza cremosa.",
+        "Ciruela": "Frutal, rica y aterciopelada; añade una profundidad oscura.",
+        "Coco": "Cremoso, exótico y lácteo; transmite una sensación solar.",
         "Durazno (Melocotón)": "Carnoso, jugoso y suave; brinda una dulzura frutal sensual.",
-        "Frambuesa": "Frutal, chispeante y acidulada; aporta un matiz juvenil, alegre y brillante.",
-        "Grosellas Negras": "Frutal oscuro, ácido y vegetal; genera contrastes refinados y sofisticados.",
-        "Higo": "Nota verde, frutal y láctea; evoca la frescura del árbol y la dulzura de la fruta madura.",
-        "Lichi": "Frutal, acuoso y delicadamente floral; añade una frescura exótica y transparente.",
-        "Manzana": "Crujiente, fresca y jugosa; infunde un toque limpio y desenfadado.",
+        "Frambuesa": "Frutal, chispeante y acidulada; aporta un matiz alegre.",
+        "Grosellas Negras": "Frutal oscuro, ácido y vegetal; genera contrastes refinados.",
+        "Higo": "Nota verde, frutal y láctea; evoca la frescura del árbol.",
+        "Lichi": "Frutal, acuoso y delicadamente floral; añade frescura exótica.",
+        "Manzana": "Crujiente, fresca y jugosa; infunde un toque limpio.",
         "Melón": "Acuoso, frutal y dulce; aporta un perfil estival muy refrescante.",
-        "Pera": "Jugosa, cristalina y delicada; añade una frescura acuática y sutil.",
-        "Piña": "Tropical, efervescente y jugosa; añade una salida radiante y adictiva.",
-        "Ruibarbo": "Ácido, verde y chispeante; aporta un contraste vanguardista inusualmente fresco.",
-        "Sandía": "Fresca, ozónica y dulce; transmite ligereza acuosa perfecta para días cálidos.",
-        "Fresia": "Floral suave, limpio y ligeramente afrutado que ilumina el corazón del perfume.",
-        "Geranio": "Verde, floral y rosado con matices aromáticos y mentolados.",
+        "Pera": "Jugosa, cristalina y delicada; añade una frescura acuática.",
+        "Piña": "Tropical, efervescente y jugosa; añade una salida radiante.",
+        "Ruibarbo": "Ácido, verde y chispeante; aporta un contraste vanguardista.",
+        "Sandía": "Fresca, ozónica y dulce; transmite ligereza acuosa.",
+        "Fresia": "Floral suave, limpio y ligeramente afrutado.",
+        "Geranio": "Verde, floral y rosado con matices aromáticos.",
         "Heliotropo": "Polvoso, avainillado y meloso con ecos de almendra dulce.",
-        "Iris (Orris)": "Polvoso, elegante y aristocrático; evoca la finura del maquillaje y distinción sutil.",
-        "Lavanda": "Aromática, limpia y relajante; pilar clásico que aporta serenidad y pureza.",
+        "Iris (Orris)": "Polvoso, elegante y aristocrático; evoca la finura del maquillaje.",
+        "Lavanda": "Aromática, limpia y relajante; pilar clásico que aporta serenidad.",
         "Lilium (Lirio)": "Floral noble, verde y radiante con presencia pulcra.",
-        "Mimosa": "Cálida, dulce, polvosa y mielada; evoca la primavera dorada.",
+        "Mimosa": "Cálida, dulce, polvosa y mielada; evoca la primavera.",
         "Peonía": "Floral delicado, fresco y acuático similar a la rosa joven.",
-        "Rosa": "La reina de las flores; romántica, atemporal, rica y de matices infinitos.",
+        "Rosa": "La reina de las flores; romántica, atemporal y rica.",
         "Violeta": "Floral verde, polvoso y dulce; evoca nostalgia elegante.",
-        "Flor de Azahar del Naranjo": "Radiante, solar y limpia, enriquecida con matices mielados.",
+        "Flor de Azahar del Naranjo": "Radiante, solar y limpia con matices mielados.",
         "Flor de Frangipani": "Exótica, cremosa y embriagadora con acentos solares.",
         "Gardenia": "Floral opulento, cremoso y verde de gran sensualidad.",
-        "Jazmín": "La reina blanca de las flores; voluptuosa, embriagadora y solar.",
+        "Jazmín": "La reina blanca de las flores; voluptuosa y embriagadora.",
         "Magnolia": "Floral fresca, cítrica y cerosa de una elegancia luminosa.",
-        "Tuberosa (Nardo)": "Flor blanca intensa, carnal y dramática; el epítome de la provocación olfativa.",
+        "Tuberosa (Nardo)": "Flor blanca intensa, carnal y dramática.",
         "Ylang-Ylang": "Flor exótica, embriagadora y marcadamente sensual.",
-        "Abedul": "Nota ahumada, leñosa y balsámica que evoca cuero suave y aire fresco de bosque.",
-        "Albahaca": "Aromática, fresca y picante; infunde una energía mentolada y vivaz.",
-        "Eucalipto": "Helado, mentolado y balsámico; despeja la composición al instante.",
+        "Abedul": "Nota ahumada, leñosa y balsámica que evoca cuero suave.",
+        "Albahaca": "Aromática, fresca y picante; infunde una energía mentolada.",
+        "Eucalipto": "Helado, mentolado y balsámico; despeja la composición.",
         "Gálbano": "Resina verde, amarga y silvestre de gran carácter botánico.",
-        "Hojas de Violeta": "Verde, metálica y terrosa; aporta un matiz de césped cortado y humedad natural.",
-        "Menta": "Vigorizante, fresca y helada; proporciona un impacto aromático estimulante.",
-        "Pachulí": "Terroso, oscuro y balsámico; pilar de la perfumería chipre y oriental.",
-        "Romero": "Herbal, aromático y balsámico; brinda un aire silvestre mediterráneo.",
-        "Salvia": "Aromática, herbal y ambarina; aporta sofisticación natural.",
+        "Hojas de Violeta": "Verde, metálica y terrosa; aporta un matiz de césped cortado.",
+        "Menta": "Vigorizante, fresca y helada; impacto aromático estimulante.",
+        "Pachulí": "Terroso, oscuro y balsámico; pilar de la perfumería chipre.",
+        "Romero": "Herbal, aromático y balsámico; brinda aire mediterráneo.",
+        "Salvia": "Aromática, herbal y ambarina; aporta sofisticación.",
         "Té Blanco": "Delicado, transparente y zen; matiz pulcro y sereno.",
-        "Té Negro": "Ahumado, tanino y profundo; aporta estructura seca y elegante.",
+        "Té Negro": "Ahumado, tanino y profundo; aporta estructura seca.",
         "Té Verde": "Herbal, sereno y reconfortante; infunde frescura limpia.",
-        "Vetiver": "Terroso, leñoso y con matices ahumados; clásico de la elegancia masculina.",
+        "Vetiver": "Terroso, leñoso y ahumado; clásico de la elegancia masculina.",
         "Anís Estrellado": "Especiado, dulce y licoroso con destellos mentolados.",
-        "Azafrán": "El 'oro rojo' de la perfumería; especiado, leñoso y de elegancia amarga.",
-        "Canela": "Especiada, dulce y cálida; añade una presencia penetrante y reconfortante.",
+        "Azafrán": "Especiado, leñoso y de elegancia amarga refinada.",
+        "Canela": "Especiada, dulce y cálida; añade una presencia reconfortante.",
         "Cardamomo": "Especiado, fresco y resinoso; brinda una sofisticación vibrante.",
         "Clavo de Olor": "Picante, cálido y penetrante con carácter audaz.",
-        "Jengibre": "Picante, efervescente y cítrico; inyecta una chispa de frescura moderna.",
+        "Jengibre": "Picante, efervescente y cítrico; inyecta una chispa moderna.",
         "Nuez Moscada": "Cálida, especiada y amaderada; agrega un contraste misterioso.",
-        "Pimienta Blanca": "Especiada suave, seca y sutil; aporta calidez sin saturar.",
+        "Pimienta Blanca": "Especiada suave, seca y sutil; aporta calidez.",
         "Pimienta Negra": "Vigorosa, picante y aromática; infunde un dinamismo directo.",
         "Pimienta Rosa": "Especiada, brillante y frutal; aporta un matiz efervescente.",
-        "Cacao / Chocolate": "Profundo, amargo y reconfortante; aporta una calidez adictiva.",
+        "Cacao / Chocolate": "Profundo, amargo y reconfortante; aporta calidez adictiva.",
         "Café": "Tostado, energizante y oscuro; perfecto para fragancias audaces.",
-        "Caramelo": "Dulce, cremoso y tentador; agrega un toque goloso aterciopelado.",
-        "Haba Tonka": "Cálida, avainillada y con matices a almendra y heno recién cortado.",
-        "Leche": "Lactónica, suave y envolvente; recrea una sensación de bienestar reconfortante.",
+        "Caramelo": "Dulce, cremoso y tentador; agrega un toque goloso.",
+        "Haba Tonka": "Cálida, avainillada y con matices a almendra.",
+        "Leche": "Lactónica, suave y envolvente; recrea bienestar reconfortante.",
         "Malvavisco": "Dulce esponjoso, azucarado y algodonoso.",
         "Miel": "Dorada, viscosa y melosa; envuelve en una riqueza cálida.",
-        "Praliné": "Dulce de frutos secos y azúcar caramelizada; cremosidad apetitosa.",
-        "Vainilla": "Dulce, sensual y reconfortante; reina indiscutible de la adicción olfativa.",
-        "Cedro": "Seco, noble y leñoso; estructura la base aportando fuerza atemporal.",
+        "Praliné": "Dulce de frutos secos y azúcar caramelizada.",
+        "Vainilla": "Dulce, sensual y reconfortante; reina de la adicción olfativa.",
+        "Cedro": "Seco, noble y leñoso; estructura la base aportando fuerza.",
         "Ciprés": "Resinoso, verde y seco; proyecta serenidad de arboleda.",
-        "Ébano": "Madera oscura, densa y refinada de gran presencia misteriosa.",
+        "Ébano": "Madera oscura, densa y refinada de gran presencia.",
         "Guayac": "Madera ahumada, dulce y balsámica con matices rosados.",
         "Musgo de Roble": "Terroso, boscoso y húmedo; esencial para la estructura Chipre.",
-        "Oud (Madera de Agar)": "Profundo, resinoso y complejo; el valioso tesoro de Oriente.",
-        "Sándalo": "Madera cremosa, suave y balsámica; transmite serenidad envolvente.",
-        "Ámbar (Cálido)": "Nota resinosa y dorada que envuelve la fragancia en riqueza dulzona.",
+        "Oud (Madera de Agar)": "Profundo, resinoso y complejo; tesoro de Oriente.",
+        "Sándalo": "Madera cremosa, suave y balsámica; transmite serenidad.",
+        "Ámbar (Cálido)": "Nota resinosa y dorada que envuelve en riqueza dulzona.",
         "Bálsamo del Perú": "Balsámico, dulce y acanelado de rica densidad.",
         "Benjuí": "Resina dulce con olor a vainilla tostada e incienso suave.",
         "Estoraque": "Ahumado, leñoso y con matices de cuero resinoso.",
-        "Incienso (Olíbano)": "Místico, resinoso y ahumado; añade solemnidad y profundidad.",
+        "Incienso (Olíbano)": "Místico, resinoso y ahumado; añade solemnidad.",
         "Ládano": "Ambarino, denso y profundamente cuero-resinoso.",
-        "Mirra": "Balsámica, cálida y milenaria; ofrece un aura mística rica.",
-        "Almizcle (Blanco/Musk)": "Piel limpia, suavidad algodonosa y fijación sensual duradera.",
-        "Almizcle Vegetal": "Alternativa botánica limpia de perfil suave y transparente.",
-        "Ámbar Gris": "Marino, terroso y aterciopelado; fija la fragancia con lujo oceánico.",
-        "Castóreo": "Nota animalic ahumada y abrigadora que evoca cuero profundo.",
-        "Civeta": "Sensualidad animalica cálida que aporta densidad al fondo.",
+        "Mirra": "Balsámica, cálida y milenaria; ofrece un aura mística.",
+        "Almizcle (Blanco/Musk)": "Piel limpia, suavidad algodonosa y fijación sensual.",
+        "Almizcle Vegetal": "Alternativa botánica limpia de perfil transparente.",
+        "Ámbar Gris": "Marino, terroso y aterciopelada; fija la fragancia.",
+        "Castóreo": "Nota animalic ahumada que evoca cuero profundo.",
+        "Civeta": "Sensualidad animalica cálida que aporta densidad.",
         "Amaretto": "Licoroso, dulce y almendrado de perfil tentador.",
         "Champán": "Burbujeante, efervescente y festivo de tono cristalino.",
-        "Cognac": "Embriagador, leñoso y ambarino con refinada distinción.",
+        "Cognac": "Embriagador, leñoso y ambarino con distinción.",
         "Ginebra": "Fresca, botánica y de enebro vigorizante.",
         "Mojito": "Cítrico, mentolado y azucarado de máxima frescura.",
         "Ron": "Licoroso, dulce y especiado con notas de barrica.",
         "Whisky": "Malteado, ahumado y cálido con presencia elegante.",
-        "Aldehídos": "Chispeantes, jabonosos y efervescentes; elevan el perfume con aire limpio.",
-        "Ambroxan": "Ambarino, leñoso y salino de proyección moderna insuperable.",
+        "Aldehídos": "Chispeantes, jabonosos y efervescentes; elevan el perfume.",
+        "Ambroxan": "Ambarino, leñoso y salino de proyección moderna.",
         "Cachemira (Cashmeran)": "Suave como la lana, leñoso, ambarino y almizclado.",
-        "Cuero": "Seco, ahumado y sofisticado; proyecta distinción y personalidad.",
-        "Iso E Super": "Molécula maderosa, suave y aterciopelada de efecto aura envolvente.",
-        "Notas Marinas": "Brisa salada y aire ozónico; aportan frescura oceánica pura.",
+        "Cuero": "Seco, ahumado y sofisticado; proyecta distinción.",
+        "Iso E Super": "Molécula maderosa, suave y aterciopelada.",
+        "Notas Marinas": "Brisa salada y aire ozónico; aportan frescura oceánica.",
         "Notas Solares": "Calidez de la piel bajo el sol y tardes de verano.",
-        "Sangre (Metálica)": "Nota vanguardista nicho; evoca hierro y un matiz salado muy singular."
+        "Sangre (Metálica)": "Nota vanguardista nicho; evoca hierro y un matiz salado."
     }
 
     esencias_dict = []
     for note in all_notes:
         border_col, bg_col, text_c = get_essence_colors(note)
-        desc = essence_descriptions.get(note, "Nota olfativa distintiva que aporta carácter y equilibrio a la fragancia.")
+        desc = essence_descriptions.get(note, "Nota olfativa distintiva que aporta carácter y equilibrio.")
         esencias_dict.append({
             "title": note,
             "color_border": border_col,
@@ -762,7 +700,7 @@ elif st.session_state['current_page'] == 'esencias_page':
             "desc": desc
         })
 
-    col_es_1, col_es_2 = st.columns(2, gap="large")
+    col_es_1, col_es_2 = st.columns(2, gap="medium")
     
     for i, item in enumerate(esencias_dict):
         tarjeta_html = f"""
@@ -779,6 +717,6 @@ elif st.session_state['current_page'] == 'esencias_page':
                 st.markdown(tarjeta_html, unsafe_allow_html=True)
 
 elif st.session_state['current_page'] == 'trust_page':
-    st.markdown(f"<h3 style='text-align: center; color: {text_color}; font-weight: 300;'>Páginas de Confianza (Próximamente)</h3>", unsafe_allow_html=True)
+    st.markdown(f"<div style='text-align: center; color: {text_color}; font-weight: 300; font-size: 0.9rem;'>Páginas de Confianza (Próximamente)</div>", unsafe_allow_html=True)
 elif st.session_state['current_page'] == 'compare_page':
-    st.markdown(f"<h3 style='text-align: center; color: {text_color}; font-weight: 300;'>Comparador de Precios (Próximamente)</h3>", unsafe_allow_html=True)
+    st.markdown(f"<div style='text-align: center; color: {text_color}; font-weight: 300; font-size: 0.9rem;'>Comparador de Precios (Próximamente)</div>", unsafe_allow_html=True)
