@@ -355,21 +355,25 @@ st.markdown(f"""
 
     /* ESTILOS PARA LA SECCIÓN DE ESENCIAS */
     .essence-card {{
-        background-color: {btn_bg};
-        border: 1px solid {btn_border};
         border-radius: 8px;
-        padding: 15px;
+        padding: 18px;
         margin-bottom: 15px;
+        transition: transform 0.2s ease;
+        border: 1px solid {btn_border};
+    }}
+    .essence-card:hover {{
+        transform: scale(1.01);
     }}
     .essence-title {{
         font-size: 1.1rem;
         font-weight: 700;
-        color: #8c7b6d;
-        margin-bottom: 5px;
+        color: {text_color};
+        margin-bottom: 6px;
+        letter-spacing: 0.3px;
     }}
     .essence-desc {{
         font-size: 0.9rem;
-        color: {text_color};
+        color: {subtext_color};
         line-height: 1.5;
     }}
     </style>
@@ -407,7 +411,7 @@ with col_actions:
     with btn_col2:
         st.button(" ", key="theme_toggle", on_click=toggle_theme)
 
-# 2. NAVEGACIÓN PRINCIPAL (Actualizada con Diseñador, Nicho y Esencias)
+# 2. NAVEGACIÓN PRINCIPAL 
 st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
 nav_cols = st.columns([1.1, 1.6, 0.9, 1.0, 1.1, 0.9, 1.0, 1.5], vertical_alignment="center")
 
@@ -429,20 +433,20 @@ with col_search:
 
 with col_filter:
     with st.popover("Esencias", use_container_width=True):
-        # NOTAS ACTUALIZADAS CON COLORES Y CATEGORÍAS
+        # NOTAS LIMPIAS (SIN EMOJIS) PARA UN LOOK MÁS PROFESIONAL
         all_notes = sorted([
-            "🟤 Abedul", "🟢 Albahaca", "⚪ Almizcle (Blanco/Musk)", "🟤 Ámbar (Cálido)", "🌊 Ámbar Gris", 
-            "🔴 Azafrán (Rojo)", "🟢 Bergamota (Verde Cítrico)", "🟤 Cacao", "⚫ Café", "🟤 Canela", 
-            "🟠 Caramelo", "🟢 Cardamomo", "🟤 Cedro", "🔴 Cereza", "🟣 Ciruela", "🟡 Cítricos (Amarillo)", 
-            "⚫ Civeta", "⚪ Coco", "⚫ Cuero (Oscuro)", "🔴 Frambuesa", "🟣 Grosellas Negras", 
-            "⚫ Haba Tonka", "🟣 Higo", "⚪ Incienso (Blanco)", "🟣 Iris", "⚪ Jazmín", "🟡 Jengibre", 
-            "🟣 Lavanda (Morado)", "🔴 Lichi", "🟡 Limón", "🟠 Mandarina", "🟢 Manzana", "🟠 Melocotón", 
-            "🟢 Menta", "🟡 Miel", "🟤 Mirra", "🟢 Naranjo", "⚪ Nardos", "⚪ Neroli", 
-            "🔵 Notas Marinas (Azules)", "🟡 Notas Solares", "🟤 Nuez Moscada", "⚫ Oud (Madera Oscura)", 
-            "🟢 Pachulí", "🟢 Pera", "⚪ Pimienta Blanca", "⚫ Pimienta Negra", "🔴 Pimienta Rosa", 
-            "🟡 Piña", "🟠 Pomelo", "🟤 Praliné", "🟢 Romero", "🔴 Rosa", "🔴 Ruibarbo", 
-            "🟢 Salvia", "🟤 Sándalo", "🔴 Sangre (Metálica/Roja)", "🟤 Tabaco", "🟢 Té Verde", 
-            "🟡 Vainilla (Amarilla/Dulce)", "🟢 Vetiver", "🟡 Ylang-Ylang"
+            "Abedul", "Albahaca", "Almizcle (Blanco/Musk)", "Ámbar (Cálido)", "Ámbar Gris", 
+            "Azafrán", "Bergamota", "Cacao", "Café", "Canela", 
+            "Caramelo", "Cardamomo", "Cedro", "Cereza", "Ciruela", "Cítricos", 
+            "Civeta", "Coco", "Cuero", "Frambuesa", "Grosellas Negras", 
+            "Haba Tonka", "Higo", "Incienso", "Iris", "Jazmín", "Jengibre", 
+            "Lavanda", "Lichi", "Limón", "Mandarina", "Manzana", "Melocotón", 
+            "Menta", "Miel", "Mirra", "Naranjo", "Nardos", "Neroli", 
+            "Notas Marinas", "Notas Solares", "Nuez Moscada", "Oud", 
+            "Pachulí", "Pera", "Pimienta Blanca", "Pimienta Negra", "Pimienta Rosa", 
+            "Piña", "Pomelo", "Praliné", "Romero", "Rosa", "Ruibarbo", 
+            "Salvia", "Sándalo", "Sangre (Metálica)", "Tabaco", "Té Verde", 
+            "Vainilla", "Vetiver", "Ylang-Ylang"
         ])
         selected_essences = st.multiselect(
             "Selecciona notas olfativas:",
@@ -478,7 +482,7 @@ if st.session_state['current_page'] == 'home':
     if selected_essences:
         st.write(f"**Filtrando por:** {', '.join(selected_essences)}")
 
-    # BASE DE DATOS DE PERFUMES CON DETALLES DE HOVER
+    # BASE DE DATOS DE PERFUMES
     catalog_perfumes = [
         {
             "name": "Bleu de Chanel",
@@ -557,31 +561,77 @@ if st.session_state['current_page'] == 'home':
                 with cols[j]:
                     st.markdown(card_html, unsafe_allow_html=True)
 
-# PÁGINA DE ESENCIAS (DICCIONARIO OLFATIVO)
+# PÁGINA DE ESENCIAS (DICCIONARIO OLFATIVO CON DISEÑO MINIMALISTA)
 elif st.session_state['current_page'] == 'esencias_page':
     st.markdown(f"<h2 style='text-align: center; color: {text_color}; margin-bottom: 30px;'>Diccionario de Esencias</h2>", unsafe_allow_html=True)
-    st.write("Descubre qué significa cada nota olfativa y cómo aporta personalidad a tus fragancias favoritas. Hemos categorizado visualmente las notas por colores y sensaciones.")
+    st.write("Descubre qué significa cada nota olfativa y cómo aporta personalidad a tus fragancias favoritas. Categorizado a través de sutiles perfiles de color.")
     
-    esencias_dict = {
-        "🔵 Notas Marinas (Azules)": "Las notas marinas intentan capturar el aroma del océano, la brisa marina, la sal y el yodo. Se logran frecuentemente mediante moléculas sintéticas como el *Calone*. Aportan una frescura ozónica, limpia y acuática a los perfumes.",
-        "⚪ Almizcle (Blanco / Musk)": "El almizcle blanco moderno es una recreación sintética del almizcle animal. Aporta una sensación de 'piel limpia', pureza, suavidad algodonosa y actúa como un excelente fijador que hace que la fragancia dure más tiempo en la piel.",
-        "🔴 Sangre (Rojas / Metálicas)": "Una nota conceptual, nicho y audaz que evoca el hierro. En perfumería, se recrea con moléculas específicas (como el óxido de rosa) para dar una sensación carnal, férrea, salada y metálica. Añade un toque misterioso o 'vampírico'.",
-        "🟤 Ámbar (Marrón / Cálido)": "El ámbar no es una resina fosilizada real en perfumería, sino un 'acorde' (una mezcla) tradicionalmente dulce, cálido y resinoso creado combinando ládano, benjuí y vainilla. Evoca calidez, lujo, misterio y sensualidad.",
-        "⚫ Oud (Madera Oscura)": "El Oud o madera de Agar es una de las materias primas más caras. Se extrae de la madera infectada por un hongo del árbol Aquilaria. Su aroma es profundo, oscuro, amaderado, ahumado y, a menudo, con matices animálicos o a cuero.",
-        "🟡 Vainilla (Amarilla / Dulce)": "Una de las notas más populares del mundo. Extraída de las vainas de la orquídea vainilla, aporta dulzura, confort, sensualidad y toques 'gourmand' (comestibles). Es un pilar fundamental en fragancias orientales.",
-        "🟢 Bergamota (Verde Cítrico)": "Es la nota de salida por excelencia. Un cítrico cultivado principalmente en Italia que es chispeante, brillante, fresco, verde y con un ligero matiz floral y especiado. Es lo que le da el aroma característico al té Earl Grey.",
-        "⚫ Cuero (Oscuro)": "Una nota de fantasía que recrea el olor de chaquetas, botas o el interior de un auto de lujo. Se logra combinando abedul, enebro, isobutil quinolina y otras notas ahumadas. Aporta carácter, masculinidad y rebeldía.",
-        "🔴 Azafrán (Rojo / Especiado)": "Conocido como el 'oro rojo', aporta un aroma especiado, ligeramente dulce, terroso y con un fondo que a veces recuerda sutilmente al cuero o al yodo (muy famoso por su presencia en Baccarat Rouge 540)."
-    }
+    # LISTA DE ESENCIAS CON COLORES SUTILES ASIGNADOS
+    esencias_dict = [
+        {
+            "title": "Notas Marinas (Acústicas)", 
+            "color_border": "rgba(0, 168, 255, 0.45)", 
+            "color_bg": "rgba(0, 168, 255, 0.04)", 
+            "desc": "Las notas marinas intentan capturar el aroma del océano, la brisa marina, la sal y el yodo. Se logran frecuentemente mediante moléculas sintéticas como el <i>Calone</i>. Aportan una frescura ozónica, limpia y acuática."
+        },
+        {
+            "title": "Almizcle (Blanco / Musk)", 
+            "color_border": "rgba(180, 180, 180, 0.45)", 
+            "color_bg": "rgba(200, 200, 200, 0.04)", 
+            "desc": "El almizcle blanco moderno es una recreación sintética del almizcle animal. Aporta una sensación de 'piel limpia', pureza, suavidad algodonosa y actúa como un excelente fijador que hace que la fragancia dure más tiempo."
+        },
+        {
+            "title": "Sangre (Metálicas)", 
+            "color_border": "rgba(220, 20, 60, 0.45)", 
+            "color_bg": "rgba(220, 20, 60, 0.04)", 
+            "desc": "Una nota conceptual, nicho y audaz que evoca el hierro. En perfumería, se recrea con moléculas específicas para dar una sensación carnal, férrea, salada y metálica. Añade un toque misterioso o vanguardista."
+        },
+        {
+            "title": "Ámbar (Cálido)", 
+            "color_border": "rgba(210, 130, 60, 0.45)", 
+            "color_bg": "rgba(210, 130, 60, 0.04)", 
+            "desc": "El ámbar no es una resina fosilizada real en perfumería, sino un 'acorde' tradicionalmente dulce, cálido y resinoso creado combinando ládano, benjuí y vainilla. Evoca lujo, misterio y sensualidad."
+        },
+        {
+            "title": "Oud (Madera Oscura)", 
+            "color_border": "rgba(75, 54, 33, 0.55)", 
+            "color_bg": "rgba(75, 54, 33, 0.04)", 
+            "desc": "El Oud o madera de Agar es una de las materias primas más exclusivas. Se extrae de la madera infectada de Aquilaria. Su aroma es profundo, oscuro, amaderado, ahumado y con matices a cuero."
+        },
+        {
+            "title": "Vainilla (Dulce)", 
+            "color_border": "rgba(220, 200, 100, 0.45)", 
+            "color_bg": "rgba(220, 200, 100, 0.04)", 
+            "desc": "Extraída de las vainas de la orquídea vainilla, aporta dulzura, confort, sensualidad y toques 'gourmand' (comestibles). Es un pilar fundamental y adictivo en fragancias orientales."
+        },
+        {
+            "title": "Bergamota (Verde Cítrico)", 
+            "color_border": "rgba(100, 200, 120, 0.45)", 
+            "color_bg": "rgba(100, 200, 120, 0.04)", 
+            "desc": "Es la nota de salida por excelencia. Un cítrico que es chispeante, brillante, fresco, verde y con un ligero matiz floral y especiado. Es lo que le da el aroma característico al té Earl Grey."
+        },
+        {
+            "title": "Cuero (Oscuro)", 
+            "color_border": "rgba(50, 70, 80, 0.45)", 
+            "color_bg": "rgba(50, 70, 80, 0.04)", 
+            "desc": "Una nota de fantasía que recrea el olor de chaquetas o el interior de un auto de lujo. Se logra combinando abedul, enebro y notas ahumadas. Aporta un carácter fuerte y una elegancia rebelde."
+        },
+        {
+            "title": "Azafrán (Especiado)", 
+            "color_border": "rgba(230, 80, 40, 0.45)", 
+            "color_bg": "rgba(230, 80, 40, 0.04)", 
+            "desc": "Conocido como el 'oro rojo', aporta un aroma especiado, ligeramente dulce, terroso y con un fondo que a veces recuerda sutilmente al cuero o al yodo (presente en Baccarat Rouge 540)."
+        }
+    ]
 
     # Mostrar en columnas para mejor lectura
     col_es_1, col_es_2 = st.columns(2, gap="large")
     
-    for i, (titulo, descripcion) in enumerate(esencias_dict.items()):
+    for i, item in enumerate(esencias_dict):
         tarjeta_html = f"""
-        <div class="essence-card">
-            <div class="essence-title">{titulo}</div>
-            <div class="essence-desc">{descripcion}</div>
+        <div class="essence-card" style="border-left: 4px solid {item['color_border']}; background-color: {item['color_bg']};">
+            <div class="essence-title">{item['title']}</div>
+            <div class="essence-desc">{item['desc']}</div>
         </div>
         """
         if i % 2 == 0:
