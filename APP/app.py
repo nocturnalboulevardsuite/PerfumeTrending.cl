@@ -52,6 +52,56 @@ bottle_svg = (
 
 camera_icon_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z'/><circle cx='12' cy='13' r='4'/></svg>"
 
+# GENERACIÓN DINÁMICA DE ESTILOS DE COLOR SUTILES PARA CADA ESENCIA
+essence_colors = {
+    # Rojos (Sangre, Cereza, Rosa, etc.)
+    ("Sangre", "Cereza", "Frambuesa", "Pimienta Rosa", "Rosa", "Ruibarbo", "Lichi"): 
+        ("rgba(220, 38, 38, 0.22)", "rgba(239, 68, 68, 0.6)"),
+    # Azules (Notas Marinas)
+    ("Notas Marinas",): 
+        ("rgba(2, 132, 199, 0.22)", "rgba(56, 189, 248, 0.6)"),
+    # Verdes (Albahaca, Bergamota, Menta, etc.)
+    ("Albahaca", "Bergamota", "Cardamomo", "Higo", "Manzana", "Menta", "Pachulí", "Pera", "Romero", "Salvia", "Té Verde", "Vetiver"): 
+        ("rgba(22, 163, 74, 0.22)", "rgba(74, 222, 128, 0.6)"),
+    # Amarillos / Dorados (Vainilla, Cítricos, Miel, Piña, etc.)
+    ("Caramelo", "Cítricos", "Jengibre", "Limón", "Miel", "Notas Solares", "Piña", "Vainilla", "Ylang-Ylang"): 
+        ("rgba(202, 138, 4, 0.22)", "rgba(250, 204, 21, 0.6)"),
+    # Naranjas (Ámbar, Azafrán, Mandarina, etc.)
+    ("Ámbar", "Azafrán", "Mandarina", "Melocotón", "Mirra", "Naranjo", "Pomelo"): 
+        ("rgba(234, 88, 12, 0.22)", "rgba(251, 146, 60, 0.6)"),
+    # Púrpura / Violeta (Iris, Lavanda, Ciruela, etc.)
+    ("Ciruela", "Grosellas Negras", "Iris", "Lavanda"): 
+        ("rgba(147, 51, 234, 0.22)", "rgba(192, 132, 252, 0.6)"),
+    # Marrón / Café / Especias (Café, Cacao, Cedro, Tabaco, etc.)
+    ("Cacao", "Café", "Canela", "Cedro", "Haba Tonka", "Nuez Moscada", "Praliné", "Sándalo", "Tabaco"): 
+        ("rgba(146, 64, 14, 0.25)", "rgba(217, 119, 6, 0.6)"),
+    # Gris / Humo (Incienso, Ámbar Gris)
+    ("Ámbar Gris", "Incienso"): 
+        ("rgba(100, 116, 139, 0.25)", "rgba(148, 163, 184, 0.6)"),
+    # Cuero / Oscuro (Oud, Cuero, Abedul, Civeta)
+    ("Abedul", "Civeta", "Cuero", "Oud", "Pimienta Negra"): 
+        ("rgba(55, 65, 81, 0.35)", "rgba(156, 163, 175, 0.6)"),
+    # Blancos / Florales (Almizcle, Jazmín, Coco, etc.)
+    ("Almizcle", "Coco", "Jazmín", "Nardos", "Neroli", "Pimienta Blanca"): 
+        ("rgba(255, 255, 255, 0.12)", "rgba(255, 255, 255, 0.4)"),
+}
+
+dynamic_essence_css = ""
+for names, (bg_color, border_color) in essence_colors.items():
+    for name in names:
+        dynamic_essence_css += f"""
+        span[data-baseweb="tag"][title*="{name}"],
+        div[role="option"][aria-label*="{name}"],
+        li[role="option"][aria-label*="{name}"],
+        li[title*="{name}"] {{
+            background-color: {bg_color} !important;
+            border: 1px solid {border_color} !important;
+            color: #ffffff !important;
+            border-radius: 6px !important;
+            transition: all 0.2s ease !important;
+        }}
+        """
+
 st.markdown(f"""
     <style>
     header[data-testid="stHeader"] {{ display: none !important; }}
@@ -206,11 +256,8 @@ st.markdown(f"""
     
     div[data-baseweb="input"] input::placeholder {{ color: #9e9e9e !important; }}
 
-    span[data-baseweb="tag"] {{
-        background-color: #2d3340 !important;
-        border: 1px solid #3a3f4d !important;
-        color: white !important;
-    }}
+    /* APLICACIÓN DE COLORES SUTILES PARA CADA OPCIÓN DE ESENCIA */
+    {dynamic_essence_css}
 
     /* SWITCH DE TEMA */
     .st-key-theme_toggle div[data-testid="stButton"] > button,
@@ -264,7 +311,7 @@ st.markdown(f"""
         z-index: 2 !important;
     }}
 
-    /* --- TARJETAS DE CATÁLOGO Y EFECTO HOVER DINÁMICO --- */
+    /* TARJETAS DE CATÁLOGO Y EFECTO HOVER */
     .catalog-card {{
         background-color: {btn_bg};
         border: 1px solid {btn_border};
@@ -353,13 +400,12 @@ st.markdown(f"""
         color: {subtext_color};
     }}
 
-    /* ESTILOS PARA LA SECCIÓN DE ESENCIAS */
+    /* ESTILOS PARA LA SECCIÓN DE DICCIONARIO DE ESENCIAS */
     .essence-card {{
         border-radius: 8px;
         padding: 18px;
         margin-bottom: 15px;
         transition: transform 0.2s ease;
-        border: 1px solid {btn_border};
     }}
     .essence-card:hover {{
         transform: scale(1.01);
@@ -379,7 +425,7 @@ st.markdown(f"""
     </style>
 """, unsafe_allow_html=True)
 
-# 1. LA CABECERA (LOGO + USER / THEME)
+# 1. CABECERA (LOGO + USER / THEME)
 col_logo, col_espacio, col_actions = st.columns([4, 3, 2.5], vertical_alignment="center")
 
 with col_logo:
@@ -425,7 +471,7 @@ with nav_cols[6]: st.button("ESENCIAS", key="n_esencias", on_click=navigate_to, 
 
 st.markdown(f"<hr style='margin: 8px 0 25px 0; border: none; border-bottom: 1px solid {btn_border}; opacity: 0.5;'>", unsafe_allow_html=True)
 
-# 3. EL "HERO" DE BÚSQUEDA CON INDICADORES DE COLOR POR NOTA
+# 3. EL "HERO" DE BÚSQUEDA CON ESENCIAS COLOREADAS SUTILMENTE
 col_search, col_filter, col_separator, col_photo = st.columns([5.2, 1.8, 0.2, 2.3], vertical_alignment="center")
 
 with col_search:
@@ -433,24 +479,23 @@ with col_search:
 
 with col_filter:
     with st.popover("Esencias", use_container_width=True):
-        # NOTAS OLFATIVAS CON INDICADORES DE COLOR SUTILES
+        # LISTA DE ESENCIAS SIN ÍCONOS DE COLOR EN EL TEXTO
         raw_notes = [
-            ("Abedul", "🖤"), ("Albahaca", "🟢"), ("Almizcle (Blanco/Musk)", "⚪"), ("Ámbar (Cálido)", "🟠"), ("Ámbar Gris", "🔘"),
-            ("Azafrán", "🟠"), ("Bergamota", "🟢"), ("Cacao", "🟤"), ("Café", "🟤"), ("Canela", "🟤"),
-            ("Caramelo", "🟡"), ("Cardamomo", "🟢"), ("Cedro", "🟤"), ("Cereza", "🔴"), ("Ciruela", "🟣"), ("Cítricos", "🟡"),
-            ("Civeta", "🖤"), ("Coco", "⚪"), ("Cuero", "🖤"), ("Frambuesa", "🔴"), ("Grosellas Negras", "🟣"),
-            ("Haba Tonka", "🟤"), ("Higo", "🟢"), ("Incienso", "🔘"), ("Iris", "🟣"), ("Jazmín", "⚪"), ("Jengibre", "🟡"),
-            ("Lavanda", "🟣"), ("Lichi", "🔴"), ("Limón", "🟡"), ("Mandarina", "🟠"), ("Manzana", "🟢"), ("Melocotón", "🟠"),
-            ("Menta", "🟢"), ("Miel", "🟡"), ("Mirra", "🟠"), ("Naranjo", "🟠"), ("Nardos", "⚪"), ("Neroli", "⚪"),
-            ("Notas Marinas", "🔵"), ("Notas Solares", "🟡"), ("Nuez Moscada", "🟤"), ("Oud", "🖤"),
-            ("Pachulí", "🟢"), ("Pera", "🟢"), ("Pimienta Blanca", "⚪"), ("Pimienta Negra", "🖤"), ("Pimienta Rosa", "🔴"),
-            ("Piña", "🟡"), ("Pomelo", "🟠"), ("Praliné", "🟤"), ("Romero", "🟢"), ("Rosa", "🔴"), ("Ruibarbo", "🔴"),
-            ("Salvia", "🟢"), ("Sándalo", "🟤"), ("Sangre (Metálica)", "🔴"), ("Tabaco", "🟤"), ("Té Verde", "🟢"),
-            ("Vainilla", "🟡"), ("Vetiver", "🟢"), ("Ylang-Ylang", "🟡")
+            "Abedul", "Albahaca", "Almizcle (Blanco/Musk)", "Ámbar (Cálido)", "Ámbar Gris",
+            "Azafrán", "Bergamota", "Cacao", "Café", "Canela",
+            "Caramelo", "Cardamomo", "Cedro", "Cereza", "Ciruela", "Cítricos",
+            "Civeta", "Coco", "Cuero", "Frambuesa", "Grosellas Negras",
+            "Haba Tonka", "Higo", "Incienso", "Iris", "Jazmín", "Jengibre",
+            "Lavanda", "Lichi", "Limón", "Mandarina", "Manzana", "Melocotón",
+            "Menta", "Miel", "Mirra", "Naranjo", "Nardos", "Neroli",
+            "Notas Marinas", "Notas Solares", "Nuez Moscada", "Oud",
+            "Pachulí", "Pera", "Pimienta Blanca", "Pimienta Negra", "Pimienta Rosa",
+            "Piña", "Pomelo", "Praliné", "Romero", "Rosa", "Ruibarbo",
+            "Salvia", "Sándalo", "Sangre (Metálica)", "Tabaco", "Té Verde",
+            "Vainilla", "Vetiver", "Ylang-Ylang"
         ]
         
-        # Formato ordenado alfabéticamente conservando el color
-        all_notes = [f"{icon} {name}" for name, icon in sorted(raw_notes, key=lambda x: x[0])]
+        all_notes = sorted(raw_notes)
         
         selected_essences = st.multiselect(
             "Selecciona notas olfativas:",
@@ -565,59 +610,58 @@ if st.session_state['current_page'] == 'home':
                 with cols[j]:
                     st.markdown(card_html, unsafe_allow_html=True)
 
-# PÁGINA DE ESENCIAS (DICCIONARIO OLFATIVO MINIMALISTA POR COLOR)
+# PÁGINA DE ESENCIAS (DICCIONARIO OLFATIVO CON COLORES SUTILES)
 elif st.session_state['current_page'] == 'esencias_page':
     st.markdown(f"<h2 style='text-align: center; color: {text_color}; margin-bottom: 30px;'>Diccionario de Esencias</h2>", unsafe_allow_html=True)
-    st.write("Descubre qué significa cada nota olfativa y cómo aporta personalidad a tus fragancias favoritas. Categorizado con sutiles paletas de color especificas.")
+    st.write("Descubre qué significa cada nota olfativa y cómo aporta personalidad a tus fragancias favoritas.")
     
-    # LISTA DE ESENCIAS CON COLORES ESPECÍFICOS ASIGNADOS
     esencias_dict = [
         {
-            "title": "🔵 Notas Marinas (Acuáticas)", 
-            "color_border": "rgba(0, 168, 255, 0.8)", 
-            "color_bg": "rgba(0, 168, 255, 0.05)", 
+            "title": "Notas Marinas (Acuáticas)", 
+            "color_border": "rgba(56, 189, 248, 0.8)", 
+            "color_bg": "rgba(2, 132, 199, 0.15)", 
             "desc": "Las notas marinas capturan el aroma del océano, la brisa marina, la sal y el yodo. Se logran con moléculas sintéticas como el <i>Calone</i>. Aportan una frescura ozónica, limpia y cristalina."
         },
         {
-            "title": "⚪ Almizcle (Blanco / Musk)", 
-            "color_border": "rgba(220, 220, 220, 0.8)", 
-            "color_bg": "rgba(240, 240, 240, 0.05)", 
+            "title": "Almizcle (Blanco / Musk)", 
+            "color_border": "rgba(255, 255, 255, 0.5)", 
+            "color_bg": "rgba(255, 255, 255, 0.08)", 
             "desc": "El almizcle blanco recrea una sensación pura de 'piel limpia', suavidad algodonosa y aporta fijación duradera a cualquier composición perfumada."
         },
         {
-            "title": "🔴 Sangre (Metálica)", 
-            "color_border": "rgba(220, 20, 60, 0.8)", 
-            "color_bg": "rgba(220, 20, 60, 0.05)", 
+            "title": "Sangre (Metálica)", 
+            "color_border": "rgba(239, 68, 68, 0.8)", 
+            "color_bg": "rgba(220, 38, 38, 0.15)", 
             "desc": "Una nota vanguardista y nicho que evoca el hierro. Aporta una sensación carnal, férrea, salada y metálica muy distintiva en fragancias conceptuales."
         },
         {
-            "title": "🟤 Café (Gourmand)", 
-            "color_border": "rgba(111, 78, 55, 0.8)", 
-            "color_bg": "rgba(111, 78, 55, 0.05)", 
+            "title": "Café (Gourmand)", 
+            "color_border": "rgba(217, 119, 6, 0.8)", 
+            "color_bg": "rgba(146, 64, 14, 0.18)", 
             "desc": "Aporta un matiz tostado, cálido, energizante y vagamente amargo. Ideal para perfumes de invierno que buscan una faceta adictiva y acogedora."
         },
         {
-            "title": "🟠 Ámbar (Cálido)", 
-            "color_border": "rgba(255, 140, 0, 0.8)", 
-            "color_bg": "rgba(255, 140, 0, 0.05)", 
+            "title": "Ámbar (Cálido)", 
+            "color_border": "rgba(251, 146, 60, 0.8)", 
+            "color_bg": "rgba(234, 88, 12, 0.15)", 
             "desc": "Un acorde tradicionalmente dulce, resinoso y envolvente (ládano, benjuí y vainilla). Evoca elegancia, misterio, calidez y opulencia."
         },
         {
-            "title": "🖤 Oud (Madera Oscura)", 
-            "color_border": "rgba(60, 40, 20, 0.8)", 
-            "color_bg": "rgba(60, 40, 20, 0.05)", 
-            "desc": "Extracted de la madera infectada de Aquilaria, es una de las notas más exclusivas del mundo oriental. Su perfil es profundo, amaderado, ahumado y complejo."
+            "title": "Oud (Madera Oscura)", 
+            "color_border": "rgba(156, 163, 175, 0.8)", 
+            "color_bg": "rgba(55, 65, 81, 0.25)", 
+            "desc": "Extraído de la madera infectada de Aquilaria, es una de las notas más exclusivas del mundo oriental. Su perfil es profundo, amaderado, ahumado y complejo."
         },
         {
-            "title": "🟡 Vainilla (Dulce)", 
-            "color_border": "rgba(240, 200, 80, 0.8)", 
-            "color_bg": "rgba(240, 200, 80, 0.05)", 
+            "title": "Vainilla (Dulce)", 
+            "color_border": "rgba(250, 204, 21, 0.8)", 
+            "color_bg": "rgba(202, 138, 4, 0.15)", 
             "desc": "Aporta dulzura, confort, voluptuosidad y toques golosos. Pilar fundamental de la familia oriental y gourmand."
         },
         {
-            "title": "🟢 Bergamota (Cítrico Verde)", 
-            "color_border": "rgba(46, 204, 113, 0.8)", 
-            "color_bg": "rgba(46, 204, 113, 0.05)", 
+            "title": "Bergamota (Cítrico Verde)", 
+            "color_border": "rgba(74, 222, 128, 0.8)", 
+            "color_bg": "rgba(22, 163, 74, 0.15)", 
             "desc": "Un cítrico brillante, efervescente y verde con matices florales sutiles. Es la nota de salida por excelencia para abrir una fragancia con frescura."
         }
     ]
@@ -626,7 +670,7 @@ elif st.session_state['current_page'] == 'esencias_page':
     
     for i, item in enumerate(esencias_dict):
         tarjeta_html = f"""
-        <div class="essence-card" style="border-left: 4px solid {item['color_border']}; background-color: {item['color_bg']};">
+        <div class="essence-card" style="border: 1px solid {item['color_border']}; background-color: {item['color_bg']};">
             <div class="essence-title">{item['title']}</div>
             <div class="essence-desc">{item['desc']}</div>
         </div>
