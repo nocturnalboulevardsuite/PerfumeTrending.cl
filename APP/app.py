@@ -654,7 +654,7 @@ with col_chip1:
     if st.button("Trend Del Hype", key="btn_trend", use_container_width=True):
         st.switch_page("pages/trendhype.py")
 with col_chip2:
-    st.page_link("pages/trustpage.py")
+    st.page_link("pages/trustpage.py", label="Páginas de Confianza", icon="🛡️")
 with col_chip3:
     st.button("Comparar Precios", key="btn_compare", on_click=navigate_to, args=('compare_page',), use_container_width=True)
 
