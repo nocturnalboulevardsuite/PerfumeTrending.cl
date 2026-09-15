@@ -52,6 +52,7 @@ bottle_svg = (
 )
 
 camera_icon_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23{text_color[1:]}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z'/><circle cx='12' cy='13' r='4'/></svg>"
+user_icon_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23{btn_text[1:]}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2'/><circle cx='12' cy='7' r='4'/></svg>"
 
 # 2. SCRIPT DE COLORES COMPACTO
 js_color_script = f"""
@@ -197,15 +198,16 @@ st.markdown(f"""
         color: {text_color} !important;
     }}
 
-    /* CHIPS Y HERRAMIENTAS RÁPIDAS COMPACTAS */
+    /* CHIPS Y HERRAMIENTAS RÁPIDAS COMPACTAS (CORREGIDOS SIN RECORTE '...') */
     .st-key-btn_trend button, 
     .st-key-btn_trust button, 
     .st-key-btn_compare button {{
         background-color: transparent !important;
         border: 1px solid {btn_border} !important;
         border-radius: 14px !important;
-        padding: 0.1rem 0.5rem !important;
+        padding: 0.15rem 0.6rem !important;
         box-shadow: none !important;
+        width: 100% !important;
     }}
     
     .st-key-btn_trend button p, 
@@ -215,15 +217,22 @@ st.markdown(f"""
         font-weight: 400 !important;
         color: {subtext_color} !important;
         letter-spacing: 0.2px;
+        white-space: nowrap !important;
+        text-overflow: clip !important;
+        overflow: visible !important;
     }}
 
-    /* BOTÓN INGRESAR COMPACTO */
+    /* BOTÓN INGRESAR COMPACTO CON ÍCONO DE PERSONA */
     .st-key-login_btn button {{
         background-color: {btn_bg} !important;
         color: {btn_text} !important;
         border: 1px solid {btn_border} !important;
         border-radius: 4px !important;
-        padding: 0.2rem 0.6rem !important;
+        padding: 0.2rem 0.6rem 0.2rem 1.8rem !important;
+        background-image: url("{user_icon_svg}") !important;
+        background-repeat: no-repeat !important;
+        background-position: 8px center !important;
+        background-size: 13px 13px !important;
         font-size: 0.72rem !important;
     }}
     .st-key-login_btn button p {{
@@ -382,7 +391,7 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # 4. CABECERA
-col_logo, col_espacio, col_actions = st.columns([5, 2, 2.2], vertical_alignment="center")
+col_logo, col_espacio, col_actions = st.columns([5, 1.8, 2.4], vertical_alignment="center")
 
 with col_logo:
     logo_color = "#8c7b6d"
@@ -405,7 +414,7 @@ with col_logo:
     st.markdown(logo_html, unsafe_allow_html=True)
 
 with col_actions:
-    btn_col1, btn_col2 = st.columns([1.3, 1], vertical_alignment="center")
+    btn_col1, btn_col2 = st.columns([1.4, 1], vertical_alignment="center")
     with btn_col1:
         st.button("Ingresar", key="login_btn", use_container_width=True)
     with btn_col2:
@@ -463,9 +472,9 @@ with col_separator:
 with col_photo:
     st.button("Búsqueda visual", key="btn_photo_search", help="Buscar por imagen", use_container_width=True)
 
-# 7. CHIPS DE NAVEGACIÓN RÁPIDA
+# 7. CHIPS DE NAVEGACIÓN RÁPIDA (ANCHO PROPOCIONAL AMPLIADO PARA EVITAR TRUNCO)
 st.markdown("<div style='margin-top: 8px;'></div>", unsafe_allow_html=True)
-col_chip1, col_chip2, col_chip3, col_chip_space = st.columns([1.2, 1.4, 1.3, 5.5], vertical_alignment="center")
+col_chip1, col_chip2, col_chip3, col_chip_space = st.columns([1.3, 2.0, 1.7, 4.0], vertical_alignment="center")
 
 with col_chip1:
     if st.button("Trend Del Hype", key="btn_trend", use_container_width=True):
