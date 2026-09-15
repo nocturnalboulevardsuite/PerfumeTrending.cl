@@ -22,10 +22,10 @@ def navigate_to(page, perfume_data=None):
 
 is_dark = st.session_state['theme'] == 'dark'
 
-# Colores generales (Alta legibilidad en ambos temas)
+# Colores generales (Ajustados para perfecta visibilidad en ambos temas)
 app_bg_css = "background-color: #0e1117 !important;" if is_dark else "background-color: #f8f6f3 !important;"
 text_color = "#ffffff" if is_dark else "#1a1a1a"
-subtext_color = "#a0a0a0" if is_dark else "#333333"
+subtext_color = "#a0a0a0" if is_dark else "#444444"
 
 btn_bg = "#1f242d" if is_dark else "#ffffff"
 btn_text = "#ffffff" if is_dark else "#1a1a1a"
@@ -36,7 +36,7 @@ input_bg = "#1f242d" if is_dark else "#ffffff"
 input_text = "#ffffff" if is_dark else "#1a1a1a"
 input_border = "#3a3f4d" if is_dark else "#d4cdc5"
 
-# Switch de Tema (Conservado intacto)
+# Posicionamiento del Switch de Tema (CONSERVADO 100% INTACTO)
 bottle_left_pos = "42px" if is_dark else "-2px"
 static_icon_pos = "12px center" if is_dark else "calc(100% - 12px) center"
 
@@ -54,7 +54,7 @@ bottle_svg = (
 
 camera_icon_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23{text_color[1:]}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z'/><circle cx='12' cy='13' r='4'/></svg>"
 
-# 2. SCRIPT DE INYECCIÓN JAVASCRIPT CON PALETA DINÁMICA CLARO / OSCURO
+# 2. SCRIPT DE INYECCIÓN JAVASCRIPT PARA CHIPS DE ESENCIAS
 js_color_script = f"""
 <script>
 function applyEssenceColors() {{
@@ -219,12 +219,46 @@ st.markdown(f"""
         letter-spacing: 0.5px;
     }}
 
-    /* POPOVER Y BÚSQUEDA FOTO */
-    div[data-testid="stPopover"] > button {{
+    /* INPUTS, SELECTS Y BOTÓN ESENCIAS (CORRECCIÓN TOTAL DE VISIBILIDAD) */
+    div[data-baseweb="input"],
+    div[data-baseweb="base-input"],
+    div[data-baseweb="select"] > div,
+    div[data-testid="stPopover"] > button,
+    button[data-testid="stPopoverButton"],
+    button[data-testid="stBaseButton-secondary"] {{
         background-color: {input_bg} !important;
         border: 1px solid {input_border} !important;
         border-radius: 6px !important;
-        padding: 0.4rem 0.2rem !important;
+    }}
+
+    /* TEXTO INTERNO DE BUSCADOR Y BOTÓN ESENCIAS */
+    div[data-baseweb="input"] input,
+    div[data-baseweb="base-input"] input,
+    div[data-baseweb="select"] span[data-baseweb="tag"] span,
+    div[data-baseweb="select"] div,
+    div[data-testid="stPopover"] button,
+    div[data-testid="stPopover"] button *,
+    div[data-testid="stPopover"] button p,
+    div[data-testid="stPopover"] button span,
+    div[data-testid="stPopover"] button div,
+    button[data-testid="stPopoverButton"],
+    button[data-testid="stPopoverButton"] *,
+    button[data-testid="stPopoverButton"] p,
+    button[data-testid="stPopoverButton"] span {{
+        color: {input_text} !important;
+        white-space: nowrap !important;
+    }}
+
+    /* ÍCONO DE FLECHA DE POPOVER Y BUSCADOR */
+    div[data-testid="stPopover"] button svg,
+    button[data-testid="stPopoverButton"] svg {{
+        stroke: {input_text} !important;
+        fill: {input_text} !important;
+    }}
+
+    div[data-baseweb="input"] input::placeholder {{
+        color: {subtext_color} !important;
+        font-weight: 300;
     }}
 
     .st-key-btn_photo_search button {{
@@ -239,32 +273,13 @@ st.markdown(f"""
         font-size: 0.82rem !important;
     }}
     
-    .stApp div[data-testid="stPopover"] button,
-    .stApp div[data-testid="stPopover"] button p,
-    .stApp div[data-testid="stPopover"] button span,
     .stApp .st-key-btn_photo_search button,
     .stApp .st-key-btn_photo_search button p {{
         color: {text_color} !important;
         white-space: nowrap !important;
     }}
 
-    /* INPUTS Y SELECTS */
-    div[data-baseweb="input"], 
-    div[data-baseweb="select"] > div {{
-        background-color: {input_bg} !important;
-        border: 1px solid {input_border} !important;
-        border-radius: 6px !important;
-    }}
-    
-    div[data-baseweb="input"] input, 
-    div[data-baseweb="select"] span[data-baseweb="tag"] span,
-    div[data-baseweb="select"] div {{
-        color: {input_text} !important;
-    }}
-    
-    div[data-baseweb="input"] input::placeholder {{ color: {subtext_color} !important; font-weight: 300; }}
-
-    /* SWITCH DE TEMA INTERACTIVO (TOTALMENTE CONSERVADO) */
+    /* SWITCH DE TEMA INTERACTIVO (SIN CAMBIOS, TOTALMENTE CONSERVADO) */
     .st-key-theme_toggle button {{
         background: transparent !important;
         border: none !important;
