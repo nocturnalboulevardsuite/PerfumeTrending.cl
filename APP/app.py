@@ -54,13 +54,60 @@ bottle_svg = (
 camera_icon_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23{text_color[1:]}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z'/><circle cx='12' cy='13' r='4'/></svg>"
 user_icon_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23{btn_text[1:]}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2'/><circle cx='12' cy='7' r='4'/></svg>"
 
-# 2. SCRIPT DE COLORES COMPACTO
+# 2. SCRIPT DE COLORES Y SISTEMA DE SONIDO DE BURBUJA
 js_color_script = f"""
 <script>
 (function() {{
     const doc = window.parent.document;
     const isDark = {str(is_dark).lower()};
     
+    // Configuración de audio y mute
+    window.parent.soundMuted = window.parent.soundMuted || false;
+    
+    window.parent.playBubbleSound = function() {{
+        if (window.parent.soundMuted) return;
+        try {{
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContext) return;
+            if (!window.parent.audioCtx) {{
+                window.parent.audioCtx = new AudioContext();
+            }}
+            const ctx = window.parent.audioCtx;
+            if (ctx.state === 'suspended') {{
+                ctx.resume();
+            }}
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+
+            osc.type = 'sine';
+            const now = ctx.currentTime;
+
+            // Barrido de tono tipo burbuja (baja a alta frecuencia en ms)
+            osc.frequency.setValueAtTime(220, now);
+            osc.frequency.exponentialRampToValueAtTime(750, now + 0.07);
+
+            // Envolvente de volumen (ataque rápido y caída tenue)
+            gain.gain.setValueAtTime(0.25, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
+
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+
+            osc.start(now);
+            osc.stop(now + 0.07);
+        }} catch(e) {{ console.error(e); }}
+    }};
+
+    window.parent.toggleSoundMute = function() {{
+        window.parent.soundMuted = !window.parent.soundMuted;
+        const btn = doc.getElementById('sound-toggle-btn');
+        if (btn) {{
+            btn.innerHTML = window.parent.soundMuted ? '🔇' : '🔊';
+            btn.title = window.parent.soundMuted ? 'Sonido desactivado' : 'Sonido activado';
+            btn.style.opacity = window.parent.soundMuted ? '0.55' : '1';
+        }}
+    }};
+
     const colorRules = [
         {{ keywords: ['sangre', 'cereza', 'frambuesa', 'pimienta rosa', 'rosa', 'ruibarbo', 'lichi', 'ciruela', 'grosella', 'grosellas', 'peonía', 'geranio'], 
           bg: isDark ? '#3d1a1e' : '#f7eaec', border: isDark ? '#5c282e' : '#e2b3b7', text: isDark ? '#f0adb4' : '#5c1b22' }},
@@ -80,7 +127,7 @@ js_color_script = f"""
           bg: isDark ? '#1f2228' : '#f2f4f7', border: isDark ? '#333842' : '#cad0d9', text: isDark ? '#bcc2cc' : '#2b3038' }}
     ];
 
-    function applyEssenceColors() {{
+    function applyEssenceColorsAndEvents() {{
         const targets = doc.querySelectorAll('li[role="option"], div[role="option"], span[data-baseweb="tag"], div[data-baseweb="option"]');
         targets.forEach(el => {{
             if (el.dataset.colored === 'true') return;
@@ -102,11 +149,27 @@ js_color_script = f"""
                 }}
             }}
         }});
+
+        // Eventos de clic para sonido de burbuja en las esencias
+        const essenceCards = doc.querySelectorAll('.essence-card');
+        essenceCards.forEach(card => {{
+            if (!card.dataset.soundAttached) {{
+                card.dataset.soundAttached = 'true';
+                card.addEventListener('click', () => window.parent.playBubbleSound());
+            }}
+        }});
+
+        // Actualizar estado visual del botón mute si ya existe
+        const btn = doc.getElementById('sound-toggle-btn');
+        if (btn) {{
+            btn.innerHTML = window.parent.soundMuted ? '🔇' : '🔊';
+            btn.style.opacity = window.parent.soundMuted ? '0.55' : '1';
+        }}
     }}
 
-    const observer = new MutationObserver(() => applyEssenceColors());
+    const observer = new MutationObserver(() => applyEssenceColorsAndEvents());
     observer.observe(doc.body, {{ childList: true, subtree: true }});
-    applyEssenceColors();
+    applyEssenceColorsAndEvents();
 }})();
 </script>
 """
@@ -401,10 +464,52 @@ st.markdown(f"""
     .card-perfume-name {{ font-size: 0.85rem; font-weight: 500; color: {text_color}; margin-bottom: 3px; }}
     .card-perfume-brand {{ font-size: 0.7rem; font-weight: 300; color: {subtext_color}; text-transform: uppercase; letter-spacing: 0.5px; }}
 
-    /* DICCIONARIO DE ESENCIAS */
-    .essence-card {{ border-radius: 6px; padding: 12px 14px; margin-bottom: 10px; border-width: 1px; border-style: solid; }}
+    /* DICCIONARIO DE ESENCIAS CON MINI ZOOM, HOVER Y CLIC */
+    .essence-card {{ 
+        border-radius: 8px; 
+        padding: 12px 14px; 
+        margin-bottom: 10px; 
+        border-width: 1px; 
+        border-style: solid;
+        cursor: pointer;
+        user-select: none;
+        transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.22s ease, border-color 0.22s ease;
+        will-change: transform;
+    }}
+    .essence-card:hover {{
+        transform: translateY(-4px) scale(1.025);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    }}
+    .essence-card:active {{
+        transform: translateY(0px) scale(0.97);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    }}
     .essence-title {{ font-size: 0.85rem; font-weight: 600; margin-bottom: 4px; letter-spacing: 0.3px; }}
     .essence-desc {{ font-size: 0.78rem; font-weight: 400; line-height: 1.4; opacity: 0.9; }}
+
+    /* BOTÓN DE SONIDO MUTE EN CABECERA DE DICCIONARIO */
+    .sound-mute-btn {{
+        background: transparent;
+        border: 1px solid {btn_border};
+        color: {text_color};
+        border-radius: 50%;
+        width: 36px;
+        height: 36px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.05rem;
+        transition: transform 0.2s ease, background-color 0.2s ease;
+        margin-bottom: 24px;
+    }}
+    .sound-mute-btn:hover {{
+        transform: scale(1.1);
+        background-color: {btn_bg};
+    }}
+    .sound-mute-btn:active {{
+        transform: scale(0.95);
+    }}
     </style>
 """, unsafe_allow_html=True)
 
@@ -589,7 +694,20 @@ if st.session_state['current_page'] == 'home':
                     st.markdown(card_html, unsafe_allow_html=True)
 
 elif st.session_state['current_page'] == 'esencias_page':
-    st.markdown(f"<div style='text-align: center; color: {text_color}; letter-spacing: 1px; font-weight: 300; margin-bottom: 24px; font-size: 1.05rem; text-transform: uppercase;'>DICCIONARIO DE ESENCIAS Y NOTAS</div>", unsafe_allow_html=True)
+    # CABECERA DEL DICCIONARIO CON BOTÓN DE MUTEAR SONIDO DE BURBUJA
+    col_dict_title, col_dict_mute = st.columns([9, 1], vertical_alignment="center")
+    
+    with col_dict_title:
+        st.markdown(f"<div style='text-align: center; color: {text_color}; letter-spacing: 1px; font-weight: 300; margin-bottom: 24px; font-size: 1.05rem; text-transform: uppercase;'>DICCIONARIO DE ESENCIAS Y NOTAS</div>", unsafe_allow_html=True)
+    
+    with col_dict_mute:
+        st.markdown(f"""
+        <div style="text-align: right;">
+            <button id="sound-toggle-btn" class="sound-mute-btn" onclick="window.parent.toggleSoundMute()" title="Desactivar / Activar sonido de clic">
+                🔊
+            </button>
+        </div>
+        """, unsafe_allow_html=True)
     
     def get_essence_colors(name):
         n = name.lower()
@@ -736,7 +854,7 @@ elif st.session_state['current_page'] == 'esencias_page':
     
     for i, item in enumerate(esencias_dict):
         tarjeta_html = f"""
-        <div class="essence-card" style="border-color: {item['color_border']}; background-color: {item['color_bg']}; color: {item['color_text']};">
+        <div class="essence-card" onclick="window.parent.playBubbleSound && window.parent.playBubbleSound()" style="border-color: {item['color_border']}; background-color: {item['color_bg']}; color: {item['color_text']};">
             <div class="essence-title" style="color: {item['color_text']} !important;">{item['title']}</div>
             <div class="essence-desc" style="color: {item['color_text']} !important;">{item['desc']}</div>
         </div>
