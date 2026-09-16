@@ -20,6 +20,30 @@ from backend.scraper_periodico import ejecutar_ciclo_scraping_y_descubrimiento
 
 import base64
 
+# -----------------------------------------------------------------------------
+# CAPA DE CACHÉ REACTIVA DE ALTO RENDIMIENTO (STREAMLIT DATA CACHING)
+# -----------------------------------------------------------------------------
+@st.cache_data(ttl=60, show_spinner=False)
+def cached_obtener_catalogo(busqueda=None, esencias_tuple=None, categoria=None, orden="id_asc"):
+    esencias_list = list(esencias_tuple) if esencias_tuple else None
+    return obtener_catalogo(busqueda=busqueda, esencias=esencias_list, categoria=categoria, orden=orden)
+
+@st.cache_data(ttl=60, show_spinner=False)
+def cached_obtener_detalle(perfume_id):
+    return obtener_detalle_perfume(perfume_id)
+
+@st.cache_data(ttl=60, show_spinner=False)
+def cached_obtener_precios(perfume_id):
+    return obtener_precios_actuales(perfume_id)
+
+@st.cache_data(ttl=60, show_spinner=False)
+def cached_obtener_historico(perfume_id):
+    return obtener_historico_precios(perfume_id)
+
+@st.cache_data(ttl=60, show_spinner=False)
+def cached_obtener_tiendas():
+    return obtener_tiendas()
+
 def get_image_src(img_path_or_url):
     """
     Retorna la URL remota o el data URI en base64 si es un archivo local del proyecto,
@@ -418,7 +442,7 @@ st.markdown("<br>", unsafe_allow_html=True)
 # -------------------------------------------------------------------------------------------------
 if st.session_state['current_page'] == 'detalle' and st.session_state['selected_perfume']:
     perfume_id = st.session_state['selected_perfume']
-    perfume = obtener_detalle_perfume(perfume_id)
+    perfume = cached_obtener_detalle(perfume_id)
 
     if not perfume:
         st.error("No se encontró el perfume seleccionado.")
@@ -435,13 +459,14 @@ if st.session_state['current_page'] == 'detalle' and st.session_state['selected_
             if st.button("🔄 Ejecutar Análisis Periódico (Scraper)", key="btn_scrape_single", use_container_width=True):
                 with st.spinner("Ejecutando scraper y registrando nuevos snapshots..."):
                     res = ejecutar_ciclo_scraping_y_descubrimiento()
+                    st.cache_data.clear()
                     st.toast(f"¡Precios analizados! {res['actualizaciones']} registros actualizados.", icon="✅")
                     st.rerun()
 
         st.markdown("<hr style='margin: 10px 0 20px 0; border: none; border-bottom: 1px solid #3a3f4d;'>", unsafe_allow_html=True)
 
-        precios_tiendas = obtener_precios_actuales(perfume_id)
-        historico = obtener_historico_precios(perfume_id)
+        precios_tiendas = cached_obtener_precios(perfume_id)
+        historico = cached_obtener_historico(perfume_id)
 
         # Filtrar tiendas que tienen stock y precio > 0 para calcular el mejor precio disponible
         tiendas_en_stock = [p for p in precios_tiendas if p.get("en_stock") == 1 and p.get("precio_actual", 0) > 0]
@@ -620,19 +645,40 @@ else:
     cat = st.session_state['current_page']
     categoria_filtro = "arabes" if cat == "arabes" else ("remates" if cat == "remates" else None)
 
-    col_titulo, col_btn_scrape = st.columns([7, 3], vertical_alignment="center")
+    col_titulo, col_orden, col_btn_scrape = st.columns([5.2, 2.5, 2.3], vertical_alignment="center")
     with col_titulo:
         titulo_cat = "CATÁLOGO DE PERFUMES ÁRABES" if cat == "arabes" else ("REMATES Y OFERTAS" if cat == "remates" else "CATÁLOGO Y TENDENCIAS")
         st.markdown(f"<h3 style='color: {text_color}; letter-spacing: 0.5px; margin: 0;'>{titulo_cat}</h3>", unsafe_allow_html=True)
     
+    with col_orden:
+        orden_ui = st.selectbox(
+            "Ordenar por:",
+            ["Relevancia", "Precio: Menor a Mayor", "Precio: Mayor a Menor", "Nombre (A-Z)"],
+            label_visibility="collapsed"
+        )
+        mapa_orden = {
+            "Relevancia": "id_asc",
+            "Precio: Menor a Mayor": "precio_asc",
+            "Precio: Mayor a Menor": "precio_desc",
+            "Nombre (A-Z)": "nombre_asc"
+        }
+        orden_param = mapa_orden.get(orden_ui, "id_asc")
+
     with col_btn_scrape:
-        if st.button("🤖 Descubrir Perfumes Automáticamente", key="btn_auto_discover", use_container_width=True, help="Ejecuta el scraper para buscar nuevos perfumes e insertarlos automáticamente"):
+        if st.button("🤖 Descubrir Perfumes", key="btn_auto_discover", use_container_width=True, help="Ejecuta el scraper para buscar nuevos perfumes e insertarlos automáticamente"):
             with st.spinner("Scraper explorando tiendas e insertando perfumes automáticamente..."):
                 res = ejecutar_ciclo_scraping_y_descubrimiento()
+                st.cache_data.clear()
                 st.toast(f"¡Listo! Se agregaron {res['nuevos']} nuevos perfumes y {res['actualizaciones']} precios actualizados.", icon="✨")
                 st.rerun()
 
-    perfumes = obtener_catalogo(busqueda=search_query, esencias=selected_essences, categoria=categoria_filtro)
+    esencias_tuple = tuple(selected_essences) if selected_essences else None
+    perfumes = cached_obtener_catalogo(
+        busqueda=search_query,
+        esencias_tuple=esencias_tuple,
+        categoria=categoria_filtro,
+        orden=orden_param
+    )
 
     filtro_tienda = st.session_state.get("filtro_tienda_catalogo")
     if filtro_tienda:

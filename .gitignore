@@ -216,3 +216,30 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# SQLite WAL & Journal temporary runtime files
+*.db-wal
+*.db-shm
+*.db-journal
+
+# IDEs & Editor configs
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Operating System artifacts
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.DS_Store
+._*
+
+# Virtual Environments & secrets
+.env
+.venv/
+venv/
+env/
+ENV/
+

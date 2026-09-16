@@ -27,6 +27,10 @@ except ImportError:
         init_db
     )
 
+@st.cache_data(ttl=60, show_spinner=False)
+def cached_obtener_tiendas_trust(filtro_tipo=None, score_minimo=0, busqueda=""):
+    return obtener_tiendas_trust(filtro_tipo=filtro_tipo, score_minimo=score_minimo, busqueda=busqueda)
+
 # -----------------------------------------------------------------------------
 # 1. CONFIGURACIÓN DE PÁGINA Y TEMA
 # -----------------------------------------------------------------------------
@@ -153,7 +157,7 @@ with col_h2:
 # -----------------------------------------------------------------------------
 # 3. KPIs DEL MERCADO CHILENO
 # -----------------------------------------------------------------------------
-tiendas_totales = obtener_tiendas_trust()
+tiendas_totales = cached_obtener_tiendas_trust()
 total_comercios = len(tiendas_totales)
 avg_trust = round(sum(t["trust_score"] for t in tiendas_totales) / max(total_comercios, 1), 1)
 ccs_conteo = sum(1 for t in tiendas_totales if t["sello_ccs"])
@@ -270,7 +274,7 @@ with col_f2:
 with col_f3:
     min_score = st.slider("Confianza mínima:", 0, 100, 85)
 
-tiendas_filtradas = obtener_tiendas_trust(
+tiendas_filtradas = cached_obtener_tiendas_trust(
     filtro_tipo=tipo_filtro,
     score_minimo=min_score,
     busqueda=busqueda_txt

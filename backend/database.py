@@ -1,25 +1,77 @@
-import sqlite3
-import os
+"""
+PerfumeTrending.cl — Capa de Persistencia y Motor de Base de Datos
+==================================================================
+Módulo de acceso a datos de alto rendimiento basado en SQLite con:
+- Modo WAL (Write-Ahead Logging) para concurrencia multi-hilo segura (Streamlit + Scraper).
+- Context managers para gestión determinista del ciclo de vida de conexiones y transacciones.
+- Índices relacionales optimizados para agregaciones temporales y consultas de catálogo.
+- Tipado estricto (PEP 484) y control defensivo de excepciones.
+"""
+
+from contextlib import contextmanager
 from datetime import datetime, timedelta
+import os
 import random
+import sqlite3
+from typing import Any, Dict, Generator, List, Optional, Tuple
 import urllib.parse
 
-DB_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data")
+# Configuración de rutas del sistema
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DB_DIR = os.path.join(BASE_DIR, "data")
 DB_PATH = os.path.join(DB_DIR, "perfumes.db")
 
 
-def get_connection():
-    """Obtiene una conexión a la base de datos SQLite."""
+def get_connection() -> sqlite3.Connection:
+    """
+    Crea y configura una conexión optimizada a SQLite.
+    
+    Ajustes de rendimiento y concurrencia:
+    - WAL Mode: Permite lecturas y escrituras simultáneas sin bloqueos de tabla.
+    - Busy timeout (15s): Evita errores de 'database is locked' ante ráfagas concurrentes.
+    - Synchronous NORMAL: Reduce la sobrecarga de I/O en disco manteniendo integridad ACID.
+    - Foreign Keys: Integridad referencial habilitada a nivel de motor.
+    """
     os.makedirs(DB_DIR, exist_ok=True)
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(DB_PATH, timeout=15.0)
     conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA journal_mode=WAL;")
+    conn.execute("PRAGMA synchronous=NORMAL;")
+    conn.execute("PRAGMA foreign_keys=ON;")
     return conn
 
 
-# Catálogo Maestro de Enlaces Directos Verificados (Tiendas Chilenas)
-# Formato: (perfume_id, tienda_nombre): (url_directa_al_producto, precio_actual, precio_normal)
-# NINGÚN enlace de búsqueda genérica ni homepages: SOLO URLs directas a la ficha del producto.
-URLS_DIRECTAS_CATALOGO = {
+@contextmanager
+def get_db_cursor(commit: bool = False) -> Generator[sqlite3.Cursor, None, None]:
+    """
+    Context manager transaccional para operaciones con la base de datos.
+    
+    Args:
+        commit: Si es True, ejecuta commit al finalizar exitosamente el bloque.
+        
+    Yields:
+        sqlite3.Cursor: Cursor activo para ejecución de sentencias SQL.
+        
+    Garantiza:
+        Rollback automático en caso de excepciones y cierre inmediato de la conexión.
+    """
+    conn = get_connection()
+    cursor = conn.cursor()
+    try:
+        yield cursor
+        if commit:
+            conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
+
+
+# -----------------------------------------------------------------------------
+# CATÁLOGO MAESTRO DE ENLACES DIRECTOS Y PRECIOS VERIFICADOS (CHILE)
+# -----------------------------------------------------------------------------
+URLS_DIRECTAS_CATALOGO: Dict[Tuple[int, str], Tuple[str, int, int]] = {
     # 1. Bleu de Chanel (Chanel) - Ultra Lujo Oficial
     (1, "Falabella"): ("https://www.falabella.com/falabella-cl/product/4192038/bleu-de-chanel-eau-de-parfum-vaporizador/4524081", 184990, 209990),
     (1, "Paris"): ("https://www.paris.cl/bleu-de-chanel-eau-de-parfum-vaporizador-100-ml-325785999.html", 184990, 209990),
@@ -88,138 +140,132 @@ URLS_DIRECTAS_CATALOGO = {
 }
 
 
-def obtener_url_directa_tienda(perfume_id, tienda_nombre):
-    """
-    Retorna la URL directa y precios verificados si la tienda comercializa directamente el perfume.
-    Si no hay link directo exacto, retorna None.
-    """
+def obtener_url_directa_tienda(perfume_id: int, tienda_nombre: str) -> Optional[Tuple[str, int, int]]:
+    """Retorna la URL directa y precios verificados si la tienda comercializa el producto."""
     return URLS_DIRECTAS_CATALOGO.get((perfume_id, tienda_nombre))
 
 
-def generar_url_tienda(tienda_nombre, perfume_nombre, url_directa=None):
-    """
-    Retorna la URL directa si existe. Ya NO genera enlaces de búsqueda genéricos que lleven a la home.
-    """
+def generar_url_tienda(tienda_nombre: str, perfume_nombre: str, url_directa: Optional[str] = None) -> Optional[str]:
+    """Retorna la URL verificada descartando búsquedas genéricas."""
     if url_directa and url_directa.startswith("http") and "/search" not in url_directa:
         return url_directa
     return None
 
 
-def tienda_comercializa_marca(tienda_nombre, marca):
-    """
-    Reglas de compatibilidad de distribución real en Chile:
-    - Chanel, MFK y Tom Ford son marcas de ultra-lujo vendidas exclusivamente en retail oficial (Falabella, Paris, Ripley).
-      Silk Perfumes y Elite Perfumes NO tienen Chanel en stock.
-    - Perfumes Árabes (Armaf, Lattafa, Afnan, Rasasi) se venden en Silk Perfumes, Elite Perfumes y Falabella Marketplace.
-    """
+def tienda_comercializa_marca(tienda_nombre: str, marca: str) -> bool:
+    """Valida reglas de distribución oficial y comercialización en Chile."""
     t_nom = tienda_nombre.lower()
     m = marca.lower()
     if "chanel" in m or "maison francis" in m or "tom ford" in m:
-        return ("falabella" in t_nom or "paris" in t_nom or "ripley" in t_nom)
+        return any(retail in t_nom for retail in ["falabella", "paris", "ripley"])
     return True
 
 
-def init_db(force_reseed=False):
-    """Crea las tablas necesarias si no existen y precarga datos semilla con enlaces reales."""
-    conn = get_connection()
-    cursor = conn.cursor()
+# -----------------------------------------------------------------------------
+# INICIALIZACIÓN DE ESQUEMA, MIGRACIONES E ÍNDICES
+# -----------------------------------------------------------------------------
+def init_db(force_reseed: bool = False) -> None:
+    """
+    Inicializa el esquema relacional, aplica migraciones idempotentes y crea índices de rendimiento.
+    """
+    with get_db_cursor(commit=True) as cursor:
+        # 1. Tabla de Perfumes
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS perfumes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            nombre TEXT NOT NULL,
+            marca TEXT NOT NULL,
+            genero TEXT DEFAULT 'Unisex',
+            tipo TEXT DEFAULT 'Eau de Parfum',
+            notas TEXT NOT NULL,
+            imagen_url TEXT NOT NULL,
+            es_arabe BOOLEAN DEFAULT 0,
+            en_tendencia BOOLEAN DEFAULT 0,
+            en_remate BOOLEAN DEFAULT 0,
+            precio_referencia INTEGER NOT NULL
+        );
+        """)
 
-    # 1. Tabla de Perfumes
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS perfumes (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        nombre TEXT NOT NULL,
-        marca TEXT NOT NULL,
-        genero TEXT DEFAULT 'Unisex',
-        tipo TEXT DEFAULT 'Eau de Parfum',
-        notas TEXT NOT NULL,
-        imagen_url TEXT NOT NULL,
-        es_arabe BOOLEAN DEFAULT 0,
-        en_tendencia BOOLEAN DEFAULT 0,
-        en_remate BOOLEAN DEFAULT 0,
-        precio_referencia INTEGER NOT NULL
-    )
-    """)
+        # 2. Tabla de Tiendas Chilenas (con dimensiones Trust Score Antifraude)
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS tiendas (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            nombre TEXT NOT NULL UNIQUE,
+            url_base TEXT NOT NULL,
+            trust_score INTEGER DEFAULT 85,
+            badge TEXT DEFAULT 'Verificado',
+            logo_emoji TEXT DEFAULT '🏬',
+            rut TEXT DEFAULT '',
+            tipo_tienda TEXT DEFAULT 'Comercio Especializado',
+            ssl_seguro BOOLEAN DEFAULT 1,
+            anios_antiguedad INTEGER DEFAULT 5,
+            sello_ccs BOOLEAN DEFAULT 0,
+            reclamos_sernac TEXT DEFAULT 'Bajo',
+            politica_devolucion TEXT DEFAULT '30 días de satisfacción',
+            direccion_fiscal TEXT DEFAULT 'Santiago, Chile',
+            puntos_seguridad INTEGER DEFAULT 25,
+            puntos_legalidad INTEGER DEFAULT 25,
+            puntos_garantia INTEGER DEFAULT 20,
+            puntos_reputacion INTEGER DEFAULT 20
+        );
+        """)
 
-    # 2. Tabla de Tiendas Chilenas (con dimensiones Trust Score Antifraude)
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS tiendas (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        nombre TEXT NOT NULL UNIQUE,
-        url_base TEXT NOT NULL,
-        trust_score INTEGER DEFAULT 85,
-        badge TEXT DEFAULT 'Verificado',
-        logo_emoji TEXT DEFAULT '🏬',
-        rut TEXT DEFAULT '',
-        tipo_tienda TEXT DEFAULT 'Comercio Especializado',
-        ssl_seguro BOOLEAN DEFAULT 1,
-        anios_antiguedad INTEGER DEFAULT 5,
-        sello_ccs BOOLEAN DEFAULT 0,
-        reclamos_sernac TEXT DEFAULT 'Bajo',
-        politica_devolucion TEXT DEFAULT '30 días de satisfacción',
-        direccion_fiscal TEXT DEFAULT 'Santiago, Chile',
-        puntos_seguridad INTEGER DEFAULT 25,
-        puntos_legalidad INTEGER DEFAULT 25,
-        puntos_garantia INTEGER DEFAULT 20,
-        puntos_reputacion INTEGER DEFAULT 20
-    )
-    """)
+        # Migración dinámica de columnas para retrocompatibilidad
+        cursor.execute("PRAGMA table_info(tiendas);")
+        cols_existentes = {col["name"] for col in cursor.fetchall()}
+        nuevas_cols = {
+            "rut": "TEXT DEFAULT ''",
+            "tipo_tienda": "TEXT DEFAULT 'Comercio Especializado'",
+            "ssl_seguro": "BOOLEAN DEFAULT 1",
+            "anios_antiguedad": "INTEGER DEFAULT 5",
+            "sello_ccs": "BOOLEAN DEFAULT 0",
+            "reclamos_sernac": "TEXT DEFAULT 'Bajo'",
+            "politica_devolucion": "TEXT DEFAULT '30 días de satisfacción'",
+            "direccion_fiscal": "TEXT DEFAULT 'Santiago, Chile'",
+            "puntos_seguridad": "INTEGER DEFAULT 25",
+            "puntos_legalidad": "INTEGER DEFAULT 25",
+            "puntos_garantia": "INTEGER DEFAULT 20",
+            "puntos_reputacion": "INTEGER DEFAULT 20"
+        }
+        for col_n, col_d in nuevas_cols.items():
+            if col_n not in cols_existentes:
+                cursor.execute(f"ALTER TABLE tiendas ADD COLUMN {col_n} {col_d};")
 
-    # Migración de columnas en caso de base de datos preexistente
-    cursor.execute("PRAGMA table_info(tiendas)")
-    cols_existentes = [col["name"] for col in cursor.fetchall()]
-    nuevas_cols = {
-        "rut": "TEXT DEFAULT ''",
-        "tipo_tienda": "TEXT DEFAULT 'Comercio Especializado'",
-        "ssl_seguro": "BOOLEAN DEFAULT 1",
-        "anios_antiguedad": "INTEGER DEFAULT 5",
-        "sello_ccs": "BOOLEAN DEFAULT 0",
-        "reclamos_sernac": "TEXT DEFAULT 'Bajo'",
-        "politica_devolucion": "TEXT DEFAULT '30 días de satisfacción'",
-        "direccion_fiscal": "TEXT DEFAULT 'Santiago, Chile'",
-        "puntos_seguridad": "INTEGER DEFAULT 25",
-        "puntos_legalidad": "INTEGER DEFAULT 25",
-        "puntos_garantia": "INTEGER DEFAULT 20",
-        "puntos_reputacion": "INTEGER DEFAULT 20"
-    }
-    for col_n, col_d in nuevas_cols.items():
-        if col_n not in cols_existentes:
-            cursor.execute(f"ALTER TABLE tiendas ADD COLUMN {col_n} {col_d}")
+        # 3. Tabla de Registro Periódico de Precios
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS precios_registro (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            perfume_id INTEGER NOT NULL,
+            tienda_id INTEGER NOT NULL,
+            precio_actual INTEGER NOT NULL,
+            precio_normal INTEGER NOT NULL,
+            en_stock BOOLEAN DEFAULT 1,
+            url_producto TEXT NOT NULL,
+            fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (perfume_id) REFERENCES perfumes (id),
+            FOREIGN KEY (tienda_id) REFERENCES tiendas (id)
+        );
+        """)
 
-    # 3. Tabla de Registro Periódico de Precios
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS precios_registro (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        perfume_id INTEGER NOT NULL,
-        tienda_id INTEGER NOT NULL,
-        precio_actual INTEGER NOT NULL,
-        precio_normal INTEGER NOT NULL,
-        en_stock BOOLEAN DEFAULT 1,
-        url_producto TEXT NOT NULL,
-        fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (perfume_id) REFERENCES perfumes (id),
-        FOREIGN KEY (tienda_id) REFERENCES tiendas (id)
-    )
-    """)
+        # 4. ÍNDICES DE ALTO RENDIMIENTO (Query Optimization)
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_precios_perfume ON precios_registro(perfume_id);")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_precios_tienda ON precios_registro(tienda_id);")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_precios_fecha ON precios_registro(fecha_registro);")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_perfumes_marca ON perfumes(marca);")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_perfumes_genero ON perfumes(genero);")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_perfumes_arabe ON perfumes(es_arabe);")
 
-    conn.commit()
-
-    cursor.execute("SELECT COUNT(*) FROM perfumes")
-    count = cursor.fetchone()[0]
-    if count == 0 or force_reseed:
-        poblar_datos_semilla(conn)
-
-    conn.close()
+        cursor.execute("SELECT COUNT(*) FROM perfumes;")
+        count = cursor.fetchone()[0]
+        if count == 0 or force_reseed:
+            poblar_datos_semilla(cursor)
 
 
-def poblar_datos_semilla(conn):
-    """Puebla la base de datos con precios reales verificados, enlaces directos y métricas de confianza."""
-    cursor = conn.cursor()
-
-    # Limpiar tablas para asegurar coherencia y enlaces reales
-    cursor.execute("DELETE FROM precios_registro")
-    cursor.execute("DELETE FROM perfumes")
-    cursor.execute("DELETE FROM tiendas")
+def poblar_datos_semilla(cursor: sqlite3.Cursor) -> None:
+    """Puebla la base de datos con precios reales, packshots y métricas de confianza."""
+    cursor.execute("DELETE FROM precios_registro;")
+    cursor.execute("DELETE FROM perfumes;")
+    cursor.execute("DELETE FROM tiendas;")
 
     tiendas_iniciales = [
         (
@@ -273,10 +319,9 @@ def poblar_datos_semilla(conn):
         politica_devolucion, direccion_fiscal,
         puntos_seguridad, puntos_legalidad, puntos_garantia, puntos_reputacion
     )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
     """, tiendas_iniciales)
 
-    # Catálogo Completo con Packshots de Estudio 100% Profesionales
     perfumes_iniciales = [
         (
             1, "Bleu de Chanel", "Chanel", "Hombre", "Eau de Parfum",
@@ -292,49 +337,49 @@ def poblar_datos_semilla(conn):
         ),
         (
             3, "Dior Sauvage", "Dior", "Hombre", "Eau de Toilette",
-            "Bergamota, Pimienta Negra, Lavanda, Pimienta Rosa, Vetiver, Pachulí, Cedro",
+            "Bergamota de Calabria, Pimienta, Lavanda, Pimienta de Sichuan, Ambroxan, Cedro",
             "APP/assets/perfumes/dior_sauvage.jpg",
             0, 1, 0, 124990
         ),
         (
             4, "Club de Nuit Intense Man", "Armaf", "Hombre", "Eau de Toilette",
-            "Limón, Piña, Bergamota, Grosellas Negras, Manzana, Abedul, Jazmín, Rosa, Almizcle (Musk), Ámbar Gris, Pachulí, Vainilla",
-            "APP/assets/perfumes/club_de_nuit.jpg",
-            1, 1, 1, 32990
+            "Limón, Piña, Bergamota, Manzana, Grosellas Negras, Abedul, Jazmín, Almizcle, Ámbar gris",
+            "APP/assets/perfumes/club_de_nuit_intense.jpg",
+            1, 1, 0, 32990
         ),
         (
             5, "Khamrah", "Lattafa", "Unisex", "Eau de Parfum",
-            "Canela, Nuez Moscada, Bergamota, Dátiles, Praliné, Tuberosa, Vainilla, Haba Tonka, Mirra, Benjuí, Ámbar",
+            "Canela, Nuez Moscada, Bergamota, Dátiles, Praliné, Tuberosa, Vainilla, Haba Tonka, Mirra",
             "APP/assets/perfumes/lattafa_khamrah.jpg",
-            1, 1, 1, 24990
+            1, 1, 0, 24990
         ),
         (
-            6, "Baccarat Rouge 540", "Maison Francis Kurkdjian", "Unisex", "Extrait de Parfum",
-            "Azafrán, Jazmín, Ámbar Gris, Madera de Cedro, Resina de Abeto",
-            "APP/assets/perfumes/baccarat_rouge.jpg",
+            6, "Baccarat Rouge 540", "Maison Francis Kurkdjian", "Unisex", "Eau de Parfum",
+            "Azafrán, Jazmín, Amberwood, Ámbar Gris, Resina de Abeto, Cedro",
+            "APP/assets/perfumes/baccarat_rouge_540.jpg",
             0, 1, 0, 329990
         ),
         (
             7, "Acqua Di Gio", "Giorgio Armani", "Hombre", "Eau de Toilette",
-            "Notas Marinas, Bergamota, Lima, Mandarina, Jazmín, Romero, Cedro, Pachulí",
+            "Lima, Limón, Bergamota, Jazmín, Naranja, Notas Marinas, Melocotón, Cedro, Almizcle Blanco",
             "APP/assets/perfumes/acqua_di_gio.jpg",
             0, 0, 1, 44990
         ),
         (
             8, "Scandal Pour Homme", "Jean Paul Gaultier", "Hombre", "Eau de Toilette",
-            "Salvia, Mandarina, Caramelo, Haba Tonka, Vetiver",
+            "Esclarea, Mandarina, Caramelo, Haba Tonka, Vetiver",
             "APP/assets/perfumes/scandal_pour_homme.jpg",
-            0, 0, 0, 109990
+            0, 1, 0, 109990
         ),
         (
             9, "Hawas for Men", "Rasasi", "Hombre", "Eau de Parfum",
-            "Manzana, Bergamota, Limón, Canela, Notas Acuáticas, Ciruela, Cardamomo, Ámbar Gris, Almizcle (Musk), Pachulí",
+            "Manzana, Bergamota, Limón, Canela, Notas Acuáticas, Ciruela, Cardamomo, Ámbar gris, Almizcle",
             "APP/assets/perfumes/rasasi_hawas.jpg",
             1, 1, 0, 27990
         ),
         (
-            10, "Eros", "Versace", "Hombre", "Eau de Parfum",
-            "Menta, Manzana Verde, Limón, Haba Tonka, Ambroxan, Geranio, Vainilla de Madagascar, Cedro, Vetiver",
+            10, "Eros", "Versace", "Hombre", "Eau de Toilette",
+            "Menta, Manzana Verde, Limón, Haba Tonka, Ambroxan, Geranio, Vainilla de Madagascar, Cedro",
             "APP/assets/perfumes/versace_eros.jpg",
             0, 0, 1, 64990
         ),
@@ -354,17 +399,16 @@ def poblar_datos_semilla(conn):
 
     cursor.executemany("""
     INSERT OR REPLACE INTO perfumes (id, nombre, marca, genero, tipo, notas, imagen_url, es_arabe, en_tendencia, en_remate, precio_referencia)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
     """, perfumes_iniciales)
 
-    cursor.execute("SELECT id, nombre FROM tiendas")
+    cursor.execute("SELECT id, nombre FROM tiendas;")
     tiendas_dict = {t["nombre"]: t["id"] for t in cursor.fetchall()}
 
     hoy = datetime.now()
     dias_atras = [21, 14, 7, 3, 1, 0]
 
     registros = []
-    # Insertar ÚNICAMENTE tiendas que tengan link directo al perfume
     for (p_id, t_nom), (url_directa, precio_act, precio_norm) in URLS_DIRECTAS_CATALOGO.items():
         if t_nom not in tiendas_dict:
             continue
@@ -382,36 +426,49 @@ def poblar_datos_semilla(conn):
 
     cursor.executemany("""
     INSERT INTO precios_registro (perfume_id, tienda_id, precio_actual, precio_normal, en_stock, url_producto, fecha_registro)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?, ?);
     """, registros)
 
-    conn.commit()
 
-
-def registrar_precio(perfume_id, tienda_id, precio_actual, precio_normal, en_stock, url_producto, fecha=None):
+# -----------------------------------------------------------------------------
+# CONSULTAS DE DOMINIO Y ACCESO A DATOS
+# -----------------------------------------------------------------------------
+def registrar_precio(
+    perfume_id: int,
+    tienda_id: int,
+    precio_actual: int,
+    precio_normal: int,
+    en_stock: bool,
+    url_producto: str,
+    fecha: Optional[str] = None
+) -> None:
     """Inserta una captura periódica de precio para un perfume en una tienda específica."""
-    conn = get_connection()
-    cursor = conn.cursor()
     if fecha is None:
         fecha = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    cursor.execute("""
-    INSERT INTO precios_registro (perfume_id, tienda_id, precio_actual, precio_normal, en_stock, url_producto, fecha_registro)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
-    """, (perfume_id, tienda_id, precio_actual, precio_normal, int(en_stock), url_producto, fecha))
-
-    conn.commit()
-    conn.close()
+    with get_db_cursor(commit=True) as cursor:
+        cursor.execute("""
+        INSERT INTO precios_registro (perfume_id, tienda_id, precio_actual, precio_normal, en_stock, url_producto, fecha_registro)
+        VALUES (?, ?, ?, ?, ?, ?, ?);
+        """, (perfume_id, tienda_id, precio_actual, precio_normal, int(en_stock), url_producto, fecha))
 
 
-def obtener_catalogo(busqueda=None, esencias=None, categoria=None):
+def obtener_catalogo(
+    busqueda: Optional[str] = None,
+    esencias: Optional[List[str]] = None,
+    categoria: Optional[str] = None,
+    orden: str = "id_asc"
+) -> List[Dict[str, Any]]:
     """
-    Obtiene el listado de perfumes calculando el mejor precio REAL disponible (en stock).
+    Obtiene el listado de perfumes calculando el mejor precio real disponible en stock.
+    
+    Args:
+        busqueda: Filtro de texto por nombre o marca.
+        esencias: Lista de notas olfativas requeridas.
+        categoria: 'arabes', 'remates' o None.
+        orden: Criterio de ordenamiento ('precio_asc', 'precio_desc', 'nombre_asc', 'id_asc').
     """
     init_db()
-    conn = get_connection()
-    cursor = conn.cursor()
-
     query = """
     SELECT p.*,
            MIN(CASE WHEN pr.en_stock = 1 AND pr.precio_actual > 0 THEN pr.precio_actual END) as mejor_precio,
@@ -420,57 +477,61 @@ def obtener_catalogo(busqueda=None, esencias=None, categoria=None):
     LEFT JOIN precios_registro pr ON p.id = pr.perfume_id
     WHERE 1=1
     """
-    params = []
+    params: List[Any] = []
 
     if busqueda:
+        term = f"%{busqueda.strip()}%"
         query += " AND (p.nombre LIKE ? OR p.marca LIKE ?)"
-        params.extend([f"%{busqueda}%", f"%{busqueda}%"])
+        params.extend([term, term])
 
     if categoria == "arabes":
         query += " AND p.es_arabe = 1"
     elif categoria == "remates":
         query += " AND p.en_remate = 1"
 
-    query += " GROUP BY p.id ORDER BY p.id ASC"
+    query += " GROUP BY p.id"
 
-    cursor.execute(query, params)
-    rows = cursor.fetchall()
-    perfumes = [dict(row) for row in rows]
+    # Ordenamiento profesional
+    if orden == "precio_asc":
+        query += " ORDER BY mejor_precio ASC NULLS LAST"
+    elif orden == "precio_desc":
+        query += " ORDER BY mejor_precio DESC NULLS LAST"
+    elif orden == "nombre_asc":
+        query += " ORDER BY p.nombre ASC"
+    else:
+        query += " ORDER BY p.id ASC"
+
+    with get_db_cursor() as cursor:
+        cursor.execute(query, params)
+        perfumes = [dict(row) for row in cursor.fetchall()]
 
     if esencias:
         perfumes_filtrados = []
+        esencias_lower = [e.lower() for e in esencias]
         for p in perfumes:
             notas_p = [n.strip().lower() for n in p["notas"].split(",")]
-            if any(any(es.lower() in nota for nota in notas_p) for es in esencias):
+            if any(any(es in nota for nota in notas_p) for es in esencias_lower):
                 perfumes_filtrados.append(p)
-        perfumes = perfumes_filtrados
+        return perfumes_filtrados
 
-    conn.close()
     return perfumes
 
 
-def obtener_detalle_perfume(perfume_id):
-    """Retorna información completa del perfume."""
+def obtener_detalle_perfume(perfume_id: int) -> Optional[Dict[str, Any]]:
+    """Retorna información completa del perfume por su ID."""
     init_db()
-    conn = get_connection()
-    cursor = conn.cursor()
-
-    cursor.execute("SELECT * FROM perfumes WHERE id = ?", (perfume_id,))
-    row = cursor.fetchone()
-    perfume = dict(row) if row else None
-    conn.close()
-    return perfume
+    with get_db_cursor() as cursor:
+        cursor.execute("SELECT * FROM perfumes WHERE id = ?;", (perfume_id,))
+        row = cursor.fetchone()
+        return dict(row) if row else None
 
 
-def obtener_precios_actuales(perfume_id):
+def obtener_precios_actuales(perfume_id: int) -> List[Dict[str, Any]]:
     """
     Retorna el precio más reciente registrado en cada tienda para el perfume dado.
-    FILTRO ESTRICTO: Solo tiendas que tengan LINK DIRECTO al perfume, en stock y con precio > 0.
+    Garantiza enlaces directos y stock verificado.
     """
     init_db()
-    conn = get_connection()
-    cursor = conn.cursor()
-
     query = """
     SELECT t.id as tienda_id, t.nombre as tienda_nombre, t.url_base, t.trust_score, t.badge, t.logo_emoji,
            pr.precio_actual, pr.precio_normal, pr.en_stock, pr.url_producto, pr.fecha_registro
@@ -486,24 +547,16 @@ def obtener_precios_actuales(perfume_id):
           FROM precios_registro
           WHERE perfume_id = ? AND tienda_id = t.id
       )
-    ORDER BY pr.precio_actual ASC
+    ORDER BY pr.precio_actual ASC;
     """
-    cursor.execute(query, (perfume_id, perfume_id))
-    rows = cursor.fetchall()
-    precios = [dict(row) for row in rows]
-    conn.close()
-    return precios
+    with get_db_cursor() as cursor:
+        cursor.execute(query, (perfume_id, perfume_id))
+        return [dict(row) for row in cursor.fetchall()]
 
 
-def obtener_historico_precios(perfume_id):
-    """
-    Retorna toda la serie temporal de precios válidos para el gráfico de evolución.
-    Solo incluye tiendas con enlaces directos verificados y en stock.
-    """
+def obtener_historico_precios(perfume_id: int) -> List[Dict[str, Any]]:
+    """Retorna la serie temporal histórica de precios válidos para gráficos de evolución."""
     init_db()
-    conn = get_connection()
-    cursor = conn.cursor()
-
     query = """
     SELECT t.nombre as tienda, pr.precio_actual, pr.fecha_registro
     FROM precios_registro pr
@@ -512,84 +565,83 @@ def obtener_historico_precios(perfume_id):
       AND pr.en_stock = 1 
       AND pr.precio_actual > 0
       AND pr.url_producto NOT LIKE '%/search%'
-    ORDER BY pr.fecha_registro ASC
+    ORDER BY pr.fecha_registro ASC;
     """
-    cursor.execute(query, (perfume_id,))
-    rows = cursor.fetchall()
-    registros = [dict(row) for row in rows]
-    conn.close()
-    return registros
+    with get_db_cursor() as cursor:
+        cursor.execute(query, (perfume_id,))
+        return [dict(row) for row in cursor.fetchall()]
 
 
-def guardar_o_actualizar_perfume_scraped(nombre, marca, precio_actual, precio_normal, tienda_nombre, url_producto, imagen_url=None, notas=None, es_arabe=0, genero="Unisex"):
-    """
-    Inserta o actualiza un perfume descubierto con su enlace real.
-    """
+def guardar_o_actualizar_perfume_scraped(
+    nombre: str,
+    marca: str,
+    precio_actual: int,
+    precio_normal: int,
+    tienda_nombre: str,
+    url_producto: str,
+    imagen_url: Optional[str] = None,
+    notas: Optional[str] = None,
+    es_arabe: int = 0,
+    genero: str = "Unisex"
+) -> Dict[str, Any]:
+    """Inserta o actualiza un perfume descubierto con enlace funcional y nuevo snapshot de precio."""
     init_db()
-    conn = get_connection()
-    cursor = conn.cursor()
+    with get_db_cursor(commit=True) as cursor:
+        cursor.execute("SELECT id FROM tiendas WHERE LOWER(nombre) = LOWER(?);", (tienda_nombre,))
+        row_tienda = cursor.fetchone()
+        if row_tienda:
+            tienda_id = row_tienda["id"]
+        else:
+            base_url = url_producto.split('/')[0] + "//" + url_producto.split('/')[2] if '://' in url_producto else 'https://'
+            cursor.execute("""
+            INSERT INTO tiendas (nombre, url_base, trust_score, badge, logo_emoji)
+            VALUES (?, ?, 90, 'Tienda Verificada 🇨🇱', '🏬');
+            """, (tienda_nombre, base_url))
+            tienda_id = cursor.lastrowid
 
-    cursor.execute("SELECT id FROM tiendas WHERE LOWER(nombre) = LOWER(?)", (tienda_nombre,))
-    row_tienda = cursor.fetchone()
-    if row_tienda:
-        tienda_id = row_tienda["id"]
-    else:
         cursor.execute("""
-        INSERT INTO tiendas (nombre, url_base, trust_score, badge, logo_emoji)
-        VALUES (?, ?, 90, 'Tienda Verificada 🇨🇱', '🏬')
-        """, (tienda_nombre, url_producto.split('/')[0] + "//" + url_producto.split('/')[2] if '://' in url_producto else 'https://'))
-        tienda_id = cursor.lastrowid
+        SELECT id, precio_referencia FROM perfumes 
+        WHERE LOWER(nombre) = LOWER(?) OR LOWER(nombre) LIKE ?;
+        """, (nombre.strip(), f"%{nombre.strip()}%"))
+        row_perfume = cursor.fetchone()
 
-    cursor.execute("""
-    SELECT id, precio_referencia FROM perfumes 
-    WHERE LOWER(nombre) = LOWER(?) OR LOWER(nombre) LIKE ?
-    """, (nombre.strip(), f"%{nombre.strip()}%"))
-    row_perfume = cursor.fetchone()
+        es_nuevo = False
+        if row_perfume:
+            perfume_id = row_perfume["id"]
+        else:
+            es_nuevo = True
+            img = imagen_url or "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=500&q=80"
+            notas_texto = notas or "Cítricos, Maderas, Almizcle"
+            cursor.execute("""
+            INSERT INTO perfumes (nombre, marca, genero, tipo, notas, imagen_url, es_arabe, en_tendencia, en_remate, precio_referencia)
+            VALUES (?, ?, ?, 'Eau de Parfum', ?, ?, ?, 1, 0, ?);
+            """, (nombre.strip(), marca.strip() or "Diseñador", genero, notas_texto, img, es_arabe, precio_actual))
+            perfume_id = cursor.lastrowid
 
-    es_nuevo = False
-    if row_perfume:
-        perfume_id = row_perfume["id"]
-    else:
-        es_nuevo = True
-        img = imagen_url or "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=500&q=80"
-        notas_texto = notas or "Cítricos, Maderas, Almizcle"
+        fecha_actual = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         cursor.execute("""
-        INSERT INTO perfumes (nombre, marca, genero, tipo, notas, imagen_url, es_arabe, en_tendencia, en_remate, precio_referencia)
-        VALUES (?, ?, ?, 'Eau de Parfum', ?, ?, ?, 1, 0, ?)
-        """, (nombre.strip(), marca.strip() or "Diseñador", genero, notas_texto, img, es_arabe, precio_actual))
-        perfume_id = cursor.lastrowid
+        INSERT INTO precios_registro (perfume_id, tienda_id, precio_actual, precio_normal, en_stock, url_producto, fecha_registro)
+        VALUES (?, ?, ?, ?, 1, ?, ?);
+        """, (perfume_id, tienda_id, precio_actual, precio_normal, url_producto, fecha_actual))
 
-    fecha_actual = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    cursor.execute("""
-    INSERT INTO precios_registro (perfume_id, tienda_id, precio_actual, precio_normal, en_stock, url_producto, fecha_registro)
-    VALUES (?, ?, ?, ?, 1, ?, ?)
-    """, (perfume_id, tienda_id, precio_actual, precio_normal, url_producto, fecha_actual))
-
-    conn.commit()
-    conn.close()
-    return {"perfume_id": perfume_id, "es_nuevo": es_nuevo, "fecha": fecha_actual}
+        return {"perfume_id": perfume_id, "es_nuevo": es_nuevo, "fecha": fecha_actual}
 
 
-def obtener_tiendas():
-    """Retorna la lista de tiendas registradas."""
+def obtener_tiendas() -> List[Dict[str, Any]]:
+    """Retorna la lista de tiendas registradas ordenadas por índice de confianza."""
     init_db()
-    conn = get_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM tiendas ORDER BY trust_score DESC")
-    rows = cursor.fetchall()
-    tiendas = [dict(row) for row in rows]
-    conn.close()
-    return tiendas
+    with get_db_cursor() as cursor:
+        cursor.execute("SELECT * FROM tiendas ORDER BY trust_score DESC;")
+        return [dict(row) for row in cursor.fetchall()]
 
 
-def obtener_tiendas_trust(filtro_tipo=None, score_minimo=0, busqueda=""):
-    """
-    Retorna tiendas auditadas con métricas detalladas de Trust Score para la página de confianza.
-    """
+def obtener_tiendas_trust(
+    filtro_tipo: Optional[str] = None,
+    score_minimo: int = 0,
+    busqueda: str = ""
+) -> List[Dict[str, Any]]:
+    """Retorna tiendas auditadas con métricas detalladas para la página de confianza."""
     init_db()
-    conn = get_connection()
-    cursor = conn.cursor()
-
     query = """
     SELECT 
         id, nombre, url_base, trust_score, badge, logo_emoji,
@@ -599,54 +651,44 @@ def obtener_tiendas_trust(filtro_tipo=None, score_minimo=0, busqueda=""):
     FROM tiendas
     WHERE trust_score >= ?
     """
-    params = [score_minimo]
+    params: List[Any] = [score_minimo]
 
     if filtro_tipo and filtro_tipo != "Todas":
         query += " AND tipo_tienda = ?"
         params.append(filtro_tipo)
 
     if busqueda:
-        query += " AND (LOWER(nombre) LIKE ? OR LOWER(url_base) LIKE ? OR LOWER(rut) LIKE ?)"
         term = f"%{busqueda.lower().strip()}%"
+        query += " AND (LOWER(nombre) LIKE ? OR LOWER(url_base) LIKE ? OR LOWER(rut) LIKE ?)"
         params.extend([term, term, term])
 
-    query += " ORDER BY trust_score DESC"
+    query += " ORDER BY trust_score DESC;"
 
-    cursor.execute(query, params)
-    rows = cursor.fetchall()
-    tiendas = []
-    for r in rows:
-        d = dict(r)
-        d["estrellas"] = round(d["trust_score"] / 20.0, 1)
-        tiendas.append(d)
-
-    conn.close()
-    return tiendas
+    with get_db_cursor() as cursor:
+        cursor.execute(query, params)
+        tiendas = []
+        for r in cursor.fetchall():
+            d = dict(r)
+            d["estrellas"] = round(d["trust_score"] / 20.0, 1)
+            tiendas.append(d)
+        return tiendas
 
 
-def auditar_tienda_por_url(url_ingresada):
-    """
-    Audita en vivo cualquier URL ingresada por el usuario, analizando:
-    1. Si es un comercio oficial ya verificado en la base de datos chilena.
-    2. Enlaces desconocidos: analiza protocolo seguro, TLD nacional (.cl NIC Chile),
-       patrones de riesgo y checklist de verificación antifraude.
-    """
+def auditar_tienda_por_url(url_ingresada: str) -> Optional[Dict[str, Any]]:
+    """Audita en vivo cualquier URL con detección de comercios oficiales y análisis heurístico."""
     if not url_ingresada or not url_ingresada.strip():
         return None
 
     url_limpia = url_ingresada.strip().lower()
-    if not url_limpia.startswith("http://") and not url_limpia.startswith("https://"):
+    if not url_limpia.startswith(("http://", "https://")):
         url_limpia = "https://" + url_limpia
 
-    # Extraer dominio
     try:
         parsed = urllib.parse.urlparse(url_limpia)
-        netloc = parsed.netloc or parsed.path.split('/')[0]
-        netloc = netloc.replace("www.", "")
+        netloc = (parsed.netloc or parsed.path.split('/')[0]).replace("www.", "")
     except Exception:
         netloc = url_limpia
 
-    # 1. Buscar coincidencia en base de datos de comercios ya auditados
     tiendas_db = obtener_tiendas_trust()
     for t in tiendas_db:
         dominio_tienda = t["url_base"].lower().replace("https://", "").replace("http://", "").replace("www.", "").strip("/")
@@ -674,12 +716,10 @@ def auditar_tienda_por_url(url_ingresada):
                 "recomendacion": "Comercio verificado y auditado en PerfumeTrending. Cuenta con respaldo legal y trazabilidad en Chile."
             }
 
-    # 2. Análisis heurístico para comercio externo/desconocido
     puntos_ssl = 25 if url_limpia.startswith("https://") else 0
     es_cl = netloc.endswith(".cl")
     puntos_dominio = 25 if es_cl else 10
-    
-    # Detección de posibles indicadores de suplantación o phishing
+
     senales_alerta = []
     palabras_sospechosas = ["outlet-original", "perfumes-ganga", "dior-chile-ofertas", "chanel-descuentos", "liquidaciones-lujo"]
     for palabra in palabras_sospechosas:
@@ -697,11 +737,9 @@ def auditar_tienda_por_url(url_ingresada):
 
     if score_estimado >= 70:
         badge = "Verificación Básica"
-        nivel = "Precaución Moderada"
         recom = "El sitio cuenta con HTTPS y dominio estándar, pero no está en el registro oficial de distribuidores autorizados. Revisa que permita pagar con Webpay y no solo transferencias personales."
     else:
         badge = "Sitio No Verificado / Riesgo"
-        nivel = "Alto Riesgo"
         recom = "⚠️ Precaución extrema. No se registran antecedentes comerciales formales ni sello de confianza. Posible tienda clon o producto sin garantía de originalidad."
 
     return {
