@@ -16,7 +16,10 @@ from backend.database import (
     obtener_tiendas,
     init_db
 )
-from backend.scraper_periodico import ejecutar_ciclo_scraping_y_descubrimiento
+from backend.scraper_periodico import (
+    ejecutar_ciclo_scraping_y_descubrimiento,
+    obtener_ultimo_reporte_scraping
+)
 
 import base64
 
@@ -358,6 +361,28 @@ with col_logo:
     </div>
     """
     st.markdown(logo_html, unsafe_allow_html=True)
+
+with col_espacio:
+    ultimo_rep = obtener_ultimo_reporte_scraping()
+    if ultimo_rep:
+        meta = ultimo_rep.get("metadata", {})
+        metricas = ultimo_rep.get("metricas", {})
+        fecha_str = meta.get("fecha_ejecucion", "")
+        hora_str = fecha_str.split(" ")[1][:5] if " " in fecha_str else fecha_str
+        actualizados = metricas.get("precios_actualizados", 0)
+        duracion = meta.get("duracion_segundos", 0)
+        estado = meta.get("estado", "EXITOSO")
+        dot_color = "#27ae60" if estado == "EXITOSO" else "#e67e22"
+        badge_bg = "rgba(39, 174, 96, 0.1)" if not is_dark else "rgba(39, 174, 96, 0.18)"
+        badge_border = "rgba(39, 174, 96, 0.3)" if not is_dark else "rgba(39, 174, 96, 0.4)"
+        
+        st.markdown(f"""
+        <div style="display: flex; align-items: center; justify-content: center; gap: 8px; background: {badge_bg}; border: 1px solid {badge_border}; border-radius: 20px; padding: 5px 12px; font-size: 0.76rem; font-family: 'Inter', sans-serif; cursor: default; margin-top: 5px;" title="Pipeline ETL v2.0 • {actualizados} precios verificados en {duracion}s">
+            <span style="display: inline-block; width: 7px; height: 7px; border-radius: 50%; background-color: {dot_color}; box-shadow: 0 0 6px {dot_color};"></span>
+            <span style="font-weight: 700; color: {text_color};">ETL Activo</span>
+            <span style="color: {subtext_color};">• {actualizados} precios auditados ({hora_str} hrs)</span>
+        </div>
+        """, unsafe_allow_html=True)
 
 with col_actions:
     btn_col1, btn_col2 = st.columns([1.5, 1], vertical_alignment="center")

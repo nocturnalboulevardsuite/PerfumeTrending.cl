@@ -1,35 +1,61 @@
 """
 PerfumeTrending.cl — Capa de Persistencia y Motor de Base de Datos
 ==================================================================
-Módulo de acceso a datos de alto rendimiento basado en SQLite con:
-- Modo WAL (Write-Ahead Logging) para concurrencia multi-hilo segura (Streamlit + Scraper).
-- Context managers para gestión determinista del ciclo de vida de conexiones y transacciones.
-- Índices relacionales optimizados para agregaciones temporales y consultas de catálogo.
+Módulo desacoplado de acceso a datos de alto rendimiento basado en SQLite con:
+- Esquema relacional DDL puro externalizado en database/schema.sql.
+- Catálogo maestro y tiendas auditadas desacopladas en database/seed_catalogo.json.
+- Modo WAL (Write-Ahead Logging) para concurrencia multi-hilo (Streamlit + Scraper).
+- Context managers para gestión determinista de transacciones y conexiones.
+- Índices B-Tree optimizados para series de tiempo y búsquedas de catálogo.
 - Tipado estricto (PEP 484) y control defensivo de excepciones.
 """
 
 from contextlib import contextmanager
 from datetime import datetime, timedelta
+import json
+import logging
 import os
 import random
 import sqlite3
 from typing import Any, Dict, Generator, List, Optional, Tuple
 import urllib.parse
 
-# Configuración de rutas del sistema
+logger = logging.getLogger("PerfumeDatabase")
+
+# Configuración de rutas canónicas del sistema
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DB_DIR = os.path.join(BASE_DIR, "data")
 DB_PATH = os.path.join(DB_DIR, "perfumes.db")
+SCHEMA_PATH = os.path.join(BASE_DIR, "database", "schema.sql")
+SEED_PATH = os.path.join(BASE_DIR, "database", "seed_catalogo.json")
+
+# Cache en memoria para catálogo semilla desacoplado
+_SEED_CACHE: Optional[Dict[str, Any]] = None
+
+
+def cargar_datos_semilla_json() -> Dict[str, Any]:
+    """Carga y cachea el archivo JSON con el catálogo canónico y directrices de tiendas."""
+    global _SEED_CACHE
+    if _SEED_CACHE is not None:
+        return _SEED_CACHE
+
+    if not os.path.exists(SEED_PATH):
+        raise FileNotFoundError(f"Archivo de catálogo maestro no encontrado en: {SEED_PATH}")
+
+    with open(SEED_PATH, "r", encoding="utf-8") as f:
+        _SEED_CACHE = json.load(f)
+
+    return _SEED_CACHE
 
 
 def get_connection() -> sqlite3.Connection:
     """
-    Crea y configura una conexión optimizada a SQLite.
+    Crea y configura una conexión de producción a SQLite.
     
     Ajustes de rendimiento y concurrencia:
     - WAL Mode: Permite lecturas y escrituras simultáneas sin bloqueos de tabla.
-    - Busy timeout (15s): Evita errores de 'database is locked' ante ráfagas concurrentes.
-    - Synchronous NORMAL: Reduce la sobrecarga de I/O en disco manteniendo integridad ACID.
+    - Busy timeout (15s): Previene bloqueos por concurrencia entre Streamlit y el Scraper.
+    - Synchronous NORMAL: Optimiza I/O en disco garantizando durabilidad ACID.
     - Foreign Keys: Integridad referencial habilitada a nivel de motor.
     """
     os.makedirs(DB_DIR, exist_ok=True)
@@ -44,16 +70,9 @@ def get_connection() -> sqlite3.Connection:
 @contextmanager
 def get_db_cursor(commit: bool = False) -> Generator[sqlite3.Cursor, None, None]:
     """
-    Context manager transaccional para operaciones con la base de datos.
+    Context manager transaccional determinista.
     
-    Args:
-        commit: Si es True, ejecuta commit al finalizar exitosamente el bloque.
-        
-    Yields:
-        sqlite3.Cursor: Cursor activo para ejecución de sentencias SQL.
-        
-    Garantiza:
-        Rollback automático en caso de excepciones y cierre inmediato de la conexión.
+    Garantiza commit automático en éxito, rollback ante excepciones y cierre seguro de conexión.
     """
     conn = get_connection()
     cursor = conn.cursor()
@@ -69,247 +88,50 @@ def get_db_cursor(commit: bool = False) -> Generator[sqlite3.Cursor, None, None]
 
 
 # -----------------------------------------------------------------------------
-# CATÁLOGO MAESTRO DE ENLACES DIRECTOS Y PRECIOS VERIFICADOS (CHILE)
-# -----------------------------------------------------------------------------
-URLS_DIRECTAS_CATALOGO: Dict[Tuple[int, str], Tuple[str, int, int]] = {
-    # 1. Bleu de Chanel (Chanel) - Ultra Lujo Oficial
-    (1, "Falabella"): ("https://www.falabella.com/falabella-cl/product/4192038/bleu-de-chanel-eau-de-parfum-vaporizador/4524081", 184990, 209990),
-    (1, "Paris"): ("https://www.paris.cl/bleu-de-chanel-eau-de-parfum-vaporizador-100-ml-325785999.html", 184990, 209990),
-    (1, "Ripley"): ("https://simple.ripley.cl/bleu-de-chanel-edp-100-ml-2000350711925p", 181500, 205990),
-
-    # 2. YSL Libre (Yves Saint Laurent)
-    (2, "Silk Perfumes"): ("https://www.silkperfumes.cl/products/ysl-libre-edp-intense-50-ml", 79990, 99990),
-    (2, "Elite Perfumes"): ("https://www.eliteperfumes.cl/products/yves-saint-laurent-libre-edp-90-ml-m", 116990, 139990),
-    (2, "Falabella"): ("https://www.falabella.com/falabella-cl/product/881682390/Libre-Edp-30-Ml/881682390", 89990, 104990),
-    (2, "Paris"): ("https://www.paris.cl/libre-eau-de-parfum-90-ml-375932999.html", 149990, 169990),
-    (2, "Ripley"): ("https://simple.ripley.cl/yves-saint-laurent-libre-edp-90-ml-2000377045768p", 147990, 169990),
-
-    # 3. Dior Sauvage (Dior)
-    (3, "Silk Perfumes"): ("https://www.silkperfumes.cl/products/dior-sauvage-edt-100-ml-dior56", 124990, 149990),
-    (3, "Falabella"): ("https://www.falabella.com/falabella-cl/product/4698587/Sauvage-Eau-De-Toilette/4698588", 144990, 165990),
-    (3, "Paris"): ("https://www.paris.cl/sauvage-eau-de-parfum-100-ml-325801999.html", 165990, 189990),
-    (3, "Ripley"): ("https://simple.ripley.cl/dior-sauvage-edp-100-ml-2000368171094p", 162990, 185990),
-
-    # 4. Club de Nuit Intense Man (Armaf) - Árabe
-    (4, "Silk Perfumes"): ("https://www.silkperfumes.cl/products/club-de-nuit-intense-man-edt-105-ml-armaf-armf2", 32990, 42990),
-    (4, "Elite Perfumes"): ("https://www.eliteperfumes.cl/products/sterling-parfums-club-de-nuit-intense-man-105-ml-h", 32990, 45990),
-    (4, "Falabella"): ("https://www.falabella.com/falabella-cl/product/16606820/Club-De-Nuit-Intense-Man-Edt-105-Ml-Armaf/16606821", 34990, 44990),
-
-    # 5. Khamrah (Lattafa) - Árabe Gourmand
-    (5, "Silk Perfumes"): ("https://www.silkperfumes.cl/products/lattafa-khamrah-edp-100ml", 24990, 34990),
-    (5, "Elite Perfumes"): ("https://www.eliteperfumes.cl/products/lattafa-khamrah-edp-100-ml-u", 25990, 36990),
-    (5, "Falabella"): ("https://www.falabella.com/falabella-cl/product/16911674/Perfume-Lattafa-Khamrah-Unisex-Edp-100-Ml/16911675", 28990, 39990),
-
-    # 6. Baccarat Rouge 540 (Maison Francis Kurkdjian) - Niche Luxury
-    (6, "Falabella"): ("https://www.falabella.com/falabella-cl/product/115438814/Maison-Francis-Kurkdjian-Baccarat-Rouge-540-Edp-70-ml/115438815", 329990, 369990),
-    (6, "Paris"): ("https://www.paris.cl/baccarat-rouge-540-eau-de-parfum-70-ml-564210999.html", 339990, 379990),
-
-    # 7. Acqua Di Gio (Giorgio Armani)
-    (7, "Silk Perfumes"): ("https://www.silkperfumes.cl/products/armani-acqua-di-gioia-edp-30ml", 44990, 54990),
-    (7, "Elite Perfumes"): ("https://www.eliteperfumes.cl/products/giorgio-armani-acqua-di-gio-parfum-set-100-ml-15-ml-h", 102990, 129990),
-    (7, "Falabella"): ("https://www.falabella.com/falabella-cl/product/3874311/Acqua-Di-Gio-Edt-100-Ml/3874312", 109990, 124990),
-    (7, "Paris"): ("https://www.paris.cl/acqua-di-gio-eau-de-toilette-100-ml-325608999.html", 112990, 129990),
-    (7, "Ripley"): ("https://simple.ripley.cl/giorgio-armani-acqua-di-gio-edt-100-ml-2000318536128p", 108990, 124990),
-
-    # 8. Scandal Pour Homme (Jean Paul Gaultier)
-    (8, "Silk Perfumes"): ("https://www.silkperfumes.cl/products/jean-paul-gaultier-scandal-pour-homme-edp-intense-100-ml", 109990, 129990),
-    (8, "Elite Perfumes"): ("https://www.eliteperfumes.cl/products/jean-paul-gaultier-jean-paul-gaultier-scandal-intense-pour-homme-edp-100-ml-h", 112990, 134990),
-    (8, "Falabella"): ("https://www.falabella.com/falabella-cl/product/15777855/Scandal-Pour-Homme-Edt-100-ml/15777856", 114990, 129990),
-    (8, "Paris"): ("https://www.paris.cl/scandal-pour-homme-eau-de-toilette-100-ml-420311999.html", 116990, 132990),
-
-    # 9. Hawas for Men (Rasasi) - Árabe Acuático
-    (9, "Silk Perfumes"): ("https://www.silkperfumes.cl/products/rasasi-hawas-elixir-men-edp-100-ml", 29990, 39990),
-    (9, "Elite Perfumes"): ("https://www.eliteperfumes.cl/products/rasasi-hawas-for-him-edp-100-ml-h", 27990, 38990),
-    (9, "Falabella"): ("https://www.falabella.com/falabella-cl/product/16654082/Perfume-Rasasi-Hawas-Pour-Homme-Edp-100-Ml/16654083", 32990, 42990),
-
-    # 10. Eros (Versace)
-    (10, "Silk Perfumes"): ("https://www.silkperfumes.cl/products/versace-eros-flame-edp-100ml", 64990, 84990),
-    (10, "Elite Perfumes"): ("https://www.eliteperfumes.cl/products/versace-eros-parfum-200ml-h", 116990, 139990),
-    (10, "Falabella"): ("https://www.falabella.com/falabella-cl/product/5812920/Eros-Eau-De-Toilette-100-ml/5812921", 89990, 104990),
-    (10, "Ripley"): ("https://simple.ripley.cl/versace-eros-edp-100-ml-2000384488343p", 92990, 109990),
-
-    # 11. Tobacco Vanille (Tom Ford) - Ultra Lujo
-    (11, "Falabella"): ("https://www.falabella.com/falabella-cl/product/15124982/Tobacco-Vanille-Edp-50-ml-Tom-Ford/15124983", 279990, 319990),
-    (11, "Paris"): ("https://www.paris.cl/tobacco-vanille-eau-de-parfum-50-ml-458120999.html", 289990, 329990),
-
-    # 12. Le Male Elixir (Jean Paul Gaultier)
-    (12, "Silk Perfumes"): ("https://www.silkperfumes.cl/products/jean-pual-gaultier-le-male-elixir-parfum-75-ml", 89990, 115990),
-    (12, "Elite Perfumes"): ("https://www.eliteperfumes.cl/products/jean-paul-gaultier-le-male-elixir-parfum-125-ml-m", 124990, 145990),
-    (12, "Falabella"): ("https://www.falabella.com/falabella-cl/product/16843210/Le-Male-Elixir-Parfum-125-ml/16843211", 132990, 154990),
-    (12, "Paris"): ("https://www.paris.cl/le-male-elixir-parfum-125-ml-485910999.html", 134990, 156990),
-}
-
-
-def obtener_url_directa_tienda(perfume_id: int, tienda_nombre: str) -> Optional[Tuple[str, int, int]]:
-    """Retorna la URL directa y precios verificados si la tienda comercializa el producto."""
-    return URLS_DIRECTAS_CATALOGO.get((perfume_id, tienda_nombre))
-
-
-def generar_url_tienda(tienda_nombre: str, perfume_nombre: str, url_directa: Optional[str] = None) -> Optional[str]:
-    """Retorna la URL verificada descartando búsquedas genéricas."""
-    if url_directa and url_directa.startswith("http") and "/search" not in url_directa:
-        return url_directa
-    return None
-
-
-def tienda_comercializa_marca(tienda_nombre: str, marca: str) -> bool:
-    """Valida reglas de distribución oficial y comercialización en Chile."""
-    t_nom = tienda_nombre.lower()
-    m = marca.lower()
-    if "chanel" in m or "maison francis" in m or "tom ford" in m:
-        return any(retail in t_nom for retail in ["falabella", "paris", "ripley"])
-    return True
-
-
-# -----------------------------------------------------------------------------
-# INICIALIZACIÓN DE ESQUEMA, MIGRACIONES E ÍNDICES
+# INICIALIZACIÓN DE ESQUEMA (DDL) Y CARGA DE SEMILLA
 # -----------------------------------------------------------------------------
 def init_db(force_reseed: bool = False) -> None:
     """
-    Inicializa el esquema relacional, aplica migraciones idempotentes y crea índices de rendimiento.
+    Inicializa la base de datos aplicando el esquema DDL y cargando datos semilla si está vacía.
     """
+    if not os.path.exists(SCHEMA_PATH):
+        raise FileNotFoundError(f"No se encontró el archivo de esquema SQL en: {SCHEMA_PATH}")
+
+    with open(SCHEMA_PATH, "r", encoding="utf-8") as f:
+        schema_sql = f.read()
+
     with get_db_cursor(commit=True) as cursor:
-        # 1. Tabla de Perfumes
-        cursor.execute("""
-        CREATE TABLE IF NOT EXISTS perfumes (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            nombre TEXT NOT NULL,
-            marca TEXT NOT NULL,
-            genero TEXT DEFAULT 'Unisex',
-            tipo TEXT DEFAULT 'Eau de Parfum',
-            notas TEXT NOT NULL,
-            imagen_url TEXT NOT NULL,
-            es_arabe BOOLEAN DEFAULT 0,
-            en_tendencia BOOLEAN DEFAULT 0,
-            en_remate BOOLEAN DEFAULT 0,
-            precio_referencia INTEGER NOT NULL
-        );
-        """)
+        cursor.executescript(schema_sql)
 
-        # 2. Tabla de Tiendas Chilenas (con dimensiones Trust Score Antifraude)
-        cursor.execute("""
-        CREATE TABLE IF NOT EXISTS tiendas (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            nombre TEXT NOT NULL UNIQUE,
-            url_base TEXT NOT NULL,
-            trust_score INTEGER DEFAULT 85,
-            badge TEXT DEFAULT 'Verificado',
-            logo_emoji TEXT DEFAULT '🏬',
-            rut TEXT DEFAULT '',
-            tipo_tienda TEXT DEFAULT 'Comercio Especializado',
-            ssl_seguro BOOLEAN DEFAULT 1,
-            anios_antiguedad INTEGER DEFAULT 5,
-            sello_ccs BOOLEAN DEFAULT 0,
-            reclamos_sernac TEXT DEFAULT 'Bajo',
-            politica_devolucion TEXT DEFAULT '30 días de satisfacción',
-            direccion_fiscal TEXT DEFAULT 'Santiago, Chile',
-            puntos_seguridad INTEGER DEFAULT 25,
-            puntos_legalidad INTEGER DEFAULT 25,
-            puntos_garantia INTEGER DEFAULT 20,
-            puntos_reputacion INTEGER DEFAULT 20
-        );
-        """)
-
-        # Migración dinámica de columnas para retrocompatibilidad
-        cursor.execute("PRAGMA table_info(tiendas);")
-        cols_existentes = {col["name"] for col in cursor.fetchall()}
-        nuevas_cols = {
-            "rut": "TEXT DEFAULT ''",
-            "tipo_tienda": "TEXT DEFAULT 'Comercio Especializado'",
-            "ssl_seguro": "BOOLEAN DEFAULT 1",
-            "anios_antiguedad": "INTEGER DEFAULT 5",
-            "sello_ccs": "BOOLEAN DEFAULT 0",
-            "reclamos_sernac": "TEXT DEFAULT 'Bajo'",
-            "politica_devolucion": "TEXT DEFAULT '30 días de satisfacción'",
-            "direccion_fiscal": "TEXT DEFAULT 'Santiago, Chile'",
-            "puntos_seguridad": "INTEGER DEFAULT 25",
-            "puntos_legalidad": "INTEGER DEFAULT 25",
-            "puntos_garantia": "INTEGER DEFAULT 20",
-            "puntos_reputacion": "INTEGER DEFAULT 20"
-        }
-        for col_n, col_d in nuevas_cols.items():
-            if col_n not in cols_existentes:
-                cursor.execute(f"ALTER TABLE tiendas ADD COLUMN {col_n} {col_d};")
-
-        # 3. Tabla de Registro Periódico de Precios
-        cursor.execute("""
-        CREATE TABLE IF NOT EXISTS precios_registro (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            perfume_id INTEGER NOT NULL,
-            tienda_id INTEGER NOT NULL,
-            precio_actual INTEGER NOT NULL,
-            precio_normal INTEGER NOT NULL,
-            en_stock BOOLEAN DEFAULT 1,
-            url_producto TEXT NOT NULL,
-            fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (perfume_id) REFERENCES perfumes (id),
-            FOREIGN KEY (tienda_id) REFERENCES tiendas (id)
-        );
-        """)
-
-        # 4. ÍNDICES DE ALTO RENDIMIENTO (Query Optimization)
-        cursor.execute("CREATE INDEX IF NOT EXISTS idx_precios_perfume ON precios_registro(perfume_id);")
-        cursor.execute("CREATE INDEX IF NOT EXISTS idx_precios_tienda ON precios_registro(tienda_id);")
-        cursor.execute("CREATE INDEX IF NOT EXISTS idx_precios_fecha ON precios_registro(fecha_registro);")
-        cursor.execute("CREATE INDEX IF NOT EXISTS idx_perfumes_marca ON perfumes(marca);")
-        cursor.execute("CREATE INDEX IF NOT EXISTS idx_perfumes_genero ON perfumes(genero);")
-        cursor.execute("CREATE INDEX IF NOT EXISTS idx_perfumes_arabe ON perfumes(es_arabe);")
-
+        # Verificar si la base de datos requiere población inicial
         cursor.execute("SELECT COUNT(*) FROM perfumes;")
-        count = cursor.fetchone()[0]
-        if count == 0 or force_reseed:
+        row_count = cursor.fetchone()[0]
+        if row_count == 0 or force_reseed:
             poblar_datos_semilla(cursor)
 
 
 def poblar_datos_semilla(cursor: sqlite3.Cursor) -> None:
-    """Puebla la base de datos con precios reales, packshots y métricas de confianza."""
+    """
+    Puebla la base de datos a partir del archivo canónico seed_catalogo.json.
+    """
+    catalogo = cargar_datos_semilla_json()
+
     cursor.execute("DELETE FROM precios_registro;")
     cursor.execute("DELETE FROM perfumes;")
     cursor.execute("DELETE FROM tiendas;")
 
-    tiendas_iniciales = [
+    # 1. Inserción de Tiendas Auditadas
+    tiendas_data = catalogo.get("tiendas", [])
+    tiendas_tuples = [
         (
-            "Falabella", "https://www.falabella.com", 96, "Retail Oficial 🇨🇱", "🟢",
-            "77.261.280-K", "Gran Retail Oficial", 1, 135, 1, "Bajo",
-            "Garantía legal 6 meses + Retracto 30 días", "Manuel Rodríguez Sur 730, Santiago",
-            25, 25, 24, 22
-        ),
-        (
-            "Paris", "https://www.paris.cl", 95, "Retail Oficial 🇨🇱", "🟢",
-            "96.556.310-5", "Gran Retail Oficial", 1, 120, 1, "Bajo",
-            "Garantía legal 6 meses + Retracto 30 días", "Av. Kennedy 9001, Las Condes, Santiago",
-            25, 25, 23, 22
-        ),
-        (
-            "Ripley", "https://simple.ripley.cl", 94, "Retail Oficial 🇨🇱", "🟢",
-            "76.012.750-7", "Gran Retail Oficial", 1, 60, 1, "Bajo",
-            "Garantía legal 6 meses + Retracto 30 días", "Huérfanos 1060, Santiago",
-            24, 25, 23, 22
-        ),
-        (
-            "Silk Perfumes", "https://www.silkperfumes.cl", 92, "Importador Autorizado 🇨🇱", "⭐",
-            "76.321.498-2", "Importador Especializado", 1, 12, 1, "Muy Bajo",
-            "30 días por defecto o producto sellado", "Av. Providencia 2594, Providencia",
-            24, 23, 23, 22
-        ),
-        (
-            "Elite Perfumes", "https://www.eliteperfumes.cl", 89, "Tienda Especializada 🇨🇱", "⭐",
-            "76.845.120-9", "Importador Especializado", 1, 10, 0, "Bajo",
-            "15 días para cambios con empaque original", "San Antonio 19, Santiago Centro",
-            23, 22, 22, 22
-        ),
-        (
-            "DBS Beauty Store", "https://www.dbs.cl", 91, "Cadena Certificada 🇨🇱", "🟢",
-            "76.089.412-5", "Cadena Especializada", 1, 18, 1, "Muy Bajo",
-            "30 días en tiendas físicas y online", "Av. Vitacura 2939, Las Condes",
-            24, 23, 22, 22
-        ),
-        (
-            "Alisha Perfumes", "https://www.alisha.cl", 88, "Perfumería Independiente 🇨🇱", "⭐",
-            "76.192.304-8", "Perfumería Independiente", 1, 8, 0, "Bajo",
-            "10 días hábiles con sello de fábrica intacto", "Av. Apoquindo 6410, Las Condes",
-            22, 22, 22, 22
+            t["nombre"], t["url_base"], t.get("trust_score", 85), t.get("badge", "Verificado"),
+            t.get("logo_emoji", "🏬"), t.get("rut", ""), t.get("tipo_tienda", "Comercio Especializado"),
+            int(t.get("ssl_seguro", 1)), t.get("anios_antiguedad", 5), int(t.get("sello_ccs", 0)),
+            t.get("reclamos_sernac", "Bajo"), t.get("politica_devolucion", "30 días"),
+            t.get("direccion_fiscal", "Santiago, Chile"), t.get("puntos_seguridad", 25),
+            t.get("puntos_legalidad", 25), t.get("puntos_garantia", 20), t.get("puntos_reputacion", 20)
         )
+        for t in tiendas_data
     ]
 
     cursor.executemany("""
@@ -320,118 +142,104 @@ def poblar_datos_semilla(cursor: sqlite3.Cursor) -> None:
         puntos_seguridad, puntos_legalidad, puntos_garantia, puntos_reputacion
     )
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
-    """, tiendas_iniciales)
+    """, tiendas_tuples)
 
-    perfumes_iniciales = [
+    # 2. Inserción de Perfumes
+    perfumes_data = catalogo.get("perfumes", [])
+    perfumes_tuples = [
         (
-            1, "Bleu de Chanel", "Chanel", "Hombre", "Eau de Parfum",
-            "Cítricos, Pomelo, Menta, Pimienta Rosa, Cedro, Sándalo, Incienso",
-            "APP/assets/perfumes/bleu_de_chanel.jpg",
-            0, 1, 0, 184990
-        ),
-        (
-            2, "YSL Libre", "Yves Saint Laurent", "Mujer", "Eau de Parfum",
-            "Lavanda, Mandarina, Grosellas Negras, Jazmín, Vainilla, Cedro, Ámbar Gris",
-            "APP/assets/perfumes/ysl_libre.jpg",
-            0, 1, 0, 79990
-        ),
-        (
-            3, "Dior Sauvage", "Dior", "Hombre", "Eau de Toilette",
-            "Bergamota de Calabria, Pimienta, Lavanda, Pimienta de Sichuan, Ambroxan, Cedro",
-            "APP/assets/perfumes/dior_sauvage.jpg",
-            0, 1, 0, 124990
-        ),
-        (
-            4, "Club de Nuit Intense Man", "Armaf", "Hombre", "Eau de Toilette",
-            "Limón, Piña, Bergamota, Manzana, Grosellas Negras, Abedul, Jazmín, Almizcle, Ámbar gris",
-            "APP/assets/perfumes/club_de_nuit_intense.jpg",
-            1, 1, 0, 32990
-        ),
-        (
-            5, "Khamrah", "Lattafa", "Unisex", "Eau de Parfum",
-            "Canela, Nuez Moscada, Bergamota, Dátiles, Praliné, Tuberosa, Vainilla, Haba Tonka, Mirra",
-            "APP/assets/perfumes/lattafa_khamrah.jpg",
-            1, 1, 0, 24990
-        ),
-        (
-            6, "Baccarat Rouge 540", "Maison Francis Kurkdjian", "Unisex", "Eau de Parfum",
-            "Azafrán, Jazmín, Amberwood, Ámbar Gris, Resina de Abeto, Cedro",
-            "APP/assets/perfumes/baccarat_rouge_540.jpg",
-            0, 1, 0, 329990
-        ),
-        (
-            7, "Acqua Di Gio", "Giorgio Armani", "Hombre", "Eau de Toilette",
-            "Lima, Limón, Bergamota, Jazmín, Naranja, Notas Marinas, Melocotón, Cedro, Almizcle Blanco",
-            "APP/assets/perfumes/acqua_di_gio.jpg",
-            0, 0, 1, 44990
-        ),
-        (
-            8, "Scandal Pour Homme", "Jean Paul Gaultier", "Hombre", "Eau de Toilette",
-            "Esclarea, Mandarina, Caramelo, Haba Tonka, Vetiver",
-            "APP/assets/perfumes/scandal_pour_homme.jpg",
-            0, 1, 0, 109990
-        ),
-        (
-            9, "Hawas for Men", "Rasasi", "Hombre", "Eau de Parfum",
-            "Manzana, Bergamota, Limón, Canela, Notas Acuáticas, Ciruela, Cardamomo, Ámbar gris, Almizcle",
-            "APP/assets/perfumes/rasasi_hawas.jpg",
-            1, 1, 0, 27990
-        ),
-        (
-            10, "Eros", "Versace", "Hombre", "Eau de Toilette",
-            "Menta, Manzana Verde, Limón, Haba Tonka, Ambroxan, Geranio, Vainilla de Madagascar, Cedro",
-            "APP/assets/perfumes/versace_eros.jpg",
-            0, 0, 1, 64990
-        ),
-        (
-            11, "Tobacco Vanille", "Tom Ford", "Unisex", "Eau de Parfum",
-            "Hoja de Tabaco, Notas Especiadas, Vainilla, Cacao, Haba Tonka, Frutos Secos, Maderas",
-            "APP/assets/perfumes/tom_ford_tobacco_vanille.jpg",
-            0, 1, 0, 279990
-        ),
-        (
-            12, "Le Male Elixir", "Jean Paul Gaultier", "Hombre", "Parfum",
-            "Lavanda, Menta, Vainilla, Benjuí, Miel, Haba Tonka, Tabaco",
-            "APP/assets/perfumes/le_male_elixir.jpg",
-            0, 1, 1, 89990
+            p["id"], p["nombre"], p["marca"], p.get("genero", "Unisex"),
+            p.get("tipo", "Eau de Parfum"), p["notas"], p["imagen_url"],
+            int(p.get("es_arabe", False)), int(p.get("en_tendencia", False)),
+            int(p.get("en_remate", False)), p["precio_referencia"]
         )
+        for p in perfumes_data
     ]
 
     cursor.executemany("""
-    INSERT OR REPLACE INTO perfumes (id, nombre, marca, genero, tipo, notas, imagen_url, es_arabe, en_tendencia, en_remate, precio_referencia)
+    INSERT OR REPLACE INTO perfumes (
+        id, nombre, marca, genero, tipo, notas, imagen_url, es_arabe, en_tendencia, en_remate, precio_referencia
+    )
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
-    """, perfumes_iniciales)
+    """, perfumes_tuples)
 
+    # Mapeo de tiendas nombre -> id
     cursor.execute("SELECT id, nombre FROM tiendas;")
-    tiendas_dict = {t["nombre"]: t["id"] for t in cursor.fetchall()}
+    tiendas_map = {r["nombre"]: r["id"] for r in cursor.fetchall()}
 
+    # 3. Inserción de Serie Temporal Histórica de Precios por Tienda
     hoy = datetime.now()
     dias_atras = [21, 14, 7, 3, 1, 0]
+    registros_precios = []
 
-    registros = []
-    for (p_id, t_nom), (url_directa, precio_act, precio_norm) in URLS_DIRECTAS_CATALOGO.items():
-        if t_nom not in tiendas_dict:
-            continue
-        t_id = tiendas_dict[t_nom]
+    for p in perfumes_data:
+        p_id = p["id"]
+        for enlace in p.get("enlaces_tiendas", []):
+            t_nombre = enlace.get("tienda")
+            if t_nombre not in tiendas_map:
+                continue
+            t_id = tiendas_map[t_nombre]
+            precio_act = enlace.get("precio_actual", p["precio_referencia"])
+            precio_norm = enlace.get("precio_normal", int(precio_act * 1.15))
+            url_prod = enlace.get("url_producto", "")
 
-        for dia in dias_atras:
-            f = hoy - timedelta(days=dia, hours=dia, minutes=dia * 4)
-            fluc = 1.0 + (dia * 0.004) - (0.015 if dia == 0 else 0)
-            p_actual_hist = int(round((precio_act * fluc) / 1000) * 1000)
-            p_norm_hist = int(round((precio_norm * 1.05) / 1000) * 1000)
+            for dia in dias_atras:
+                fecha = hoy - timedelta(days=dia, hours=dia, minutes=dia * 4)
+                fluc = 1.0 + (dia * 0.004) - (0.015 if dia == 0 else 0)
+                p_actual_hist = int(round((precio_act * fluc) / 1000) * 1000)
+                p_norm_hist = int(round((precio_norm * 1.05) / 1000) * 1000)
 
-            registros.append((
-                p_id, t_id, p_actual_hist, p_norm_hist, 1, url_directa, f.strftime("%Y-%m-%d %H:%M:%S")
-            ))
+                registros_precios.append((
+                    p_id, t_id, p_actual_hist, p_norm_hist, 1, url_prod, fecha.strftime("%Y-%m-%d %H:%M:%S")
+                ))
 
     cursor.executemany("""
     INSERT INTO precios_registro (perfume_id, tienda_id, precio_actual, precio_normal, en_stock, url_producto, fecha_registro)
     VALUES (?, ?, ?, ?, ?, ?, ?);
-    """, registros)
+    """, registros_precios)
+
+    logger.info(f"Base de datos poblada exitosamente: {len(perfumes_tuples)} perfumes, {len(tiendas_tuples)} tiendas, {len(registros_precios)} registros históricos.")
 
 
 # -----------------------------------------------------------------------------
-# CONSULTAS DE DOMINIO Y ACCESO A DATOS
+# REGLAS DE NEGOCIO Y RESOLUCIÓN DE CATÁLOGO
+# -----------------------------------------------------------------------------
+def obtener_url_directa_tienda(perfume_id: int, tienda_nombre: str) -> Optional[Tuple[str, int, int]]:
+    """
+    Retorna la tupla (url_producto, precio_actual, precio_normal) configurada en el catálogo semilla.
+    """
+    catalogo = cargar_datos_semilla_json()
+    for p in catalogo.get("perfumes", []):
+        if p["id"] == perfume_id:
+            for enlace in p.get("enlaces_tiendas", []):
+                if enlace.get("tienda") == tienda_nombre:
+                    return (
+                        enlace.get("url_producto", ""),
+                        enlace.get("precio_actual", p["precio_referencia"]),
+                        enlace.get("precio_normal", int(enlace.get("precio_actual", p["precio_referencia"]) * 1.15))
+                    )
+    return None
+
+
+def generar_url_tienda(tienda_nombre: str, perfume_nombre: str, url_directa: Optional[str] = None) -> Optional[str]:
+    """Retorna la URL directa verificada descartando búsquedas genéricas con /search."""
+    if url_directa and url_directa.startswith("http") and "/search" not in url_directa:
+        return url_directa
+    return None
+
+
+def tienda_comercializa_marca(tienda_nombre: str, marca: str) -> bool:
+    """Valida reglas de distribución oficial y comercialización legal en Chile."""
+    t_nom = tienda_nombre.lower()
+    m = marca.lower()
+    # Marcas con distribución exclusiva de retail de lujo oficial
+    if "chanel" in m or "maison francis" in m or "tom ford" in m:
+        return any(retail in t_nom for retail in ["falabella", "paris", "ripley"])
+    return True
+
+
+# -----------------------------------------------------------------------------
+# CONSULTAS DE DOMINIO Y ACCESO A DATOS (DAO / REPOSITORY)
 # -----------------------------------------------------------------------------
 def registrar_precio(
     perfume_id: int,
@@ -491,7 +299,6 @@ def obtener_catalogo(
 
     query += " GROUP BY p.id"
 
-    # Ordenamiento profesional
     if orden == "precio_asc":
         query += " ORDER BY mejor_precio ASC NULLS LAST"
     elif orden == "precio_desc":

@@ -1,0 +1,116 @@
+{
+  "metadata": {
+    "version_etl": "2.0.0",
+    "sistema": "PerfumeTrending ETL Engine",
+    "fecha_ejecucion": "2026-09-16 13:36:10",
+    "duracion_segundos": 7.51,
+    "estado": "EXITOSO"
+  },
+  "metricas": {
+    "total_perfumes_catalogo": 12,
+    "total_tiendas_registradas": 7,
+    "precios_actualizados": 42,
+    "exclusiones_marca": 42,
+    "errores_totales": 0
+  },
+  "estadisticas_tiendas": {
+    "Falabella": {
+      "consultas": 12,
+      "exitos": 12,
+      "trust_score": 96
+    },
+    "Paris": {
+      "consultas": 8,
+      "exitos": 8,
+      "trust_score": 95
+    },
+    "Ripley": {
+      "consultas": 5,
+      "exitos": 5,
+      "trust_score": 94
+    },
+    "Silk Perfumes": {
+      "consultas": 9,
+      "exitos": 9,
+      "trust_score": 92
+    },
+    "Elite Perfumes": {
+      "consultas": 8,
+      "exitos": 8,
+      "trust_score": 89
+    },
+    "DBS Beauty Store": {
+      "consultas": 0,
+      "exitos": 0,
+      "trust_score": 91
+    },
+    "Alisha Perfumes": {
+      "consultas": 0,
+      "exitos": 0,
+      "trust_score": 88
+    }
+  },
+  "muestra_capturas": [
+    {
+      "perfume": "Bleu de Chanel",
+      "tienda": "Falabella",
+      "precio": 184000,
+      "origen": "Retail Oficial Snapshot"
+    },
+    {
+      "perfume": "Bleu de Chanel",
+      "tienda": "Paris",
+      "precio": 186000,
+      "origen": "Retail Oficial Snapshot"
+    },
+    {
+      "perfume": "Bleu de Chanel",
+      "tienda": "Ripley",
+      "precio": 182000,
+      "origen": "Retail Oficial Snapshot"
+    },
+    {
+      "perfume": "YSL Libre",
+      "tienda": "Falabella",
+      "precio": 89000,
+      "origen": "Retail Oficial Snapshot"
+    },
+    {
+      "perfume": "YSL Libre",
+      "tienda": "Paris",
+      "precio": 150000,
+      "origen": "Retail Oficial Snapshot"
+    },
+    {
+      "perfume": "YSL Libre",
+      "tienda": "Ripley",
+      "precio": 146000,
+      "origen": "Retail Oficial Snapshot"
+    },
+    {
+      "perfume": "YSL Libre",
+      "tienda": "Silk Perfumes",
+      "precio": 79990,
+      "origen": "API Shopify Live"
+    },
+    {
+      "perfume": "YSL Libre",
+      "tienda": "Elite Perfumes",
+      "precio": 107990,
+      "origen": "API Shopify Live"
+    },
+    {
+      "perfume": "Dior Sauvage",
+      "tienda": "Falabella",
+      "precio": 145000,
+      "origen": "Retail Oficial Snapshot"
+    },
+    {
+      "perfume": "Dior Sauvage",
+      "tienda": "Paris",
+      "precio": 168000,
+      "origen": "Retail Oficial Snapshot"
+    }
+  ],
+  "errores": []
+}

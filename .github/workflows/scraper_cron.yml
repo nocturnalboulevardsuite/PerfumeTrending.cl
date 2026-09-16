@@ -33,5 +33,5 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action Scraper"
-          git add data/perfumes.db
+          git add data/perfumes.db data/reportes/ultimo_scraping.json
           git diff --quiet && git diff --staged --quiet || (git commit -m "🤖 Actualización periódica de precios y catálogo [skip ci]" && git push)
