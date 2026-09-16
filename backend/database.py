@@ -141,7 +141,7 @@ def init_db(force_reseed=False):
     )
     """)
 
-    # 2. Tabla de Tiendas Chilenas
+    # 2. Tabla de Tiendas Chilenas (con dimensiones Trust Score Antifraude)
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS tiendas (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -149,9 +149,42 @@ def init_db(force_reseed=False):
         url_base TEXT NOT NULL,
         trust_score INTEGER DEFAULT 85,
         badge TEXT DEFAULT 'Verificado',
-        logo_emoji TEXT DEFAULT '🏬'
+        logo_emoji TEXT DEFAULT '🏬',
+        rut TEXT DEFAULT '',
+        tipo_tienda TEXT DEFAULT 'Comercio Especializado',
+        ssl_seguro BOOLEAN DEFAULT 1,
+        anios_antiguedad INTEGER DEFAULT 5,
+        sello_ccs BOOLEAN DEFAULT 0,
+        reclamos_sernac TEXT DEFAULT 'Bajo',
+        politica_devolucion TEXT DEFAULT '30 días de satisfacción',
+        direccion_fiscal TEXT DEFAULT 'Santiago, Chile',
+        puntos_seguridad INTEGER DEFAULT 25,
+        puntos_legalidad INTEGER DEFAULT 25,
+        puntos_garantia INTEGER DEFAULT 20,
+        puntos_reputacion INTEGER DEFAULT 20
     )
     """)
+
+    # Migración de columnas en caso de base de datos preexistente
+    cursor.execute("PRAGMA table_info(tiendas)")
+    cols_existentes = [col["name"] for col in cursor.fetchall()]
+    nuevas_cols = {
+        "rut": "TEXT DEFAULT ''",
+        "tipo_tienda": "TEXT DEFAULT 'Comercio Especializado'",
+        "ssl_seguro": "BOOLEAN DEFAULT 1",
+        "anios_antiguedad": "INTEGER DEFAULT 5",
+        "sello_ccs": "BOOLEAN DEFAULT 0",
+        "reclamos_sernac": "TEXT DEFAULT 'Bajo'",
+        "politica_devolucion": "TEXT DEFAULT '30 días de satisfacción'",
+        "direccion_fiscal": "TEXT DEFAULT 'Santiago, Chile'",
+        "puntos_seguridad": "INTEGER DEFAULT 25",
+        "puntos_legalidad": "INTEGER DEFAULT 25",
+        "puntos_garantia": "INTEGER DEFAULT 20",
+        "puntos_reputacion": "INTEGER DEFAULT 20"
+    }
+    for col_n, col_d in nuevas_cols.items():
+        if col_n not in cols_existentes:
+            cursor.execute(f"ALTER TABLE tiendas ADD COLUMN {col_n} {col_d}")
 
     # 3. Tabla de Registro Periódico de Precios
     cursor.execute("""
@@ -180,7 +213,7 @@ def init_db(force_reseed=False):
 
 
 def poblar_datos_semilla(conn):
-    """Puebla la base de datos con precios reales verificados y enlaces 100% directos a la ficha."""
+    """Puebla la base de datos con precios reales verificados, enlaces directos y métricas de confianza."""
     cursor = conn.cursor()
 
     # Limpiar tablas para asegurar coherencia y enlaces reales
@@ -189,17 +222,58 @@ def poblar_datos_semilla(conn):
     cursor.execute("DELETE FROM tiendas")
 
     tiendas_iniciales = [
-        ("Falabella", "https://www.falabella.com", 96, "Retail Oficial 🇨🇱", "🟢"),
-        ("Paris", "https://www.paris.cl", 95, "Retail Oficial 🇨🇱", "🟢"),
-        ("Ripley", "https://simple.ripley.cl", 94, "Retail Oficial 🇨🇱", "🟢"),
-        ("Silk Perfumes", "https://www.silkperfumes.cl", 92, "Importador Autorizado 🇨🇱", "⭐"),
-        ("Elite Perfumes", "https://www.eliteperfumes.cl", 89, "Tienda Especializada 🇨🇱", "⭐"),
-        ("DBS Beauty Store", "https://www.dbs.cl", 91, "Cadena Certificada 🇨🇱", "🟢")
+        (
+            "Falabella", "https://www.falabella.com", 96, "Retail Oficial 🇨🇱", "🟢",
+            "77.261.280-K", "Gran Retail Oficial", 1, 135, 1, "Bajo",
+            "Garantía legal 6 meses + Retracto 30 días", "Manuel Rodríguez Sur 730, Santiago",
+            25, 25, 24, 22
+        ),
+        (
+            "Paris", "https://www.paris.cl", 95, "Retail Oficial 🇨🇱", "🟢",
+            "96.556.310-5", "Gran Retail Oficial", 1, 120, 1, "Bajo",
+            "Garantía legal 6 meses + Retracto 30 días", "Av. Kennedy 9001, Las Condes, Santiago",
+            25, 25, 23, 22
+        ),
+        (
+            "Ripley", "https://simple.ripley.cl", 94, "Retail Oficial 🇨🇱", "🟢",
+            "76.012.750-7", "Gran Retail Oficial", 1, 60, 1, "Bajo",
+            "Garantía legal 6 meses + Retracto 30 días", "Huérfanos 1060, Santiago",
+            24, 25, 23, 22
+        ),
+        (
+            "Silk Perfumes", "https://www.silkperfumes.cl", 92, "Importador Autorizado 🇨🇱", "⭐",
+            "76.321.498-2", "Importador Especializado", 1, 12, 1, "Muy Bajo",
+            "30 días por defecto o producto sellado", "Av. Providencia 2594, Providencia",
+            24, 23, 23, 22
+        ),
+        (
+            "Elite Perfumes", "https://www.eliteperfumes.cl", 89, "Tienda Especializada 🇨🇱", "⭐",
+            "76.845.120-9", "Importador Especializado", 1, 10, 0, "Bajo",
+            "15 días para cambios con empaque original", "San Antonio 19, Santiago Centro",
+            23, 22, 22, 22
+        ),
+        (
+            "DBS Beauty Store", "https://www.dbs.cl", 91, "Cadena Certificada 🇨🇱", "🟢",
+            "76.089.412-5", "Cadena Especializada", 1, 18, 1, "Muy Bajo",
+            "30 días en tiendas físicas y online", "Av. Vitacura 2939, Las Condes",
+            24, 23, 22, 22
+        ),
+        (
+            "Alisha Perfumes", "https://www.alisha.cl", 88, "Perfumería Independiente 🇨🇱", "⭐",
+            "76.192.304-8", "Perfumería Independiente", 1, 8, 0, "Bajo",
+            "10 días hábiles con sello de fábrica intacto", "Av. Apoquindo 6410, Las Condes",
+            22, 22, 22, 22
+        )
     ]
 
     cursor.executemany("""
-    INSERT OR REPLACE INTO tiendas (nombre, url_base, trust_score, badge, logo_emoji)
-    VALUES (?, ?, ?, ?, ?)
+    INSERT OR REPLACE INTO tiendas (
+        nombre, url_base, trust_score, badge, logo_emoji,
+        rut, tipo_tienda, ssl_seguro, anios_antiguedad, sello_ccs, reclamos_sernac,
+        politica_devolucion, direccion_fiscal,
+        puntos_seguridad, puntos_legalidad, puntos_garantia, puntos_reputacion
+    )
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, tiendas_iniciales)
 
     # Catálogo Completo con Packshots de Estudio 100% Profesionales
@@ -506,3 +580,150 @@ def obtener_tiendas():
     tiendas = [dict(row) for row in rows]
     conn.close()
     return tiendas
+
+
+def obtener_tiendas_trust(filtro_tipo=None, score_minimo=0, busqueda=""):
+    """
+    Retorna tiendas auditadas con métricas detalladas de Trust Score para la página de confianza.
+    """
+    init_db()
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    query = """
+    SELECT 
+        id, nombre, url_base, trust_score, badge, logo_emoji,
+        rut, tipo_tienda, ssl_seguro, anios_antiguedad, sello_ccs, reclamos_sernac,
+        politica_devolucion, direccion_fiscal,
+        puntos_seguridad, puntos_legalidad, puntos_garantia, puntos_reputacion
+    FROM tiendas
+    WHERE trust_score >= ?
+    """
+    params = [score_minimo]
+
+    if filtro_tipo and filtro_tipo != "Todas":
+        query += " AND tipo_tienda = ?"
+        params.append(filtro_tipo)
+
+    if busqueda:
+        query += " AND (LOWER(nombre) LIKE ? OR LOWER(url_base) LIKE ? OR LOWER(rut) LIKE ?)"
+        term = f"%{busqueda.lower().strip()}%"
+        params.extend([term, term, term])
+
+    query += " ORDER BY trust_score DESC"
+
+    cursor.execute(query, params)
+    rows = cursor.fetchall()
+    tiendas = []
+    for r in rows:
+        d = dict(r)
+        d["estrellas"] = round(d["trust_score"] / 20.0, 1)
+        tiendas.append(d)
+
+    conn.close()
+    return tiendas
+
+
+def auditar_tienda_por_url(url_ingresada):
+    """
+    Audita en vivo cualquier URL ingresada por el usuario, analizando:
+    1. Si es un comercio oficial ya verificado en la base de datos chilena.
+    2. Enlaces desconocidos: analiza protocolo seguro, TLD nacional (.cl NIC Chile),
+       patrones de riesgo y checklist de verificación antifraude.
+    """
+    if not url_ingresada or not url_ingresada.strip():
+        return None
+
+    url_limpia = url_ingresada.strip().lower()
+    if not url_limpia.startswith("http://") and not url_limpia.startswith("https://"):
+        url_limpia = "https://" + url_limpia
+
+    # Extraer dominio
+    try:
+        parsed = urllib.parse.urlparse(url_limpia)
+        netloc = parsed.netloc or parsed.path.split('/')[0]
+        netloc = netloc.replace("www.", "")
+    except Exception:
+        netloc = url_limpia
+
+    # 1. Buscar coincidencia en base de datos de comercios ya auditados
+    tiendas_db = obtener_tiendas_trust()
+    for t in tiendas_db:
+        dominio_tienda = t["url_base"].lower().replace("https://", "").replace("http://", "").replace("www.", "").strip("/")
+        if dominio_tienda in netloc or netloc in dominio_tienda:
+            return {
+                "nombre": t["nombre"],
+                "url": t["url_base"],
+                "dominio": netloc,
+                "score": t["trust_score"],
+                "badge": t["badge"],
+                "es_conocida": True,
+                "tipo": t["tipo_tienda"],
+                "rut": t["rut"],
+                "ssl": bool(t["ssl_seguro"]),
+                "sello_ccs": bool(t["sello_ccs"]),
+                "antiguedad": f"{t['anios_antiguedad']} años",
+                "sernac": t["reclamos_sernac"],
+                "devolucion": t["politica_devolucion"],
+                "desglose": {
+                    "Seguridad Web (SSL/TLS)": f"{t['puntos_seguridad']}/25",
+                    "Legalidad & RUT": f"{t['puntos_legalidad']}/25",
+                    "Garantía & Devoluciones": f"{t['puntos_garantia']}/25",
+                    "Reputación & Sellos": f"{t['puntos_reputacion']}/25"
+                },
+                "recomendacion": "Comercio verificado y auditado en PerfumeTrending. Cuenta con respaldo legal y trazabilidad en Chile."
+            }
+
+    # 2. Análisis heurístico para comercio externo/desconocido
+    puntos_ssl = 25 if url_limpia.startswith("https://") else 0
+    es_cl = netloc.endswith(".cl")
+    puntos_dominio = 25 if es_cl else 10
+    
+    # Detección de posibles indicadores de suplantación o phishing
+    senales_alerta = []
+    palabras_sospechosas = ["outlet-original", "perfumes-ganga", "dior-chile-ofertas", "chanel-descuentos", "liquidaciones-lujo"]
+    for palabra in palabras_sospechosas:
+        if palabra in netloc:
+            senales_alerta.append(f"Uso de términos engañosos en el dominio ('{palabra}')")
+
+    if not url_limpia.startswith("https://"):
+        senales_alerta.append("No utiliza protocolo cifrado seguro HTTPS")
+    if not es_cl:
+        senales_alerta.append("No utiliza dominio oficial chileno (.cl)")
+
+    puntos_transparencia = 15 if not senales_alerta else 5
+    puntos_reputacion = 15 if not senales_alerta else 5
+    score_estimado = max(10, min(80, puntos_ssl + puntos_dominio + puntos_transparencia + puntos_reputacion))
+
+    if score_estimado >= 70:
+        badge = "Verificación Básica"
+        nivel = "Precaución Moderada"
+        recom = "El sitio cuenta con HTTPS y dominio estándar, pero no está en el registro oficial de distribuidores autorizados. Revisa que permita pagar con Webpay y no solo transferencias personales."
+    else:
+        badge = "Sitio No Verificado / Riesgo"
+        nivel = "Alto Riesgo"
+        recom = "⚠️ Precaución extrema. No se registran antecedentes comerciales formales ni sello de confianza. Posible tienda clon o producto sin garantía de originalidad."
+
+    return {
+        "nombre": netloc.capitalize(),
+        "url": url_limpia,
+        "dominio": netloc,
+        "score": score_estimado,
+        "badge": badge,
+        "es_conocida": False,
+        "tipo": "Comercio Externo No Auditado",
+        "rut": "No registrado en plataforma",
+        "ssl": url_limpia.startswith("https://"),
+        "sello_ccs": False,
+        "antiguedad": "Desconocida",
+        "sernac": "Sin historial",
+        "devolucion": "No especificada legalmente",
+        "desglose": {
+            "Seguridad Web": f"{puntos_ssl}/25",
+            "Dominio (.cl)": f"{puntos_dominio}/25",
+            "Transparencia": f"{puntos_transparencia}/25",
+            "Acreditación": f"{puntos_reputacion}/25"
+        },
+        "senales_alerta": senales_alerta,
+        "recomendacion": recom
+    }

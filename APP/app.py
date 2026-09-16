@@ -406,7 +406,8 @@ with col_chip1:
     if st.button("Trend Del Hype", key="btn_trend", use_container_width=True):
         st.switch_page("pages/trendhype.py")
 with col_chip2:
-    st.button("Páginas de Confianza", key="btn_trust", on_click=navigate_to, args=('trust_page', None), use_container_width=True)
+    if st.button("🛡️ Trust Score", key="btn_trust", use_container_width=True):
+        st.switch_page("pages/trustpage.py")
 with col_chip3:
     st.button("Comparar Precios", key="btn_compare", on_click=navigate_to, args=('home', None), use_container_width=True)
 
@@ -632,6 +633,16 @@ else:
                 st.rerun()
 
     perfumes = obtener_catalogo(busqueda=search_query, esencias=selected_essences, categoria=categoria_filtro)
+
+    filtro_tienda = st.session_state.get("filtro_tienda_catalogo")
+    if filtro_tienda:
+        col_f_tienda, col_f_clear = st.columns([0.8, 0.2])
+        with col_f_tienda:
+            st.info(f"🏬 Filtrando perfumes disponibles en **{filtro_tienda}**")
+        with col_f_clear:
+            if st.button("✕ Quitar filtro", key="clear_store_filter"):
+                del st.session_state["filtro_tienda_catalogo"]
+                st.rerun()
 
     if selected_essences:
         st.caption(f"Filtrando por notas: **{', '.join(selected_essences)}** ({len(perfumes)} resultados encontrados)")
