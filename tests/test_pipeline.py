@@ -28,6 +28,14 @@ from backend.database import (
     obtener_url_directa_tienda
 )
 from backend.scraper_periodico import obtener_ultimo_reporte_scraping
+from backend.scraper_autonomo import obtener_ultimo_reporte_descubrimiento
+from backend.normalizador import (
+    extraer_volumen_ml,
+    extraer_concentracion,
+    limpiar_nombre_perfume,
+    es_arabe,
+    es_producto_perfume_valido
+)
 
 
 class TestDataArchitecture(unittest.TestCase):
@@ -146,6 +154,48 @@ class TestDataArchitecture(unittest.TestCase):
         self.assertIn("estadisticas_tiendas", reporte)
         self.assertEqual(reporte["metadata"]["estado"], "EXITOSO")
         self.assertGreater(reporte["metricas"]["precios_actualizados"], 0)
+
+    def test_07_normalizador_variantes(self):
+        """Valida las reglas de extracción NLP y regex para tamaños, concentración y marcas."""
+        self.assertEqual(extraer_volumen_ml("Dior Sauvage EDP 60ml Hombre"), 60)
+        self.assertEqual(extraer_volumen_ml("Bleu de Chanel 3.4 oz"), 100)
+        self.assertEqual(extraer_volumen_ml("Versace Eros 200 ml"), 200)
+        self.assertEqual(extraer_concentracion("Dior Sauvage Elixir Spray"), "Elixir")
+        self.assertEqual(extraer_concentracion("YSL Libre Eau de Parfum Intense"), "Eau de Parfum Intense")
+        self.assertEqual(extraer_concentracion("Acqua Di Gio EDT"), "Eau de Toilette")
+
+        # Limpieza de títulos de e-commerce
+        limpio = limpiar_nombre_perfume("Perfume Lattafa Khamrah Unisex Edp 100 Ml Oferta", "Lattafa")
+        self.assertEqual(limpio, "Khamrah")
+
+        # Detección de casas árabes y filtros de exclusión
+        self.assertTrue(es_arabe("Lattafa", "Khamrah"))
+        self.assertFalse(es_arabe("Chanel", "Bleu de Chanel"))
+        self.assertFalse(es_producto_perfume_valido("Desodorante en Barra Dior Sauvage 75g"))
+        self.assertTrue(es_producto_perfume_valido("Dior Sauvage Eau de Parfum 100ml"))
+
+    def test_08_calculo_precio_por_ml(self):
+        """Valida que la base de datos entregue el volumen y calcule el precio por ml."""
+        precios = obtener_precios_actuales(1)
+        self.assertGreaterEqual(len(precios), 1)
+        for p in precios:
+            self.assertIn("volumen_ml", p)
+            self.assertIn("precio_por_ml", p)
+            self.assertGreater(p["volumen_ml"], 0)
+            self.assertGreater(p["precio_por_ml"], 0)
+            # Validación matemática: $/ml = precio / volumen
+            esperado = round(p["precio_actual"] / p["volumen_ml"])
+            self.assertAlmostEqual(p["precio_por_ml"], esperado, delta=2)
+
+    def test_09_reporte_descubrimiento_autonomo(self):
+        """Verifica la existencia y validez del reporte del crawler autónomo."""
+        reporte = obtener_ultimo_reporte_descubrimiento()
+        self.assertIsNotNone(reporte, "Debe existir data/reportes/ultimo_descubrimiento.json")
+        self.assertIn("metadata", reporte)
+        self.assertIn("metricas", reporte)
+        self.assertIn("total_productos_analizados", reporte["metricas"])
+        self.assertIn("nuevos_perfumes_descubiertos", reporte["metricas"])
+        self.assertEqual(reporte["metadata"]["estado"], "EXITOSO")
 
 
 if __name__ == "__main__":

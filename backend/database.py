@@ -101,9 +101,18 @@ def init_db(force_reseed: bool = False) -> None:
         schema_sql = f.read()
 
     with get_db_cursor(commit=True) as cursor:
+        # 1. Migración previa defensiva si la tabla precios_registro ya existía sin volumen_ml
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='precios_registro';")
+        if cursor.fetchone():
+            cursor.execute("PRAGMA table_info(precios_registro);")
+            cols = {c["name"] for c in cursor.fetchall()}
+            if "volumen_ml" not in cols:
+                cursor.execute("ALTER TABLE precios_registro ADD COLUMN volumen_ml INTEGER DEFAULT 100;")
+
+        # 2. Aplicar esquema DDL e índices
         cursor.executescript(schema_sql)
 
-        # Verificar si la base de datos requiere población inicial
+        # 3. Verificar si la base de datos requiere población inicial
         cursor.execute("SELECT COUNT(*) FROM perfumes;")
         row_count = cursor.fetchone()[0]
         if row_count == 0 or force_reseed:
@@ -190,12 +199,12 @@ def poblar_datos_semilla(cursor: sqlite3.Cursor) -> None:
                 p_norm_hist = int(round((precio_norm * 1.05) / 1000) * 1000)
 
                 registros_precios.append((
-                    p_id, t_id, p_actual_hist, p_norm_hist, 1, url_prod, fecha.strftime("%Y-%m-%d %H:%M:%S")
+                    p_id, t_id, p_actual_hist, p_norm_hist, 1, 100, url_prod, fecha.strftime("%Y-%m-%d %H:%M:%S")
                 ))
 
     cursor.executemany("""
-    INSERT INTO precios_registro (perfume_id, tienda_id, precio_actual, precio_normal, en_stock, url_producto, fecha_registro)
-    VALUES (?, ?, ?, ?, ?, ?, ?);
+    INSERT INTO precios_registro (perfume_id, tienda_id, precio_actual, precio_normal, en_stock, volumen_ml, url_producto, fecha_registro)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?);
     """, registros_precios)
 
     logger.info(f"Base de datos poblada exitosamente: {len(perfumes_tuples)} perfumes, {len(tiendas_tuples)} tiendas, {len(registros_precios)} registros históricos.")
@@ -248,17 +257,18 @@ def registrar_precio(
     precio_normal: int,
     en_stock: bool,
     url_producto: str,
-    fecha: Optional[str] = None
+    fecha: Optional[str] = None,
+    volumen_ml: int = 100
 ) -> None:
-    """Inserta una captura periódica de precio para un perfume en una tienda específica."""
+    """Inserta una captura periódica de precio para un perfume en una tienda específica y tamaño en ml."""
     if fecha is None:
         fecha = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     with get_db_cursor(commit=True) as cursor:
         cursor.execute("""
-        INSERT INTO precios_registro (perfume_id, tienda_id, precio_actual, precio_normal, en_stock, url_producto, fecha_registro)
-        VALUES (?, ?, ?, ?, ?, ?, ?);
-        """, (perfume_id, tienda_id, precio_actual, precio_normal, int(en_stock), url_producto, fecha))
+        INSERT INTO precios_registro (perfume_id, tienda_id, precio_actual, precio_normal, en_stock, volumen_ml, url_producto, fecha_registro)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+        """, (perfume_id, tienda_id, precio_actual, precio_normal, int(en_stock), volumen_ml, url_producto, fecha))
 
 
 def obtener_catalogo(
@@ -336,12 +346,14 @@ def obtener_detalle_perfume(perfume_id: int) -> Optional[Dict[str, Any]]:
 def obtener_precios_actuales(perfume_id: int) -> List[Dict[str, Any]]:
     """
     Retorna el precio más reciente registrado en cada tienda para el perfume dado.
-    Garantiza enlaces directos y stock verificado.
+    Garantiza enlaces directos, stock verificado y cálculo de precio por ml ($/ml).
     """
     init_db()
     query = """
     SELECT t.id as tienda_id, t.nombre as tienda_nombre, t.url_base, t.trust_score, t.badge, t.logo_emoji,
-           pr.precio_actual, pr.precio_normal, pr.en_stock, pr.url_producto, pr.fecha_registro
+           pr.precio_actual, pr.precio_normal, pr.en_stock, COALESCE(pr.volumen_ml, 100) as volumen_ml,
+           ROUND(CAST(pr.precio_actual AS REAL) / MAX(1, COALESCE(pr.volumen_ml, 100))) as precio_por_ml,
+           pr.url_producto, pr.fecha_registro
     FROM tiendas t
     JOIN precios_registro pr ON t.id = pr.tienda_id
     WHERE pr.perfume_id = ?

@@ -1,0 +1,100 @@
+{
+  "metadata": {
+    "version": "1.0.0",
+    "sistema": "PerfumeTrending Autonomous Discovery Crawler",
+    "fecha_ejecucion": "2026-09-16 15:30:40",
+    "duracion_segundos": 3.02,
+    "estado": "EXITOSO"
+  },
+  "metricas": {
+    "total_productos_analizados": 10,
+    "descartados_no_perfume": 0,
+    "nuevos_perfumes_descubiertos": 9,
+    "precios_variantes_registrados": 10,
+    "errores_totales": 0
+  },
+  "muestras_nuevas": [
+    {
+      "id": 13,
+      "nombre": "Pure Seduction Shimmer Loción Nueva Colección",
+      "marca": "Victoria Secret",
+      "tipo": "Eau de Parfum",
+      "es_arabe": false,
+      "tienda": "Silk Perfumes",
+      "precio": 13490
+    },
+    {
+      "id": 14,
+      "nombre": "Flowerbomb + Mini + Crema",
+      "marca": "Viktor & Rolf",
+      "tipo": "Eau de Parfum",
+      "es_arabe": false,
+      "tienda": "Silk Perfumes",
+      "precio": 104990
+    },
+    {
+      "id": 15,
+      "nombre": "Flowerbomb + Loción + Crema",
+      "marca": "Viktor & Rolf",
+      "tipo": "Eau de Parfum",
+      "es_arabe": false,
+      "tienda": "Silk Perfumes",
+      "precio": 104990
+    },
+    {
+      "id": 16,
+      "nombre": "Velvet Orchid",
+      "marca": "Tom Ford",
+      "tipo": "Eau de Parfum",
+      "es_arabe": false,
+      "tienda": "Silk Perfumes",
+      "precio": 144990
+    },
+    {
+      "id": 17,
+      "nombre": "Chrome H",
+      "marca": "Azzaro",
+      "tipo": "Eau de Toilette",
+      "es_arabe": false,
+      "tienda": "Elite Perfumes",
+      "precio": 49990
+    },
+    {
+      "id": 18,
+      "nombre": "Azzaro Pour Homme Edt 200 Ml (H)",
+      "marca": "Azzaro",
+      "tipo": "Eau de Toilette",
+      "es_arabe": false,
+      "tienda": "Elite Perfumes",
+      "precio": 39990
+    },
+    {
+      "id": 19,
+      "nombre": "Code Men H",
+      "marca": "Giorgio Armani",
+      "tipo": "Eau de Toilette",
+      "es_arabe": false,
+      "tienda": "Elite Perfumes",
+      "precio": 59492
+    },
+    {
+      "id": 20,
+      "nombre": "Fancy Girl M",
+      "marca": "Jessica Simpson",
+      "tipo": "Eau de Parfum",
+      "es_arabe": false,
+      "tienda": "Elite Perfumes",
+      "precio": 21990
+    },
+    {
+      "id": 21,
+      "nombre": "Jungle Tiger M",
+      "marca": "Cuba",
+      "tipo": "Eau de Parfum",
+      "es_arabe": false,
+      "tienda": "Elite Perfumes",
+      "precio": 6490
+    }
+  ],
+  "errores": []
+}

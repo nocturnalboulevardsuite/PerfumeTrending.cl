@@ -52,6 +52,7 @@ CREATE TABLE IF NOT EXISTS precios_registro (
     precio_actual INTEGER NOT NULL,
     precio_normal INTEGER NOT NULL,
     en_stock BOOLEAN DEFAULT 1,
+    volumen_ml INTEGER DEFAULT 100,
     url_producto TEXT NOT NULL,
     fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (perfume_id) REFERENCES perfumes (id) ON DELETE CASCADE,
@@ -62,6 +63,7 @@ CREATE TABLE IF NOT EXISTS precios_registro (
 CREATE INDEX IF NOT EXISTS idx_precios_perfume ON precios_registro(perfume_id);
 CREATE INDEX IF NOT EXISTS idx_precios_tienda ON precios_registro(tienda_id);
 CREATE INDEX IF NOT EXISTS idx_precios_fecha ON precios_registro(fecha_registro);
+CREATE INDEX IF NOT EXISTS idx_precios_volumen ON precios_registro(perfume_id, volumen_ml);
 CREATE INDEX IF NOT EXISTS idx_precios_stock_act ON precios_registro(en_stock, precio_actual);
 CREATE INDEX IF NOT EXISTS idx_perfumes_marca ON perfumes(marca);
 CREATE INDEX IF NOT EXISTS idx_perfumes_genero ON perfumes(genero);

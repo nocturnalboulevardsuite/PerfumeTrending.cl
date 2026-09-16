@@ -20,6 +20,10 @@ from backend.scraper_periodico import (
     ejecutar_ciclo_scraping_y_descubrimiento,
     obtener_ultimo_reporte_scraping
 )
+from backend.scraper_autonomo import (
+    ejecutar_descubrimiento_autonomo,
+    obtener_ultimo_reporte_descubrimiento
+)
 
 import base64
 
@@ -449,7 +453,7 @@ with col_photo:
 
 # 4. HERRAMIENTAS RÁPIDAS (CHIPS DEBAJO DEL BUSCADOR)
 st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
-col_chip1, col_chip2, col_chip3, col_chip_space = st.columns([1.5, 1.8, 1.6, 5.1], vertical_alignment="center")
+col_chip1, col_chip2, col_chip3, col_chip4, col_chip_space = st.columns([1.5, 1.8, 1.6, 2.2, 2.9], vertical_alignment="center")
 
 with col_chip1:
     if st.button("Trend Del Hype", key="btn_trend", use_container_width=True):
@@ -459,6 +463,23 @@ with col_chip2:
         st.switch_page("pages/trustpage.py")
 with col_chip3:
     st.button("Comparar Precios", key="btn_compare", on_click=navigate_to, args=('home', None), use_container_width=True)
+with col_chip4:
+    with st.popover("🌐 Descubrir Perfumes", use_container_width=True):
+        st.write("##### 🌐 Rastreador Autónomo de Catálogo")
+        st.caption("Rastrea tiendas chilenas para descubrir nuevas fragancias y variantes de tamaño.")
+        limite_crawl = st.slider("Perfumes a rastrear por tienda:", 5, 50, 15, step=5)
+        if st.button("🚀 Iniciar Rastreo Autónomo", key="btn_crawl_run", use_container_width=True):
+            with st.spinner("Rastreando catálogos de Silk Perfumes y Elite Perfumes..."):
+                rep = ejecutar_descubrimiento_autonomo(limite_por_tienda=limite_crawl)
+                st.cache_data.clear()
+                nuevos_n = rep["metricas"]["nuevos_perfumes_descubiertos"]
+                precios_n = rep["metricas"]["precios_variantes_registrados"]
+                st.toast(f"¡Rastreo completado! {nuevos_n} nuevos perfumes y {precios_n} precios.", icon="✨")
+                st.rerun()
+
+        ult_desc = obtener_ultimo_reporte_descubrimiento()
+        if ult_desc:
+            st.caption(f"Último rastreo: {ult_desc['metadata']['fecha_ejecucion']} ({ult_desc['metricas']['nuevos_perfumes_descubiertos']} nuevos)")
 
 st.markdown("<br>", unsafe_allow_html=True)
 
@@ -566,13 +587,19 @@ if st.session_state['current_page'] == 'detalle' and st.session_state['selected_
             """, unsafe_allow_html=True)
 
             if precios_tiendas:
+                precios_con_stock = [p for p in precios_tiendas if p.get("en_stock") == 1 and p.get("precio_actual", 0) > 0]
+                min_precio_ml = min([p.get("precio_por_ml", 999999) for p in precios_con_stock if p.get("precio_por_ml", 0) > 0], default=0)
+
                 for pt in precios_tiendas:
                     tiene_stock = (pt["en_stock"] == 1 and pt["precio_actual"] > 0)
                     es_mejor = (tiene_stock and pt["precio_actual"] == mejor_precio)
                     ahorro = pt["precio_normal"] - pt["precio_actual"] if tiene_stock else 0
                     ahorro_pct = int(round((ahorro / pt["precio_normal"]) * 100)) if (tiene_stock and pt["precio_normal"] > pt["precio_actual"]) else 0
+                    vol_ml = pt.get("volumen_ml", 100)
+                    precio_ml = pt.get("precio_por_ml") or (round(pt["precio_actual"] / vol_ml) if vol_ml > 0 else 0)
+                    es_mejor_ml = (tiene_stock and precio_ml > 0 and precio_ml == min_precio_ml)
 
-                    col_t1, col_t2, col_t3, col_t4 = st.columns([3, 2.5, 2.5, 2], vertical_alignment="center")
+                    col_t1, col_t2, col_t3, col_t4 = st.columns([3, 2.3, 2.7, 2], vertical_alignment="center")
 
                     with col_t1:
                         st.markdown(f"""
@@ -600,10 +627,12 @@ if st.session_state['current_page'] == 'detalle' and st.session_state['selected_
                         """, unsafe_allow_html=True)
 
                     with col_t3:
+                        badge_mejor_ml = "<span style='background-color: #27ae60; color: white; padding: 2px 7px; border-radius: 10px; font-size: 0.7rem; font-weight: bold; margin-left: 4px;'>⚡ Mejor $/ml</span>" if es_mejor_ml else ""
                         st.markdown(f"""
-                        <div style="font-size: 0.85rem; color: {subtext_color};">
-                            <span style="color: #27ae60; font-weight: bold;">🟢 En Stock Directo</span><br>
-                            <span style="font-size: 0.75rem;">Captura: {pt['fecha_registro']}</span>
+                        <div style="font-size: 0.85rem; color: {text_color};">
+                            <strong>{vol_ml} ml</strong> {badge_mejor_ml}<br>
+                            <span style="font-size: 0.8rem; color: #27ae60; font-weight: 600;">${precio_ml:,.0f} CLP / ml</span><br>
+                            <span style="font-size: 0.72rem; color: {subtext_color};">🟢 En Stock • {pt['fecha_registro'].split(' ')[0]}</span>
                         </div>
                         """, unsafe_allow_html=True)
 
