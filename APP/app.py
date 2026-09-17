@@ -192,7 +192,7 @@ st.markdown(f"""
     .block-container {{ 
         padding-top: 1rem !important; 
         padding-bottom: 2rem !important; 
-        max-width: 1140px !important;
+        max-width: 1400px !important;
     }}
     
     .stApp {{ {app_bg_css} color: {text_color} !important; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }}
@@ -282,9 +282,6 @@ st.markdown(f"""
     /* Texto de botones de navegación superior */
     .st-key-n_perfumes button, 
     .st-key-n_remates button,
-    .st-key-n_disenador button,
-    .st-key-n_nicho button,
-    .st-key-n_arabes button, 
     .st-key-n_esencias button {{
         background-color: transparent !important;
         border: none !important;
@@ -301,9 +298,6 @@ st.markdown(f"""
 
     .st-key-n_perfumes button p, 
     .st-key-n_remates button p,
-    .st-key-n_disenador button p,
-    .st-key-n_nicho button p,
-    .st-key-n_arabes button p, 
     .st-key-n_esencias button p {{
         color: {text_color} !important;
         font-weight: 600 !important;
@@ -313,9 +307,6 @@ st.markdown(f"""
 
     .st-key-n_perfumes button:hover p, 
     .st-key-n_remates button:hover p,
-    .st-key-n_disenador button:hover p,
-    .st-key-n_nicho button:hover p,
-    .st-key-n_arabes button:hover p, 
     .st-key-n_esencias button:hover p {{
         color: {text_color} !important;
         text-shadow: none !important;
@@ -627,14 +618,11 @@ with col_actions:
 
 # 5. NAVEGACIÓN
 st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
-nav_cols = st.columns([1, 1, 1, 1, 1, 1], vertical_alignment="center")
+nav_cols = st.columns([1, 1, 1], vertical_alignment="center")
 
 with nav_cols[0]: st.button("PERFUMES", key="n_perfumes", on_click=navigate_to, args=('home',), use_container_width=True)
 with nav_cols[1]: st.button("REMATES", key="n_remates", on_click=navigate_to, args=('hype',), use_container_width=True)
-with nav_cols[2]: st.button("DISEÑADOR", key="n_disenador", on_click=navigate_to, args=('home',), use_container_width=True)
-with nav_cols[3]: st.button("NICHO", key="n_nicho", on_click=navigate_to, args=('home',), use_container_width=True)
-with nav_cols[4]: st.button("ÁRABES", key="n_arabes", on_click=navigate_to, args=('home',), use_container_width=True)
-with nav_cols[5]: st.button("ESENCIAS", key="n_esencias", on_click=navigate_to, args=('esencias_page',), use_container_width=True)
+with nav_cols[2]: st.button("ESENCIAS", key="n_esencias", on_click=navigate_to, args=('esencias_page',), use_container_width=True)
 
 st.markdown(f"<hr style='margin: 6px 0 18px 0; border: none; border-bottom: 1px solid {btn_border}; opacity: 0.3;'>", unsafe_allow_html=True)
 
