@@ -22,18 +22,20 @@ def navigate_to(page, perfume_data=None):
 
 is_dark = st.session_state['theme'] == 'dark'
 
-# Colores generales
-app_bg_css = "background-color: #0c0e12 !important;" if is_dark else "background-color: #f9f9fb !important;"
+# Colores dinámicos adaptables por tema
+app_bg = "#0c0e12" if is_dark else "#f9f9fb"
+app_bg_css = f"background-color: {app_bg} !important;"
+
 text_color = "#f0f0f0" if is_dark else "#18181b"
 subtext_color = "#888890" if is_dark else "#666670"
 
 btn_bg = "#161920" if is_dark else "#ffffff"
-btn_text = "#e0e0e0" if is_dark else "#18181b"
-btn_border = "#2a2e39" if is_dark else "#e2e2e8"
+btn_text = "#ffffff" if is_dark else "#18181b"
+btn_border = "#2a2e39" if is_dark else "#d1d5db"
 
 input_bg = "#14171d" if is_dark else "#ffffff"
 input_text = "#f0f0f0" if is_dark else "#18181b"
-input_border = "#2a2e39" if is_dark else "#e2e2e8"
+input_border = "#2a2e39" if is_dark else "#d1d5db"
 
 # Posicionamiento del Switch de Tema
 bottle_left_pos = "35px" if is_dark else "-2px"
@@ -51,7 +53,7 @@ bottle_svg = (
     "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 58'><rect x='18' y='2' width='14' height='7' rx='2' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><rect x='21' y='9' width='8' height='5' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='19' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='5' fill='none' stroke='%23111111' stroke-width='2'/><line x1='25' y1='23' x2='25' y2='26' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='25' y1='42' x2='25' y2='45' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='14' y1='34' x2='17' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='33' y1='34' x2='36' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='17' y1='26' x2='19' y2='28' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='31' y1='40' x2='33' y2='42' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='17' y1='42' x2='19' y2='40' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='31' y1='28' x2='33' y2='26' stroke='%23111111' stroke-width='2' stroke-linecap='round'/></svg>"
 )
 
-camera_icon_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23{text_color[1:]}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z'/><circle cx='12' cy='13' r='4'/></svg>"
+camera_icon_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23{btn_text[1:]}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z'/><circle cx='12' cy='13' r='4'/></svg>"
 user_icon_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23{btn_text[1:]}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2'/><circle cx='12' cy='7' r='4'/></svg>"
 
 # 2. SCRIPT DE COLORES Y SISTEMA DE SONIDO DE BURBUJA
@@ -176,7 +178,7 @@ js_color_script = f"""
 
 components.html(js_color_script, height=0, width=0)
 
-# 3. CSS PROFESIONAL Y NÍTIDO
+# 3. CSS ADAPTABLE Y CORREGIDO PARA TEMA CLARO Y OSCURO
 st.markdown(f"""
     <style>
     html, body, .stApp {{
@@ -202,7 +204,7 @@ st.markdown(f"""
         text-shadow: none !important;
     }}
 
-    /* Estilizado global de botones */
+    /* Estilizado global de botones con texto legible por tema */
     div.stButton > button,
     div.stDownloadButton > button,
     div[data-testid="stPopover"] > button,
@@ -217,8 +219,10 @@ st.markdown(f"""
         outline: none !important;
     }}
 
-    div.stButton > button p {{
-        color: #ffffff !important;
+    div.stButton > button p,
+    div[data-testid="stPopover"] > button p,
+    button[data-testid="stPopoverButton"] p {{
+        color: {btn_text} !important;
     }}
 
     /* Corrección de Hover */
@@ -251,7 +255,7 @@ st.markdown(f"""
 
     .st-key-login_btn button {{
         background-color: {btn_bg} !important;
-        color: #ffffff !important;
+        color: {btn_text} !important;
         border: 1px solid {btn_border} !important;
         border-radius: 6px !important;
         height: 36px !important;
@@ -271,7 +275,7 @@ st.markdown(f"""
         font-size: 0.8rem !important;
         line-height: 1 !important;
         margin: 0 !important;
-        color: #ffffff !important;
+        color: {btn_text} !important;
         font-weight: 600 !important;
     }}
 
@@ -301,7 +305,7 @@ st.markdown(f"""
     .st-key-n_nicho button p,
     .st-key-n_arabes button p, 
     .st-key-n_esencias button p {{
-        color: #ffffff !important;
+        color: {text_color} !important;
         font-weight: 600 !important;
         white-space: nowrap !important;
         font-size: 0.78rem !important;
@@ -313,7 +317,7 @@ st.markdown(f"""
     .st-key-n_nicho button:hover p,
     .st-key-n_arabes button:hover p, 
     .st-key-n_esencias button:hover p {{
-        color: #ffffff !important;
+        color: {text_color} !important;
         text-shadow: none !important;
     }}
 
@@ -321,7 +325,7 @@ st.markdown(f"""
     .st-key-btn_trend button, 
     .st-key-btn_trust button, 
     .st-key-btn_compare button {{
-        background-color: transparent !important;
+        background-color: {btn_bg} !important;
         border: 1px solid {btn_border} !important;
         border-radius: 16px !important;
         padding: 0.25rem 0.75rem !important;
@@ -337,7 +341,7 @@ st.markdown(f"""
     .st-key-btn_compare button p {{
         font-size: 0.74rem !important;
         font-weight: 600 !important;
-        color: #ffffff !important;
+        color: {btn_text} !important;
         letter-spacing: 0.2px;
         white-space: nowrap !important;
         text-overflow: clip !important;
@@ -359,11 +363,26 @@ st.markdown(f"""
     .st-key-btn_trend button:hover p, 
     .st-key-btn_trust button:hover p, 
     .st-key-btn_compare button:hover p {{
-        color: #ffffff !important;
+        color: {btn_text} !important;
         text-shadow: none !important;
         filter: none !important;
     }}
 
+    /* Estilizado para st.page_link (Páginas de Confianza) */
+    a[data-testid="stPageLink-NavLink"] {{
+        background-color: {btn_bg} !important;
+        border: 1px solid {btn_border} !important;
+        border-radius: 16px !important;
+        padding: 0.25rem 0.75rem !important;
+    }}
+    a[data-testid="stPageLink-NavLink"] span,
+    a[data-testid="stPageLink-NavLink"] p {{
+        color: {btn_text} !important;
+        font-size: 0.74rem !important;
+        font-weight: 600 !important;
+    }}
+
+    /* Campos de Entrada e Inputs */
     div[data-baseweb="input"],
     div[data-baseweb="base-input"],
     div[data-baseweb="select"] > div,
@@ -377,6 +396,20 @@ st.markdown(f"""
         padding-top: 3px !important;
         padding-bottom: 3px !important;
         min-height: 36px !important;
+        color: {input_text} !important;
+    }}
+
+    div[data-baseweb="input"] input,
+    div[data-baseweb="base-input"] input {{
+        font-size: 0.85rem !important;
+        padding: 6px 10px !important;
+        color: {input_text} !important;
+        background-color: {input_bg} !important;
+    }}
+
+    div[data-baseweb="input"] input::placeholder {{
+        color: {subtext_color} !important;
+        font-size: 0.82rem !important;
     }}
 
     /* TRANSPARENCIA PARA BOTÓN DE TEMA */
@@ -440,17 +473,6 @@ st.markdown(f"""
         z-index: 2 !important;
     }}
 
-    div[data-baseweb="input"] input,
-    div[data-baseweb="base-input"] input {{
-        font-size: 0.85rem !important;
-        padding: 6px 10px !important;
-    }}
-
-    div[data-baseweb="input"] input::placeholder {{
-        color: {subtext_color} !important;
-        font-size: 0.82rem !important;
-    }}
-
     .st-key-btn_photo_search button {{
         background-color: {input_bg} !important;
         border: 1px solid {input_border} !important;
@@ -466,7 +488,7 @@ st.markdown(f"""
     
     .stApp .st-key-btn_photo_search button p {{
         font-size: 0.82rem !important;
-        color: #ffffff !important;
+        color: {btn_text} !important;
         font-weight: 600 !important;
     }}
 
