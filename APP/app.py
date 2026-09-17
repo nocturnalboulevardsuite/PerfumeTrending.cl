@@ -37,9 +37,9 @@ input_bg = "#14171d" if is_dark else "#ffffff"
 input_text = "#f0f0f0" if is_dark else "#18181b"
 input_border = "#2a2e39" if is_dark else "#d1d5db"
 
-# Posicionamiento del Switch de Tema
-bottle_left_pos = "35px" if is_dark else "-2px"
-static_icon_pos = "10px center" if is_dark else "calc(100% - 10px) center"
+# Posicionamiento del Switch de Tema (Tamaño Aumentado)
+bottle_left_pos = "38px" if is_dark else "-2px"
+static_icon_pos = "12px center" if is_dark else "calc(100% - 12px) center"
 
 static_icon_svg = (
     "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='4'/><line x1='12' y1='1' x2='12' y2='3'/><line x1='12' y1='21' x2='12' y2='23'/><line x1='4.22' y1='4.22' x2='5.64' y2='5.64'/><line x1='18.36' y1='18.36' x2='19.78' y2='19.78'/><line x1='1' y1='12' x2='3' y2='12'/><line x1='21' y1='12' x2='23' y2='12'/><line x1='4.22' y1='19.78' x2='5.64' y2='18.36'/><line x1='18.36' y1='5.64' x2='19.78' y2='4.22'/></svg>"
@@ -141,7 +141,7 @@ js_color_script = f"""
                     el.style.borderRadius = '3px';
                     el.style.padding = '2px 6px';
                     el.style.margin = '1px 0';
-                    el.style.fontSize = '0.85rem';
+                    el.style.fontSize = '0.75rem';
                     el.dataset.colored = 'true';
                     el.querySelectorAll('*').forEach(child => {{ child.style.color = rule.text; }});
                     break;
@@ -178,7 +178,7 @@ js_color_script = f"""
 
 components.html(js_color_script, height=0, width=0)
 
-# 3. CSS ADAPTABLE Y CORREGIDO PARA TEMA CLARO Y OSCURO (AMPLIADO)
+# 3. CSS ADAPTABLE Y EFECTOS DE ZOOM
 st.markdown(f"""
     <style>
     html, body, .stApp {{
@@ -190,7 +190,7 @@ st.markdown(f"""
     header[data-testid="stHeader"] {{ display: none !important; }}
     
     .block-container {{ 
-        padding-top: 1.5rem !important; 
+        padding-top: 1rem !important; 
         padding-bottom: 2rem !important; 
         max-width: 1400px !important;
     }}
@@ -199,24 +199,26 @@ st.markdown(f"""
 
     .stApp p, .stApp span, .stApp label, .stMarkdown p {{
         color: {text_color} !important;
-        font-size: 1rem !important;
+        font-size: 0.88rem !important;
         -webkit-font-smoothing: antialiased !important;
         text-shadow: none !important;
     }}
 
-    /* Estilizado global de botones con texto legible por tema */
+    /* Estilizado global de botones con zoom minimalista profesional */
     div.stButton > button,
     div.stDownloadButton > button,
     div[data-testid="stPopover"] > button,
     button[data-testid="stPopoverButton"],
     .st-key-btn_photo_search button,
-    .st-key-login_btn button {{
-        transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease !important;
+    .st-key-login_btn button,
+    a[data-testid="stPageLink-NavLink"] {{
+        transition: transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1), background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease !important;
         -webkit-font-smoothing: antialiased !important;
         -moz-osx-font-smoothing: grayscale !important;
         text-shadow: none !important;
         box-shadow: none !important;
         outline: none !important;
+        will-change: transform;
     }}
 
     div.stButton > button p,
@@ -225,18 +227,27 @@ st.markdown(f"""
         color: {btn_text} !important;
     }}
 
-    /* Corrección de Hover */
+    /* Efecto Zoom en Hover */
     div.stButton > button:hover,
     div[data-testid="stPopover"] > button:hover,
     button[data-testid="stPopoverButton"]:hover,
     .st-key-btn_photo_search button:hover,
     .st-key-login_btn button:hover,
-    div.stButton > button:focus,
-    div.stButton > button:active {{
+    a[data-testid="stPageLink-NavLink"]:hover,
+    div.stButton > button:focus {{
+        transform: scale(1.025) !important;
         cursor: pointer !important;
         box-shadow: none !important;
         filter: none !important;
         outline: none !important;
+    }}
+    
+    /* Respuesta táctil al hacer clic */
+    div.stButton > button:active,
+    .st-key-btn_photo_search button:active,
+    .st-key-login_btn button:active,
+    a[data-testid="stPageLink-NavLink"]:active {{
+        transform: scale(0.98) !important;
     }}
 
     div.stButton > button:hover p,
@@ -253,33 +264,34 @@ st.markdown(f"""
         height: 100% !important;
     }}
 
+    /* Botón de login ajustado al nuevo tamaño general */
     .st-key-login_btn button {{
         background-color: {btn_bg} !important;
         color: {btn_text} !important;
         border: 1px solid {btn_border} !important;
-        border-radius: 8px !important;
-        height: 44px !important;
-        min-height: 44px !important;
-        padding: 0 1rem 0 2.5rem !important;
+        border-radius: 6px !important;
+        height: 40px !important;
+        min-height: 40px !important;
+        padding: 0 1rem 0 2.4rem !important;
         display: inline-flex !important;
         align-items: center !important;
         justify-content: center !important;
         background-image: url("{user_icon_svg}") !important;
         background-repeat: no-repeat !important;
-        background-position: 14px center !important;
-        background-size: 18px 18px !important;
-        font-size: 0.95rem !important;
+        background-position: 12px center !important;
+        background-size: 16px 16px !important;
+        font-size: 0.85rem !important;
         margin: 0 !important;
     }}
     .st-key-login_btn button p {{
-        font-size: 0.95rem !important;
+        font-size: 0.85rem !important;
         line-height: 1 !important;
         margin: 0 !important;
         color: {btn_text} !important;
         font-weight: 600 !important;
     }}
 
-    /* Texto de botones de navegación superior (MÁS GRANDES) */
+    /* Texto de botones de navegación superior */
     .st-key-n_perfumes button, 
     .st-key-n_remates button,
     .st-key-n_esencias button {{
@@ -288,8 +300,8 @@ st.markdown(f"""
         border-bottom: 1px solid transparent !important;
         border-radius: 0px !important;
         font-weight: 600 !important;
-        font-size: 0.95rem !important;
-        padding: 0.6rem 0rem !important;
+        font-size: 0.78rem !important;
+        padding: 0.2rem 0rem !important;
         box-shadow: none !important;
         letter-spacing: 0.8px !important;
         min-height: 0px !important;
@@ -302,24 +314,17 @@ st.markdown(f"""
         color: {text_color} !important;
         font-weight: 600 !important;
         white-space: nowrap !important;
-        font-size: 0.95rem !important;
+        font-size: 0.78rem !important;
     }}
 
-    .st-key-n_perfumes button:hover p, 
-    .st-key-n_remates button:hover p,
-    .st-key-n_esencias button:hover p {{
-        color: {text_color} !important;
-        text-shadow: none !important;
-    }}
-
-    /* Botones tipo Chip (MÁS AMPLIOS) */
+    /* Botones tipo Chip (Trend Del Hype, Comparar Precios, etc.) */
     .st-key-btn_trend button, 
     .st-key-btn_trust button, 
     .st-key-btn_compare button {{
         background-color: {btn_bg} !important;
         border: 1px solid {btn_border} !important;
-        border-radius: 20px !important;
-        padding: 0.4rem 1rem !important;
+        border-radius: 16px !important;
+        padding: 0.25rem 0.75rem !important;
         box-shadow: none !important;
         width: 100% !important;
         min-height: 0px !important;
@@ -330,7 +335,7 @@ st.markdown(f"""
     .st-key-btn_trend button p, 
     .st-key-btn_trust button p, 
     .st-key-btn_compare button p {{
-        font-size: 0.85rem !important;
+        font-size: 0.74rem !important;
         font-weight: 600 !important;
         color: {btn_text} !important;
         letter-spacing: 0.2px;
@@ -347,33 +352,27 @@ st.markdown(f"""
     .st-key-btn_compare button:hover {{
         border-color: {"#4a5061" if is_dark else "#b5b5c0"} !important;
         background-color: {"#1a1d26" if is_dark else "#f0f0f5"} !important;
-        box-shadow: none !important;
-        filter: none !important;
     }}
 
-    .st-key-btn_trend button:hover p, 
-    .st-key-btn_trust button:hover p, 
-    .st-key-btn_compare button:hover p {{
-        color: {btn_text} !important;
-        text-shadow: none !important;
-        filter: none !important;
-    }}
-
-    /* Estilizado para st.page_link */
+    /* Estilizado para st.page_link (Páginas de Confianza) */
     a[data-testid="stPageLink-NavLink"] {{
         background-color: {btn_bg} !important;
         border: 1px solid {btn_border} !important;
-        border-radius: 20px !important;
-        padding: 0.4rem 1rem !important;
+        border-radius: 16px !important;
+        padding: 0.25rem 0.75rem !important;
+        text-decoration: none !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
     }}
     a[data-testid="stPageLink-NavLink"] span,
     a[data-testid="stPageLink-NavLink"] p {{
         color: {btn_text} !important;
-        font-size: 0.85rem !important;
+        font-size: 0.74rem !important;
         font-weight: 600 !important;
     }}
 
-    /* Campos de Entrada e Inputs (44px) */
+    /* Campos de Entrada e Inputs */
     div[data-baseweb="input"],
     div[data-baseweb="base-input"],
     div[data-baseweb="select"] > div,
@@ -382,32 +381,28 @@ st.markdown(f"""
     button[data-testid="stBaseButton-secondary"] {{
         background-color: {input_bg} !important;
         border: 1px solid {input_border} !important;
-        border-radius: 8px !important;
+        border-radius: 6px !important;
         box-shadow: none !important;
-        padding-top: 6px !important;
-        padding-bottom: 6px !important;
-        min-height: 44px !important;
+        padding-top: 3px !important;
+        padding-bottom: 3px !important;
+        min-height: 40px !important;
         color: {input_text} !important;
     }}
 
     div[data-baseweb="input"] input,
     div[data-baseweb="base-input"] input {{
-        font-size: 0.95rem !important;
-        padding: 8px 14px !important;
+        font-size: 0.85rem !important;
+        padding: 6px 10px !important;
         color: {input_text} !important;
         background-color: {input_bg} !important;
     }}
 
     div[data-baseweb="input"] input::placeholder {{
         color: {subtext_color} !important;
-        font-size: 0.95rem !important;
+        font-size: 0.82rem !important;
     }}
 
-    /* TRANSPARENCIA PARA BOTÓN DE TEMA - ESCALADO */
-    .st-key-theme_toggle {{
-        transform: scale(1.15);
-        transform-origin: center right;
-    }}
+    /* TAMAÑO AUMENTADO PARA BOTÓN DE TEMA */
     .st-key-theme_toggle,
     .st-key-theme_toggle button,
     .st-key-theme_toggle button[data-testid="stBaseButton-secondary"],
@@ -418,25 +413,21 @@ st.markdown(f"""
         box-shadow: none !important;
         outline: none !important;
         padding: 0 !important;
-        width: 68px !important;
-        height: 36px !important;
-        min-height: 36px !important;
+        width: 80px !important; /* Más grande */
+        height: 42px !important; /* Más grande */
+        min-height: 42px !important;
         position: relative !important;
         cursor: pointer !important;
         margin: 0 auto !important;
         display: block !important;
+        transform: none !important; /* Sin efecto hover para no desalinearlo */
     }}
 
     .st-key-theme_toggle button:hover,
     .st-key-theme_toggle button:focus,
-    .st-key-theme_toggle button:active,
-    .st-key-theme_toggle button[data-testid="stBaseButton-secondary"]:hover,
-    .st-key-theme_toggle button[data-testid="stBaseButton-secondary"]:focus {{
+    .st-key-theme_toggle button:active {{
+        transform: none !important;
         background: transparent !important;
-        background-color: transparent !important;
-        border: none !important;
-        box-shadow: none !important;
-        outline: none !important;
     }}
 
     .st-key-theme_toggle button * {{ display: none !important; }}
@@ -445,14 +436,14 @@ st.markdown(f"""
         content: '' !important;
         position: absolute !important;
         top: 4px !important; left: 0 !important;
-        width: 64px !important; height: 28px !important;
+        width: 76px !important; height: 34px !important; /* Track ampliado */
         background-color: {"#1c1f26" if is_dark else "#eae8e6"} !important;
         border: 1px solid {btn_border} !important;
-        border-radius: 14px !important;
+        border-radius: 17px !important;
         background-image: url("{static_icon_svg}") !important;
         background-repeat: no-repeat !important;
         background-position: {static_icon_pos} !important;
-        background-size: 14px 14px !important;
+        background-size: 16px 16px !important; /* Ícono interno mayor */
     }}
     
     .st-key-theme_toggle button::after {{
@@ -460,7 +451,7 @@ st.markdown(f"""
         position: absolute !important;
         top: 0px !important;
         left: {bottle_left_pos} !important;
-        width: 32px !important; height: 36px !important;
+        width: 38px !important; height: 42px !important; /* Botella ampliada */
         background-image: url("{bottle_svg}") !important;
         background-repeat: no-repeat !important;
         background-size: contain !important;
@@ -468,38 +459,38 @@ st.markdown(f"""
         z-index: 2 !important;
     }}
 
-    /* BOTÓN DE BÚSQUEDA VISUAL MÁS GRANDE */
     .st-key-btn_photo_search button {{
         background-color: {input_bg} !important;
         border: 1px solid {input_border} !important;
-        border-radius: 8px !important;
-        padding: 0.3rem 0.6rem 0.3rem 2.5rem !important;
+        border-radius: 6px !important;
+        padding: 0.3rem 0.6rem 0.3rem 2.1rem !important;
         background-image: url("{camera_icon_svg}") !important;
         background-repeat: no-repeat !important;
-        background-position: 14px center !important;
-        background-size: 18px 18px !important;
-        font-size: 0.95rem !important;
-        min-height: 44px !important;
+        background-position: 10px center !important;
+        background-size: 15px 15px !important;
+        font-size: 0.82rem !important;
+        min-height: 40px !important;
     }}
     
     .stApp .st-key-btn_photo_search button p {{
-        font-size: 0.95rem !important;
+        font-size: 0.82rem !important;
         color: {btn_text} !important;
         font-weight: 600 !important;
     }}
 
-    /* TARJETAS MÁS LEGIBLES */
     .catalog-card {{
         background-color: transparent;
         border: 1px solid {btn_border};
-        border-radius: 8px;
+        border-radius: 6px;
         overflow: hidden;
         position: relative;
         margin-bottom: 16px;
-        transition: border-color 0.2s ease;
+        transition: border-color 0.2s ease, transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+        will-change: transform;
     }}
     .catalog-card:hover {{
         border-color: #7a6a5d;
+        transform: scale(1.02);
     }}
     .square-img-box {{
         position: relative;
@@ -523,7 +514,7 @@ st.markdown(f"""
         top: 0; left: 0; right: 0; bottom: 0;
         background: rgba(12, 14, 18, 0.94);
         color: #ffffff;
-        padding: 18px;
+        padding: 14px;
         display: flex;
         flex-direction: column;
         justify-content: center;
@@ -533,22 +524,22 @@ st.markdown(f"""
     }}
     .catalog-card:hover .card-hover-overlay {{ opacity: 1; }}
     .overlay-title {{
-        font-size: 1.05rem;
+        font-size: 0.88rem;
         font-weight: 600;
         color: #d4c2a5;
-        margin-bottom: 8px;
+        margin-bottom: 6px;
         border-bottom: 1px solid rgba(255,255,255,0.1);
-        padding-bottom: 6px;
+        padding-bottom: 4px;
     }}
-    .overlay-info {{ font-size: 0.85rem; font-weight: 300; line-height: 1.5; color: #e0e0e0; margin-bottom: 6px; }}
-    .card-footer-info {{ padding: 14px 12px; text-align: center; background-color: {btn_bg}; }}
-    .card-perfume-name {{ font-size: 0.95rem; font-weight: 500; color: {text_color}; margin-bottom: 4px; }}
-    .card-perfume-brand {{ font-size: 0.8rem; font-weight: 300; color: {subtext_color}; text-transform: uppercase; letter-spacing: 0.5px; }}
+    .overlay-info {{ font-size: 0.76rem; font-weight: 300; line-height: 1.4; color: #b8b8b8; margin-bottom: 4px; }}
+    .card-footer-info {{ padding: 10px 12px; text-align: center; background-color: {btn_bg}; }}
+    .card-perfume-name {{ font-size: 0.85rem; font-weight: 500; color: {text_color}; margin-bottom: 3px; }}
+    .card-perfume-brand {{ font-size: 0.7rem; font-weight: 300; color: {subtext_color}; text-transform: uppercase; letter-spacing: 0.5px; }}
 
     .essence-card {{ 
         border-radius: 8px; 
-        padding: 14px 16px; 
-        margin-bottom: 12px; 
+        padding: 12px 14px; 
+        margin-bottom: 10px; 
         border-width: 1px; 
         border-style: solid;
         cursor: pointer;
@@ -564,22 +555,22 @@ st.markdown(f"""
         transform: translateY(0px) scale(0.97);
         box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
     }}
-    .essence-title {{ font-size: 0.95rem; font-weight: 600; margin-bottom: 6px; letter-spacing: 0.3px; }}
-    .essence-desc {{ font-size: 0.85rem; font-weight: 400; line-height: 1.5; opacity: 0.9; }}
+    .essence-title {{ font-size: 0.85rem; font-weight: 600; margin-bottom: 4px; letter-spacing: 0.3px; }}
+    .essence-desc {{ font-size: 0.78rem; font-weight: 400; line-height: 1.4; opacity: 0.9; }}
 
     .sound-mute-btn {{
         background: transparent;
         border: 1px solid {btn_border};
         color: {text_color};
         border-radius: 50%;
-        width: 44px;
-        height: 44px;
+        width: 36px;
+        height: 36px;
         cursor: pointer;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.15rem;
-        transition: transform 0.2s ease, background-color 0.2s ease;
+        font-size: 1.05rem;
+        transition: transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1), background-color 0.2s ease;
         margin-bottom: 24px;
     }}
     .sound-mute-btn:hover {{
@@ -592,13 +583,13 @@ st.markdown(f"""
     </style>
 """, unsafe_allow_html=True)
 
-# 4. CABECERA (LOGO AMPLIADO)
+# 4. CABECERA CON LOGO AMPLIADO
 col_logo, col_espacio, col_actions = st.columns([5, 1.8, 2.4], vertical_alignment="center")
 
 with col_logo:
     logo_color = "#8c7b6d"
     logo_html = f"""
-    <div style="display: inline-flex; align-items: center; gap: 12px; cursor: pointer; width: fit-content;" onclick="window.location.reload();">
+    <div style="display: inline-flex; align-items: center; gap: 12px; cursor: pointer; width: fit-content; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'" onclick="window.location.reload();">
         <svg width="34" height="34" viewBox="0 0 36 36" fill="none" stroke-linecap="round" stroke-linejoin="round">
             <path d="M 6.8 21 L 29.2 21 C 30 25 27 32 18 32 C 9 32 6 25 6.8 21 Z" fill="{logo_color}" />
             <line x1="6.8" y1="21" x2="29.2" y2="21" stroke="{text_color}" stroke-width="1.5" />
@@ -608,7 +599,7 @@ with col_logo:
             <rect x="13" y="3" width="10" height="4" rx="1" stroke="{text_color}" stroke-width="1.5" />
             <rect x="16" y="0" width="4" height="3" rx="1" fill="{logo_color}" stroke="{text_color}" stroke-width="1" />
         </svg>
-        <span style="font-size: 1.4rem; color: {text_color}; letter-spacing: 0.5px;">
+        <span style="font-size: 1.3rem; color: {text_color}; letter-spacing: 0.5px;">
             <span style="font-weight: 300;">Perfume</span><span style="font-weight: 600;">Trending</span>
         </span>
     </div>
@@ -623,14 +614,14 @@ with col_actions:
         st.button(" ", key="theme_toggle", on_click=toggle_theme)
 
 # 5. NAVEGACIÓN
-st.markdown("<div style='margin-top: 14px;'></div>", unsafe_allow_html=True)
+st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
 nav_cols = st.columns([1, 1, 1], vertical_alignment="center")
 
 with nav_cols[0]: st.button("PERFUMES", key="n_perfumes", on_click=navigate_to, args=('home',), use_container_width=True)
 with nav_cols[1]: st.button("REMATES", key="n_remates", on_click=navigate_to, args=('hype',), use_container_width=True)
 with nav_cols[2]: st.button("ESENCIAS", key="n_esencias", on_click=navigate_to, args=('esencias_page',), use_container_width=True)
 
-st.markdown(f"<hr style='margin: 10px 0 24px 0; border: none; border-bottom: 1px solid {btn_border}; opacity: 0.3;'>", unsafe_allow_html=True)
+st.markdown(f"<hr style='margin: 6px 0 18px 0; border: none; border-bottom: 1px solid {btn_border}; opacity: 0.3;'>", unsafe_allow_html=True)
 
 # 6. BÚSQUEDA Y SELECCIÓN DE ESENCIAS
 col_search, col_filter, col_separator, col_photo = st.columns([5.5, 1.8, 0.1, 2.0], vertical_alignment="center")
@@ -666,13 +657,13 @@ with col_filter:
         )
 
 with col_separator:
-    st.markdown(f"<div style='border-left: 1px solid {btn_border}; height: 32px; margin: auto;'></div>", unsafe_allow_html=True)
+    st.markdown(f"<div style='border-left: 1px solid {btn_border}; height: 26px; margin: auto;'></div>", unsafe_allow_html=True)
 
 with col_photo:
     st.button("Búsqueda visual", key="btn_photo_search", help="Buscar por imagen", use_container_width=True)
 
 # 7. CHIPS DE NAVEGACIÓN RÁPIDA
-st.markdown("<div style='margin-top: 14px;'></div>", unsafe_allow_html=True)
+st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
 col_chip1, col_chip2, col_chip3, col_chip_space = st.columns([1.3, 2.0, 1.7, 4.0], vertical_alignment="center")
 
 with col_chip1:
@@ -683,11 +674,11 @@ with col_chip2:
 with col_chip3:
     st.button("Comparar Precios", key="btn_compare", on_click=navigate_to, args=('compare_page',), use_container_width=True)
 
-st.markdown("<div style='margin-top: 24px;'></div>", unsafe_allow_html=True)
+st.markdown("<div style='margin-top: 18px;'></div>", unsafe_allow_html=True)
 
 # 8. VISTAS DE PÁGINA
 if st.session_state['current_page'] == 'home':
-    st.markdown(f"<div style='text-align: center; margin-bottom: 24px; color: {text_color}; letter-spacing: 1.5px; font-weight: 300; font-size: 1.1rem; text-transform: uppercase;'>CATÁLOGO Y TENDENCIAS</div>", unsafe_allow_html=True)
+    st.markdown(f"<div style='text-align: center; margin-bottom: 24px; color: {text_color}; letter-spacing: 1.5px; font-weight: 300; font-size: 1.05rem; text-transform: uppercase;'>CATÁLOGO Y TENDENCIAS</div>", unsafe_allow_html=True)
     
     if selected_essences:
         st.write(f"**Filtro activo:** {', '.join(selected_essences)}")
@@ -757,7 +748,7 @@ if st.session_state['current_page'] == 'home':
                             <div class="overlay-title">{p['name']}</div>
                             <div class="overlay-info"><b>Orígenes:</b> {p['country']}</div>
                             <div class="overlay-info"><b>Perfumista:</b> {p['perfumer']}</div>
-                            <div class="overlay-info" style="margin-top: 6px;"><b>Notas:</b> {p['notes']}</div>
+                            <div class="overlay-info" style="margin-top: 4px;"><b>Notas:</b> {p['notes']}</div>
                         </div>
                     </div>
                     <div class="card-footer-info">
@@ -773,7 +764,7 @@ elif st.session_state['current_page'] == 'esencias_page':
     col_dict_title, col_dict_mute = st.columns([9, 1], vertical_alignment="center")
     
     with col_dict_title:
-        st.markdown(f"<div style='text-align: center; color: {text_color}; letter-spacing: 1px; font-weight: 300; margin-bottom: 24px; font-size: 1.1rem; text-transform: uppercase;'>DICCIONARIO DE ESENCIAS Y NOTAS</div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='text-align: center; color: {text_color}; letter-spacing: 1px; font-weight: 300; margin-bottom: 24px; font-size: 1.05rem; text-transform: uppercase;'>DICCIONARIO DE ESENCIAS Y NOTAS</div>", unsafe_allow_html=True)
     
     with col_dict_mute:
         st.markdown(f"""
@@ -938,6 +929,6 @@ elif st.session_state['current_page'] == 'esencias_page':
         st.markdown("\n".join(html_col2), unsafe_allow_html=True)
 
 elif st.session_state['current_page'] == 'trust_page':
-    st.markdown(f"<div style='text-align: center; color: {text_color}; font-weight: 300; font-size: 1.05rem;'>Páginas de Confianza (Próximamente)</div>", unsafe_allow_html=True)
+    st.markdown(f"<div style='text-align: center; color: {text_color}; font-weight: 300; font-size: 0.95rem;'>Páginas de Confianza (Próximamente)</div>", unsafe_allow_html=True)
 elif st.session_state['current_page'] == 'compare_page':
-    st.markdown(f"<div style='text-align: center; color: {text_color}; font-weight: 300; font-size: 1.05rem;'>Comparador de Precios (Próximamente)</div>", unsafe_allow_html=True)
+    st.markdown(f"<div style='text-align: center; color: {text_color}; font-weight: 300; font-size: 0.95rem;'>Comparador de Precios (Próximamente)</div>", unsafe_allow_html=True)
