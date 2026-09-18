@@ -27,7 +27,7 @@ app_bg = "#0c0e12" if is_dark else "#f9f9fb"
 app_bg_css = f"background-color: {app_bg} !important;"
 
 text_color = "#f0f0f0" if is_dark else "#18181b"
-subtext_color = "#888890" if is_dark else "#666670"
+subtext_color = "#9a9a9a" if is_dark else "#666670"
 
 btn_bg = "#161920" if is_dark else "#ffffff"
 btn_text = "#ffffff" if is_dark else "#18181b"
@@ -56,7 +56,7 @@ bottle_svg = (
 camera_icon_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23{btn_text[1:]}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z'/><circle cx='12' cy='13' r='4'/></svg>"
 user_icon_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23{btn_text[1:]}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2'/><circle cx='12' cy='7' r='4'/></svg>"
 
-# 2. SCRIPT DE COLORES Y SISTEMA DE SONIDO DE BURBUJA
+# 2. SCRIPT DE COLORES OPTIMIZADO PARA ALTO CONTRASTE Y NITIDEZ
 js_color_script = f"""
 <script>
 (function() {{
@@ -97,33 +97,23 @@ js_color_script = f"""
         }} catch(e) {{ console.error(e); }}
     }};
 
-    window.parent.toggleSoundMute = function() {{
-        window.parent.soundMuted = !window.parent.soundMuted;
-        const btn = doc.getElementById('sound-toggle-btn');
-        if (btn) {{
-            btn.innerHTML = window.parent.soundMuted ? '🔇' : '🔊';
-            btn.title = window.parent.soundMuted ? 'Sonido desactivado' : 'Sonido activado';
-            btn.style.opacity = window.parent.soundMuted ? '0.55' : '1';
-        }}
-    }};
-
     const colorRules = [
         {{ keywords: ['sangre', 'cereza', 'frambuesa', 'pimienta rosa', 'rosa', 'ruibarbo', 'lichi', 'ciruela', 'grosella', 'peonía', 'geranio'], 
-          bg: isDark ? '#3d1a1e' : '#f7eaec', border: isDark ? '#5c282e' : '#e2b3b7', text: isDark ? '#f0adb4' : '#5c1b22' }},
+          bg: isDark ? '#3d1a1e' : '#f7eaec', border: isDark ? '#6e3037' : '#e2b3b7', text: isDark ? '#ffd1d6' : '#5c1b22' }},
         {{ keywords: ['marina', 'marinas', 'agua', 'océano', 'mar', 'ozónica', 'ozónicas', 'acuática', 'acuoso'], 
-          bg: isDark ? '#152933' : '#eaf2f7', border: isDark ? '#224052' : '#a8c7da', text: isDark ? '#92ccdb' : '#173a4b' }},
+          bg: isDark ? '#152933' : '#eaf2f7', border: isDark ? '#2b536b' : '#a8c7da', text: isDark ? '#c2eeea' : '#173a4b' }},
         {{ keywords: ['albahaca', 'bergamota', 'cardamomo', 'higo', 'manzana', 'menta', 'pachulí', 'pera', 'romero', 'salvia', 'té verde', 'té blanco', 'vetiver', 'abedul', 'eucalipto', 'gálbano', 'hojas de violeta', 'herbal', 'verde'], 
-          bg: isDark ? '#162b1e' : '#ebf5ee', border: isDark ? '#234530' : '#a4cca2', text: isDark ? '#93d1a3' : '#193d25' }},
+          bg: isDark ? '#162b1e' : '#ebf5ee', border: isDark ? '#2a543b' : '#a4cca2', text: isDark ? '#b8f5c8' : '#193d25' }},
         {{ keywords: ['iris', 'lavanda', 'jazmín', 'nardos', 'neroli', 'violeta', 'fresia', 'heliotropo', 'mimosa', 'lila', 'magnolia', 'azahar', 'frangipani', 'gardenia', 'ylang', 'floral'], 
-          bg: isDark ? '#2b1d33' : '#f2ebf7', border: isDark ? '#432d52' : '#c3b1d4', text: isDark ? '#c7a9db' : '#391c47' }},
+          bg: isDark ? '#2b1d33' : '#f2ebf7', border: isDark ? '#533863' : '#c3b1d4', text: isDark ? '#e7cdfa' : '#391c47' }},
         {{ keywords: ['caramelo', 'miel', 'solares', 'vainilla', 'cacao', 'café', 'canela', 'tonka', 'nuez moscada', 'praliné', 'haba tonka', 'almendra', 'avellana', 'leche', 'malvavisco', 'chocolate', 'ron', 'cognac', 'whisky', 'gourmand'], 
-          bg: isDark ? '#332115' : '#f7ede6', border: isDark ? '#523522' : '#d8bca7', text: isDark ? '#dbb193' : '#452914' }},
+          bg: isDark ? '#332115' : '#f7ede6', border: isDark ? '#613f28' : '#d8bca7', text: isDark ? '#f7d3b7' : '#452914' }},
         {{ keywords: ['ámbar gris', 'cedro', 'sándalo', 'tabaco', 'cuero', 'oud', 'incienso', 'ciprés', 'ébano', 'guayac', 'musgo', 'estoraque', 'ládano', 'benjuí', 'maderosa'], 
-          bg: isDark ? '#23272e' : '#edeef0', border: isDark ? '#373d47' : '#bdc1c9', text: isDark ? '#aeb5c2' : '#292e36' }},
+          bg: isDark ? '#23272e' : '#edeef0', border: isDark ? '#434b59' : '#bdc1c9', text: isDark ? '#e1e7f2' : '#292e36' }},
         {{ keywords: ['azafrán', 'ámbar', 'mandarina', 'melocotón', 'durazno', 'mirra', 'naranjo', 'pomelo', 'cítrico', 'cítricos', 'limón', 'lima', 'clementina', 'yuzu', 'petit grain', 'piña', 'jengibre', 'cítrica'], 
-          bg: isDark ? '#382013' : '#f9ede6', border: isDark ? '#59331e' : '#debca8', text: isDark ? '#dfab8c' : '#4f2711' }},
+          bg: isDark ? '#382013' : '#f9ede6', border: isDark ? '#693e25' : '#debca8', text: isDark ? '#ffd8be' : '#4f2711' }},
         {{ keywords: ['almizcle', 'coco', 'civeta', 'castóreo', 'pimienta blanca', 'pimienta negra', 'iso e super', 'ambroxan', 'aldehídos', 'cachemira', 'sintética'], 
-          bg: isDark ? '#1f2228' : '#f2f4f7', border: isDark ? '#333842' : '#cad0d9', text: isDark ? '#bcc2cc' : '#2b3038' }}
+          bg: isDark ? '#1f2228' : '#f2f4f7', border: isDark ? '#424957' : '#cad0d9', text: isDark ? '#e3e8f2' : '#2b3038' }}
     ];
 
     function applyEssenceColorsAndEvents() {{
@@ -139,7 +129,9 @@ js_color_script = f"""
                     el.style.borderColor = rule.border;
                     el.style.color = rule.text;
                     el.dataset.colored = 'true';
-                    el.querySelectorAll('*').forEach(child => {{ child.style.color = rule.text; }});
+                    el.querySelectorAll('*').forEach(child => {{ 
+                        child.style.color = rule.text; 
+                    }});
                     break;
                 }}
             }}
@@ -152,12 +144,6 @@ js_color_script = f"""
                 card.addEventListener('click', () => window.parent.playBubbleSound());
             }}
         }});
-
-        const btn = doc.getElementById('sound-toggle-btn');
-        if (btn) {{
-            btn.innerHTML = window.parent.soundMuted ? '🔇' : '🔊';
-            btn.style.opacity = window.parent.soundMuted ? '0.55' : '1';
-        }}
     }}
 
     let debounceTimer = null;
@@ -174,11 +160,10 @@ js_color_script = f"""
 
 components.html(js_color_script, height=0, width=0)
 
-# 3. CSS ADAPTABLE, EFECTOS DE ZOOM Y NITIDEZ
+# 3. CSS CORREGIDO (SIN TRANSFORM3D ESTÁTICO PARA EVITAR TEXTO BORROSO)
 st.markdown(f"""
     <style>
     html, body, .stApp {{
-        zoom: 1.0;
         -webkit-font-smoothing: antialiased !important;
         -moz-osx-font-smoothing: grayscale !important;
         text-rendering: optimizeLegibility !important;
@@ -208,15 +193,10 @@ st.markdown(f"""
     .st-key-btn_photo_search button,
     .st-key-login_btn button,
     a[data-testid="stPageLink-NavLink"] {{
-        transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease !important;
+        transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.15s ease, border-color 0.15s ease !important;
         -webkit-font-smoothing: antialiased !important;
-        -moz-osx-font-smoothing: grayscale !important;
-        text-rendering: optimizeLegibility !important;
-        backface-visibility: hidden !important;
-        transform: translateZ(0) !important;
         box-shadow: 0 2px 5px rgba(0,0,0,0.08) !important;
         outline: none !important;
-        will-change: transform, box-shadow;
     }}
 
     div.stButton > button p,
@@ -225,238 +205,16 @@ st.markdown(f"""
         color: {btn_text} !important;
     }}
 
-    /* Efecto Zoom Grande y Elevación Profesional */
+    /* Hover con escalado sin distorsión */
     div.stButton > button:hover,
     div[data-testid="stPopover"] > button:hover,
     button[data-testid="stPopoverButton"]:hover,
     .st-key-btn_photo_search button:hover,
     .st-key-login_btn button:hover,
-    a[data-testid="stPageLink-NavLink"]:hover,
-    div.stButton > button:focus {{
-        transform: scale(1.05) translateY(-2px) translateZ(0) !important;
-        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.25) !important;
+    a[data-testid="stPageLink-NavLink"]:hover {{
+        transform: scale(1.03) translateY(-1px) !important;
+        box-shadow: 0 6px 14px rgba(0, 0, 0, 0.25) !important;
         cursor: pointer !important;
-        outline: none !important;
-    }}
-    
-    div.stButton > button:active,
-    .st-key-btn_photo_search button:active,
-    .st-key-login_btn button:active,
-    a[data-testid="stPageLink-NavLink"]:active {{
-        transform: scale(0.97) translateY(0) translateZ(0) !important;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15) !important;
-    }}
-
-    .st-key-login_btn, .st-key-theme_toggle {{
-        display: flex !important;
-        align-items: center !important;
-        height: 100% !important;
-    }}
-
-    .st-key-login_btn button {{
-        background-color: {btn_bg} !important;
-        color: {btn_text} !important;
-        border: 1px solid {btn_border} !important;
-        border-radius: 6px !important;
-        height: 40px !important;
-        min-height: 40px !important;
-        padding: 0 1rem 0 2.4rem !important;
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        background-image: url("{user_icon_svg}") !important;
-        background-repeat: no-repeat !important;
-        background-position: 12px center !important;
-        background-size: 16px 16px !important;
-        font-size: 0.88rem !important;
-        margin: 0 !important;
-    }}
-    .st-key-login_btn button p {{
-        font-size: 0.88rem !important;
-        line-height: 1 !important;
-        margin: 0 !important;
-        color: {btn_text} !important;
-        font-weight: 600 !important;
-    }}
-
-    /* Botones de navegación superior (Pestañas) */
-    .st-key-n_perfumes button, 
-    .st-key-n_remates button,
-    .st-key-n_esencias button {{
-        background-color: transparent !important;
-        border: none !important;
-        border-bottom: 1px solid transparent !important;
-        border-radius: 0px !important;
-        padding: 0.4rem 0rem !important;
-        box-shadow: none !important;
-        min-height: 0px !important;
-        height: auto !important;
-    }}
-
-    .st-key-n_perfumes button:hover, 
-    .st-key-n_remates button:hover,
-    .st-key-n_esencias button:hover {{
-        transform: scale(1.06) translateY(-1px) translateZ(0) !important;
-        box-shadow: none !important;
-    }}
-
-    .st-key-n_perfumes button p, 
-    .st-key-n_remates button p,
-    .st-key-n_esencias button p {{
-        color: {text_color} !important;
-        font-weight: 700 !important;
-        white-space: nowrap !important;
-        font-size: 0.82rem !important;
-        letter-spacing: 0.8px !important;
-    }}
-
-    /* Chips */
-    .st-key-btn_trend button, 
-    .st-key-btn_trust button, 
-    .st-key-btn_compare button {{
-        background-color: {btn_bg} !important;
-        border: 1px solid {btn_border} !important;
-        border-radius: 16px !important;
-        padding: 0.35rem 0.85rem !important;
-        width: 100% !important;
-        min-height: 0px !important;
-        height: auto !important;
-    }}
-    
-    .st-key-btn_trend button p, 
-    .st-key-btn_trust button p, 
-    .st-key-btn_compare button p {{
-        font-size: 0.78rem !important;
-        font-weight: 600 !important;
-        color: {btn_text} !important;
-        letter-spacing: 0.2px;
-        white-space: nowrap !important;
-    }}
-
-    .st-key-btn_trend button:hover, 
-    .st-key-btn_trust button:hover, 
-    .st-key-btn_compare button:hover {{
-        border-color: {"#4a5061" if is_dark else "#b5b5c0"} !important;
-        background-color: {"#1a1d26" if is_dark else "#f0f0f5"} !important;
-    }}
-
-    a[data-testid="stPageLink-NavLink"] {{
-        background-color: {btn_bg} !important;
-        border: 1px solid {btn_border} !important;
-        border-radius: 16px !important;
-        padding: 0.35rem 0.85rem !important;
-        text-decoration: none !important;
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-    }}
-    a[data-testid="stPageLink-NavLink"] span,
-    a[data-testid="stPageLink-NavLink"] p {{
-        color: {btn_text} !important;
-        font-size: 0.78rem !important;
-        font-weight: 600 !important;
-    }}
-
-    div[data-baseweb="input"],
-    div[data-baseweb="base-input"],
-    div[data-baseweb="select"] > div,
-    div[data-testid="stPopover"] > button,
-    button[data-testid="stBaseButton-secondary"] {{
-        background-color: {input_bg} !important;
-        border: 1px solid {input_border} !important;
-        border-radius: 6px !important;
-        box-shadow: none !important;
-        padding-top: 3px !important;
-        padding-bottom: 3px !important;
-        min-height: 40px !important;
-        color: {input_text} !important;
-    }}
-
-    div[data-baseweb="input"] input,
-    div[data-baseweb="base-input"] input {{
-        font-size: 0.88rem !important;
-        padding: 6px 10px !important;
-        color: {input_text} !important;
-        background-color: {input_bg} !important;
-    }}
-
-    div[data-baseweb="input"] input::placeholder {{
-        color: {subtext_color} !important;
-        font-size: 0.85rem !important;
-    }}
-
-    .st-key-theme_toggle,
-    .st-key-theme_toggle button,
-    .st-key-theme_toggle button[data-testid="stBaseButton-secondary"],
-    div.st-key-theme_toggle > button {{
-        background: transparent !important;
-        border: none !important;
-        box-shadow: none !important;
-        padding: 0 !important;
-        width: 80px !important; 
-        height: 42px !important; 
-        min-height: 42px !important;
-        position: relative !important;
-        cursor: pointer !important;
-        margin: 0 auto !important;
-        display: block !important;
-        transform: none !important;
-    }}
-
-    .st-key-theme_toggle button:hover,
-    .st-key-theme_toggle button:focus,
-    .st-key-theme_toggle button:active {{
-        transform: none !important;
-        box-shadow: none !important;
-        background: transparent !important;
-    }}
-
-    .st-key-theme_toggle button * {{ display: none !important; }}
-    
-    .st-key-theme_toggle button::before {{
-        content: '' !important;
-        position: absolute !important;
-        top: 4px !important; left: 0 !important;
-        width: 76px !important; height: 34px !important;
-        background-color: {"#1c1f26" if is_dark else "#eae8e6"} !important;
-        border: 1px solid {btn_border} !important;
-        border-radius: 17px !important;
-        background-image: url("{static_icon_svg}") !important;
-        background-repeat: no-repeat !important;
-        background-position: {static_icon_pos} !important;
-        background-size: 16px 16px !important; 
-    }}
-    
-    .st-key-theme_toggle button::after {{
-        content: '' !important;
-        position: absolute !important;
-        top: 0px !important;
-        left: {bottle_left_pos} !important;
-        width: 38px !important; height: 42px !important;
-        background-image: url("{bottle_svg}") !important;
-        background-repeat: no-repeat !important;
-        background-size: contain !important;
-        transition: left 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
-        z-index: 2 !important;
-    }}
-
-    .st-key-btn_photo_search button {{
-        background-color: {input_bg} !important;
-        border: 1px solid {input_border} !important;
-        border-radius: 6px !important;
-        padding: 0.3rem 0.6rem 0.3rem 2.1rem !important;
-        background-image: url("{camera_icon_svg}") !important;
-        background-repeat: no-repeat !important;
-        background-position: 10px center !important;
-        background-size: 15px 15px !important;
-        font-size: 0.85rem !important;
-        min-height: 40px !important;
-    }}
-    
-    .stApp .st-key-btn_photo_search button p {{
-        font-size: 0.85rem !important;
-        color: {btn_text} !important;
-        font-weight: 600 !important;
     }}
 
     /* Tarjetas de Catálogo */
@@ -467,15 +225,11 @@ st.markdown(f"""
         overflow: hidden;
         position: relative;
         margin-bottom: 16px;
-        transition: border-color 0.2s ease, transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.25s ease;
-        will-change: transform;
-        backface-visibility: hidden;
-        transform: translateZ(0);
+        transition: border-color 0.2s ease, transform 0.2s ease;
     }}
     .catalog-card:hover {{
         border-color: #7a6a5d;
-        transform: scale(1.04) translateY(-2px);
-        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        transform: scale(1.03);
     }}
     .square-img-box {{
         position: relative;
@@ -516,12 +270,12 @@ st.markdown(f"""
         border-bottom: 1px solid rgba(255,255,255,0.1);
         padding-bottom: 4px;
     }}
-    .overlay-info {{ font-size: 0.76rem; font-weight: 300; line-height: 1.4; color: #b8b8b8; margin-bottom: 4px; }}
+    .overlay-info {{ font-size: 0.76rem; font-weight: 400; line-height: 1.4; color: #b8b8b8; margin-bottom: 4px; }}
     .card-footer-info {{ padding: 10px 12px; text-align: center; background-color: {btn_bg}; }}
     .card-perfume-name {{ font-size: 0.85rem; font-weight: 500; color: {text_color}; margin-bottom: 3px; }}
-    .card-perfume-brand {{ font-size: 0.7rem; font-weight: 300; color: {subtext_color}; text-transform: uppercase; letter-spacing: 0.5px; }}
+    .card-perfume-brand {{ font-size: 0.7rem; font-weight: 400; color: {subtext_color}; text-transform: uppercase; letter-spacing: 0.5px; }}
 
-    /* Tarjetas de Esencias */
+    /* Tarjetas de Esencias (Corregidas para Nitidez) */
     .essence-card {{ 
         border-radius: 8px; 
         padding: 14px 16px; 
@@ -532,23 +286,32 @@ st.markdown(f"""
         background-color: {btn_bg};
         cursor: pointer;
         user-select: none;
-        transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.25s ease, border-color 0.25s ease;
-        will-change: transform;
-        backface-visibility: hidden;
-        transform: translateZ(0);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
         height: 100%;
         box-sizing: border-box;
     }}
     .essence-card:hover {{
-        transform: scale(1.03) translateY(-3px) translateZ(0);
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+        transform: scale(1.02) translateY(-2px);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
     }}
-    .essence-card:active {{
-        transform: scale(0.97) translateY(0) translateZ(0);
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    .essence-title {{ 
+        font-size: 0.95rem; 
+        font-weight: 700; 
+        margin-bottom: 6px; 
+        letter-spacing: 0.3px; 
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; 
     }}
-    .essence-title {{ font-size: 0.92rem; font-weight: 600; margin-bottom: 6px; letter-spacing: 0.3px; display: flex; justify-content: space-between; align-items: center; }}
-    .essence-desc {{ font-size: 0.8rem; font-weight: 400; line-height: 1.45; opacity: 0.9; }}
+    .essence-title span:last-child {{
+        font-size: 0.78rem; 
+        font-weight: 500; 
+    }}
+    .essence-desc {{ 
+        font-size: 0.84rem; 
+        font-weight: 500; 
+        line-height: 1.45; 
+    }}
     </style>
 """, unsafe_allow_html=True)
 
@@ -558,7 +321,7 @@ col_logo, col_espacio, col_actions = st.columns([5, 1.8, 2.4], vertical_alignmen
 with col_logo:
     logo_color = "#8c7b6d"
     logo_html = f"""
-    <div style="display: inline-flex; align-items: center; gap: 12px; cursor: pointer; width: fit-content; transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1); backface-visibility: hidden; transform: translateZ(0);" onmouseover="this.style.transform='scale(1.05) translateY(-1px) translateZ(0)'" onmouseout="this.style.transform='scale(1) translateY(0) translateZ(0)'" onclick="window.location.reload();">
+    <div style="display: inline-flex; align-items: center; gap: 12px; cursor: pointer; width: fit-content; transition: transform 0.2s ease;" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'" onclick="window.location.reload();">
         <svg width="34" height="34" viewBox="0 0 36 36" fill="none" stroke-linecap="round" stroke-linejoin="round">
             <path d="M 6.8 21 L 29.2 21 C 30 25 27 32 18 32 C 9 32 6 25 6.8 21 Z" fill="{logo_color}" />
             <line x1="6.8" y1="21" x2="29.2" y2="21" stroke="{text_color}" stroke-width="1.5" />
@@ -827,7 +590,6 @@ if st.session_state['current_page'] == 'home':
 elif st.session_state['current_page'] == 'esencias_page':
     st.markdown(f"<div style='text-align: center; color: {text_color}; letter-spacing: 1.5px; font-weight: 300; margin-bottom: 20px; font-size: 1.05rem; text-transform: uppercase;'>DICCIONARIO DE ESENCIAS Y NOTAS OLFATIVAS</div>", unsafe_allow_html=True)
     
-    # Filtrado dinámico de esencias
     filtered_essences = essences_catalog
     
     if search_query:
@@ -856,7 +618,7 @@ elif st.session_state['current_page'] == 'esencias_page':
                     <div class="essence-card">
                         <div class="essence-title">
                             <span>{e['name']}</span>
-                            <span style="font-size: 0.72rem; font-weight: 400; opacity: 0.75;">{e['family']}</span>
+                            <span>{e['family']}</span>
                         </div>
                         <div class="essence-desc">{e['desc']}</div>
                     </div>
