@@ -22,7 +22,7 @@ def navigate_to(page, perfume_data=None):
 
 is_dark = st.session_state['theme'] == 'dark'
 
-# Colores dinámicos adaptables por tema
+# Colores dinámicos por tema
 app_bg = "#0c0e12" if is_dark else "#f9f9fb"
 app_bg_css = f"background-color: {app_bg} !important;"
 
@@ -37,10 +37,7 @@ input_bg = "#14171d" if is_dark else "#ffffff"
 input_text = "#f0f0f0" if is_dark else "#18181b"
 input_border = "#2a2e39" if is_dark else "#d1d5db"
 
-# Posicionamiento del Switch de Tema
-bottle_left_pos = "38px" if is_dark else "-2px"
-static_icon_pos = "12px center" if is_dark else "calc(100% - 12px) center"
-
+# Íconos SVG para el Switch
 static_icon_svg = (
     "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='4'/><line x1='12' y1='1' x2='12' y2='3'/><line x1='12' y1='21' x2='12' y2='23'/><line x1='4.22' y1='4.22' x2='5.64' y2='5.64'/><line x1='18.36' y1='18.36' x2='19.78' y2='19.78'/><line x1='1' y1='12' x2='3' y2='12'/><line x1='21' y1='12' x2='23' y2='12'/><line x1='4.22' y1='19.78' x2='5.64' y2='18.36'/><line x1='18.36' y1='5.64' x2='19.78' y2='4.22'/></svg>"
     if is_dark else
@@ -50,23 +47,20 @@ static_icon_svg = (
 bottle_svg = (
     "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 58'><rect x='18' y='2' width='14' height='7' rx='2' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><rect x='21' y='9' width='8' height='5' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='19' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><path d='M21 28a8 8 0 0 0 9 10.5 8.5 8.5 0 0 1-9-10.5z' fill='none' stroke='%23111111' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/></svg>"
     if is_dark else
-    "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 58'><rect x='18' y='2' width='14' height='7' rx='2' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><rect x='21' y='9' width='8' height='5' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='19' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='5' fill='none' stroke='%23111111' stroke-width='2'/><line x1='25' y1='23' x2='25' y2='26' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='25' y1='42' x2='25' y2='45' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='14' y1='34' x2='17' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='33' y1='34' x2='36' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='17' y1='26' x2='19' y2='28' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='31' y1='40' x2='33' y2='42' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='17' y1='42' x2='19' y2='40' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='31' y1='28' x2='33' y2='26' stroke='%23111111' stroke-width='2' stroke-linecap='round'/></svg>"
+    "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 58'><rect x='18' y='2' width='14' height='7' rx='2' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><rect x='21' y='9' width='8' height='5' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='19' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='5' fill='none' stroke='%23111111' stroke-width='2'/><line x1='25' y1='23' x2='25' y2='26' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='25' y1='42' x2='25' y2='45' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='14' y1='34' x2='17' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='33' y1='34' x2='36' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/></svg>"
 )
 
 camera_icon_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23{btn_text[1:]}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z'/><circle cx='12' cy='13' r='4'/></svg>"
 user_icon_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23{btn_text[1:]}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2'/><circle cx='12' cy='7' r='4'/></svg>"
 
-# 2. SCRIPT DE COLORES OPTIMIZADO PARA ALTO CONTRASTE Y NITIDEZ
+# 2. SCRIPT DE COLORES Y SONIDOS
 js_color_script = f"""
 <script>
 (function() {{
     const doc = window.parent.document;
     const isDark = {str(is_dark).lower()};
     
-    window.parent.soundMuted = window.parent.soundMuted || false;
-    
     window.parent.playBubbleSound = function() {{
-        if (window.parent.soundMuted) return;
         try {{
             const AudioContext = window.AudioContext || window.webkitAudioContext;
             if (!AudioContext) return;
@@ -74,15 +68,12 @@ js_color_script = f"""
                 window.parent.audioCtx = new AudioContext();
             }}
             const ctx = window.parent.audioCtx;
-            if (ctx.state === 'suspended') {{
-                ctx.resume();
-            }}
+            if (ctx.state === 'suspended') {{ ctx.resume(); }}
             const osc = ctx.createOscillator();
             const gain = ctx.createGain();
 
             osc.type = 'sine';
             const now = ctx.currentTime;
-
             osc.frequency.setValueAtTime(220, now);
             osc.frequency.exponentialRampToValueAtTime(750, now + 0.07);
 
@@ -91,7 +82,6 @@ js_color_script = f"""
 
             osc.connect(gain);
             gain.connect(ctx.destination);
-
             osc.start(now);
             osc.stop(now + 0.07);
         }} catch(e) {{ console.error(e); }}
@@ -129,9 +119,7 @@ js_color_script = f"""
                     el.style.borderColor = rule.border;
                     el.style.color = rule.text;
                     el.dataset.colored = 'true';
-                    el.querySelectorAll('*').forEach(child => {{ 
-                        child.style.color = rule.text; 
-                    }});
+                    el.querySelectorAll('*').forEach(child => {{ child.style.color = rule.text; }});
                     break;
                 }}
             }}
@@ -160,7 +148,7 @@ js_color_script = f"""
 
 components.html(js_color_script, height=0, width=0)
 
-# 3. CSS CORREGIDO (SIN TRANSFORM3D ESTÁTICO PARA EVITAR TEXTO BORROSO)
+# 3. CSS COMPLETO Y CORREGIDO
 st.markdown(f"""
     <style>
     html, body, .stApp {{
@@ -185,7 +173,7 @@ st.markdown(f"""
         -webkit-font-smoothing: antialiased !important;
     }}
 
-    /* Estilizado global de botones */
+    /* Estilos generales de botones */
     div.stButton > button,
     div.stDownloadButton > button,
     div[data-testid="stPopover"] > button,
@@ -205,7 +193,6 @@ st.markdown(f"""
         color: {btn_text} !important;
     }}
 
-    /* Hover con escalado sin distorsión */
     div.stButton > button:hover,
     div[data-testid="stPopover"] > button:hover,
     button[data-testid="stPopoverButton"]:hover,
@@ -215,6 +202,131 @@ st.markdown(f"""
         transform: scale(1.03) translateY(-1px) !important;
         box-shadow: 0 6px 14px rgba(0, 0, 0, 0.25) !important;
         cursor: pointer !important;
+    }}
+
+    .st-key-login_btn button {{
+        background-color: {btn_bg} !important;
+        color: {btn_text} !important;
+        border: 1px solid {btn_border} !important;
+        border-radius: 6px !important;
+        height: 40px !important;
+        min-height: 40px !important;
+        padding: 0 1rem 0 2.4rem !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        background-image: url("{user_icon_svg}") !important;
+        background-repeat: no-repeat !important;
+        background-position: 12px center !important;
+        background-size: 16px 16px !important;
+        font-size: 0.88rem !important;
+    }}
+
+    /* --- SWITCH DE TEMA REINCORPORADO Y VISIBLE --- */
+    .st-key-theme_toggle {{
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+    }}
+
+    .st-key-theme_toggle > button {{
+        background-color: {"#1c1f26" if is_dark else "#eae8e6"} !important;
+        border: 1px solid {btn_border} !important;
+        border-radius: 20px !important;
+        width: 78px !important;
+        height: 38px !important;
+        min-height: 38px !important;
+        position: relative !important;
+        cursor: pointer !important;
+        padding: 0 !important;
+        overflow: visible !important;
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.2) !important;
+        transform: none !important;
+    }}
+
+    .st-key-theme_toggle > button:hover {{
+        transform: scale(1.04) !important;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.3) !important;
+    }}
+
+    .st-key-theme_toggle > button p,
+    .st-key-theme_toggle > button div {{
+        display: none !important;
+    }}
+
+    /* Ícono Sol/Luna estático */
+    .st-key-theme_toggle > button::before {{
+        content: '' !important;
+        position: absolute !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        width: 18px !important;
+        height: 18px !important;
+        background-image: url("{static_icon_svg}") !important;
+        background-repeat: no-repeat !important;
+        background-size: contain !important;
+        left: {"12px" if is_dark else "calc(100% - 30px)"} !important;
+        opacity: 0.85 !important;
+        z-index: 1 !important;
+    }}
+
+    /* Botella de perfume deslizante */
+    .st-key-theme_toggle > button::after {{
+        content: '' !important;
+        position: absolute !important;
+        top: 2px !important;
+        left: {"40px" if is_dark else "2px"} !important;
+        width: 32px !important;
+        height: 32px !important;
+        background-image: url("{bottle_svg}") !important;
+        background-repeat: no-repeat !important;
+        background-size: contain !important;
+        background-position: center !important;
+        transition: left 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        z-index: 2 !important;
+    }}
+
+    /* Pestañas de Navegación Superior */
+    .st-key-n_perfumes button, .st-key-n_remates button, .st-key-n_esencias button {{
+        background-color: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0.4rem 0rem !important;
+    }}
+    .st-key-n_perfumes button p, .st-key-n_remates button p, .st-key-n_esencias button p {{
+        color: {text_color} !important;
+        font-weight: 700 !important;
+        font-size: 0.82rem !important;
+        letter-spacing: 0.8px !important;
+    }}
+
+    /* Chips */
+    .st-key-btn_trend button, .st-key-btn_trust button, .st-key-btn_compare button {{
+        background-color: {btn_bg} !important;
+        border: 1px solid {btn_border} !important;
+        border-radius: 16px !important;
+        padding: 0.35rem 0.85rem !important;
+    }}
+
+    div[data-baseweb="input"], div[data-baseweb="base-input"], div[data-baseweb="select"] > div, div[data-testid="stPopover"] > button {{
+        background-color: {input_bg} !important;
+        border: 1px solid {input_border} !important;
+        border-radius: 6px !important;
+        min-height: 40px !important;
+        color: {input_text} !important;
+    }}
+
+    .st-key-btn_photo_search button {{
+        background-color: {input_bg} !important;
+        border: 1px solid {input_border} !important;
+        border-radius: 6px !important;
+        padding: 0.3rem 0.6rem 0.3rem 2.1rem !important;
+        background-image: url("{camera_icon_svg}") !important;
+        background-repeat: no-repeat !important;
+        background-position: 10px center !important;
+        background-size: 15px 15px !important;
+        font-size: 0.85rem !important;
+        min-height: 40px !important;
     }}
 
     /* Tarjetas de Catálogo */
@@ -262,20 +374,13 @@ st.markdown(f"""
         text-align: left;
     }}
     .catalog-card:hover .card-hover-overlay {{ opacity: 1; }}
-    .overlay-title {{
-        font-size: 0.88rem;
-        font-weight: 600;
-        color: #d4c2a5;
-        margin-bottom: 6px;
-        border-bottom: 1px solid rgba(255,255,255,0.1);
-        padding-bottom: 4px;
-    }}
+    .overlay-title {{ font-size: 0.88rem; font-weight: 600; color: #d4c2a5; margin-bottom: 6px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 4px; }}
     .overlay-info {{ font-size: 0.76rem; font-weight: 400; line-height: 1.4; color: #b8b8b8; margin-bottom: 4px; }}
     .card-footer-info {{ padding: 10px 12px; text-align: center; background-color: {btn_bg}; }}
     .card-perfume-name {{ font-size: 0.85rem; font-weight: 500; color: {text_color}; margin-bottom: 3px; }}
     .card-perfume-brand {{ font-size: 0.7rem; font-weight: 400; color: {subtext_color}; text-transform: uppercase; letter-spacing: 0.5px; }}
 
-    /* Tarjetas de Esencias (Corregidas para Nitidez) */
+    /* Tarjetas de Esencias (Alta Nitidez) */
     .essence-card {{ 
         border-radius: 8px; 
         padding: 14px 16px; 
@@ -315,7 +420,7 @@ st.markdown(f"""
     </style>
 """, unsafe_allow_html=True)
 
-# 4. CABECERA CON LOGO AMPLIADO
+# 4. CABECERA CON LOGO Y SWITCH RESTAURADO
 col_logo, col_espacio, col_actions = st.columns([5, 1.8, 2.4], vertical_alignment="center")
 
 with col_logo:
@@ -355,7 +460,7 @@ with nav_cols[2]: st.button("ESENCIAS", key="n_esencias", on_click=navigate_to, 
 
 st.markdown(f"<hr style='margin: 6px 0 18px 0; border: none; border-bottom: 1px solid {btn_border}; opacity: 0.3;'>", unsafe_allow_html=True)
 
-# 6. DATOS DE ESENCIAS COMPLETOS Y CATEGORIZADOS
+# 6. DATOS DE ESENCIAS COMPLETOS
 essences_catalog = [
     {"name": "Bergamota", "family": "Cítrica", "desc": "Cítrico fresco, chispeante y amargo con matices florales y teáceos."},
     {"name": "Clementina", "family": "Cítrica", "desc": "Jugosa, dulce y refrescante, aporta un toque cítrico efervescente."},
@@ -503,7 +608,7 @@ with col_chip3:
 
 st.markdown("<div style='margin-top: 18px;'></div>", unsafe_allow_html=True)
 
-# 9. VISTAS DE PÁGINA Y CATÁLOGO DE ESENCIAS
+# 9. VISTAS DE PÁGINA Y CATÁLOGO
 if st.session_state['current_page'] == 'home':
     st.markdown(f"<div style='text-align: center; margin-bottom: 24px; color: {text_color}; letter-spacing: 1.5px; font-weight: 300; font-size: 1.05rem; text-transform: uppercase;'>CATÁLOGO Y TENDENCIAS</div>", unsafe_allow_html=True)
     
