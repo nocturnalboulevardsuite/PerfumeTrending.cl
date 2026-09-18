@@ -37,7 +37,7 @@ input_bg = "#14171d" if is_dark else "#ffffff"
 input_text = "#f0f0f0" if is_dark else "#18181b"
 input_border = "#2a2e39" if is_dark else "#d1d5db"
 
-# SWITCH DE TEMA
+# Posicionamiento del Switch de Tema (Sincronizado con switch.txt)
 bottle_left_pos = "42px" if is_dark else "-2px"
 static_icon_pos = "12px center" if is_dark else "calc(100% - 12px) center"
 
@@ -52,6 +52,9 @@ bottle_svg = (
     if is_dark else
     "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 58'><rect x='18' y='2' width='14' height='7' rx='2' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><rect x='21' y='9' width='8' height='5' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='19' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='5' fill='none' stroke='%23111111' stroke-width='2'/><line x1='25' y1='23' x2='25' y2='26' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='25' y1='42' x2='25' y2='45' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='14' y1='34' x2='17' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='33' y1='34' x2='36' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='17' y1='26' x2='19' y2='28' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='31' y1='40' x2='33' y2='42' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='17' y1='42' x2='19' y2='40' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='31' y1='28' x2='33' y2='26' stroke='%23111111' stroke-width='2' stroke-linecap='round'/></svg>"
 )
+
+camera_icon_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23{btn_text[1:]}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z'/><circle cx='12' cy='13' r='4'/></svg>"
+user_icon_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23{btn_text[1:]}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2'/><circle cx='12' cy='7' r='4'/></svg>"
 
 # 2. SCRIPT DE COLORES Y SISTEMA DE SONIDO DE BURBUJA
 js_color_script = f"""
@@ -175,10 +178,9 @@ js_color_script = f"""
 
 components.html(js_color_script, height=0, width=0)
 
-# 3. CSS ADAPTABLE Y CORREGIDO (NÍTIDO Y ZOOM EN BOTONES)
+# 3. CSS ADAPTABLE Y SWITCH PERFECCIONADO
 st.markdown(f"""
     <style>
-    /* Corrección global para evitar fuentes borrosas y forzar nitidez */
     html, body, .stApp {{
         -webkit-font-smoothing: antialiased !important;
         -moz-osx-font-smoothing: grayscale !important;
@@ -188,9 +190,9 @@ st.markdown(f"""
     header[data-testid="stHeader"] {{ display: none !important; }}
     
     .block-container {{ 
-        padding-top: 1.5rem !important; 
+        padding-top: 1.2rem !important; 
         padding-bottom: 2rem !important; 
-        max-width: 1400px !important;
+        max-width: 1200px !important;
     }}
     
     .stApp {{ {app_bg_css} color: {text_color} !important; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }}
@@ -203,7 +205,7 @@ st.markdown(f"""
         text-shadow: none !important;
     }}
 
-    /* Transición suave y optimizada para todos los botones con soporte de ZOOM */
+    /* EFECTO DE BOTONES GENERALES */
     div.stButton > button,
     div.stDownloadButton > button,
     div[data-testid="stPopover"] > button,
@@ -230,7 +232,6 @@ st.markdown(f"""
         color: {btn_text} !important;
     }}
 
-    /* EFECTO ZOOM HOVER EN BOTONES GENERALES */
     div.stButton > button:hover,
     div[data-testid="stPopover"] > button:hover,
     button[data-testid="stPopoverButton"]:hover,
@@ -246,14 +247,6 @@ st.markdown(f"""
 
     div.stButton > button:active {{
         transform: scale(0.98) !important;
-    }}
-
-    div.stButton > button:hover p,
-    div.stButton > button:focus p,
-    div.stButton > button:active p {{
-        text-shadow: none !important;
-        filter: none !important;
-        -webkit-font-smoothing: antialiased !important;
     }}
 
     .st-key-login_btn, .st-key-theme_toggle {{
@@ -288,7 +281,75 @@ st.markdown(f"""
         font-weight: 600 !important;
     }}
 
-    /* Botones de navegación superior con Zoom Hover */
+    /* SWITCH EXACTO DE TRENDYPE */
+    .st-key-theme_toggle,
+    .st-key-theme_toggle div[data-testid="stButton"] {{
+        background: transparent !important;
+        background-color: transparent !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-end !important;
+    }}
+
+    .st-key-theme_toggle div[data-testid="stButton"] > button,
+    .st-key-theme_toggle button,
+    .st-key-theme_toggle button:hover,
+    .st-key-theme_toggle button:focus,
+    .st-key-theme_toggle button:active,
+    .st-key-theme_toggle button:focus-visible,
+    div[data-testid="stElementContainer"].st-key-theme_toggle button {{
+        background: transparent !important;
+        background-color: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        outline: none !important;
+        padding: 0 !important;
+        width: 82px !important;
+        height: 48px !important;
+        min-height: 48px !important;
+        position: relative !important;
+        cursor: pointer !important;
+        overflow: visible !important;
+        margin-left: auto !important;
+        margin-right: 0 !important;
+        display: block !important;
+        transform: none !important;
+    }}
+
+    .st-key-theme_toggle button * {{ display: none !important; }}
+    
+    .st-key-theme_toggle button::before {{
+        content: '' !important;
+        position: absolute !important;
+        top: 7px !important; left: 0 !important;
+        width: 80px !important; height: 36px !important;
+        background-color: #2b2c34 !important;
+        border: 2px solid #1a1b20 !important;
+        border-radius: 20px !important;
+        box-shadow: inset 0 2px 5px rgba(0,0,0,0.4) !important;
+        box-sizing: border-box !important;
+        background-image: url("{static_icon_svg}") !important;
+        background-repeat: no-repeat !important;
+        background-position: {static_icon_pos} !important;
+        background-size: 18px 18px !important;
+        transition: all 0.3s ease !important;
+    }}
+    
+    .st-key-theme_toggle button::after {{
+        content: '' !important;
+        position: absolute !important;
+        top: -1px !important;
+        left: {bottle_left_pos} !important;
+        width: 40px !important; height: 46px !important;
+        background-image: url("{bottle_svg}") !important;
+        background-repeat: no-repeat !important;
+        background-size: contain !important;
+        transition: left 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+        filter: drop-shadow(2px 3px 4px rgba(0,0,0,0.3)) !important;
+        z-index: 2 !important;
+    }}
+
+    /* NAVEGACIÓN SUPERIOR */
     .st-key-n_perfumes button, 
     .st-key-n_remates button,
     .st-key-n_esencias button {{
@@ -323,14 +384,7 @@ st.markdown(f"""
         transform: scale(1.08) !important;
     }}
 
-    .st-key-n_perfumes button:hover p, 
-    .st-key-n_remates button:hover p,
-    .st-key-n_esencias button:hover p {{
-        color: {text_color} !important;
-        text-shadow: none !important;
-    }}
-
-    /* Botones tipo Chip con Zoom Hover */
+    /* CHIPS DE ACCESO RÁPIDO */
     .st-key-btn_trend button, 
     .st-key-btn_trust button, 
     .st-key-btn_compare button {{
@@ -355,42 +409,14 @@ st.markdown(f"""
         white-space: nowrap !important;
         text-overflow: clip !important;
         overflow: visible !important;
-        text-shadow: none !important;
-        filter: none !important;
-        -webkit-font-smoothing: antialiased !important;
     }}
 
-    .st-key-btn_trend button:hover, 
-    .st-key-btn_trust button:hover, 
-    .st-key-btn_compare button:hover {{
-        transform: scale(1.05) !important;
-        border-color: {"#4a5061" if is_dark else "#b5b5c0"} !important;
-        background-color: {"#1a1d26" if is_dark else "#f0f0f5"} !important;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
-        filter: none !important;
-    }}
-
-    .st-key-btn_trend button:hover p, 
-    .st-key-btn_trust button:hover p, 
-    .st-key-btn_compare button:hover p {{
-        color: {btn_text} !important;
-        text-shadow: none !important;
-        filter: none !important;
-    }}
-
-    /* Estilizado para st.page_link con Zoom Hover */
     a[data-testid="stPageLink-NavLink"] {{
         background-color: {btn_bg} !important;
         border: 1px solid {btn_border} !important;
         border-radius: 20px !important;
         padding: 0.4rem 1rem !important;
         transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.15s ease !important;
-        will-change: transform;
-        backface-visibility: hidden !important;
-    }}
-    a[data-testid="stPageLink-NavLink"]:hover {{
-        transform: scale(1.05) !important;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
     }}
     a[data-testid="stPageLink-NavLink"] span,
     a[data-testid="stPageLink-NavLink"] p {{
@@ -399,12 +425,10 @@ st.markdown(f"""
         font-weight: 600 !important;
     }}
 
-    /* Campos de Entrada e Inputs */
+    /* INPUTS */
     div[data-baseweb="input"],
     div[data-baseweb="base-input"],
     div[data-baseweb="select"] > div,
-    div[data-testid="stPopover"] > button,
-    button[data-testid="stPopoverButton"],
     button[data-testid="stBaseButton-secondary"] {{
         background-color: {input_bg} !important;
         border: 1px solid {input_border} !important;
@@ -422,84 +446,9 @@ st.markdown(f"""
         padding: 8px 14px !important;
         color: {input_text} !important;
         background-color: {input_bg} !important;
-        -webkit-font-smoothing: antialiased !important;
     }}
 
-    div[data-baseweb="input"] input::placeholder {{
-        color: {subtext_color} !important;
-        font-size: 0.95rem !important;
-    }}
-
-    /* Botón de cambio de Tema con Zoom Hover */
-    .st-key-theme_toggle {{
-        transform: scale(1.15);
-        transform-origin: center right;
-        transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
-    }}
-    .st-key-theme_toggle:hover {{
-        transform: scale(1.25) !important;
-    }}
-    .st-key-theme_toggle,
-    .st-key-theme_toggle button,
-    .st-key-theme_toggle button[data-testid="stBaseButton-secondary"],
-    div.st-key-theme_toggle > button {{
-        background: transparent !important;
-        background-color: transparent !important;
-        border: none !important;
-        box-shadow: none !important;
-        outline: none !important;
-        padding: 0 !important;
-        width: 68px !important;
-        height: 36px !important;
-        min-height: 36px !important;
-        position: relative !important;
-        cursor: pointer !important;
-        margin: 0 auto !important;
-        display: block !important;
-    }}
-
-    .st-key-theme_toggle button:hover,
-    .st-key-theme_toggle button:focus,
-    .st-key-theme_toggle button:active,
-    .st-key-theme_toggle button[data-testid="stBaseButton-secondary"]:hover,
-    .st-key-theme_toggle button[data-testid="stBaseButton-secondary"]:focus {{
-        background: transparent !important;
-        background-color: transparent !important;
-        border: none !important;
-        box-shadow: none !important;
-        outline: none !important;
-    }}
-
-    .st-key-theme_toggle button * {{ display: none !important; }}
-    
-    .st-key-theme_toggle button::before {{
-        content: '' !important;
-        position: absolute !important;
-        top: 4px !important; left: 0 !important;
-        width: 64px !important; height: 28px !important;
-        background-color: {"#1c1f26" if is_dark else "#eae8e6"} !important;
-        border: 1px solid {btn_border} !important;
-        border-radius: 14px !important;
-        background-image: url("{static_icon_svg}") !important;
-        background-repeat: no-repeat !important;
-        background-position: {static_icon_pos} !important;
-        background-size: 14px 14px !important;
-    }}
-    
-    .st-key-theme_toggle button::after {{
-        content: '' !important;
-        position: absolute !important;
-        top: 0px !important;
-        left: {bottle_left_pos} !important;
-        width: 32px !important; height: 36px !important;
-        background-image: url("{bottle_svg}") !important;
-        background-repeat: no-repeat !important;
-        background-size: contain !important;
-        transition: left 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
-        z-index: 2 !important;
-    }}
-
-    /* Botón de Búsqueda Visual */
+    /* BÚSQUEDA VISUAL */
     .st-key-btn_photo_search button {{
         background-color: {input_bg} !important;
         border: 1px solid {input_border} !important;
@@ -519,7 +468,7 @@ st.markdown(f"""
         font-weight: 600 !important;
     }}
 
-    /* Tarjetas del catálogo */
+    /* TARJETAS CATÁLOGO */
     .catalog-card {{
         background-color: transparent;
         border: 1px solid {btn_border};
@@ -528,8 +477,6 @@ st.markdown(f"""
         position: relative;
         margin-bottom: 16px;
         transition: border-color 0.2s ease, transform 0.22s ease;
-        backface-visibility: hidden;
-        will-change: transform;
     }}
     .catalog-card:hover {{
         border-color: #7a6a5d;
@@ -564,7 +511,6 @@ st.markdown(f"""
         opacity: 0;
         transition: opacity 0.2s ease;
         text-align: left;
-        -webkit-font-smoothing: antialiased;
     }}
     .catalog-card:hover .card-hover-overlay {{ opacity: 1; }}
     .overlay-title {{
@@ -577,10 +523,10 @@ st.markdown(f"""
     }}
     .overlay-info {{ font-size: 0.85rem; font-weight: 400; line-height: 1.5; color: #e0e0e0; margin-bottom: 6px; }}
     .card-footer-info {{ padding: 14px 12px; text-align: center; background-color: {btn_bg}; }}
-    .card-perfume-name {{ font-size: 0.95rem; font-weight: 600; color: {text_color}; margin-bottom: 4px; -webkit-font-smoothing: antialiased; }}
+    .card-perfume-name {{ font-size: 0.95rem; font-weight: 600; color: {text_color}; margin-bottom: 4px; }}
     .card-perfume-brand {{ font-size: 0.8rem; font-weight: 400; color: {subtext_color}; text-transform: uppercase; letter-spacing: 0.5px; }}
 
-    /* Tarjetas de esencias optimizadas para legibilidad alta */
+    /* TARJETAS ESENCIAS */
     .essence-card {{ 
         border-radius: 8px; 
         padding: 14px 16px; 
@@ -590,34 +536,22 @@ st.markdown(f"""
         cursor: pointer;
         user-select: none;
         transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.22s ease, border-color 0.22s ease;
-        will-change: transform;
-        backface-visibility: hidden;
-        -webkit-font-smoothing: antialiased !important;
-        -moz-osx-font-smoothing: grayscale !important;
     }}
     .essence-card:hover {{
         transform: translateY(-4px) scale(1.025);
         box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-    }}
-    .essence-card:active {{
-        transform: translateY(0px) scale(0.97);
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
     }}
     .essence-title {{ 
         font-size: 0.98rem; 
         font-weight: 700; 
         margin-bottom: 6px; 
         letter-spacing: 0.3px; 
-        -webkit-font-smoothing: antialiased; 
-        text-rendering: optimizeLegibility;
     }}
     .essence-desc {{ 
         font-size: 0.88rem; 
         font-weight: 500; 
         line-height: 1.5; 
         opacity: 0.95; 
-        -webkit-font-smoothing: antialiased;
-        text-rendering: optimizeLegibility;
     }}
 
     .sound-mute-btn {{
@@ -634,20 +568,15 @@ st.markdown(f"""
         font-size: 1.15rem;
         transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s ease;
         margin-bottom: 24px;
-        will-change: transform;
-        backface-visibility: hidden;
     }}
     .sound-mute-btn:hover {{
         transform: scale(1.15);
         background-color: {btn_bg};
     }}
-    .sound-mute-btn:active {{
-        transform: scale(0.95);
-    }}
     </style>
 """, unsafe_allow_html=True)
 
-# 4. CABECERA (LOGO AMPLIADO)
+# 4. CABECERA CON LOGO Y SWITCH ALINEADO
 col_logo, col_espacio, col_actions = st.columns([5, 1.8, 2.4], vertical_alignment="center")
 
 with col_logo:
@@ -677,7 +606,7 @@ with col_actions:
     with btn_col2:
         st.button(" ", key="theme_toggle", on_click=toggle_theme)
 
-# 5. NAVEGACIÓN
+# 5. NAVEGACIÓN PRINCIPAL
 st.markdown("<div style='margin-top: 14px;'></div>", unsafe_allow_html=True)
 nav_cols = st.columns([1, 1, 1], vertical_alignment="center")
 
@@ -687,7 +616,7 @@ with nav_cols[2]: st.button("ESENCIAS", key="n_esencias", on_click=navigate_to, 
 
 st.markdown(f"<hr style='margin: 10px 0 24px 0; border: none; border-bottom: 1px solid {btn_border}; opacity: 0.3;'>", unsafe_allow_html=True)
 
-# 6. BÚSQUEDA Y SELECCIÓN DE ESENCIAS
+# 6. BÚSQUEDA Y FILTRO DE ESENCIAS
 col_search, col_filter, col_separator, col_photo = st.columns([5.5, 1.8, 0.1, 2.0], vertical_alignment="center")
 
 with col_search:
@@ -726,13 +655,13 @@ with col_separator:
 with col_photo:
     st.button("Búsqueda visual", key="btn_photo_search", help="Buscar por imagen", use_container_width=True)
 
-# 7. CHIPS DE NAVEGACIÓN RÁPIDA
+# 7. CHIPS DE ENLACE RÁPIDO
 st.markdown("<div style='margin-top: 14px;'></div>", unsafe_allow_html=True)
 col_chip1, col_chip2, col_chip3, col_chip_space = st.columns([1.3, 2.0, 1.7, 4.0], vertical_alignment="center")
 
 with col_chip1:
     if st.button("Trend Del Hype", key="btn_trend", use_container_width=True):
-        st.switch_page("pages/trendhype.py")
+        st.session_state['current_page'] = 'hype'
 with col_chip2:
     st.page_link("pages/trustpage.py", label="Páginas de Confianza", icon="🛡️", use_container_width=True)
 with col_chip3:
@@ -740,7 +669,7 @@ with col_chip3:
 
 st.markdown("<div style='margin-top: 24px;'></div>", unsafe_allow_html=True)
 
-# 8. VISTAS DE PÁGINA
+# 8. SECCIONES Y CONTENIDOS
 if st.session_state['current_page'] == 'home':
     st.markdown(f"<div style='text-align: center; margin-bottom: 24px; color: {text_color}; letter-spacing: 1.5px; font-weight: 300; font-size: 1.1rem; text-transform: uppercase;'>CATÁLOGO Y TENDENCIAS</div>", unsafe_allow_html=True)
     
@@ -838,7 +767,7 @@ elif st.session_state['current_page'] == 'esencias_page':
             </button>
         </div>
         """, unsafe_allow_html=True)
-    
+
     def get_essence_colors(name):
         n = name.lower()
         if any(k in n for k in ['sangre', 'cereza', 'frambuesa', 'pimienta rosa', 'rosa', 'ruibarbo', 'lichi', 'ciruela', 'grosella', 'peonía', 'geranio']):
@@ -992,7 +921,8 @@ elif st.session_state['current_page'] == 'esencias_page':
     with col_es_2:
         st.markdown("\n".join(html_col2), unsafe_allow_html=True)
 
-elif st.session_state['current_page'] == 'trust_page':
-    st.markdown(f"<div style='text-align: center; color: {text_color}; font-weight: 300; font-size: 1.05rem;'>Páginas de Confianza (Próximamente)</div>", unsafe_allow_html=True)
+elif st.session_state['current_page'] == 'hype':
+    st.markdown(f"<div style='text-align: center; color: {text_color}; font-weight: 300; font-size: 1.05rem;'>Sección de Remates / Radar Hype</div>", unsafe_allow_html=True)
+
 elif st.session_state['current_page'] == 'compare_page':
-    st.markdown(f"<div style='text-align: center; color: {text_color}; font-weight: 300; font-size: 1.05rem;'>Comparador de Precios (Próximamente)</div>", unsafe_allow_html=True)
+    st.markdown(f"<div style='text-align: center; color: {text_color}; font-weight: 300; font-size: 1.05rem;'>Comparador de Precios</div>", unsafe_allow_html=True)
