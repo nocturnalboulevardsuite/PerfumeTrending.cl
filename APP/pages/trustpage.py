@@ -18,7 +18,7 @@ def toggle_theme():
 
 is_dark = st.session_state.theme == "dark"
 
-# 3. PALETA DE COLORES MINIMALISTA Y LUXURY
+# 3. PALETA DE COLORES Y SVGS DEL SWITCH (INCORPORADO DE SWITCH_2)
 bg_color = "#0c0e12" if is_dark else "#f9f9fb"
 card_bg = "#14171d" if is_dark else "#ffffff"
 border_color = "#2a2e39" if is_dark else "#e4e4e7"
@@ -30,15 +30,14 @@ badge_green_bg = "#162b1e" if is_dark else "#ecfdf5"
 badge_green_text = "#b8f5c8" if is_dark else "#047857"
 badge_green_border = "#2a543b" if is_dark else "#a7f3d0"
 
-btn_text = "#ffffff" if is_dark else "#18181b"
-bottle_left_pos = "38px" if is_dark else "-2px"
+# Configuración del Switch
+bottle_left_pos = "42px" if is_dark else "-2px"
 static_icon_pos = "12px center" if is_dark else "calc(100% - 12px) center"
 
-# SVGs para Controles
 static_icon_svg = (
     "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='4'/><line x1='12' y1='1' x2='12' y2='3'/><line x1='12' y1='21' x2='12' y2='23'/><line x1='4.22' y1='4.22' x2='5.64' y2='5.64'/><line x1='18.36' y1='18.36' x2='19.78' y2='19.78'/><line x1='1' y1='12' x2='3' y2='12'/><line x1='21' y1='12' x2='23' y2='12'/><line x1='4.22' y1='19.78' x2='5.64' y2='18.36'/><line x1='18.36' y1='5.64' x2='19.78' y2='4.22'/></svg>"
     if is_dark else
-    "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231a1a1a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z'/></svg>"
+    "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z'/></svg>"
 )
 
 bottle_svg = (
@@ -205,34 +204,68 @@ st.markdown(
         color: {accent_color} !important;
     }}
 
-    /* Botón Switch de Tema Custom */
-    div[data-testid="stColumn"]:nth-child(2) div[data-testid="stButton"] button {{
-        background-image: url("{static_icon_svg}");
-        background-repeat: no-repeat;
-        background-position: {static_icon_pos};
-        background-size: 20px;
-        background-color: {card_bg};
-        border: 1px solid {border_color};
-        border-radius: 30px;
-        width: 76px !important;
-        height: 38px !important;
-        position: relative;
-        color: transparent !important;
-        padding: 0;
-        transition: all 0.3s ease;
+    /* SWITCH NEUTRO Y FLOTANTE (ESTILO SWITCH_2) */
+    .st-key-theme_toggle,
+    .st-key-theme_toggle div[data-testid="stButton"] {{
+        background: transparent !important;
+        background-color: transparent !important;
     }}
-    div[data-testid="stColumn"]:nth-child(2) div[data-testid="stButton"] button::after {{
-        content: '';
-        position: absolute;
-        top: 50%;
-        left: {bottle_left_pos};
-        transform: translateY(-50%);
-        width: 32px;
-        height: 32px;
-        background-image: url("{bottle_svg}");
-        background-size: contain;
-        background-repeat: no-repeat;
-        transition: left 0.35s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+    .st-key-theme_toggle div[data-testid="stButton"] > button,
+    .st-key-theme_toggle button,
+    .st-key-theme_toggle button:hover,
+    .st-key-theme_toggle button:focus,
+    .st-key-theme_toggle button:active,
+    .st-key-theme_toggle button:focus-visible,
+    div[data-testid="stElementContainer"].st-key-theme_toggle button {{
+        background: transparent !important;
+        background-color: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        outline: none !important;
+        padding: 0 !important;
+        width: 82px !important;
+        height: 48px !important;
+        min-height: 48px !important;
+        position: relative !important;
+        cursor: pointer !important;
+        overflow: visible !important;
+        margin-left: auto !important;
+        margin-right: 0 !important;
+        display: block !important;
+    }}
+
+    .st-key-theme_toggle button * {{ display: none !important; }}
+    
+    .st-key-theme_toggle button::before {{
+        content: '' !important;
+        position: absolute !important;
+        top: 7px !important; left: 0 !important;
+        width: 80px !important; height: 36px !important;
+        background-color: #2b2c34 !important;
+        border: 2px solid #1a1b20 !important;
+        border-radius: 20px !important;
+        box-shadow: inset 0 2px 5px rgba(0,0,0,0.4) !important;
+        box-sizing: border-box !important;
+        background-image: url("{static_icon_svg}") !important;
+        background-repeat: no-repeat !important;
+        background-position: {static_icon_pos} !important;
+        background-size: 18px 18px !important;
+        transition: all 0.3s ease !important;
+    }}
+    
+    .st-key-theme_toggle button::after {{
+        content: '' !important;
+        position: absolute !important;
+        top: -1px !important;
+        left: {bottle_left_pos} !important;
+        width: 40px !important; height: 46px !important;
+        background-image: url("{bottle_svg}") !important;
+        background-repeat: no-repeat !important;
+        background-size: contain !important;
+        transition: left 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+        filter: drop-shadow(2px 3px 4px rgba(0,0,0,0.3)) !important;
+        z-index: 2 !important;
     }}
 
     /* Botón de Sonido */
@@ -285,7 +318,7 @@ with col_controls:
     with c_sound:
         st.markdown('<button id="sound-toggle-btn" class="sound-btn" onclick="window.parent.toggleSoundMute()" title="Activar/Desactivar Sonido">🔊</button>', unsafe_allow_html=True)
     with c_theme:
-        st.button(" ", on_click=toggle_theme, key="theme_switch_btn")
+        st.button(" ", on_click=toggle_theme, key="theme_toggle")
 
 st.markdown("<div style='margin-top: 16px;'></div>", unsafe_allow_html=True)
 
