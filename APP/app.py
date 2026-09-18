@@ -110,24 +110,24 @@ js_color_script = f"""
     const colorRules = [
         {{ keywords: ['sangre', 'cereza', 'frambuesa', 'pimienta rosa', 'rosa', 'ruibarbo', 'lichi', 'ciruela', 'grosella', 'peonía', 'geranio'], 
           bg: isDark ? '#3d1a1e' : '#f7eaec', border: isDark ? '#5c282e' : '#e2b3b7', text: isDark ? '#f0adb4' : '#5c1b22' }},
-        {{ keywords: ['marina', 'marinas', 'agua', 'océano', 'mar', 'ozónica', 'ozónicas'], 
+        {{ keywords: ['marina', 'marinas', 'agua', 'océano', 'mar', 'ozónica', 'ozónicas', 'acuática', 'acuoso'], 
           bg: isDark ? '#152933' : '#eaf2f7', border: isDark ? '#224052' : '#a8c7da', text: isDark ? '#92ccdb' : '#173a4b' }},
-        {{ keywords: ['albahaca', 'bergamota', 'cardamomo', 'higo', 'manzana', 'menta', 'pachulí', 'pera', 'romero', 'salvia', 'té verde', 'té blanco', 'vetiver', 'abedul', 'eucalipto', 'gálbano', 'hojas de violeta'], 
+        {{ keywords: ['albahaca', 'bergamota', 'cardamomo', 'higo', 'manzana', 'menta', 'pachulí', 'pera', 'romero', 'salvia', 'té verde', 'té blanco', 'vetiver', 'abedul', 'eucalipto', 'gálbano', 'hojas de violeta', 'herbal', 'verde'], 
           bg: isDark ? '#162b1e' : '#ebf5ee', border: isDark ? '#234530' : '#a4cca2', text: isDark ? '#93d1a3' : '#193d25' }},
-        {{ keywords: ['iris', 'lavanda', 'jazmín', 'nardos', 'neroli', 'violeta', 'fresia', 'heliotropo', 'mimosa', 'lila', 'magnolia', 'azahar', 'frangipani', 'gardenia', 'ylang'], 
+        {{ keywords: ['iris', 'lavanda', 'jazmín', 'nardos', 'neroli', 'violeta', 'fresia', 'heliotropo', 'mimosa', 'lila', 'magnolia', 'azahar', 'frangipani', 'gardenia', 'ylang', 'floral'], 
           bg: isDark ? '#2b1d33' : '#f2ebf7', border: isDark ? '#432d52' : '#c3b1d4', text: isDark ? '#c7a9db' : '#391c47' }},
-        {{ keywords: ['caramelo', 'miel', 'solares', 'vainilla', 'cacao', 'café', 'canela', 'tonka', 'nuez moscada', 'praliné', 'haba tonka', 'almendra', 'avellana', 'leche', 'malvavisco', 'chocolate', 'ron', 'cognac', 'whisky'], 
+        {{ keywords: ['caramelo', 'miel', 'solares', 'vainilla', 'cacao', 'café', 'canela', 'tonka', 'nuez moscada', 'praliné', 'haba tonka', 'almendra', 'avellana', 'leche', 'malvavisco', 'chocolate', 'ron', 'cognac', 'whisky', 'gourmand'], 
           bg: isDark ? '#332115' : '#f7ede6', border: isDark ? '#523522' : '#d8bca7', text: isDark ? '#dbb193' : '#452914' }},
-        {{ keywords: ['ámbar gris', 'cedro', 'sándalo', 'tabaco', 'cuero', 'oud', 'incienso', 'ciprés', 'ébano', 'guayac', 'musgo', 'estoraque', 'ládano', 'benjuí'], 
+        {{ keywords: ['ámbar gris', 'cedro', 'sándalo', 'tabaco', 'cuero', 'oud', 'incienso', 'ciprés', 'ébano', 'guayac', 'musgo', 'estoraque', 'ládano', 'benjuí', 'maderosa'], 
           bg: isDark ? '#23272e' : '#edeef0', border: isDark ? '#373d47' : '#bdc1c9', text: isDark ? '#aeb5c2' : '#292e36' }},
-        {{ keywords: ['azafrán', 'ámbar', 'mandarina', 'melocotón', 'durazno', 'mirra', 'naranjo', 'pomelo', 'cítrico', 'cítricos', 'limón', 'lima', 'clementina', 'yuzu', 'petit grain', 'piña', 'jengibre'], 
+        {{ keywords: ['azafrán', 'ámbar', 'mandarina', 'melocotón', 'durazno', 'mirra', 'naranjo', 'pomelo', 'cítrico', 'cítricos', 'limón', 'lima', 'clementina', 'yuzu', 'petit grain', 'piña', 'jengibre', 'cítrica'], 
           bg: isDark ? '#382013' : '#f9ede6', border: isDark ? '#59331e' : '#debca8', text: isDark ? '#dfab8c' : '#4f2711' }},
-        {{ keywords: ['almizcle', 'coco', 'civeta', 'castóreo', 'pimienta blanca', 'pimienta negra', 'iso e super', 'ambroxan', 'aldehídos', 'cachemira'], 
+        {{ keywords: ['almizcle', 'coco', 'civeta', 'castóreo', 'pimienta blanca', 'pimienta negra', 'iso e super', 'ambroxan', 'aldehídos', 'cachemira', 'sintética'], 
           bg: isDark ? '#1f2228' : '#f2f4f7', border: isDark ? '#333842' : '#cad0d9', text: isDark ? '#bcc2cc' : '#2b3038' }}
     ];
 
     function applyEssenceColorsAndEvents() {{
-        const targets = doc.querySelectorAll('li[role="option"], div[role="option"], span[data-baseweb="tag"], div[data-baseweb="option"]');
+        const targets = doc.querySelectorAll('.essence-card, li[role="option"], div[role="option"], span[data-baseweb="tag"], div[data-baseweb="option"]');
         targets.forEach(el => {{
             if (el.dataset.colored === 'true') return;
             const text = (el.innerText || '').toLowerCase();
@@ -136,12 +136,8 @@ js_color_script = f"""
             for (const rule of colorRules) {{
                 if (rule.keywords.some(kw => text.includes(kw))) {{
                     el.style.backgroundColor = rule.bg;
-                    el.style.border = '1px solid ' + rule.border;
-                    el.style.color = rule.text; 
-                    el.style.borderRadius = '3px';
-                    el.style.padding = '2px 6px';
-                    el.style.margin = '1px 0';
-                    el.style.fontSize = '0.75rem';
+                    el.style.borderColor = rule.border;
+                    el.style.color = rule.text;
                     el.dataset.colored = 'true';
                     el.querySelectorAll('*').forEach(child => {{ child.style.color = rule.text; }});
                     break;
@@ -204,7 +200,7 @@ st.markdown(f"""
         -webkit-font-smoothing: antialiased !important;
     }}
 
-    /* Estilizado global de botones con zoom grande, nitidez forzada y sombras */
+    /* Estilizado global de botones */
     div.stButton > button,
     div.stDownloadButton > button,
     div[data-testid="stPopover"] > button,
@@ -216,8 +212,8 @@ st.markdown(f"""
         -webkit-font-smoothing: antialiased !important;
         -moz-osx-font-smoothing: grayscale !important;
         text-rendering: optimizeLegibility !important;
-        backface-visibility: hidden !important; /* Soluciona la fuente borrosa en animaciones */
-        transform: translateZ(0) !important; /* Aceleración por hardware para nitidez */
+        backface-visibility: hidden !important;
+        transform: translateZ(0) !important;
         box-shadow: 0 2px 5px rgba(0,0,0,0.08) !important;
         outline: none !important;
         will-change: transform, box-shadow;
@@ -229,7 +225,7 @@ st.markdown(f"""
         color: {btn_text} !important;
     }}
 
-    /* Efecto Zoom Grande y Elevación Profesional en Hover */
+    /* Efecto Zoom Grande y Elevación Profesional */
     div.stButton > button:hover,
     div[data-testid="stPopover"] > button:hover,
     button[data-testid="stPopoverButton"]:hover,
@@ -238,12 +234,11 @@ st.markdown(f"""
     a[data-testid="stPageLink-NavLink"]:hover,
     div.stButton > button:focus {{
         transform: scale(1.05) translateY(-2px) translateZ(0) !important;
-        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.25) !important; /* Sombra profesional */
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.25) !important;
         cursor: pointer !important;
         outline: none !important;
     }}
     
-    /* Respuesta táctil al hacer clic */
     div.stButton > button:active,
     .st-key-btn_photo_search button:active,
     .st-key-login_btn button:active,
@@ -252,7 +247,6 @@ st.markdown(f"""
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15) !important;
     }}
 
-    /* El login button */
     .st-key-login_btn, .st-key-theme_toggle {{
         display: flex !important;
         align-items: center !important;
@@ -299,7 +293,6 @@ st.markdown(f"""
         height: auto !important;
     }}
 
-    /* Aumentando la escala hover específica para pestañas de texto para no romper su línea */
     .st-key-n_perfumes button:hover, 
     .st-key-n_remates button:hover,
     .st-key-n_esencias button:hover {{
@@ -311,13 +304,13 @@ st.markdown(f"""
     .st-key-n_remates button p,
     .st-key-n_esencias button p {{
         color: {text_color} !important;
-        font-weight: 700 !important; /* Más peso para nitidez */
+        font-weight: 700 !important;
         white-space: nowrap !important;
-        font-size: 0.82rem !important; /* Tamaño ligeramente incrementado */
+        font-size: 0.82rem !important;
         letter-spacing: 0.8px !important;
     }}
 
-    /* Botones tipo Chip */
+    /* Chips */
     .st-key-btn_trend button, 
     .st-key-btn_trust button, 
     .st-key-btn_compare button {{
@@ -347,7 +340,6 @@ st.markdown(f"""
         background-color: {"#1a1d26" if is_dark else "#f0f0f5"} !important;
     }}
 
-    /* Estilizado para st.page_link (Páginas de Confianza) */
     a[data-testid="stPageLink-NavLink"] {{
         background-color: {btn_bg} !important;
         border: 1px solid {btn_border} !important;
@@ -365,7 +357,6 @@ st.markdown(f"""
         font-weight: 600 !important;
     }}
 
-    /* Campos de Entrada e Inputs */
     div[data-baseweb="input"],
     div[data-baseweb="base-input"],
     div[data-baseweb="select"] > div,
@@ -394,7 +385,6 @@ st.markdown(f"""
         font-size: 0.85rem !important;
     }}
 
-    /* Botón de tema excluido del escalado y sombra para no desalinearse */
     .st-key-theme_toggle,
     .st-key-theme_toggle button,
     .st-key-theme_toggle button[data-testid="stBaseButton-secondary"],
@@ -469,7 +459,7 @@ st.markdown(f"""
         font-weight: 600 !important;
     }}
 
-    /* Tarjetas */
+    /* Tarjetas de Catálogo */
     .catalog-card {{
         background-color: transparent;
         border: 1px solid {btn_border};
@@ -534,27 +524,31 @@ st.markdown(f"""
     /* Tarjetas de Esencias */
     .essence-card {{ 
         border-radius: 8px; 
-        padding: 12px 14px; 
-        margin-bottom: 10px; 
+        padding: 14px 16px; 
+        margin-bottom: 12px; 
         border-width: 1px; 
         border-style: solid;
+        border-color: {btn_border};
+        background-color: {btn_bg};
         cursor: pointer;
         user-select: none;
         transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.25s ease, border-color 0.25s ease;
         will-change: transform;
         backface-visibility: hidden;
         transform: translateZ(0);
+        height: 100%;
+        box-sizing: border-box;
     }}
     .essence-card:hover {{
-        transform: scale(1.04) translateY(-3px) translateZ(0);
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        transform: scale(1.03) translateY(-3px) translateZ(0);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
     }}
     .essence-card:active {{
         transform: scale(0.97) translateY(0) translateZ(0);
         box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
     }}
-    .essence-title {{ font-size: 0.85rem; font-weight: 600; margin-bottom: 4px; letter-spacing: 0.3px; }}
-    .essence-desc {{ font-size: 0.78rem; font-weight: 400; line-height: 1.4; opacity: 0.9; }}
+    .essence-title {{ font-size: 0.92rem; font-weight: 600; margin-bottom: 6px; letter-spacing: 0.3px; display: flex; justify-content: space-between; align-items: center; }}
+    .essence-desc {{ font-size: 0.8rem; font-weight: 400; line-height: 1.45; opacity: 0.9; }}
     </style>
 """, unsafe_allow_html=True)
 
@@ -598,29 +592,124 @@ with nav_cols[2]: st.button("ESENCIAS", key="n_esencias", on_click=navigate_to, 
 
 st.markdown(f"<hr style='margin: 6px 0 18px 0; border: none; border-bottom: 1px solid {btn_border}; opacity: 0.3;'>", unsafe_allow_html=True)
 
-# 6. BÚSQUEDA Y SELECCIÓN DE ESENCIAS
+# 6. DATOS DE ESENCIAS COMPLETOS Y CATEGORIZADOS
+essences_catalog = [
+    {"name": "Bergamota", "family": "Cítrica", "desc": "Cítrico fresco, chispeante y amargo con matices florales y teáceos."},
+    {"name": "Clementina", "family": "Cítrica", "desc": "Jugosa, dulce y refrescante, aporta un toque cítrico efervescente."},
+    {"name": "Limón", "family": "Cítrica", "desc": "Nota limpia, brillante y efervescente que brinda vitalidad inicial."},
+    {"name": "Lima", "family": "Cítrica", "desc": "Cítrico punzante, verde y tropical con acidez vibrante."},
+    {"name": "Mandarina", "family": "Cítrica", "desc": "Cítrico dulce, festivo y afrutado con tonalidades cálidas."},
+    {"name": "Neroli", "family": "Cítrica / Floral", "desc": "Aceite de la flor de azahar, fresco, verde y blanco floral."},
+    {"name": "Petit Grain", "family": "Cítrica / Verde", "desc": "Extraído de las hojas de naranjo amargo, verde, terroso y cítrico."},
+    {"name": "Pomelo (Toronja)", "family": "Cítrica", "desc": "Cítrico amargo, fresco y energizante."},
+    {"name": "Yuzu", "family": "Cítrica", "desc": "Cítrico oriental entre mandarina y pomelo con notas exóticas."},
+    {"name": "Almendra", "family": "Gourmand", "desc": "Nota suave, lactónica, ligeramente amarga y cremosa."},
+    {"name": "Avellana", "family": "Gourmand", "desc": "Cálida, tostada y untuosa con matices de frutos secos."},
+    {"name": "Ciruela", "family": "Frutal", "desc": "Fruta oscura, jugosa, licorosa y aterciopelada."},
+    {"name": "Coco", "family": "Frutal / Gourmand", "desc": "Exótico, cremoso y solar con acordes tropicales."},
+    {"name": "Durazno (Melocotón)", "family": "Frutal", "desc": "Afrutado, aterciopelado, dulce y jugoso."},
+    {"name": "Frambuesa", "family": "Frutal", "desc": "Baya dulce, ácida y vibrante con matices de cuero o ante."},
+    {"name": "Grosellas Negras", "family": "Frutal", "desc": "Frutal ácido, verde y ligeramente silvestre."},
+    {"name": "Higo", "family": "Frutal / Verde", "desc": "Verde, dulce y lactónico con recuerdo a hojas de higuera."},
+    {"name": "Lichi", "family": "Frutal", "desc": "Afrutado, acuoso y rosado con dulzura tropical."},
+    {"name": "Manzana", "family": "Frutal", "desc": "Crujiente, fresca, ácida o dulce según su variedad."},
+    {"name": "Melón", "family": "Frutal / Acuática", "desc": "Jugoso, acuoso y refrescante para composiciones estivales."},
+    {"name": "Pera", "family": "Frutal", "desc": "Fresca, crujiente, dulce y cristalina."},
+    {"name": "Piña", "family": "Frutal", "desc": "Tropical, efervescente, jugosa y ligeramente ahumada."},
+    {"name": "Ruibarbo", "family": "Frutal / Verde", "desc": "Ácido, vegetal, cortante y de perfil moderno."},
+    {"name": "Sandía", "family": "Frutal / Acuática", "desc": "Acuosa, fresca y dulce con sensación estival."},
+    {"name": "Fresia", "family": "Floral", "desc": "Floral limpia, jabonosa, picante y cristalina."},
+    {"name": "Geranio", "family": "Floral / Verde", "desc": "Fresco, mentolado, rosado y ligeramente terroso."},
+    {"name": "Heliotropo", "family": "Floral / Gourmand", "desc": "Atalcado, almendrado con matices de vainilla y cereza."},
+    {"name": "Iris (Orris)", "family": "Floral", "desc": "Lujoso, atalcado, terroso, elegante y empolvado."},
+    {"name": "Lavanda", "family": "Floral / Aromática", "desc": "Aromática, limpia, herbal y relajante."},
+    {"name": "Lilium (Lirio)", "family": "Floral", "desc": "Floral blanco denso, especiado y opulento."},
+    {"name": "Mimosa", "family": "Floral", "desc": "Cálida, atalcada, mielada y solar."},
+    {"name": "Peonía", "family": "Floral", "desc": "Rosa fresca, ligera, acuosa y romántica."},
+    {"name": "Rosa", "family": "Floral", "desc": "La reina de las flores: elegante, rica, melosa y atemporal."},
+    {"name": "Violeta", "family": "Floral / Verde", "desc": "Atalcada, dulce, verde y empolvada."},
+    {"name": "Flor de Azahar del Naranjo", "family": "Floral Blanco", "desc": "Cálida, embriagadora, dulce y solar."},
+    {"name": "Flor de Frangipani", "family": "Floral Blanco", "desc": "Exótica, tropical, lactónica y embriagadora."},
+    {"name": "Gardenia", "family": "Floral Blanco", "desc": "Cremosa, opulenta, lactónica y verde."},
+    {"name": "Jazmín", "family": "Floral Blanco", "desc": "Sensual, embriagador, indólico y luminoso."},
+    {"name": "Magnolia", "family": "Floral Blanco", "desc": "Cítrica, suave, cerosa y delicada."},
+    {"name": "Tuberosa (Nardo)", "family": "Floral Blanco", "desc": "Intensa, carnal, cremosa y fascinante."},
+    {"name": "Ylang-Ylang", "family": "Floral Blanco", "desc": "Exótica, platanosa, especiada y sensual."},
+    {"name": "Abedul", "family": "Maderosa / Cuero", "desc": "Ahumado, alquitranado, leñoso y con carácter de cuero."},
+    {"name": "Albahaca", "family": "Herbal", "desc": "Aromática, verde, anisada y fresca."},
+    {"name": "Eucalipto", "family": "Herbal", "desc": "Fresco, alcanforado, mentolado y vivificante."},
+    {"name": "Gálbano", "family": "Verde", "desc": "Resinoso, verde intenso, vegetal y cortante."},
+    {"name": "Hojas de Violeta", "family": "Verde", "desc": "Verde, terroso, acuático y crujiente."},
+    {"name": "Menta", "family": "Herbal", "desc": "Refrescante, efervescente, mentolada y picante."},
+    {"name": "Pachulí", "family": "Terrosa / Maderosa", "desc": "Terroso, oscuro, alcanforado y balsámico."},
+    {"name": "Romero", "family": "Herbal", "desc": "Aromático, alcanforado, herbal y estimulante."},
+    {"name": "Salvia", "family": "Herbal", "desc": "Aromática, ambarina, con tonos de cuero y té."},
+    {"name": "Té Blanco", "family": "Aromática", "desc": "Delicado, limpio, suave y zen."},
+    {"name": "Té Negro", "family": "Aromática", "desc": "Ahumado, denso, tánico y especiado."},
+    {"name": "Té Verde", "family": "Aromática", "desc": "Fresco, vegetal, estimulante y sereno."},
+    {"name": "Vetiver", "family": "Terrosa / Maderosa", "desc": "Maderoso, terroso, ahumado y con notas salinas o secas."},
+    {"name": "Anís Estrellado", "family": "Especiada", "desc": "Dulce, picante, aromático y anisado."},
+    {"name": "Azafrán", "family": "Especiada / Cuero", "desc": "Especiado, con matices de cuero y metálicos."},
+    {"name": "Canela", "family": "Especiada", "desc": "Cálida, picante, dulce y envolvente."},
+    {"name": "Cardamomo", "family": "Especiada", "desc": "Verde, cítrico, resinoso y picante."},
+    {"name": "Clavo de Olor", "family": "Especiada", "desc": "Cálido, eugenólico, intenso y punzante."},
+    {"name": "Jengibre", "family": "Especiada", "desc": "Picante, cítrico, efervescente y fresco."},
+    {"name": "Nuez Moscada", "family": "Especiada", "desc": "Cálida, dulce, leñosa y especiada."},
+    {"name": "Pimienta Blanca", "family": "Especiada", "desc": "Seca, picante y suavemente terrosa."},
+    {"name": "Pimienta Negra", "family": "Especiada", "desc": "Picante, punzante, efervescente y madura."},
+    {"name": "Pimienta Rosa", "family": "Especiada / Frutal", "desc": "Fresca, efervescente, rosada y levemente afrutada."},
+    {"name": "Cacao / Chocolate", "family": "Gourmand", "desc": "Oscuro, rico, amargo y reconfortante."},
+    {"name": "Café", "family": "Gourmand", "desc": "Tostado, amargo, estimulante y profundo."},
+    {"name": "Caramelo", "family": "Gourmand", "desc": "Dulce, mantecoso, tostado y adictivo."},
+    {"name": "Haba Tonka", "family": "Gourmand / Balsámica", "desc": "Cálida, con aromas a vainilla, almendra y heno."},
+    {"name": "Leche", "family": "Gourmand", "desc": "Lactónica, reconfortante, suave y cremosa."},
+    {"name": "Malvavisco", "family": "Gourmand", "desc": "Esponjoso, dulce y atalcado."},
+    {"name": "Miel", "family": "Gourmand", "desc": "Dulce, dorada, cerosa y animalik."},
+    {"name": "Praliné", "family": "Gourmand", "desc": "Frutos secos caramelizados, dulce y crujiente."},
+    {"name": "Vainilla", "family": "Gourmand / Oriental", "desc": "Cálida, reconfortante, dulce y licorosa."},
+    {"name": "Cedro", "family": "Maderosa", "desc": "Seco, leñoso, noble y elegante."},
+    {"name": "Ciprés", "family": "Maderosa / Verde", "desc": "Fresco, resinoso, leñoso y aromático."},
+    {"name": "Ébano", "family": "Maderosa", "desc": "Oscuro, denso, místico y maderoso."},
+    {"name": "Guayac", "family": "Maderosa / Ahumada", "desc": "Ahumado, balsámico, leñoso y con matices de té."},
+    {"name": "Musgo de Roble", "family": "Chipre / Terrosa", "desc": "Terroso, húmedo, boscoso y clásico."},
+    {"name": "Oud (Madera de Agar)", "family": "Maderosa / Resinosa", "desc": "Opulento, ahumado, animalik, complejo y místico."},
+    {"name": "Sándalo", "family": "Maderosa", "desc": "Cremoso, suave, cálido y maderoso."},
+    {"name": "Ámbar (Cálido)", "family": "Resinosa", "desc": "Acorde cálido, amielado, resinoso y envolvente."},
+    {"name": "Bálsamo del Perú", "family": "Resinosa", "desc": "Cálido, vainillado, balsámico y rico."},
+    {"name": "Benjuí", "family": "Resinosa", "desc": "Resina dulce, vainillada, amielada y balsámica."},
+    {"name": "Estoraque", "family": "Resinosa", "desc": "Resinoso, leñoso, con toque de cuero y floral."},
+    {"name": "Incienso (Olíbano)", "family": "Resinosa", "desc": "Ahumado, místico, cítrico y resinoso."},
+    {"name": "Ládano", "family": "Resinosa", "desc": "Ambarino, cuero, amielado y resinoso."},
+    {"name": "Mirra", "family": "Resinosa", "desc": "Cálida, resinosa, medicinal y picante."},
+    {"name": "Almizcle (Blanco/Musk)", "family": "Sintética", "desc": "Limpio, suave, empolvado y con sensación a piel."},
+    {"name": "Almizcle Vegetal", "family": "Sintética", "desc": "Botánico, suave y sedoso."},
+    {"name": "Ámbar Gris", "family": "Acuática", "desc": "Salado, ambarino, marino, mineral y sensual."},
+    {"name": "Castóreo", "family": "Cuero", "desc": "Cuero intenso, cálido y profundo."},
+    {"name": "Civeta", "family": "Sintética", "desc": "Intensa, cálida, almizclada y seductora."},
+    {"name": "Amaretto", "family": "Gourmand", "desc": "Licoroso, de almendras dulces y cereza."},
+    {"name": "Champán", "family": "Gourmand", "desc": "Efervescente, chispeante, frutal y festivo."},
+    {"name": "Cognac", "family": "Gourmand", "desc": "Rico, maderoso, licoroso y añejo."},
+    {"name": "Ginebra", "family": "Herbal", "desc": "Cítrica, efervescente y con bayas de enebro."},
+    {"name": "Mojito", "family": "Herbal", "desc": "Menta, lima, azúcar y ron fresco."},
+    {"name": "Ron", "family": "Gourmand", "desc": "Cálido, meloso, especiado y embriagador."},
+    {"name": "Whisky", "family": "Gourmand", "desc": "Ahumado, maderoso, malteado y turbado."},
+    {"name": "Aldehídos", "family": "Sintética", "desc": "Efervescente, jabonosa, aireada y brillante."},
+    {"name": "Ambroxan", "family": "Sintética", "desc": "Moderna, ambarina, limpia, salina y difusiva."},
+    {"name": "Cachemira (Cashmeran)", "family": "Sintética", "desc": "Aterciopelada, cálida, maderosa y almizclada."},
+    {"name": "Cuero", "family": "Cuero", "desc": "Ahumado, elegancia curtida, intenso y sofisticado."},
+    {"name": "Iso E Super", "family": "Sintética", "desc": "Velada maderosa de cedro y ámbar, sutil e hipnótica."},
+    {"name": "Notas Marinas", "family": "Acuática", "desc": "Brisa salada, yodada, fresca y oceánica."},
+    {"name": "Notas Solares", "family": "Sintética", "desc": "Sensación de piel expuesta al sol, cálida y luminosa."},
+    {"name": "Sangre (Metálica)", "family": "Sintética", "desc": "Nota metálica, punzante y salina vanguardista."}
+]
+
+all_notes = sorted([e["name"] for e in essences_catalog])
+
+# 7. BÚSQUEDA Y SELECCIÓN DE ESENCIAS
 col_search, col_filter, col_separator, col_photo = st.columns([5.5, 1.8, 0.1, 2.0], vertical_alignment="center")
 
 with col_search:
     search_query = st.text_input("Buscar", placeholder="Buscar perfume, marca o esencias...", label_visibility="collapsed")
-
-raw_notes = [
-    "Bergamota", "Clementina", "Limón", "Lima", "Mandarina", "Neroli", "Petit Grain", "Pomelo (Toronja)", "Yuzu",
-    "Almendra", "Avellana", "Ciruela", "Coco", "Durazno (Melocotón)", "Frambuesa", "Grosellas Negras", 
-    "Higo", "Lichi", "Manzana", "Melón", "Pera", "Piña", "Ruibarbo", "Sandía",
-    "Fresia", "Geranio", "Heliotropo", "Iris (Orris)", "Lavanda", "Lilium (Lirio)", "Mimosa", "Peonía", "Rosa", "Violeta",
-    "Flor de Azahar del Naranjo", "Flor de Frangipani", "Gardenia", "Jazmín", "Magnolia", "Tuberosa (Nardo)", "Ylang-Ylang",
-    "Abedul", "Albahaca", "Eucalipto", "Gálbano", "Hojas de Violeta", "Menta", "Pachulí", "Romero", "Salvia", "Té Blanco", "Té Negro", "Té Verde", "Vetiver",
-    "Anís Estrellado", "Azafrán", "Canela", "Cardamomo", "Clavo de Olor", "Jengibre", "Nuez Moscada", "Pimienta Blanca", "Pimienta Negra", "Pimienta Rosa",
-    "Cacao / Chocolate", "Café", "Caramelo", "Haba Tonka", "Leche", "Malvavisco", "Miel", "Praliné", "Vainilla",
-    "Cedro", "Ciprés", "Ébano", "Guayac", "Musgo de Roble", "Oud (Madera de Agar)", "Sándalo",
-    "Ámbar (Cálido)", "Bálsamo del Perú", "Benjuí", "Estoraque", "Incienso (Olíbano)", "Ládano", "Mirra",
-    "Almizcle (Blanco/Musk)", "Almizcle Vegetal", "Ámbar Gris", "Castóreo", "Civeta",
-    "Amaretto", "Champán", "Cognac", "Ginebra", "Mojito", "Ron", "Whisky",
-    "Aldehídos", "Ambroxan", "Cachemira (Cashmeran)", "Cuero", "Iso E Super", "Notas Marinas", "Notas Solares", "Sangre (Metálica)"
-]
-
-all_notes = sorted(raw_notes)
 
 with col_filter:
     with st.popover("Esencias", use_container_width=True):
@@ -637,7 +726,7 @@ with col_separator:
 with col_photo:
     st.button("Búsqueda visual", key="btn_photo_search", help="Buscar por imagen", use_container_width=True)
 
-# 7. CHIPS DE NAVEGACIÓN RÁPIDA
+# 8. CHIPS DE NAVEGACIÓN RÁPIDA
 st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
 col_chip1, col_chip2, col_chip3, col_chip_space = st.columns([1.3, 2.0, 1.7, 4.0], vertical_alignment="center")
 
@@ -651,7 +740,7 @@ with col_chip3:
 
 st.markdown("<div style='margin-top: 18px;'></div>", unsafe_allow_html=True)
 
-# 8. VISTAS DE PÁGINA
+# 9. VISTAS DE PÁGINA Y CATÁLOGO DE ESENCIAS
 if st.session_state['current_page'] == 'home':
     st.markdown(f"<div style='text-align: center; margin-bottom: 24px; color: {text_color}; letter-spacing: 1.5px; font-weight: 300; font-size: 1.05rem; text-transform: uppercase;'>CATÁLOGO Y TENDENCIAS</div>", unsafe_allow_html=True)
     
@@ -736,8 +825,47 @@ if st.session_state['current_page'] == 'home':
                     st.markdown(card_html, unsafe_allow_html=True)
 
 elif st.session_state['current_page'] == 'esencias_page':
-    st.markdown(f"<div style='text-align: center; color: {text_color}; letter-spacing: 1px; font-weight: 300; margin-bottom: 24px; font-size: 1.05rem; text-transform: uppercase;'>DICCIONARIO DE ESENCIAS Y NOTAS</div>", unsafe_allow_html=True)
+    st.markdown(f"<div style='text-align: center; color: {text_color}; letter-spacing: 1.5px; font-weight: 300; margin-bottom: 20px; font-size: 1.05rem; text-transform: uppercase;'>DICCIONARIO DE ESENCIAS Y NOTAS OLFATIVAS</div>", unsafe_allow_html=True)
     
+    # Filtrado dinámico de esencias
+    filtered_essences = essences_catalog
+    
+    if search_query:
+        q = search_query.lower()
+        filtered_essences = [
+            e for e in filtered_essences 
+            if q in e['name'].lower() or q in e['family'].lower() or q in e['desc'].lower()
+        ]
+
+    if selected_essences:
+        filtered_essences = [
+            e for e in filtered_essences
+            if any(s.lower() in e['name'].lower() for s in selected_essences)
+        ]
+
+    st.markdown(f"<div style='margin-bottom: 16px; color: {subtext_color}; font-size: 0.85rem;'>Mostrando {len(filtered_essences)} esencias disponibles. Haz clic en cualquier tarjeta para escuchar su tono acuático.</div>", unsafe_allow_html=True)
+
+    if filtered_essences:
+        cols_per_row = 3
+        for i in range(0, len(filtered_essences), cols_per_row):
+            cols = st.columns(cols_per_row, gap="small")
+            for j in range(cols_per_row):
+                if i + j < len(filtered_essences):
+                    e = filtered_essences[i + j]
+                    card_html = f"""
+                    <div class="essence-card">
+                        <div class="essence-title">
+                            <span>{e['name']}</span>
+                            <span style="font-size: 0.72rem; font-weight: 400; opacity: 0.75;">{e['family']}</span>
+                        </div>
+                        <div class="essence-desc">{e['desc']}</div>
+                    </div>
+                    """
+                    with cols[j]:
+                        st.markdown(card_html, unsafe_allow_html=True)
+    else:
+        st.info("No se encontraron esencias que coincidan con la búsqueda o filtro seleccionado.")
+
 elif st.session_state['current_page'] == 'trust_page':
     st.markdown(f"<div style='text-align: center; color: {text_color}; font-weight: 300; font-size: 0.95rem;'>Páginas de Confianza (Próximamente)</div>", unsafe_allow_html=True)
 elif st.session_state['current_page'] == 'compare_page':
