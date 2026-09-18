@@ -9,23 +9,23 @@ st.set_page_config(
 )
 
 if "current_page" not in st.session_state:
-  st.session_state["current_page"] = "home"
+    st.session_state["current_page"] = "home"
 if "theme" not in st.session_state:
-  st.session_state["theme"] = "dark"
+    st.session_state["theme"] = "dark"
 if "selected_perfume" not in st.session_state:
-  st.session_state["selected_perfume"] = None
+    st.session_state["selected_perfume"] = None
 
 
 def toggle_theme():
-  st.session_state["theme"] = (
-      "dark" if st.session_state["theme"] == "light" else "light"
-  )
+    st.session_state["theme"] = (
+        "dark" if st.session_state["theme"] == "light" else "light"
+    )
 
 
 def navigate_to(page, perfume_data=None):
-  st.session_state["current_page"] = page
-  if perfume_data:
-    st.session_state["selected_perfume"] = perfume_data
+    st.session_state["current_page"] = page
+    if perfume_data:
+        st.session_state["selected_perfume"] = perfume_data
 
 
 is_dark = st.session_state["theme"] == "dark"
@@ -46,12 +46,12 @@ input_text = "#f0f0f0" if is_dark else "#18181b"
 input_border = "#2a2e39" if is_dark else "#d1d5db"
 
 
-# Función Helper para Base64 SVG (Garantiza visibilidad en CSS)
+# Función Helper para Base64 SVG
 def svg_to_uri(svg_str):
-  return f"data:image/svg+xml;base64,{base64.b64encode(svg_str.encode('utf-8')).decode('utf-8')}"
+    return f"data:image/svg+xml;base64,{base64.b64encode(svg_str.encode('utf-8')).decode('utf-8')}"
 
 
-# Íconos SVG para el Switch
+# Íconos SVG
 static_icon_raw = (
     """<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='#ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='4'/><line x1='12' y1='1' x2='12' y2='3'/><line x1='12' y1='21' x2='12' y2='23'/><line x1='4.22' y1='4.22' x2='5.64' y2='5.64'/><line x1='18.36' y1='18.36' x2='19.78' y2='19.78'/><line x1='1' y1='12' x2='3' y2='12'/><line x1='21' y1='12' x2='23' y2='12'/><line x1='4.22' y1='19.78' x2='5.64' y2='18.36'/><line x1='18.36' y1='5.64' x2='19.78' y2='4.22'/></svg>"""
     if is_dark
@@ -168,7 +168,7 @@ js_color_script = f"""
 
 components.html(js_color_script, height=0, width=0)
 
-# 3. CSS COMPLETO Y CORREGIDO
+# 3. CSS COMPLETO CON CONTRASTE Y ESTILOS CORREGIDOS
 st.markdown(
     f"""
     <style>
@@ -202,16 +202,25 @@ st.markdown(
     .st-key-btn_photo_search button,
     .st-key-login_btn button,
     a[data-testid="stPageLink-NavLink"] {{
+        background-color: {btn_bg} !important;
+        color: {btn_text} !important;
+        border: 1px solid {btn_border} !important;
+        border-radius: 8px !important;
         transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.15s ease, border-color 0.15s ease !important;
         -webkit-font-smoothing: antialiased !important;
         box-shadow: 0 2px 5px rgba(0,0,0,0.08) !important;
         outline: none !important;
     }}
 
+    /* Fuerza contraste de texto en los botones y desplegables */
     div.stButton > button p,
+    div.stButton > button span,
     div[data-testid="stPopover"] > button p,
-    button[data-testid="stPopoverButton"] p {{
+    div[data-testid="stPopover"] > button span,
+    button[data-testid="stPopoverButton"] p,
+    button[data-testid="stPopoverButton"] span {{
         color: {btn_text} !important;
+        font-weight: 500 !important;
     }}
 
     div.stButton > button:hover,
@@ -220,16 +229,17 @@ st.markdown(
     .st-key-btn_photo_search button:hover,
     .st-key-login_btn button:hover,
     a[data-testid="stPageLink-NavLink"]:hover {{
-        transform: scale(1.03) translateY(-1px) !important;
+        transform: scale(1.02) translateY(-1px) !important;
         box-shadow: 0 6px 14px rgba(0, 0, 0, 0.25) !important;
         cursor: pointer !important;
     }}
 
+    /* Botón de usuario */
     .st-key-login_btn button {{
         background-color: {btn_bg} !important;
         color: {btn_text} !important;
         border: 1px solid {btn_border} !important;
-        border-radius: 6px !important;
+        border-radius: 8px !important;
         height: 40px !important;
         min-height: 40px !important;
         padding: 0 1rem 0 2.4rem !important;
@@ -243,7 +253,7 @@ st.markdown(
         font-size: 0.88rem !important;
     }}
 
-    /* --- SWITCH DE TEMA FIX VISIBILIDAD Y POSICIÓN --- */
+    /* Switch de Tema */
     .st-key-theme_toggle {{
         display: flex !important;
         justify-content: center !important;
@@ -275,14 +285,12 @@ st.markdown(
         box-shadow: 0 4px 10px rgba(0,0,0,0.3) !important;
     }}
 
-    /* Ocultar texto/nodos de Streamlit dentro del botón */
     .st-key-theme_toggle > button * {{
         display: none !important;
         opacity: 0 !important;
         visibility: hidden !important;
     }}
 
-    /* Ícono Sol/Luna estático */
     .st-key-theme_toggle > button::before {{
         content: '' !important;
         position: absolute !important;
@@ -300,7 +308,6 @@ st.markdown(
         pointer-events: none !important;
     }}
 
-    /* Botella de perfume deslizante */
     .st-key-theme_toggle > button::after {{
         content: '' !important;
         position: absolute !important;
@@ -317,7 +324,7 @@ st.markdown(
         pointer-events: none !important;
     }}
 
-    /* Pestañas de Navegación Superior */
+    /* Pestañas de Navegación */
     .st-key-n_perfumes button, .st-key-n_remates button, .st-key-n_esencias button {{
         background-color: transparent !important;
         border: none !important;
@@ -327,7 +334,7 @@ st.markdown(
     .st-key-n_perfumes button p, .st-key-n_remates button p, .st-key-n_esencias button p {{
         color: {text_color} !important;
         font-weight: 700 !important;
-        font-size: 0.82rem !important;
+        font-size: 0.85rem !important;
         letter-spacing: 0.8px !important;
     }}
 
@@ -339,18 +346,23 @@ st.markdown(
         padding: 0.35rem 0.85rem !important;
     }}
 
+    /* Inputs y Selectores */
     div[data-baseweb="input"], div[data-baseweb="base-input"], div[data-baseweb="select"] > div, div[data-testid="stPopover"] > button {{
         background-color: {input_bg} !important;
         border: 1px solid {input_border} !important;
-        border-radius: 6px !important;
+        border-radius: 8px !important;
         min-height: 40px !important;
+        color: {input_text} !important;
+    }}
+
+    div[data-baseweb="input"] input {{
         color: {input_text} !important;
     }}
 
     .st-key-btn_photo_search button {{
         background-color: {input_bg} !important;
         border: 1px solid {input_border} !important;
-        border-radius: 6px !important;
+        border-radius: 8px !important;
         padding: 0.3rem 0.6rem 0.3rem 2.1rem !important;
         background-image: url("{camera_icon_svg}") !important;
         background-repeat: no-repeat !important;
@@ -364,7 +376,7 @@ st.markdown(
     .catalog-card {{
         background-color: transparent;
         border: 1px solid {btn_border};
-        border-radius: 6px;
+        border-radius: 8px;
         overflow: hidden;
         position: relative;
         margin-bottom: 16px;
@@ -372,7 +384,7 @@ st.markdown(
     }}
     .catalog-card:hover {{
         border-color: #7a6a5d;
-        transform: scale(1.03);
+        transform: scale(1.02);
     }}
     .square-img-box {{
         position: relative;
@@ -453,14 +465,14 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# 4. CABECERA CON LOGO Y SWITCH RESTAURADO
+# 4. CABECERA CON LOGO Y SWITCH
 col_logo, col_espacio, col_actions = st.columns(
     [5, 1.8, 2.4], vertical_alignment="center"
 )
 
 with col_logo:
-  logo_color = "#8c7b6d"
-  logo_html = f"""
+    logo_color = "#8c7b6d"
+    logo_html = f"""
     <div style="display: inline-flex; align-items: center; gap: 12px; cursor: pointer; width: fit-content; transition: transform 0.2s ease;" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'" onclick="window.location.reload();">
         <svg width="34" height="34" viewBox="0 0 36 36" fill="none" stroke-linecap="round" stroke-linejoin="round">
             <path d="M 6.8 21 L 29.2 21 C 30 25 27 32 18 32 C 9 32 6 25 6.8 21 Z" fill="{logo_color}" />
@@ -476,47 +488,46 @@ with col_logo:
         </span>
     </div>
     """
-  st.markdown(logo_html, unsafe_allow_html=True)
+    st.markdown(logo_html, unsafe_allow_html=True)
 
 with col_actions:
-  btn_col1, btn_col2 = st.columns([1.4, 1], vertical_alignment="center")
-  with btn_col1:
-    st.button("Ingresar", key="login_btn", use_container_width=True)
-  with btn_col2:
-    st.button(" ", key="theme_toggle", on_click=toggle_theme)
+    btn_col1, btn_col2 = st.columns([1.4, 1], vertical_alignment="center")
+    with btn_col1:
+        st.button("Ingresar", key="login_btn", use_container_width=True)
+    with btn_col2:
+        st.button(" ", key="theme_toggle", on_click=toggle_theme)
 
 # 5. NAVEGACIÓN
 st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
 nav_cols = st.columns([1, 1, 1], vertical_alignment="center")
 
 with nav_cols[0]:
-  st.button(
-      "PERFUMES",
-      key="n_perfumes",
-      on_click=navigate_to,
-      args=("home",),
-      use_container_width=True,
-  )
+    st.button(
+        "PERFUMES",
+        key="n_perfumes",
+        on_click=navigate_to,
+        args=("home",),
+        use_container_width=True,
+    )
 with nav_cols[1]:
-  st.button(
-      "REMATES",
-      key="n_remates",
-      on_click=navigate_to,
-      args=("hype",),
-      use_container_width=True,
-  )
+    st.button(
+        "REMATES",
+        key="n_remates",
+        on_click=navigate_to,
+        args=("hype",),
+        use_container_width=True,
+    )
 with nav_cols[2]:
-  st.button(
-      "ESENCIAS",
-      key="n_esencias",
-      on_click=navigate_to,
-      args=("esencias_page",),
-      use_container_width=True,
-  )
+    st.button(
+        "ESENCIAS",
+        key="n_esencias",
+        on_click=navigate_to,
+        args=("esencias_page",),
+        use_container_width=True,
+    )
 
 st.markdown(
-    f"<hr style='margin: 6px 0 18px 0; border: none; border-bottom: 1px solid"
-    f" {btn_border}; opacity: 0.3;'>",
+    f"<hr style='margin: 6px 0 18px 0; border: none; border-bottom: 1px solid {btn_border}; opacity: 0.3;'>",
     unsafe_allow_html=True,
 )
 
@@ -525,17 +536,12 @@ essences_catalog = [
     {
         "name": "Bergamota",
         "family": "Cítrica",
-        "desc": (
-            "Cítrico fresco, chispeante y amargo con matices florales y"
-            " teáceos."
-        ),
+        "desc": "Cítrico fresco, chispeante y amargo con matices florales y teáceos.",
     },
     {
         "name": "Clementina",
         "family": "Cítrica",
-        "desc": (
-            "Jugosa, dulce y refrescante, aporta un toque cítrico efervescente."
-        ),
+        "desc": "Jugosa, dulce y refrescante, aporta un toque cítrico efervescente.",
     },
     {
         "name": "Limón",
@@ -560,9 +566,7 @@ essences_catalog = [
     {
         "name": "Petit Grain",
         "family": "Cítrica / Verde",
-        "desc": (
-            "Extraído de las hojas de naranjo amargo, verde, terroso y cítrico."
-        ),
+        "desc": "Extraído de las hojas de naranjo amargo, verde, terroso y cítrico.",
     },
     {
         "name": "Pomelo (Toronja)",
@@ -572,9 +576,7 @@ essences_catalog = [
     {
         "name": "Yuzu",
         "family": "Cítrica",
-        "desc": (
-            "Cítrico oriental entre mandarina y pomelo con notas exóticas."
-        ),
+        "desc": "Cítrico oriental entre mandarina y pomelo con notas exóticas.",
     },
     {
         "name": "Almendra",
@@ -739,9 +741,7 @@ essences_catalog = [
     {
         "name": "Abedul",
         "family": "Maderosa / Cuero",
-        "desc": (
-            "Ahumado, alquitranado, leñoso y con carácter de cuero."
-        ),
+        "desc": "Ahumado, alquitranado, leñoso y con carácter de cuero.",
     },
     {
         "name": "Albahaca",
@@ -801,9 +801,7 @@ essences_catalog = [
     {
         "name": "Vetiver",
         "family": "Terrosa / Maderosa",
-        "desc": (
-            "Maderoso, terroso, ahumado y con notas salinas o secas."
-        ),
+        "desc": "Maderoso, terroso, ahumado y con notas salinas o secas.",
     },
     {
         "name": "Anís Estrellado",
@@ -1053,9 +1051,7 @@ essences_catalog = [
     {
         "name": "Iso E Super",
         "family": "Sintética",
-        "desc": (
-            "Velada maderosa de cedro y ámbar, sutil e hipnótica."
-        ),
+        "desc": "Velada maderosa de cedro y ámbar, sutil e hipnótica.",
     },
     {
         "name": "Notas Marinas",
@@ -1065,9 +1061,7 @@ essences_catalog = [
     {
         "name": "Notas Solares",
         "family": "Sintética",
-        "desc": (
-            "Sensación de piel expuesta al sol, cálida y luminosa."
-        ),
+        "desc": "Sensación de piel expuesta al sol, cálida y luminosa.",
     },
     {
         "name": "Sangre (Metálica)",
@@ -1084,35 +1078,34 @@ col_search, col_filter, col_separator, col_photo = st.columns(
 )
 
 with col_search:
-  search_query = st.text_input(
-      "Buscar",
-      placeholder="Buscar perfume, marca o esencias...",
-      label_visibility="collapsed",
-  )
-
-with col_filter:
-  with st.popover("Esencias", use_container_width=True):
-    selected_essences = st.multiselect(
-        "Selecciona notas olfativas:",
-        options=all_notes,
-        placeholder="Filtrar...",
+    search_query = st.text_input(
+        "Buscar",
+        placeholder="Buscar perfume, marca o esencias...",
         label_visibility="collapsed",
     )
 
+with col_filter:
+    with st.popover("Esencias", use_container_width=True):
+        selected_essences = st.multiselect(
+            "Selecciona notas olfativas:",
+            options=all_notes,
+            placeholder="Filtrar...",
+            label_visibility="collapsed",
+        )
+
 with col_separator:
-  st.markdown(
-      f"<div style='border-left: 1px solid {btn_border}; height: 26px; margin:"
-      " auto;'></div>",
-      unsafe_allow_html=True,
-  )
+    st.markdown(
+        f"<div style='border-left: 1px solid {btn_border}; height: 26px; margin: auto;'></div>",
+        unsafe_allow_html=True,
+    )
 
 with col_photo:
-  st.button(
-      "Búsqueda visual",
-      key="btn_photo_search",
-      help="Buscar por imagen",
-      use_container_width=True,
-  )
+    st.button(
+        "Búsqueda visual",
+        key="btn_photo_search",
+        help="Buscar por imagen",
+        use_container_width=True,
+    )
 
 # 8. CHIPS DE NAVEGACIÓN RÁPIDA
 st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
@@ -1121,116 +1114,90 @@ col_chip1, col_chip2, col_chip3, col_chip_space = st.columns(
 )
 
 with col_chip1:
-  if st.button("Trend Del Hype", key="btn_trend", use_container_width=True):
-    st.switch_page("pages/trendhype.py")
+    if st.button("Trend Del Hype", key="btn_trend", use_container_width=True):
+        navigate_to("hype")
 with col_chip2:
-  st.page_link(
-      "pages/trustpage.py",
-      label="Páginas de Confianza",
-      icon="🛡️",
-      use_container_width=True,
-  )
+    if st.button("Páginas de Confianza", key="btn_trust", use_container_width=True):
+        navigate_to("trust_page")
 with col_chip3:
-  st.button(
-      "Comparar Precios",
-      key="btn_compare",
-      on_click=navigate_to,
-      args=("compare_page",),
-      use_container_width=True,
-  )
+    st.button(
+        "Comparar Precios",
+        key="btn_compare",
+        on_click=navigate_to,
+        args=("compare_page",),
+        use_container_width=True,
+    )
 
 st.markdown("<div style='margin-top: 18px;'></div>", unsafe_allow_html=True)
 
 # 9. VISTAS DE PÁGINA Y CATÁLOGO
 if st.session_state["current_page"] == "home":
-  st.markdown(
-      f"<div style='text-align: center; margin-bottom: 24px; color:"
-      f" {text_color}; letter-spacing: 1.5px; font-weight: 300; font-size:"
-      " 1.05rem; text-transform: uppercase;'>CATÁLOGO Y TENDENCIAS</div>",
-      unsafe_allow_html=True,
-  )
+    st.markdown(
+        f"<div style='text-align: center; margin-bottom: 24px; color: {text_color}; letter-spacing: 1.5px; font-weight: 300; font-size: 1.05rem; text-transform: uppercase;'>CATÁLOGO Y TENDENCIAS</div>",
+        unsafe_allow_html=True,
+    )
 
-  if selected_essences:
-    st.write(f"**Filtro activo:** {', '.join(selected_essences)}")
+    if selected_essences:
+        st.write(f"**Filtro activo:** {', '.join(selected_essences)}")
 
-  catalog_perfumes = [
-      {
-          "name": "Bleu de Chanel",
-          "brand": "Chanel",
-          "country": "Francia 🇫🇷",
-          "perfumer": "Jacques Polge",
-          "notes": (
-              "Toronja, Limón, Menta, Jengibre, Incienso, Cedro, Sándalo"
-          ),
-          "img": (
-              "https://m.media-amazon.com/images/I/71R2e1U3JYL._SL1500_.jpg"
-          ),
-      },
-      {
-          "name": "Sauvage Elixir",
-          "brand": "Dior",
-          "country": "Francia 🇫🇷",
-          "perfumer": "François Demachy",
-          "notes": "Canela, Nuez Moscada, Lavanda, Regaliz, Sándalo, Ámbar",
-          "img": (
-              "https://m.media-amazon.com/images/I/71xSg5Wf0-L._SL1500_.jpg"
-          ),
-      },
-      {
-          "name": "Baccarat Rouge 540",
-          "brand": "Maison Francis Kurkdjian",
-          "country": "Francia 🇫🇷",
-          "perfumer": "Francis Kurkdjian",
-          "notes": (
-              "Azafrán, Jazmín, Ámbar Gris, Madera de Cedro, Resina de Abeto"
-          ),
-          "img": (
-              "https://m.media-amazon.com/images/I/61yD-8sK6yL._SL1500_.jpg"
-          ),
-      },
-      {
-          "name": "Club de Nuit Intense",
-          "brand": "Armaf",
-          "country": "Emiratos Árabes 🇦🇪",
-          "perfumer": "Christian Provenzano",
-          "notes": "Limón, Piña, Grosellas Negras, Abedul, Jazmín, Almizcle",
-          "img": (
-              "https://m.media-amazon.com/images/I/61Yg40gX3mL._SL1500_.jpg"
-          ),
-      },
-      {
-          "name": "Angels' Share",
-          "brand": "Kilian",
-          "country": "Francia 🇫🇷",
-          "perfumer": "Benoist Lapouza",
-          "notes": (
-              "Cognac, Canela, Haba Tonka, Roble, Vainilla, Sándalo, Praliné"
-          ),
-          "img": (
-              "https://m.media-amazon.com/images/I/61sN52z4wEL._SL1500_.jpg"
-          ),
-      },
-      {
-          "name": "YSL Libre EDP",
-          "brand": "Yves Saint Laurent",
-          "country": "Francia 🇫🇷",
-          "perfumer": "Anne Flipo & Carlos Benaïm",
-          "notes": (
-              "Lavanda, Mandarina, Grosellas Negras, Flor de Azahar, Vainilla"
-          ),
-          "img": (
-              "https://m.media-amazon.com/images/I/61A+-0V2VFL._SL1500_.jpg"
-          ),
-      },
-  ]
+    catalog_perfumes = [
+        {
+            "name": "Bleu de Chanel",
+            "brand": "Chanel",
+            "country": "Francia 🇫🇷",
+            "perfumer": "Jacques Polge",
+            "notes": "Toronja, Limón, Menta, Jengibre, Incienso, Cedro, Sándalo",
+            "img": "https://m.media-amazon.com/images/I/71R2e1U3JYL._SL1500_.jpg",
+        },
+        {
+            "name": "Sauvage Elixir",
+            "brand": "Dior",
+            "country": "Francia 🇫🇷",
+            "perfumer": "François Demachy",
+            "notes": "Canela, Nuez Moscada, Lavanda, Regaliz, Sándalo, Ámbar",
+            "img": "https://m.media-amazon.com/images/I/71xSg5Wf0-L._SL1500_.jpg",
+        },
+        {
+            "name": "Baccarat Rouge 540",
+            "brand": "Maison Francis Kurkdjian",
+            "country": "Francia 🇫🇷",
+            "perfumer": "Francis Kurkdjian",
+            "notes": "Azafrán, Jazmín, Ámbar Gris, Madera de Cedro, Resina de Abeto",
+            "img": "https://m.media-amazon.com/images/I/61yD-8sK6yL._SL1500_.jpg",
+        },
+        {
+            "name": "Club de Nuit Intense",
+            "brand": "Armaf",
+            "country": "Emiratos Árabes 🇦🇪",
+            "perfumer": "Christian Provenzano",
+            "notes": "Limón, Piña, Grosellas Negras, Abedul, Jazmín, Almizcle",
+            "img": "https://m.media-amazon.com/images/I/61Yg40gX3mL._SL1500_.jpg",
+        },
+        {
+            "name": "Angels' Share",
+            "brand": "Kilian",
+            "country": "Francia 🇫🇷",
+            "perfumer": "Benoist Lapouza",
+            "notes": "Cognac, Canela, Haba Tonka, Roble, Vainilla, Sándalo, Praliné",
+            "img": "https://m.media-amazon.com/images/I/61sN52z4wEL._SL1500_.jpg",
+        },
+        {
+            "name": "YSL Libre EDP",
+            "brand": "Yves Saint Laurent",
+            "country": "Francia 🇫🇷",
+            "perfumer": "Anne Flipo & Carlos Benaïm",
+            "notes": "Lavanda, Mandarina, Grosellas Negras, Flor de Azahar, Vainilla",
+            "img": "https://m.media-amazon.com/images/I/61A+-0V2VFL._SL1500_.jpg",
+        },
+    ]
 
-  cols_per_row = 3
-  for i in range(0, len(catalog_perfumes), cols_per_row):
-    cols = st.columns(cols_per_row, gap="medium")
-    for j in range(cols_per_row):
-      if i + j < len(catalog_perfumes):
-        p = catalog_perfumes[i + j]
-        card_html = f"""
+    cols_per_row = 3
+    for i in range(0, len(catalog_perfumes), cols_per_row):
+        cols = st.columns(cols_per_row, gap="medium")
+        for j in range(cols_per_row):
+            if i + j < len(catalog_perfumes):
+                p = catalog_perfumes[i + j]
+                card_html = f"""
                 <div class="catalog-card">
                     <div class="square-img-box">
                         <img src="{p['img']}" alt="{p['name']}" referrerpolicy="no-referrer">
@@ -1247,52 +1214,47 @@ if st.session_state["current_page"] == "home":
                     </div>
                 </div>
                 """
-        with cols[j]:
-          st.markdown(card_html, unsafe_allow_html=True)
+                with cols[j]:
+                    st.markdown(card_html, unsafe_allow_html=True)
 
 elif st.session_state["current_page"] == "esencias_page":
-  st.markdown(
-      f"<div style='text-align: center; color: {text_color}; letter-spacing:"
-      " 1.5px; font-weight: 300; margin-bottom: 20px; font-size: 1.05rem;"
-      " text-transform: uppercase;'>DICCIONARIO DE ESENCIAS Y NOTAS"
-      " OLFATIVAS</div>",
-      unsafe_allow_html=True,
-  )
+    st.markdown(
+        f"<div style='text-align: center; color: {text_color}; letter-spacing: 1.5px; font-weight: 300; margin-bottom: 20px; font-size: 1.05rem; text-transform: uppercase;'>DICCIONARIO DE ESENCIAS Y NOTAS OLFATIVAS</div>",
+        unsafe_allow_html=True,
+    )
 
-  filtered_essences = essences_catalog
+    filtered_essences = essences_catalog
 
-  if search_query:
-    q = search_query.lower()
-    filtered_essences = [
-        e
-        for e in filtered_essences
-        if q in e["name"].lower()
-        or q in e["family"].lower()
-        or q in e["desc"].lower()
-    ]
+    if search_query:
+        q = search_query.lower()
+        filtered_essences = [
+            e
+            for e in filtered_essences
+            if q in e["name"].lower()
+            or q in e["family"].lower()
+            or q in e["desc"].lower()
+        ]
 
-  if selected_essences:
-    filtered_essences = [
-        e
-        for e in filtered_essences
-        if any(s.lower() in e["name"].lower() for s in selected_essences)
-    ]
+    if selected_essences:
+        filtered_essences = [
+            e
+            for e in filtered_essences
+            if any(s.lower() in e["name"].lower() for s in selected_essences)
+        ]
 
-  st.markdown(
-      f"<div style='margin-bottom: 16px; color: {subtext_color}; font-size:"
-      f" 0.85rem;'>Mostrando {len(filtered_essences)} esencias disponibles. Haz"
-      " clic en cualquier tarjeta para escuchar su tono acuático.</div>",
-      unsafe_allow_html=True,
-  )
+    st.markdown(
+        f"<div style='margin-bottom: 16px; color: {subtext_color}; font-size: 0.85rem;'>Mostrando {len(filtered_essences)} esencias disponibles. Haz clic en cualquier tarjeta para escuchar su tono acuático.</div>",
+        unsafe_allow_html=True,
+    )
 
-  if filtered_essences:
-    cols_per_row = 3
-    for i in range(0, len(filtered_essences), cols_per_row):
-      cols = st.columns(cols_per_row, gap="small")
-      for j in range(cols_per_row):
-        if i + j < len(filtered_essences):
-          e = filtered_essences[i + j]
-          card_html = f"""
+    if filtered_essences:
+        cols_per_row = 3
+        for i in range(0, len(filtered_essences), cols_per_row):
+            cols = st.columns(cols_per_row, gap="small")
+            for j in range(cols_per_row):
+                if i + j < len(filtered_essences):
+                    e = filtered_essences[i + j]
+                    card_html = f"""
                     <div class="essence-card">
                         <div class="essence-title">
                             <span>{e['name']}</span>
@@ -1301,23 +1263,20 @@ elif st.session_state["current_page"] == "esencias_page":
                         <div class="essence-desc">{e['desc']}</div>
                     </div>
                     """
-          with cols[j]:
-            st.markdown(card_html, unsafe_allow_html=True)
-  else:
-    st.info(
-        "No se encontraron esencias que coincidan con la búsqueda o filtro"
-        " seleccionado."
-    )
+                    with cols[j]:
+                        st.markdown(card_html, unsafe_allow_html=True)
+    else:
+        st.info(
+            "No se encontraron esencias que coincidan con la búsqueda o filtro seleccionado."
+        )
 
 elif st.session_state["current_page"] == "trust_page":
-  st.markdown(
-      f"<div style='text-align: center; color: {text_color}; font-weight: 300;"
-      " font-size: 0.95rem;'>Páginas de Confianza (Próximamente)</div>",
-      unsafe_allow_html=True,
-  )
+    st.markdown(
+        f"<div style='text-align: center; color: {text_color}; font-weight: 300; font-size: 0.95rem;'>Páginas de Confianza (Próximamente)</div>",
+        unsafe_allow_html=True,
+    )
 elif st.session_state["current_page"] == "compare_page":
-  st.markdown(
-      f"<div style='text-align: center; color: {text_color}; font-weight: 300;"
-      " font-size: 0.95rem;'>Comparador de Precios (Próximamente)</div>",
-      unsafe_allow_html=True,
-  )
+    st.markdown(
+        f"<div style='text-align: center; color: {text_color}; font-weight: 300; font-size: 0.95rem;'>Comparador de Precios (Próximamente)</div>",
+        unsafe_allow_html=True,
+    )
