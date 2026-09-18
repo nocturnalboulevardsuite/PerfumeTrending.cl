@@ -178,13 +178,14 @@ js_color_script = f"""
 
 components.html(js_color_script, height=0, width=0)
 
-# 3. CSS ADAPTABLE Y CORREGIDO PARA TEMA CLARO Y OSCURO (AMPLIADO)
+# 3. CSS ADAPTABLE Y CORREGIDO (NÍTIDO Y ZOOM EN BOTONES)
 st.markdown(f"""
     <style>
+    /* Corrección global para evitar fuentes borrosas y forzar nitidez */
     html, body, .stApp {{
-        zoom: 1.0;
         -webkit-font-smoothing: antialiased !important;
         -moz-osx-font-smoothing: grayscale !important;
+        text-rendering: optimizeLegibility !important;
     }}
 
     header[data-testid="stHeader"] {{ display: none !important; }}
@@ -201,22 +202,29 @@ st.markdown(f"""
         color: {text_color} !important;
         font-size: 1rem !important;
         -webkit-font-smoothing: antialiased !important;
+        -moz-osx-font-smoothing: grayscale !important;
         text-shadow: none !important;
     }}
 
-    /* Estilizado global de botones con texto legible por tema */
+    /* Transición suave y optimizada para todos los botones con soporte de ZOOM */
     div.stButton > button,
     div.stDownloadButton > button,
     div[data-testid="stPopover"] > button,
     button[data-testid="stPopoverButton"],
     .st-key-btn_photo_search button,
-    .st-key-login_btn button {{
-        transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease !important;
+    .st-key-login_btn button,
+    .st-key-btn_trend button, 
+    .st-key-btn_trust button, 
+    .st-key-btn_compare button,
+    a[data-testid="stPageLink-NavLink"] {{
+        transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease !important;
         -webkit-font-smoothing: antialiased !important;
         -moz-osx-font-smoothing: grayscale !important;
         text-shadow: none !important;
         box-shadow: none !important;
         outline: none !important;
+        backface-visibility: hidden !important;
+        will-change: transform;
     }}
 
     div.stButton > button p,
@@ -225,18 +233,22 @@ st.markdown(f"""
         color: {btn_text} !important;
     }}
 
-    /* Corrección de Hover */
+    /* EFECTO ZOOM HOVER EN BOTONES GENERALES */
     div.stButton > button:hover,
     div[data-testid="stPopover"] > button:hover,
     button[data-testid="stPopoverButton"]:hover,
     .st-key-btn_photo_search button:hover,
     .st-key-login_btn button:hover,
-    div.stButton > button:focus,
-    div.stButton > button:active {{
+    div.stButton > button:focus {{
+        transform: scale(1.04) !important;
         cursor: pointer !important;
-        box-shadow: none !important;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
         filter: none !important;
         outline: none !important;
+    }}
+
+    div.stButton > button:active {{
+        transform: scale(0.98) !important;
     }}
 
     div.stButton > button:hover p,
@@ -279,7 +291,7 @@ st.markdown(f"""
         font-weight: 600 !important;
     }}
 
-    /* Texto de botones de navegación superior (MÁS GRANDES) */
+    /* Botones de navegación superior con Zoom Hover */
     .st-key-n_perfumes button, 
     .st-key-n_remates button,
     .st-key-n_esencias button {{
@@ -294,6 +306,9 @@ st.markdown(f"""
         letter-spacing: 0.8px !important;
         min-height: 0px !important;
         height: auto !important;
+        transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.15s ease !important;
+        will-change: transform;
+        backface-visibility: hidden !important;
     }}
 
     .st-key-n_perfumes button p, 
@@ -305,6 +320,12 @@ st.markdown(f"""
         font-size: 0.95rem !important;
     }}
 
+    .st-key-n_perfumes button:hover, 
+    .st-key-n_remates button:hover,
+    .st-key-n_esencias button:hover {{
+        transform: scale(1.08) !important;
+    }}
+
     .st-key-n_perfumes button:hover p, 
     .st-key-n_remates button:hover p,
     .st-key-n_esencias button:hover p {{
@@ -312,7 +333,7 @@ st.markdown(f"""
         text-shadow: none !important;
     }}
 
-    /* Botones tipo Chip (MÁS AMPLIOS) */
+    /* Botones tipo Chip con Zoom Hover */
     .st-key-btn_trend button, 
     .st-key-btn_trust button, 
     .st-key-btn_compare button {{
@@ -345,9 +366,10 @@ st.markdown(f"""
     .st-key-btn_trend button:hover, 
     .st-key-btn_trust button:hover, 
     .st-key-btn_compare button:hover {{
+        transform: scale(1.05) !important;
         border-color: {"#4a5061" if is_dark else "#b5b5c0"} !important;
         background-color: {"#1a1d26" if is_dark else "#f0f0f5"} !important;
-        box-shadow: none !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
         filter: none !important;
     }}
 
@@ -359,12 +381,19 @@ st.markdown(f"""
         filter: none !important;
     }}
 
-    /* Estilizado para st.page_link */
+    /* Estilizado para st.page_link con Zoom Hover */
     a[data-testid="stPageLink-NavLink"] {{
         background-color: {btn_bg} !important;
         border: 1px solid {btn_border} !important;
         border-radius: 20px !important;
         padding: 0.4rem 1rem !important;
+        transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.15s ease !important;
+        will-change: transform;
+        backface-visibility: hidden !important;
+    }}
+    a[data-testid="stPageLink-NavLink"]:hover {{
+        transform: scale(1.05) !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
     }}
     a[data-testid="stPageLink-NavLink"] span,
     a[data-testid="stPageLink-NavLink"] p {{
@@ -373,7 +402,7 @@ st.markdown(f"""
         font-weight: 600 !important;
     }}
 
-    /* Campos de Entrada e Inputs (44px) */
+    /* Campos de Entrada e Inputs */
     div[data-baseweb="input"],
     div[data-baseweb="base-input"],
     div[data-baseweb="select"] > div,
@@ -396,6 +425,7 @@ st.markdown(f"""
         padding: 8px 14px !important;
         color: {input_text} !important;
         background-color: {input_bg} !important;
+        -webkit-font-smoothing: antialiased !important;
     }}
 
     div[data-baseweb="input"] input::placeholder {{
@@ -403,10 +433,14 @@ st.markdown(f"""
         font-size: 0.95rem !important;
     }}
 
-    /* TRANSPARENCIA PARA BOTÓN DE TEMA - ESCALADO */
+    /* Botón de cambio de Tema con Zoom Hover */
     .st-key-theme_toggle {{
         transform: scale(1.15);
         transform-origin: center right;
+        transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+    }}
+    .st-key-theme_toggle:hover {{
+        transform: scale(1.25) !important;
     }}
     .st-key-theme_toggle,
     .st-key-theme_toggle button,
@@ -468,7 +502,7 @@ st.markdown(f"""
         z-index: 2 !important;
     }}
 
-    /* BOTÓN DE BÚSQUEDA VISUAL MÁS GRANDE */
+    /* Botón de Búsqueda Visual */
     .st-key-btn_photo_search button {{
         background-color: {input_bg} !important;
         border: 1px solid {input_border} !important;
@@ -488,7 +522,7 @@ st.markdown(f"""
         font-weight: 600 !important;
     }}
 
-    /* TARJETAS MÁS LEGIBLES */
+    /* Tarjetas del catálogo */
     .catalog-card {{
         background-color: transparent;
         border: 1px solid {btn_border};
@@ -496,10 +530,13 @@ st.markdown(f"""
         overflow: hidden;
         position: relative;
         margin-bottom: 16px;
-        transition: border-color 0.2s ease;
+        transition: border-color 0.2s ease, transform 0.22s ease;
+        backface-visibility: hidden;
+        will-change: transform;
     }}
     .catalog-card:hover {{
         border-color: #7a6a5d;
+        transform: translateY(-2px);
     }}
     .square-img-box {{
         position: relative;
@@ -530,6 +567,7 @@ st.markdown(f"""
         opacity: 0;
         transition: opacity 0.2s ease;
         text-align: left;
+        -webkit-font-smoothing: antialiased;
     }}
     .catalog-card:hover .card-hover-overlay {{ opacity: 1; }}
     .overlay-title {{
@@ -540,11 +578,12 @@ st.markdown(f"""
         border-bottom: 1px solid rgba(255,255,255,0.1);
         padding-bottom: 6px;
     }}
-    .overlay-info {{ font-size: 0.85rem; font-weight: 300; line-height: 1.5; color: #e0e0e0; margin-bottom: 6px; }}
+    .overlay-info {{ font-size: 0.85rem; font-weight: 400; line-height: 1.5; color: #e0e0e0; margin-bottom: 6px; }}
     .card-footer-info {{ padding: 14px 12px; text-align: center; background-color: {btn_bg}; }}
-    .card-perfume-name {{ font-size: 0.95rem; font-weight: 500; color: {text_color}; margin-bottom: 4px; }}
-    .card-perfume-brand {{ font-size: 0.8rem; font-weight: 300; color: {subtext_color}; text-transform: uppercase; letter-spacing: 0.5px; }}
+    .card-perfume-name {{ font-size: 0.95rem; font-weight: 600; color: {text_color}; margin-bottom: 4px; -webkit-font-smoothing: antialiased; }}
+    .card-perfume-brand {{ font-size: 0.8rem; font-weight: 400; color: {subtext_color}; text-transform: uppercase; letter-spacing: 0.5px; }}
 
+    /* Tarjetas de esencias optimizadas para legibilidad alta */
     .essence-card {{ 
         border-radius: 8px; 
         padding: 14px 16px; 
@@ -555,17 +594,34 @@ st.markdown(f"""
         user-select: none;
         transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.22s ease, border-color 0.22s ease;
         will-change: transform;
+        backface-visibility: hidden;
+        -webkit-font-smoothing: antialiased !important;
+        -moz-osx-font-smoothing: grayscale !important;
     }}
     .essence-card:hover {{
         transform: translateY(-4px) scale(1.025);
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
     }}
     .essence-card:active {{
         transform: translateY(0px) scale(0.97);
         box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
     }}
-    .essence-title {{ font-size: 0.95rem; font-weight: 600; margin-bottom: 6px; letter-spacing: 0.3px; }}
-    .essence-desc {{ font-size: 0.85rem; font-weight: 400; line-height: 1.5; opacity: 0.9; }}
+    .essence-title {{ 
+        font-size: 0.98rem; 
+        font-weight: 700; 
+        margin-bottom: 6px; 
+        letter-spacing: 0.3px; 
+        -webkit-font-smoothing: antialiased; 
+        text-rendering: optimizeLegibility;
+    }}
+    .essence-desc {{ 
+        font-size: 0.88rem; 
+        font-weight: 500; 
+        line-height: 1.5; 
+        opacity: 0.95; 
+        -webkit-font-smoothing: antialiased;
+        text-rendering: optimizeLegibility;
+    }}
 
     .sound-mute-btn {{
         background: transparent;
@@ -579,11 +635,13 @@ st.markdown(f"""
         align-items: center;
         justify-content: center;
         font-size: 1.15rem;
-        transition: transform 0.2s ease, background-color 0.2s ease;
+        transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s ease;
         margin-bottom: 24px;
+        will-change: transform;
+        backface-visibility: hidden;
     }}
     .sound-mute-btn:hover {{
-        transform: scale(1.1);
+        transform: scale(1.15);
         background-color: {btn_bg};
     }}
     .sound-mute-btn:active {{
