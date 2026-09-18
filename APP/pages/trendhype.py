@@ -61,8 +61,19 @@ st.markdown(f"""
     }}
 
     /* SWITCH NEUTRO */
+    .st-key-theme_toggle,
+    .st-key-theme_toggle div[data-testid="stButton"] {{
+        background: transparent !important;
+        background-color: transparent !important;
+    }}
+
     .st-key-theme_toggle div[data-testid="stButton"] > button,
-    .st-key-theme_toggle button {{
+    .st-key-theme_toggle button,
+    .st-key-theme_toggle button:hover,
+    .st-key-theme_toggle button:focus,
+    .st-key-theme_toggle button:active,
+    .st-key-theme_toggle button:focus-visible,
+    div[data-testid="stElementContainer"].st-key-theme_toggle button {{
         background: transparent !important;
         background-color: transparent !important;
         border: none !important;
@@ -198,7 +209,7 @@ st.markdown(f"""
         color: {text_color} !important;
         font-weight: 700 !important;
         font-size: 1rem !important;
-        margin: 0,9 !important;
+        margin: 0 !important;
         display: flex;
         align-items: center !important;
         justify-content: flex-start;
@@ -504,7 +515,7 @@ st.markdown(f"""
     .price-text {{ text-align: center; font-size: 11px; color: {text_color}; margin-bottom: 6px; }}
 
     /* BOTONES DE COMPARAR PRECIOS */
-    div[data-testid="stElementContainer"] > div.stButton > button:not([aria-label=" "]) {{
+    div[data-testid="stElementContainer"]:not(.st-key-theme_toggle) > div.stButton > button {{
         background-color: #d83737 !important;
         color: #ffffff !important;
         border: none !important;
@@ -517,14 +528,14 @@ st.markdown(f"""
         width: 100% !important;
     }}
 
-    div[data-testid="stElementContainer"] > div.stButton > button:not([aria-label=" "]):hover {{
+    div[data-testid="stElementContainer"]:not(.st-key-theme_toggle) > div.stButton > button:hover {{
         background-color: #be2e2e !important;
         transform: scale(1.03) translateY(-2px) !important;
         box-shadow: 0 6px 18px rgba(216, 55, 55, 0.38) !important;
         color: #ffffff !important;
     }}
 
-    div[data-testid="stElementContainer"] > div.stButton > button:not([aria-label=" "]):active {{
+    div[data-testid="stElementContainer"]:not(.st-key-theme_toggle) > div.stButton > button:active {{
         transform: scale(0.98) translateY(0px) !important;
     }}
     </style>
