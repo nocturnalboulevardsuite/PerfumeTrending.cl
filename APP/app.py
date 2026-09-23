@@ -56,9 +56,9 @@ bottle_svg = (
 camera_icon_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23{btn_text[1:]}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z'/><circle cx='12' cy='13' r='4'/></svg>"
 user_icon_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23{btn_text[1:]}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2'/><circle cx='12' cy='7' r='4'/></svg>"
 
-# ICONOS ILUSTRADOS EN ROJO
-tracks_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff3838' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M8 22L10 2M16 22L14 2M8.3 18h7.4M8.8 13.5h6.4M9.3 9h5.4M9.8 4.5h4.4'/></svg>"
-train_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff3838' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><rect x='5' y='11' width='14' height='9' rx='2'/><path d='M7 11V6a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v5M10 2v2M14 2v2M8 15h8'/><circle cx='8.5' cy='17.5' r='1' fill='%23ff3838'/><circle cx='15.5' cy='17.5' r='1' fill='%23ff3838'/></svg>"
+# ICONOS ILUSTRADOS EN ROJO (Vías rectilínas y Tren estilizado)
+tracks_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff3838' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M7 1v22M17 1v22M7 4h10M7 9h10M7 14h10M7 19h10'/></svg>"
+train_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff3838' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><rect x='4' y='3' width='16' height='13' rx='2.5' fill='%23ff3838'/><rect x='7' y='5.5' width='10' height='4.5' rx='1' fill='%230c0e12'/><circle cx='7.5' cy='12.5' r='1' fill='%23ffffff'/><circle cx='16.5' cy='12.5' r='1' fill='%23ffffff'/><path d='M7 16l-2 3M17 16l2 3M8 16h8' stroke='%23ff3838' stroke-width='2'/></svg>"
 shield_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff3838' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/><path d='m9 12 2 2 4-4'/></svg>"
 tag_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff3838' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12 2H2v10l11.29 11.29a1 1 0 0 0 1.41 0l7.58-7.58a1 1 0 0 0 0-1.41L12 2z'/><circle cx='7.5' cy='7.5' r='1.5' fill='%23ff3838'/></svg>"
 
@@ -424,26 +424,26 @@ st.markdown(f"""
     a[data-testid="stPageLink-NavLink"][href*="trustpage"],
     a[data-testid="stPageLink-NavLink"][href*="compararprecios"] {{
         position: relative !important;
-        padding-left: 2.7rem !important;
+        padding-left: 2.8rem !important;
         padding-right: 1.1rem !important;
         overflow: hidden !important;
     }}
 
-    /* 1. Trend Del Hype: Vías inclinadas + Tren sobre vías avanzando hasta el final en hover */
+    /* 1. Trend Del Hype: Vías Fijas + Tren Animado Subiendo */
     a[data-testid="stPageLink-NavLink"][href*="trendhype"]::before {{
         content: '' !important;
         position: absolute !important;
-        left: 14px !important;
+        left: 13px !important;
         top: 50% !important;
-        transform: translateY(-50%) rotate(28deg) !important;
-        width: 20px !important;
-        height: 22px !important;
+        transform: translateY(-50%) !important;
+        width: 18px !important;
+        height: 24px !important;
         background-image: url("{tracks_red_svg}") !important;
         background-repeat: no-repeat !important;
         background-size: contain !important;
         background-position: center !important;
         z-index: 1 !important;
-        opacity: 0.85 !important;
+        opacity: 0.65 !important;
     }}
 
     a[data-testid="stPageLink-NavLink"][href*="trendhype"]::after {{
@@ -451,32 +451,33 @@ st.markdown(f"""
         position: absolute !important;
         left: 14px !important;
         top: 50% !important;
-        transform: translateY(3px) rotate(28deg) !important;
-        width: 20px !important;
-        height: 22px !important;
+        transform: translateY(-50%) !important;
+        width: 16px !important;
+        height: 16px !important;
         background-image: url("{train_red_svg}") !important;
         background-repeat: no-repeat !important;
         background-size: contain !important;
         background-position: center !important;
         z-index: 2 !important;
-        transition: transform 0.25s ease !important;
     }}
 
     a[data-testid="stPageLink-NavLink"][href*="trendhype"]:hover::after {{
-        animation: trainClimbTrack 0.85s infinite linear !important;
+        animation: trainDrive 0.85s infinite linear !important;
     }}
 
-    @keyframes trainClimbTrack {{
+    @keyframes trainDrive {{
         0% {{
-            transform: translateY(6px) rotate(28deg);
+            transform: translateY(16px);
+            opacity: 0;
+        }}
+        20% {{
             opacity: 1;
         }}
         80% {{
-            transform: translateY(-9px) rotate(28deg);
             opacity: 1;
         }}
         100% {{
-            transform: translateY(-13px) rotate(28deg);
+            transform: translateY(-18px);
             opacity: 0;
         }}
     }}
@@ -904,7 +905,7 @@ elif st.session_state['current_page'] == 'esencias_page':
         "Geranio": "Verde, floral y rosado con matices aromáticos.",
         "Heliotropo": "Polvoso, avainillado y meloso con ecos de almendra dulce.",
         "Iris (Orris)": "Polvoso, elegante y aristocrático; evoca la finura del maquillaje.",
-        "Lavanda": "Aromática, limpia y relaxing; pilar clásico que aporta serenidad.",
+        "Lavanda": "Aromática, limpia y relajante; pilar clásico que aporta serenidad.",
         "Lilium (Lirio)": "Floral noble, verde y radiante con presencia pulcra.",
         "Mimosa": "Cálida, dulce, polvosa y mielada; evoca la primavera.",
         "Peonía": "Floral delicado, fresco y acuático similar a la rosa joven.",
