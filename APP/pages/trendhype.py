@@ -1,37 +1,45 @@
 import streamlit as st
+import streamlit.components.v1 as components
 
-# 1. CONFIGURACIÓN DE PÁGINA
-st.set_page_config(page_title="Radar del Hype - PerfumeTrending", layout="wide")
+# 1. CONFIGURACIÓN DE PÁGINA Y ESTADO
+st.set_page_config(page_title="PerfumeTrending", layout="wide", initial_sidebar_state="collapsed")
 
-# 2. GESTIÓN DEL TEMA Y ESTADO
-if "current_page" not in st.session_state:
-    st.session_state.current_page = "home"
-if "selected_perfume" not in st.session_state:
-    st.session_state.selected_perfume = None
-if "selected_month" not in st.session_state:
-    st.session_state.selected_month = "Este Mes"
-
-if "theme" not in st.session_state:
-    st.session_state.theme = "dark"
+if 'current_page' not in st.session_state:
+    st.session_state['current_page'] = 'home'
+if 'theme' not in st.session_state:
+    st.session_state['theme'] = 'dark'
+if 'selected_perfume' not in st.session_state:
+    st.session_state['selected_perfume'] = None
+if 'selected_month' not in st.session_state:
+    st.session_state['selected_month'] = 'Este Mes'
 
 def toggle_theme():
-    st.session_state.theme = "light" if st.session_state.theme == "dark" else "dark"
+    st.session_state['theme'] = 'dark' if st.session_state['theme'] == 'light' else 'light'
 
-is_dark = st.session_state.theme == "dark"
+def navigate_to(page, perfume_data=None):
+    st.session_state['current_page'] = page
+    if perfume_data:
+        st.session_state['selected_perfume'] = perfume_data
 
-# 3. PALETA DE COLORES Y SVGS DEL SWITCH (INCORPORADO DE SWITCH_2)
-bg_color = "#0c0e12" if is_dark else "#f9f9fb"
+is_dark = st.session_state['theme'] == 'dark'
+
+# Colores dinámicos adaptables por tema
+app_bg = "#0c0e12" if is_dark else "#f9f9fb"
 card_bg = "#14171d" if is_dark else "#ffffff"
 border_color = "#2a2e39" if is_dark else "#e4e4e7"
 text_color = "#f0f0f0" if is_dark else "#18181b"
-subtext_color = "#9a9a9a" if is_dark else "#71717a"
+subtext_color = "#888890" if is_dark else "#666670"
 accent_color = "#d4c2a5" if is_dark else "#8c7b6d"
 
-badge_green_bg = "#162b1e" if is_dark else "#ecfdf5"
-badge_green_text = "#b8f5c8" if is_dark else "#047857"
-badge_green_border = "#2a543b" if is_dark else "#a7f3d0"
+btn_bg = "#161920" if is_dark else "#ffffff"
+btn_text = "#ffffff" if is_dark else "#18181b"
+btn_border = "#2a2e39" if is_dark else "#d1d5db"
 
-# Configuración del Switch
+input_bg = "#14171d" if is_dark else "#ffffff"
+input_text = "#f0f0f0" if is_dark else "#18181b"
+input_border = "#2a2e39" if is_dark else "#d1d5db"
+
+# Posicionamiento del Switch de Tema
 bottle_left_pos = "42px" if is_dark else "-2px"
 static_icon_pos = "12px center" if is_dark else "calc(100% - 12px) center"
 
@@ -47,25 +55,151 @@ bottle_svg = (
     "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 58'><rect x='18' y='2' width='14' height='7' rx='2' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><rect x='21' y='9' width='8' height='5' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='19' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='5' fill='none' stroke='%23111111' stroke-width='2'/><line x1='25' y1='23' x2='25' y2='26' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='25' y1='42' x2='25' y2='45' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='14' y1='34' x2='17' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='33' y1='34' x2='36' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='17' y1='26' x2='19' y2='28' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='31' y1='40' x2='33' y2='42' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='17' y1='42' x2='19' y2='40' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='31' y1='28' x2='33' y2='26' stroke='%23111111' stroke-width='2' stroke-linecap='round'/></svg>"
 )
 
-# 4. ESTILOS CSS REFINADOS CON PALETA UNIFICADA
+camera_icon_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23{btn_text[1:]}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z'/><circle cx='12' cy='13' r='4'/></svg>"
+user_icon_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23{btn_text[1:]}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2'/><circle cx='12' cy='7' r='4'/></svg>"
+
+# ICONOS ILUSTRATIVOS
+trend_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff3838' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'><path d='M2 19h20M2 22h20M5 19v3M9 19v3M13 19v3M17 19v3M21 19v3' stroke='%23ff3838'/><path d='M4 11h9v7H4z' fill='%23ff3838'/><path d='M13 7h6v11h-6z' fill='%23ff3838'/><rect x='15' y='9' width='3' height='3' fill='%23ffffff'/><path d='M6 7h2v4H6z' fill='%23ff3838'/><path d='M19 14l3 4h-3z' fill='%23ff3838'/><circle cx='6.5' cy='18.5' r='1.5' fill='%23ff3838' stroke='%23ffffff' stroke-width='0.5'/><circle cx='10.5' cy='18.5' r='1.5' fill='%23ff3838' stroke='%23ffffff' stroke-width='0.5'/><circle cx='16' cy='18.5' r='1.5' fill='%23ff3838' stroke='%23ffffff' stroke-width='0.5'/></svg>"
+shield_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff3838' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/><path d='m9 12 2 2 4-4'/></svg>"
+tag_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff3838' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12 2H2v10l11.29 11.29a1 1 0 0 0 1.41 0l7.58-7.58a1 1 0 0 0 0-1.41L12 2z'/><circle cx='7.5' cy='7.5' r='1.5' fill='%23ff3838'/></svg>"
+
+# 2. SISTEMA DE SONIDO Y EVENTOS DE TARJETAS
+js_color_script = f"""
+<script>
+(function() {{
+    const doc = window.parent.document;
+    const isDark = {str(is_dark).lower()};
+    
+    window.parent.soundMuted = window.parent.soundMuted || false;
+    
+    window.parent.playBubbleSound = function() {{
+        if (window.parent.soundMuted) return;
+        try {{
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContext) return;
+            if (!window.parent.audioCtx) {{
+                window.parent.audioCtx = new AudioContext();
+            }}
+            const ctx = window.parent.audioCtx;
+            if (ctx.state === 'suspended') {{
+                ctx.resume();
+            }}
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+
+            osc.type = 'sine';
+            const now = ctx.currentTime;
+
+            osc.frequency.setValueAtTime(220, now);
+            osc.frequency.exponentialRampToValueAtTime(750, now + 0.07);
+
+            gain.gain.setValueAtTime(0.25, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
+
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+
+            osc.start(now);
+            osc.stop(now + 0.07);
+        }} catch(e) {{ console.error(e); }}
+    }};
+
+    function attachCardEvents() {{
+        const essenceCards = doc.querySelectorAll('.hype-card');
+        essenceCards.forEach(card => {{
+            if (!card.dataset.soundAttached) {{
+                card.dataset.soundAttached = 'true';
+                card.addEventListener('click', () => window.parent.playBubbleSound());
+            }}
+        }});
+    }}
+
+    let debounceTimer = null;
+    const observer = new MutationObserver(() => {{
+        if (debounceTimer) clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(attachCardEvents, 100);
+    }});
+    
+    observer.observe(doc.body, {{ childList: true, subtree: true }});
+    attachCardEvents();
+}})();
+</script>
+"""
+
+components.html(js_color_script, height=0, width=0)
+
+# 3. CSS ADAPTABLE, BOTONES Y SWITCH DE TEMA
 st.markdown(f"""
     <style>
     header[data-testid="stHeader"] {{ display: none !important; }}
     div[data-testid="stAppViewContainer"] {{ padding-top: 0px !important; }}
-    
-    .stApp {{ background-color: {bg_color} !important; }}
-    
-    .main .block-container,
-    div.block-container,
-    [data-testid="stMainBlockContainer"],
-    [data-testid="stAppViewBlockContainer"] {{
-        padding-top: 1.2rem !important;
-        margin-top: 0rem !important;
-        padding-bottom: 2rem !important;
+
+    .stApp {{ 
+        background-color: {app_bg} !important; 
+        color: {text_color} !important; 
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+    }}
+
+    .block-container {{ 
+        padding-top: 1.2rem !important; 
+        padding-bottom: 2rem !important; 
         max-width: 1200px !important;
     }}
 
-    /* SWITCH NEUTRO Y PERSONALIZADO */
+    .stApp p, .stApp span, .stApp label, .stMarkdown p {{
+        color: {text_color} !important;
+        text-shadow: none !important;
+    }}
+
+    /* BOTÓN INGRESAR (LOGIN) Y CONTENEDORES DE LA CABECERA */
+    .st-key-login_btn, .st-key-theme_toggle {{
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-end !important;
+        height: 100% !important;
+    }}
+
+    .st-key-login_btn button {{
+        background-color: {btn_bg} !important;
+        color: {btn_text} !important;
+        border: 1px solid {btn_border} !important;
+        border-radius: 10px !important;
+        padding: 8px 18px !important;
+        font-weight: 600 !important;
+        font-size: 14px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 8px !important;
+        transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.15s ease, border-color 0.15s ease !important;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.1) !important;
+        width: auto !important;
+    }}
+
+    .st-key-login_btn button p {{
+        color: {btn_text} !important;
+        margin: 0 !important;
+        font-weight: 700 !important;
+    }}
+
+    .st-key-login_btn button::before {{
+        content: '' !important;
+        display: inline-block !important;
+        width: 18px !important;
+        height: 18px !important;
+        background-image: url("{user_icon_svg}") !important;
+        background-repeat: no-repeat !important;
+        background-size: contain !important;
+        background-position: center !important;
+    }}
+
+    .st-key-login_btn button:hover {{
+        transform: scale(1.04) !important;
+        border-color: #d83737 !important;
+        cursor: pointer !important;
+    }}
+
+    /* SWITCH PERSONALIZADO DE TEMA DE BOTELLA */
     .st-key-theme_toggle,
     .st-key-theme_toggle div[data-testid="stButton"] {{
         background: transparent !important;
@@ -129,7 +263,7 @@ st.markdown(f"""
         z-index: 2 !important;
     }}
 
-    /* TÍTULO Y TOOLTIP */
+    /* TÍTULO Y TOOLTIP DE INFORMACIÓN */
     .radar-title-container {{
         display: inline-flex;
         align-items: baseline;
@@ -209,7 +343,7 @@ st.markdown(f"""
         pointer-events: auto;
     }}
 
-    /* ETIQUETA "FILTRADO POR :" */
+    /* FILTROS Y POPOVER */
     .filter-label-text {{
         color: {text_color} !important;
         font-weight: 700 !important;
@@ -221,7 +355,6 @@ st.markdown(f"""
         height: 32px;
     }}
 
-    /* BOTÓN PRINCIPAL DEL POPOVER */
     div[data-testid="stPopover"] {{
         display: flex !important;
         align-items: center !important;
@@ -264,22 +397,13 @@ st.markdown(f"""
         justify-content: center !important;
     }}
 
-    div[data-testid="stPopover"] button svg {{
-        fill: {text_color} !important;
-        width: 12px !important;
-        height: 12px !important;
-        margin: 0 !important;
-        flex-shrink: 0 !important;
-    }}
-
     div[data-testid="stPopover"] button:hover {{
-        background-color: {bg_color} !important;
+        background-color: {app_bg} !important;
         border-color: #d83737 !important;
         transform: translateY(-1px) !important;
         box-shadow: 0 3px 8px rgba(0,0,0,0.08) !important;
     }}
 
-    /* MENÚ DESPLEGABLE */
     div[data-testid="stPopoverBody"] {{
         padding: 6px !important;
         min-width: 160px !important;
@@ -309,19 +433,13 @@ st.markdown(f"""
     }}
 
     div[data-testid="stPopoverBody"] div.stButton > button:hover {{
-        background-color: {bg_color} !important;
+        background-color: {app_bg} !important;
         color: #d83737 !important;
         transform: none !important;
         box-shadow: none !important;
     }}
 
-    div[data-testid="stPopoverBody"] div.stButton > button p {{
-        font-size: 13px !important;
-        font-weight: 600 !important;
-        color: inherit !important;
-    }}
-
-    /* CHIP DE YOUTUBE */
+    /* CHIP YOUTUBE */
     .social-select-box {{
         display: flex;
         align-items: center;
@@ -361,45 +479,11 @@ st.markdown(f"""
         user-select: none;
     }}
 
-    .yt-chip-btn span {{
-        display: inline-flex;
-        align-items: center;
-        line-height: 1;
-    }}
-
     .yt-chip-btn:hover {{
         transform: translateY(-1px);
         border-color: #d83737;
-        background-color: {bg_color};
+        background-color: {app_bg};
         box-shadow: 0 3px 8px rgba(216, 55, 55, 0.15);
-    }}
-
-    .yt-chip-btn:active {{
-        transform: scale(0.96);
-    }}
-
-    .yt-bounce {{
-        animation: ytPulseBounce 0.4s ease;
-    }}
-
-    @keyframes ytPulseBounce {{
-        0% {{ transform: scale(1); }}
-        40% {{ transform: scale(1.12) rotate(-3deg); }}
-        80% {{ transform: scale(0.96) rotate(2deg); }}
-        100% {{ transform: scale(1); }}
-    }}
-
-    .yt-particle {{
-        position: fixed;
-        z-index: 99999;
-        pointer-events: none;
-        font-size: 18px;
-        animation: floatAndFade 0.85s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
-    }}
-
-    @keyframes floatAndFade {{
-        0% {{ opacity: 1; transform: translate(0, 0) scale(0.6) rotate(0deg); }}
-        100% {{ opacity: 0; transform: translate(var(--dx), var(--dy)) scale(1.4) rotate(360deg); }}
     }}
 
     .social-desc {{
@@ -436,7 +520,6 @@ st.markdown(f"""
         color: {text_color};
         font-family: 'Inter', sans-serif;
         transition: transform 0.32s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.32s cubic-bezier(0.25, 0.8, 0.25, 1), border-color 0.32s ease;
-        will-change: transform, box-shadow;
     }}
     
     .hype-card:hover {{
@@ -506,12 +589,12 @@ st.markdown(f"""
     .stats-row {{ display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 10px; }}
     .stats-text {{ width: 55%; color: {text_color}; line-height: 1.25; }}
     .chile-badge {{
-        display: flex; align-items: center; gap: 4px; background-color: {bg_color}; border: 1px solid {border_color};
+        display: flex; align-items: center; gap: 4px; background-color: {app_bg}; border: 1px solid {border_color};
         border-radius: 16px; padding: 3px 6px; font-weight: bold; font-size: 9px; text-align: left; line-height: 1.1; color: {text_color};
     }}
     .ai-box {{
         display: flex; gap: 8px; align-items: center; border: 1px solid {border_color}; border-radius: 8px;
-        padding: 8px; margin-bottom: 10px; font-size: 10px; line-height: 1.25; background-color: {bg_color}; color: {subtext_color};
+        padding: 8px; margin-bottom: 10px; font-size: 10px; line-height: 1.25; background-color: {app_bg}; color: {subtext_color};
     }}
     .ai-icon {{
         min-width: 22px; height: 22px; border-radius: 50%; border: 1px solid {border_color}; display: flex;
@@ -520,7 +603,7 @@ st.markdown(f"""
     .price-text {{ text-align: center; font-size: 11px; color: {text_color}; margin-bottom: 6px; }}
 
     /* BOTONES DE COMPARAR PRECIOS */
-    div[data-testid="stElementContainer"]:not(.st-key-theme_toggle) > div.stButton > button {{
+    div[data-testid="stElementContainer"]:not(.st-key-theme_toggle):not(.st-key-login_btn) > div.stButton > button {{
         background-color: #d83737 !important;
         color: #ffffff !important;
         border: none !important;
@@ -533,53 +616,21 @@ st.markdown(f"""
         width: 100% !important;
     }}
 
-    div[data-testid="stElementContainer"]:not(.st-key-theme_toggle) > div.stButton > button:hover {{
+    div[data-testid="stElementContainer"]:not(.st-key-theme_toggle):not(.st-key-login_btn) > div.stButton > button:hover {{
         background-color: #be2e2e !important;
         transform: scale(1.03) translateY(-2px) !important;
         box-shadow: 0 6px 18px rgba(216, 55, 55, 0.38) !important;
         color: #ffffff !important;
     }}
 
-    div[data-testid="stElementContainer"]:not(.st-key-theme_toggle) > div.stButton > button:active {{
+    div[data-testid="stElementContainer"]:not(.st-key-theme_toggle):not(.st-key-login_btn) > div.stButton > button:active {{
         transform: scale(0.98) translateY(0px) !important;
     }}
     </style>
-
-    <script>
-    function triggerYtAnimation(event, btn) {{
-        btn.classList.add('yt-bounce');
-        setTimeout(() => btn.classList.remove('yt-bounce'), 400);
-
-        const emojis = ['▶️', '🔥', '✨', '🎵', '❤️', '🍿', '🚀', '⭐'];
-        const rect = btn.getBoundingClientRect();
-
-        for(let i=0; i<14; i++) {{
-            const particle = document.createElement('span');
-            particle.innerHTML = emojis[Math.floor(Math.random() * emojis.length)];
-            particle.className = 'yt-particle';
-            
-            const startX = event.clientX || (rect.left + rect.width / 2);
-            const startY = event.clientY || (rect.top + rect.height / 2);
-            
-            const angle = Math.random() * Math.PI * 2;
-            const distance = 45 + Math.random() * 85;
-            const destX = Math.cos(angle) * distance;
-            const destY = Math.sin(angle) * distance - 35;
-            
-            particle.style.left = startX + 'px';
-            particle.style.top = startY + 'px';
-            particle.style.setProperty('--dx', destX + 'px');
-            particle.style.setProperty('--dy', destY + 'px');
-            
-            document.body.appendChild(particle);
-            setTimeout(() => particle.remove(), 850);
-        }}
-    }}
-    </script>
 """, unsafe_allow_html=True)
 
-# 5. CABECERA CON LOGO Y SWITCH DE TEMA
-col_logo, col_theme = st.columns([6, 1], vertical_alignment="center")
+# 4. ENCABEZADO SUPERIOR: LOGO, BOTÓN "INGRESAR" Y SWITCH DE TEMA
+col_logo, col_login, col_theme = st.columns([5, 1.2, 0.8], vertical_alignment="center")
 
 with col_logo:
     logo_html = f"""
@@ -602,10 +653,13 @@ with col_logo:
     """
     st.markdown(logo_html, unsafe_allow_html=True)
 
+with col_login:
+    st.button("Ingresar", key="login_btn")
+
 with col_theme:
     st.button(" ", key="theme_toggle", on_click=toggle_theme)
 
-# SECCIÓN DEL TÍTULO Y NAVEGACIÓN
+# 5. SECCIÓN DEL TÍTULO Y NAVEGACIÓN
 st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
 col_header_title, col_back_btn = st.columns([3.4, 1], vertical_alignment="center")
 
@@ -629,7 +683,7 @@ with col_back_btn:
 
 st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
 
-# 6. FILTROS ALINEADOS
+# 6. FILTROS Y BARRAS SUPERIORES
 col_title, col_fecha, col_red = st.columns([0.28, 0.42, 3.3], gap="small", vertical_alignment="center")
 
 with col_title:
@@ -647,7 +701,7 @@ with col_red:
     social_select_html = f"""
     <div class="social-select-box">
         <span class="social-label">Red social analizada:</span>
-        <button class="yt-chip-btn" onclick="triggerYtAnimation(event, this)">
+        <button class="yt-chip-btn">
             <svg width="16" height="12" viewBox="0 0 26 20" fill="none">
                 <rect x="1" y="1" width="24" height="18" rx="5" fill="#d83737" />
                 <polygon points="10,5 18,10 10,15" fill="#ffffff" />
@@ -661,7 +715,7 @@ with col_red:
 
 st.write("")
 
-# 7. ICONOS DE ESTRELLAS DE RANKING
+# 7. ESTRELLAS DE RANKING SVG
 star_ruby_svg = """
 <div class="star-minimal-ruby">
     <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
