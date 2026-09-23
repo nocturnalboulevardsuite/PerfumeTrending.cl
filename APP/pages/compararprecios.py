@@ -1,4 +1,3 @@
-
 import streamlit as st
 import streamlit.components.v1 as components
 
@@ -46,7 +45,12 @@ bottle_svg = (
 
 user_icon_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23{btn_text[1:]}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2'/><circle cx='12' cy='7' r='4'/></svg>"
 
-# 2. CSS ADAPTABLE Y SWITCH
+# ICONOS ILUSTRADOS EN ROJO (TREN, ESCUDO, ETIQUETA)
+trend_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff3838' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'><path d='M2 19h20M2 22h20M5 19v3M9 19v3M13 19v3M17 19v3M21 19v3' stroke='%23ff3838'/><path d='M4 11h9v7H4z' fill='%23ff3838'/><path d='M13 7h6v11h-6z' fill='%23ff3838'/><rect x='15' y='9' width='3' height='3' fill='%23ffffff'/><path d='M6 7h2v4H6z' fill='%23ff3838'/><path d='M19 14l3 4h-3z' fill='%23ff3838'/><circle cx='6.5' cy='18.5' r='1.5' fill='%23ff3838' stroke='%23ffffff' stroke-width='0.5'/><circle cx='10.5' cy='18.5' r='1.5' fill='%23ff3838' stroke='%23ffffff' stroke-width='0.5'/><circle cx='16' cy='18.5' r='1.5' fill='%23ff3838' stroke='%23ffffff' stroke-width='0.5'/></svg>"
+shield_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff3838' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/><path d='m9 12 2 2 4-4'/></svg>"
+tag_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff3838' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12 2H2v10l11.29 11.29a1 1 0 0 0 1.41 0l7.58-7.58a1 1 0 0 0 0-1.41L12 2z'/><circle cx='7.5' cy='7.5' r='1.5' fill='%23ff3838'/></svg>"
+
+# 2. CSS ADAPTABLE Y ESTILOS PRINCIPALES
 st.markdown(f"""
     <style>
     html, body, .stApp {{
@@ -67,12 +71,14 @@ st.markdown(f"""
 
     .stApp p, .stApp span, .stApp label, .stMarkdown p {{
         color: {text_color} !important;
+        text-shadow: none !important;
     }}
 
-    /* BOTONES Y ENLACES PAGE_LINK */
+    /* EFECTO DE BOTONES Y ENLACES PAGE_LINK */
     div.stButton > button,
     a[data-testid="stPageLink-NavLink"] {{
         transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease !important;
+        text-shadow: none !important;
         box-shadow: none !important;
         outline: none !important;
     }}
@@ -82,6 +88,8 @@ st.markdown(f"""
         transform: scale(1.04) !important;
         cursor: pointer !important;
         box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+        filter: none !important;
+        outline: none !important;
     }}
 
     div.stButton > button:active,
@@ -168,22 +176,90 @@ st.markdown(f"""
         font-weight: 600 !important;
     }}
 
-    /* CHIPS PAGE_LINK */
+    /* CHIPS DE ACCESO RÁPIDO Y PAGE LINKS (IGUAL A APP.PY) */
     a[data-testid="stPageLink-NavLink"] {{
         background-color: {btn_bg} !important;
         border: 1px solid {btn_border} !important;
         border-radius: 20px !important;
         padding: 0.45rem 1rem !important;
+        box-shadow: none !important;
         width: 100% !important;
+        min-height: 0px !important;
+        height: auto !important;
+        filter: none !important;
         text-decoration: none !important;
         display: inline-flex !important;
         align-items: center !important;
         justify-content: center !important;
+        box-sizing: border-box !important;
     }}
-    a[data-testid="stPageLink-NavLink"] p, a[data-testid="stPageLink-NavLink"] span {{
+    
+    a[data-testid="stPageLink-NavLink"] p,
+    a[data-testid="stPageLink-NavLink"] span {{
         font-size: 0.85rem !important;
         font-weight: 600 !important;
         color: {btn_text} !important;
+        letter-spacing: 0.2px;
+        white-space: nowrap !important;
+        text-overflow: clip !important;
+        overflow: visible !important;
+        margin: 0 !important;
+    }}
+
+    /* DIBUJOS ILUSTRADOS EN ROJO PARA LOS BOTONES */
+    a[data-testid="stPageLink-NavLink"][href*="trendhype"],
+    a[data-testid="stPageLink-NavLink"][href*="trustpage"],
+    a[data-testid="stPageLink-NavLink"][href*="compararprecios"] {{
+        position: relative !important;
+        padding-left: 2.8rem !important;
+        padding-right: 1.1rem !important;
+        overflow: hidden !important;
+    }}
+
+    /* 1. Trend Del Hype: Tren rojo */
+    a[data-testid="stPageLink-NavLink"][href*="trendhype"]::before {{
+        content: '' !important;
+        position: absolute !important;
+        left: 14px !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        width: 20px !important;
+        height: 20px !important;
+        background-image: url("{trend_red_svg}") !important;
+        background-repeat: no-repeat !important;
+        background-size: contain !important;
+        background-position: center !important;
+        z-index: 1 !important;
+    }}
+
+    /* 2. Páginas de Confianza: Escudo Rojo */
+    a[data-testid="stPageLink-NavLink"][href*="trustpage"]::before {{
+        content: '' !important;
+        position: absolute !important;
+        left: 14px !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        width: 19px !important;
+        height: 19px !important;
+        background-image: url("{shield_red_svg}") !important;
+        background-repeat: no-repeat !important;
+        background-size: contain !important;
+        background-position: center !important;
+    }}
+
+    /* 3. Comparar Precios: Etiqueta Roja */
+    a[data-testid="stPageLink-NavLink"][href*="compararprecios"]::before {{
+        content: '' !important;
+        position: absolute !important;
+        left: 14px !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        width: 19px !important;
+        height: 19px !important;
+        background-image: url("{tag_red_svg}") !important;
+        background-repeat: no-repeat !important;
+        background-size: contain !important;
+        background-position: center !important;
     }}
 
     /* TARJETAS DE COMPARACIÓN DE PRECIOS */
@@ -292,15 +368,15 @@ with nav_cols[2]:
 
 st.markdown(f"<hr style='margin: 10px 0 24px 0; border: none; border-bottom: 1px solid {btn_border}; opacity: 0.3;'>", unsafe_allow_html=True)
 
-# 5. CHIPS DE NAVEGACIÓN RÁPIDA
+# 5. CHIPS DE NAVEGACIÓN RÁPIDA (REUSANDO EL DISEÑO Y SVGS DE APP.PY)
 col_chip1, col_chip2, col_chip3, col_chip_space = st.columns([1.5, 2.0, 1.7, 3.8], vertical_alignment="center")
 
 with col_chip1:
     st.page_link("pages/trendhype.py", label="Trend Del Hype", use_container_width=True)
 with col_chip2:
-    st.page_link("pages/trustpage.py", label="Páginas de Confianza", icon="🛡️", use_container_width=True)
+    st.page_link("pages/trustpage.py", label="Páginas de Confianza", use_container_width=True)
 with col_chip3:
-    st.page_link("pages/compararprecios.py", label="Comparar Precios", icon="🏷️", use_container_width=True)
+    st.page_link("pages/compararprecios.py", label="Comparar Precios", use_container_width=True)
 
 st.markdown("<div style='margin-top: 24px;'></div>", unsafe_allow_html=True)
 
