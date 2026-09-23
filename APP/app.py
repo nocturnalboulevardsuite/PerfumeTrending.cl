@@ -658,7 +658,7 @@ with col_chip1:
 with col_chip2:
     st.page_link("pages/trustpage.py", label="Páginas de Confianza", icon="🛡️", use_container_width=True)
 with col_chip3:
-    st.button("Comparar Precios", key="btn_compare", on_click=navigate_to, args=('compare_page',), use_container_width=True)
+    st.page_link("pages/comprarprecios.py", label="Comparar Precios", use_container_width=True)
 
 st.markdown("<div style='margin-top: 24px;'></div>", unsafe_allow_html=True)
 
@@ -913,6 +913,3 @@ elif st.session_state['current_page'] == 'esencias_page':
         st.markdown("\n".join(html_col1), unsafe_allow_html=True)
     with col_es_2:
         st.markdown("\n".join(html_col2), unsafe_allow_html=True)
-
-elif st.session_state['current_page'] == 'compare_page':
-    st.markdown(f"<div style='text-align: center; color: {text_color}; font-weight: 300; font-size: 1.05rem;'>Comparador de Precios</div>", unsafe_allow_html=True)
