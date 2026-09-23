@@ -212,7 +212,8 @@ st.markdown(f"""
     button[data-testid="stPopoverButton"],
     .st-key-btn_photo_search button,
     .st-key-login_btn button,
-    a[data-testid="stPageLink-NavLink"] {{
+    a[data-testid="stPageLink-NavLink"],
+    .custom-chip-link {{
         transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease !important;
         -webkit-font-smoothing: antialiased !important;
         -moz-osx-font-smoothing: grayscale !important;
@@ -235,7 +236,8 @@ st.markdown(f"""
     .st-key-btn_photo_search button:hover,
     .st-key-login_btn button:hover,
     div.stButton > button:focus,
-    a[data-testid="stPageLink-NavLink"]:hover {{
+    a[data-testid="stPageLink-NavLink"]:hover,
+    .custom-chip-link:hover {{
         transform: scale(1.04) !important;
         cursor: pointer !important;
         box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
@@ -244,7 +246,8 @@ st.markdown(f"""
     }}
 
     div.stButton > button:active,
-    a[data-testid="stPageLink-NavLink"]:active {{
+    a[data-testid="stPageLink-NavLink"]:active,
+    .custom-chip-link:active {{
         transform: scale(0.98) !important;
     }}
 
@@ -384,7 +387,8 @@ st.markdown(f"""
     }}
 
     /* CHIPS DE ACCESO RÁPIDO Y PAGE LINKS */
-    a[data-testid="stPageLink-NavLink"] {{
+    a[data-testid="stPageLink-NavLink"],
+    .custom-chip-link {{
         background-color: {btn_bg} !important;
         border: 1px solid {btn_border} !important;
         border-radius: 20px !important;
@@ -398,11 +402,13 @@ st.markdown(f"""
         display: inline-flex !important;
         align-items: center !important;
         justify-content: center !important;
+        gap: 8px !important;
         box-sizing: border-box !important;
     }}
     
     a[data-testid="stPageLink-NavLink"] p,
-    a[data-testid="stPageLink-NavLink"] span {{
+    a[data-testid="stPageLink-NavLink"] span,
+    .custom-chip-link span {{
         font-size: 0.85rem !important;
         font-weight: 600 !important;
         color: {btn_text} !important;
@@ -646,16 +652,22 @@ with col_separator:
 with col_photo:
     st.button("Búsqueda visual", key="btn_photo_search", help="Buscar por imagen", use_container_width=True)
 
-# 7. CHIPS DE ENLACE RÁPIDO A PÁGINAS INDEPENDIENTES
+# 7. CHIPS DE ENLACE RÁPIDO A PÁGINAS INDEPENDIENTES (CON LOGOS ROJOS EN SVG/HTML)
 st.markdown("<div style='margin-top: 14px;'></div>", unsafe_allow_html=True)
-col_chip1, col_chip2, col_chip3, col_chip_space = st.columns([1.5, 2.0, 1.7, 3.8], vertical_alignment="center")
+col_chip1, col_chip2, col_chip3, col_chip_space = st.columns([1.6, 2.1, 1.8, 3.5], vertical_alignment="center")
+
+svg_trend = """<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><path d="M3 19L19 3"/><polyline points="13 3 19 3 19 9"/><rect x="2" y="10" width="9" height="6" rx="1" fill="#ef4444" fill-opacity="0.25" stroke="#ef4444"/><path d="M7 10V7h3v3"/><circle cx="4.5" cy="17" r="1" fill="#ef4444"/><circle cx="8.5" cy="17" r="1" fill="#ef4444"/></svg>"""
+
+svg_shield = """<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" fill="#ef4444" fill-opacity="0.25"/><path d="M9 12l2 2 4-4"/></svg>"""
+
+svg_compare = """<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><path d="M12 2H2v10l9.29 9.29a1 1 0 0 0 1.41 0l7.29-7.29a1 1 0 0 0 0-1.41L12 2z" fill="#ef4444" fill-opacity="0.25"/><circle cx="6" cy="6" r="1.5" fill="#ef4444"/><path d="M17 7l3 3-3 3"/><path d="M13 10h7"/></svg>"""
 
 with col_chip1:
-    st.page_link("pages/trendhype.py", label="Trend Del Hype", use_container_width=True)
+    st.markdown(f'<a href="trendhype" target="_self" class="custom-chip-link">{svg_trend}<span>Trend Del Hype</span></a>', unsafe_allow_html=True)
 with col_chip2:
-    st.page_link("pages/trustpage.py", label="Páginas de Confianza", icon="🛡️", use_container_width=True)
+    st.markdown(f'<a href="trustpage" target="_self" class="custom-chip-link">{svg_shield}<span>Páginas de Confianza</span></a>', unsafe_allow_html=True)
 with col_chip3:
-    st.page_link("pages/compararprecios.py", label="Comparar Precios", use_container_width=True)
+    st.markdown(f'<a href="compararprecios" target="_self" class="custom-chip-link">{svg_compare}<span>Comparar Precios</span></a>', unsafe_allow_html=True)
 
 st.markdown("<div style='margin-top: 24px;'></div>", unsafe_allow_html=True)
 
