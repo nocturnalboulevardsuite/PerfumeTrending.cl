@@ -212,7 +212,6 @@ st.markdown(f"""
     button[data-testid="stPopoverButton"],
     .st-key-btn_photo_search button,
     .st-key-login_btn button,
-    .st-key-btn_compare button,
     a[data-testid="stPageLink-NavLink"] {{
         transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease !important;
         -webkit-font-smoothing: antialiased !important;
@@ -385,7 +384,6 @@ st.markdown(f"""
     }}
 
     /* CHIPS DE ACCESO RÁPIDO Y PAGE LINKS */
-    .st-key-btn_compare button,
     a[data-testid="stPageLink-NavLink"] {{
         background-color: {btn_bg} !important;
         border: 1px solid {btn_border} !important;
@@ -403,7 +401,6 @@ st.markdown(f"""
         box-sizing: border-box !important;
     }}
     
-    .st-key-btn_compare button p, 
     a[data-testid="stPageLink-NavLink"] p,
     a[data-testid="stPageLink-NavLink"] span {{
         font-size: 0.85rem !important;
@@ -658,8 +655,7 @@ with col_chip1:
 with col_chip2:
     st.page_link("pages/trustpage.py", label="Páginas de Confianza", icon="🛡️", use_container_width=True)
 with col_chip3:
-    # Solución al error: navegación interna con botón
-    st.button("Comparar Precios", key="btn_compare", on_click=navigate_to, args=('compare_page',), use_container_width=True)
+    st.page_link("pages/compararprecios.py", label="Comparar Precios", use_container_width=True)
 
 st.markdown("<div style='margin-top: 24px;'></div>", unsafe_allow_html=True)
 
@@ -914,6 +910,3 @@ elif st.session_state['current_page'] == 'esencias_page':
         st.markdown("\n".join(html_col1), unsafe_allow_html=True)
     with col_es_2:
         st.markdown("\n".join(html_col2), unsafe_allow_html=True)
-
-elif st.session_state['current_page'] == 'compare_page':
-    st.markdown(f"<div style='text-align: center; color: {text_color}; font-weight: 300; font-size: 1.05rem;'>Comparador de Precios</div>", unsafe_allow_html=True)
