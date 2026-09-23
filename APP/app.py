@@ -609,14 +609,14 @@ st.markdown(f"""
     </style>
 """, unsafe_allow_html=True)
 
-# 4. CABECERA CON LOGO Y SWITCH ALINEADO
-col_logo, col_espacio, col_actions = st.columns([5, 1.8, 2.4], vertical_alignment="center")
+# 4. CABECERA CON LOGO EN TAMAÑO PERFECTO Y SWITCH ALINEADO
+col_logo, col_espacio, col_actions = st.columns([5.5, 1.3, 2.4], vertical_alignment="center")
 
 with col_logo:
     logo_color = "#8c7b6d"
     logo_html = f"""
-    <div style="display: inline-flex; align-items: center; gap: 12px; cursor: pointer; width: fit-content;" onclick="window.location.reload();">
-        <svg width="34" height="34" viewBox="0 0 36 36" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <div style="display: inline-flex; align-items: center; gap: 14px; cursor: pointer; width: fit-content;" onclick="window.location.reload();">
+        <svg width="48" height="48" viewBox="0 0 36 36" fill="none" stroke-linecap="round" stroke-linejoin="round">
             <path d="M 6.8 21 L 29.2 21 C 30 25 27 32 18 32 C 9 32 6 25 6.8 21 Z" fill="{logo_color}" />
             <line x1="6.8" y1="21" x2="29.2" y2="21" stroke="{text_color}" stroke-width="1.5" />
             <line x1="18" y1="10" x2="18" y2="30" stroke="{text_color}" stroke-width="1" />
@@ -625,8 +625,8 @@ with col_logo:
             <rect x="13" y="3" width="10" height="4" rx="1" stroke="{text_color}" stroke-width="1.5" />
             <rect x="16" y="0" width="4" height="3" rx="1" fill="{logo_color}" stroke="{text_color}" stroke-width="1" />
         </svg>
-        <span style="font-size: 1.4rem; color: {text_color}; letter-spacing: 0.5px;">
-            <span style="font-weight: 300;">Perfume</span><span style="font-weight: 600;">Trending</span>
+        <span style="font-size: 2.1rem; color: {text_color}; letter-spacing: 0.5px; line-height: 1;">
+            <span style="font-weight: 300;">Perfume</span><span style="font-weight: 700;">Trending</span>
         </span>
     </div>
     """
