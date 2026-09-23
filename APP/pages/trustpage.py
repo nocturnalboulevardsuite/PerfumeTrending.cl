@@ -1,9 +1,9 @@
 import streamlit as st
-import streamlit.components.v1 as components
+import textwrap
 
 # 1. CONFIGURACIÓN DE PÁGINA
 st.set_page_config(
-    page_title="PerfumeTrending - Nivel de Confianza",
+    page_title="PerfumeTrending — Trust Verification",
     page_icon="🧴",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -48,9 +48,9 @@ bottle_svg = (
 
 # 4. ESTILOS CSS
 st.markdown(
-    f"""
+    textwrap.dedent(f"""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap');
 
     html, body, [class*="css"], .stApp {{
         font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif !important;
@@ -61,192 +61,174 @@ st.markdown(
     header[data-testid="stHeader"] {{ display: none !important; }}
     
     .block-container {{ 
-        padding-top: 1.2rem !important; 
+        padding-top: 1.5rem !important; 
         padding-bottom: 2rem !important; 
-        max-width: 1320px !important;
+        max-width: 1280px !important;
     }}
 
-    /* SECCIÓN IZQUIERDA: PRODUCTO SPOTLIGHT */
+    /* SECCIÓN IZQUIERDA: TARJETA DE PRODUCTO MINIMALISTA */
     .product-card {{
         background-color: {card_bg};
         border: 1px solid {border_color};
-        border-radius: 16px;
-        padding: 24px;
+        border-radius: 12px;
+        padding: 28px;
         display: flex;
         flex-direction: column;
         align-items: center;
         text-align: center;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.06);
-    }}
-    .bottle-wrapper {{
-        width: 100%;
-        max-width: 220px;
-        margin-bottom: 16px;
     }}
     .product-title {{
+        font-family: 'Space Grotesk', sans-serif;
         font-size: 1.15rem;
-        font-weight: 800;
-        letter-spacing: 1px;
-        margin: 8px 0 2px 0;
+        font-weight: 700;
+        letter-spacing: 1.5px;
+        margin: 16px 0 4px 0;
         text-transform: uppercase;
         color: {text_color};
     }}
     .product-subtitle {{
-        font-size: 0.82rem;
+        font-size: 0.75rem;
         color: {subtext_color};
         font-weight: 600;
-        letter-spacing: 0.5px;
-        margin-bottom: 20px;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        margin-bottom: 24px;
     }}
 
-    /* NOTAS OLFATIVAS MINIMALISTAS */
+    /* NOTAS OLFATIVAS */
     .notes-container {{
         width: 100%;
         text-align: left;
-        margin-bottom: 20px;
+        margin-bottom: 24px;
         border-top: 1px solid {border_color};
-        padding-top: 14px;
+        padding-top: 16px;
     }}
     .note-item {{
         display: flex;
         align-items: center;
         justify-content: space-between;
-        margin-bottom: 8px;
-        padding-bottom: 6px;
+        padding: 8px 0;
         border-bottom: 1px dashed {border_color};
     }}
-    .note-info strong {{
-        display: inline-block;
-        font-size: 0.8rem;
+    .note-label {{
+        font-size: 0.7rem;
         font-weight: 700;
+        letter-spacing: 1px;
+        color: {subtext_color};
         text-transform: uppercase;
-        letter-spacing: 0.5px;
+    }}
+    .note-value {{
+        font-size: 0.82rem;
+        font-weight: 600;
         color: {text_color};
     }}
-    .note-info span {{
-        font-size: 0.78rem;
-        color: {subtext_color};
-    }}
 
-    /* GRÁFICO VIRALITY DE MOCKUP */
+    /* CONTENEDOR DE GRÁFICO */
     .virality-box {{
         width: 100%;
         border-top: 1px solid {border_color};
         padding-top: 16px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
     }}
 
-    /* TABLA DE COMPARACIÓN (DERECHA) */
+    /* TABLA DE COMPARACIÓN */
     .trust-table-container {{
         background-color: {card_bg};
         border: 1px solid {border_color};
-        border-radius: 16px;
-        padding: 12px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+        border-radius: 12px;
+        padding: 8px;
     }}
     table.trust-table {{
         width: 100%;
         border-collapse: separate;
-        border-spacing: 0 8px;
+        border-spacing: 0 6px;
     }}
     table.trust-table th {{
         padding: 12px 16px;
-        font-size: 0.78rem;
+        font-size: 0.7rem;
         font-weight: 800;
         text-transform: uppercase;
         color: {subtext_color};
-        letter-spacing: 1px;
-        border-bottom: 2px solid {border_color};
-        text-align: center;
+        letter-spacing: 1.2px;
+        border-bottom: 1px solid {border_color};
+        text-align: left;
     }}
     table.trust-table td {{
-        padding: 16px;
+        padding: 14px 16px;
         background-color: {bg_color};
         border-top: 1px solid {border_color};
         border-bottom: 1px solid {border_color};
         vertical-align: middle;
-        text-align: center;
     }}
     table.trust-table tr td:first-child {{
         border-left: 1px solid {border_color};
-        border-top-left-radius: 12px;
-        border-bottom-left-radius: 12px;
+        border-top-left-radius: 8px;
+        border-bottom-left-radius: 8px;
         font-weight: 700;
-        font-size: 0.9rem;
+        font-size: 0.75rem;
         color: {subtext_color};
     }}
     table.trust-table tr td:last-child {{
         border-right: 1px solid {border_color};
-        border-top-right-radius: 12px;
-        border-bottom-right-radius: 12px;
+        border-top-right-radius: 8px;
+        border-bottom-right-radius: 8px;
+        text-align: right;
     }}
 
-    .store-cell {{
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 10px;
-        font-weight: 800;
-        font-size: 0.9rem;
+    .store-title {{
+        font-weight: 700;
+        font-size: 0.85rem;
+        letter-spacing: 0.5px;
         text-transform: uppercase;
-        line-height: 1.2;
-    }}
-
-    .price-tag {{
-        font-size: 1.15rem;
-        font-weight: 800;
         color: {text_color};
     }}
 
-    /* BADGES DE ESTADO */
-    .status-badge-safe {{
-        background-color: rgba(34, 197, 94, 0.12);
-        border: 1px solid #22c55e;
-        color: #22c55e;
-        padding: 4px 10px;
-        border-radius: 6px;
-        font-size: 0.7rem;
-        font-weight: 800;
-        letter-spacing: 0.5px;
-        display: inline-block;
-    }}
-    .status-badge-danger {{
-        background-color: rgba(239, 68, 68, 0.12);
-        border: 1px solid #ef4444;
-        color: #ef4444;
-        padding: 4px 10px;
-        border-radius: 6px;
-        font-size: 0.7rem;
-        font-weight: 800;
-        letter-spacing: 0.5px;
-        display: inline-block;
-    }}
-    .status-subtext-safe {{
-        font-size: 0.7rem;
-        color: #22c55e;
+    .price-tag {{
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 1.05rem;
         font-weight: 700;
-        margin-top: 4px;
-    }}
-    .status-subtext-danger {{
-        font-size: 0.7rem;
-        color: #ef4444;
-        font-weight: 700;
-        margin-top: 4px;
+        color: {text_color};
     }}
 
-    /* BOTONES DE COMPRA MINIMALISTAS */
+    /* BADGES DE ESTADO VECTORIALES */
+    .status-badge-safe {{
+        display: inline-flex;
+        align-items: center;
+        padding: 4px 10px;
+        border-radius: 4px;
+        font-size: 0.68rem;
+        font-weight: 800;
+        letter-spacing: 0.8px;
+        text-transform: uppercase;
+        background: rgba(34, 197, 94, 0.1);
+        color: #22c55e;
+        border: 1px solid rgba(34, 197, 94, 0.25);
+    }}
+    .status-badge-danger {{
+        display: inline-flex;
+        align-items: center;
+        padding: 4px 10px;
+        border-radius: 4px;
+        font-size: 0.68rem;
+        font-weight: 800;
+        letter-spacing: 0.8px;
+        text-transform: uppercase;
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+        border: 1px solid rgba(239, 68, 68, 0.25);
+    }}
+
+    /* BOTONES ACCIÓN MINIMALISTAS */
     .btn-buy-now {{
         background: {text_color};
         color: {bg_color} !important;
         font-weight: 700;
-        font-size: 0.75rem;
-        letter-spacing: 0.5px;
+        font-size: 0.72rem;
+        letter-spacing: 1px;
         padding: 8px 16px;
         border-radius: 6px;
         text-decoration: none !important;
         display: inline-block;
+        text-transform: uppercase;
         transition: opacity 0.2s ease;
     }}
     .btn-buy-now:hover {{
@@ -257,12 +239,13 @@ st.markdown(
         color: {subtext_color} !important;
         border: 1px solid {border_color};
         font-weight: 700;
-        font-size: 0.75rem;
-        letter-spacing: 0.5px;
+        font-size: 0.72rem;
+        letter-spacing: 1px;
         padding: 8px 16px;
         border-radius: 6px;
         text-decoration: none !important;
         display: inline-block;
+        text-transform: uppercase;
         cursor: not-allowed;
     }}
 
@@ -330,7 +313,7 @@ st.markdown(
         z-index: 2 !important;
     }}
     </style>
-    """,
+    """),
     unsafe_allow_html=True
 )
 
@@ -339,7 +322,7 @@ col_head_logo, col_head_switch = st.columns([8, 2], vertical_alignment="center")
 
 with col_head_logo:
     logo_color = "#8c7b6d"
-    logo_html = f"""
+    logo_html = textwrap.dedent(f"""
     <div style="display: inline-flex; align-items: center; gap: 10px; cursor: pointer;" onclick="window.location.reload();">
         <svg width="34" height="34" viewBox="0 0 36 36" fill="none" stroke-linecap="round" stroke-linejoin="round">
             <path d="M 6.8 21 L 29.2 21 C 30 25 27 32 18 32 C 9 32 6 25 6.8 21 Z" fill="{logo_color}" />
@@ -354,7 +337,7 @@ with col_head_logo:
             <span style="font-weight: 300;">Perfume</span><span style="font-weight: 800;">Trending</span>
         </span>
     </div>
-    """
+    """)
     st.markdown(logo_html, unsafe_allow_html=True)
 
 with col_head_switch:
@@ -363,155 +346,134 @@ with col_head_switch:
 st.markdown(f"<hr style='border: none; border-top: 1px solid {border_color}; margin: 16px 0 24px 0;' />", unsafe_allow_html=True)
 
 # 6. ESTRUCTURA PRINCIPAL EN DOS COLUMNAS
-left_col, right_col = st.columns([1, 1.35], gap="large")
+left_col, right_col = st.columns([1, 1.4], gap="large")
 
-# --- COLUMNA IZQUIERDA: DETALLES DEL PERFUME & VIRALIDAD ---
+# --- COLUMNA IZQUIERDA: DETALLES DEL PERFUME ---
 with left_col:
     bottle_sketch_svg = f"""
-    <svg viewBox="0 0 200 240" fill="none" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: auto; max-width: 190px;">
-        <path d="M70 20 L130 20 L145 35 L145 55 L130 70 L70 70 L55 55 L55 35 Z" stroke="{text_color}" stroke-width="2.5" fill="{card_bg}"/>
-        <rect x="75" y="70" width="50" height="15" stroke="{text_color}" stroke-width="2" fill="{card_bg}"/>
-        <path d="M40 85 L160 85 L175 110 L175 210 L160 225 L40 225 L25 210 L25 110 Z" stroke="{text_color}" stroke-width="3" fill="{card_bg}"/>
-        <rect x="55" y="115" width="90" height="65" stroke="{text_color}" stroke-width="1.8" fill="{bg_color}"/>
-        <text x="100" y="132" font-size="7" font-weight="bold" fill="{subtext_color}" text-anchor="middle">SKETCHED SCENTS CO.</text>
-        <text x="100" y="150" font-size="11" font-weight="900" fill="{text_color}" text-anchor="middle">MIDNIGHT</text>
-        <text x="100" y="163" font-size="11" font-weight="900" fill="{text_color}" text-anchor="middle">OUD</text>
-        <text x="100" y="174" font-size="6" fill="{subtext_color}" text-anchor="middle">50ml / 1.7 oz</text>
-        <path d="M30 115 L30 205 M170 115 L170 205" stroke="{text_color}" stroke-width="1" stroke-dasharray="2 2"/>
+    <svg viewBox="0 0 200 240" fill="none" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: auto; max-width: 170px;">
+        <path d="M70 20 L130 20 L145 35 L145 55 L130 70 L70 70 L55 55 L55 35 Z" stroke="{text_color}" stroke-width="2" fill="{card_bg}"/>
+        <rect x="75" y="70" width="50" height="15" stroke="{text_color}" stroke-width="1.5" fill="{card_bg}"/>
+        <path d="M40 85 L160 85 L175 110 L175 210 L160 225 L40 225 L25 210 L25 110 Z" stroke="{text_color}" stroke-width="2" fill="{card_bg}"/>
+        <rect x="55" y="115" width="90" height="65" stroke="{border_color}" stroke-width="1" fill="{bg_color}"/>
+        <text x="100" y="132" font-size="6" font-weight="700" fill="{subtext_color}" text-anchor="middle" letter-spacing="1">SKETCHED SCENTS</text>
+        <text x="100" y="150" font-size="10" font-weight="800" fill="{text_color}" text-anchor="middle" letter-spacing="1.5">MIDNIGHT</text>
+        <text x="100" y="163" font-size="10" font-weight="800" fill="{text_color}" text-anchor="middle" letter-spacing="1.5">OUD</text>
+        <text x="100" y="174" font-size="5.5" fill="{subtext_color}" text-anchor="middle">EAU DE PARFUM</text>
     </svg>
     """
 
     trend_graph_svg = f"""
-    <svg viewBox="0 0 220 70" fill="none" xmlns="http://www.w3.org/2000/svg" style="width: 100%;">
-        <line x1="25" y1="10" x2="25" y2="55" stroke="{subtext_color}" stroke-width="1"/>
-        <line x1="25" y1="55" x2="190" y2="55" stroke="{subtext_color}" stroke-width="1"/>
-        <path d="M35 48 L85 40 L175 15" stroke="{text_color}" stroke-width="2"/>
-        <circle cx="35" cy="48" r="3" fill="{bg_color}" stroke="{text_color}" stroke-width="2"/>
-        <circle cx="85" cy="40" r="3" fill="{bg_color}" stroke="{text_color}" stroke-width="2"/>
-        <circle cx="175" cy="15" r="3" fill="{bg_color}" stroke="{text_color}" stroke-width="2"/>
-        <path d="M35 48 L85 40 L175 15 L175 55 L35 55 Z" fill="{text_color}" fill-opacity="0.05"/>
-        <text x="35" y="66" font-size="7" fill="{subtext_color}" text-anchor="middle">1 Wk Ago</text>
-        <text x="85" y="66" font-size="7" fill="{subtext_color}" text-anchor="middle">2 Wks Ago</text>
-        <text x="175" y="66" font-size="7" fill="{subtext_color}" text-anchor="middle">Today</text>
+    <svg viewBox="0 0 220 60" fill="none" xmlns="http://www.w3.org/2000/svg" style="width: 100%;">
+        <path d="M10 48 L80 38 L140 28 L210 8" stroke="{text_color}" stroke-width="1.8"/>
+        <path d="M10 48 L80 38 L140 28 L210 8 L210 55 L10 55 Z" fill="{text_color}" fill-opacity="0.04"/>
+        <circle cx="210" cy="8" r="3" fill="{text_color}"/>
     </svg>
     """
 
-    card_left_html = f"""
+    card_left_html = textwrap.dedent(f"""
     <div class="product-card">
-        <div class="bottle-wrapper">
+        <div style="width: 100%; display: flex; justify-content: center; margin-bottom: 8px;">
             {bottle_sketch_svg}
         </div>
-        <div class="product-title">MIDNIGHT OUD – EAU DE PARFUM</div>
-        <div class="product-subtitle">50ml / 1.7 oz</div>
+        <div class="product-title">MIDNIGHT OUD</div>
+        <div class="product-subtitle">EAU DE PARFUM — 50ML / 1.7 OZ</div>
         
         <div class="notes-container">
             <div class="note-item">
-                <div class="note-info"><strong>Oud Wood</strong></div>
-                <div class="note-info"><span>Oud Wood, with set Oud Wood</span></div>
+                <span class="note-label">TOP NOTE</span>
+                <span class="note-value">Natural Oud Wood</span>
             </div>
             <div class="note-item">
-                <div class="note-info"><strong>Bulgarian Rose</strong></div>
-                <div class="note-info"><span>Bulgarian Rose, Bulgarian Rose</span></div>
+                <span class="note-label">HEART NOTE</span>
+                <span class="note-value">Bulgarian Rose</span>
             </div>
             <div class="note-item">
-                <div class="note-info"><strong>Amber</strong></div>
-                <div class="note-info"><span>Amber blend</span></div>
+                <span class="note-label">BASE NOTE</span>
+                <span class="note-value">Smokey Amber</span>
             </div>
         </div>
 
-        <div style="width:100%; text-align:left; font-size:0.75rem; font-weight:800; color:{text_color}; margin-bottom:8px; text-transform:uppercase; letter-spacing:0.5px;">
-            Trend Score
-        </div>
         <div class="virality-box">
-            <div style="width:100%;">
-                {trend_graph_svg}
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <span style="font-size: 0.68rem; font-weight: 800; letter-spacing: 1.2px; color: {subtext_color}; text-transform: uppercase;">TREND INDEX</span>
+                <span style="font-size: 0.75rem; font-weight: 800; color: {text_color};">98.4 / 100</span>
             </div>
+            {trend_graph_svg}
         </div>
     </div>
-    """
+    """)
     st.markdown(card_left_html, unsafe_allow_html=True)
 
-# --- COLUMNA DERECHA: TABLA DE COMPARACIÓN Y CONFIANZA ---
+# --- COLUMNA DERECHA: TABLA DE VERIFICACIÓN ---
 with right_col:
-    table_html = f"""
+    table_html = textwrap.dedent(f"""
     <div class="trust-table-container">
         <table class="trust-table">
             <thead>
                 <tr>
                     <th style="width: 8%;">#</th>
-                    <th style="width: 28%;">RETAILER</th>
+                    <th style="width: 32%;">RETAILER</th>
                     <th style="width: 18%;">PRICE</th>
-                    <th style="width: 26%;">NIVEL DE CONFIANZA</th>
-                    <th style="width: 20%;">COMPRA AHORA</th>
+                    <th style="width: 24%;">VERIFICATION</th>
+                    <th style="width: 18%; text-align: right;">ACTION</th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
                     <td>01</td>
                     <td>
-                        <div class="store-cell">
-                            <div>AURA SCENTS</div>
-                        </div>
+                        <div class="store-title">AURA SCENTS</div>
                     </td>
                     <td><span class="price-tag">$110.00</span></td>
                     <td>
-                        <div class="status-badge-safe">CONFIRMADO</div>
-                        <div class="status-subtext-safe">Muy Seguro</div>
+                        <span class="status-badge-safe">VERIFIED</span>
                     </td>
                     <td>
-                        <a href="#" class="btn-buy-now">COMPRA AHORA</a>
+                        <a href="#" class="btn-buy-now">PURCHASE</a>
                     </td>
                 </tr>
                 <tr>
                     <td>02</td>
                     <td>
-                        <div class="store-cell">
-                            <div>THE PERFUME BARN</div>
-                        </div>
+                        <div class="store-title">THE PERFUME BARN</div>
                     </td>
                     <td><span class="price-tag">$105.00</span></td>
                     <td>
-                        <div class="status-badge-danger">RIESGO ALTO</div>
-                        <div class="status-subtext-danger">Alerta Estafa</div>
+                        <span class="status-badge-danger">HIGH RISK</span>
                     </td>
                     <td>
-                        <a href="#" class="btn-buy-disabled">BLOQUEADO</a>
+                        <span class="btn-buy-disabled">BLOCKED</span>
                     </td>
                 </tr>
                 <tr>
                     <td>03</td>
                     <td>
-                        <div class="store-cell">
-                            <div>ELEGANT FRAGRANCE</div>
-                        </div>
+                        <div class="store-title">ELEGANT FRAGRANCE</div>
                     </td>
                     <td><span class="price-tag">$112.50</span></td>
                     <td>
-                        <div class="status-badge-safe">CONFIRMADO</div>
-                        <div class="status-subtext-safe">Muy Seguro</div>
+                        <span class="status-badge-safe">VERIFIED</span>
                     </td>
                     <td>
-                        <a href="#" class="btn-buy-now">COMPRA AHORA</a>
+                        <a href="#" class="btn-buy-now">PURCHASE</a>
                     </td>
                 </tr>
                 <tr>
                     <td>04</td>
                     <td>
-                        <div class="store-cell">
-                            <div>FRAGRANCE DIRECT</div>
-                        </div>
+                        <div class="store-title">FRAGRANCE DIRECT</div>
                     </td>
                     <td><span class="price-tag">$108.99</span></td>
                     <td>
-                        <div class="status-badge-safe">CONFIRMADO</div>
-                        <div class="status-subtext-safe">Muy Seguro</div>
+                        <span class="status-badge-safe">VERIFIED</span>
                     </td>
                     <td>
-                        <a href="#" class="btn-buy-now">COMPRA AHORA</a>
+                        <a href="#" class="btn-buy-now">PURCHASE</a>
                     </td>
                 </tr>
             </tbody>
         </table>
     </div>
-    """
+    """)
     st.markdown(table_html, unsafe_allow_html=True)
