@@ -430,7 +430,7 @@ if filtered_sites:
             if i + j < len(filtered_sites):
                 site = filtered_sites[i + j]
                 tags_html = "".join([f'<span data-baseweb="tag">{tag}</span>' for tag in site["tags"]])
-                badge_html = '<span class="verified-badge">Garantizado 🛡️</span>' if site["verified"] else ''
+                badge_html = '<span class="verified-badge">Garantizado</span>' if site["verified"] else ''
                 stars = "★" * site["rating"] + "☆" * (5 - site["rating"])
 
                 card_html = f"""
