@@ -159,7 +159,7 @@ st.markdown(f"""
         z-index: 2 !important;
     }}
 
-    /* CHIPS DE ACCESO RÁPIDO Y PAGE LINKS (IGUAL A APP.PY) */
+    /* CHIPS DE ACCESO RÁPIDO Y PAGE LINKS */
     a[data-testid="stPageLink-NavLink"] {{
         background-color: {btn_bg} !important;
         border: 1px solid {btn_border} !important;
@@ -310,22 +310,7 @@ col_logo, col_espacio, col_actions = st.columns([5, 1.8, 2.4], vertical_alignmen
 
 with col_logo:
     logo_color = "#8c7b6d"
-    logo_html = f"""
-    <div style="display: inline-flex; align-items: center; gap: 12px; cursor: pointer; width: fit-content;" onclick="window.location.href='/';">
-        <svg width="34" height="34" viewBox="0 0 36 36" fill="none" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M 6.8 21 L 29.2 21 C 30 25 27 32 18 32 C 9 32 6 25 6.8 21 Z" fill="{logo_color}" />
-            <line x1="6.8" y1="21" x2="29.2" y2="21" stroke="{text_color}" stroke-width="1.5" />
-            <line x1="18" y1="10" x2="18" y2="30" stroke="{text_color}" stroke-width="1" />
-            <path d="M 18 32 C 9 32 5 24 7.5 17 C 9 12 13 10 15 10 L 21 10 C 23 10 27 12 28.5 17 C 31 24 27 32 18 32 Z" stroke="{text_color}" stroke-width="2" />
-            <rect x="15" y="7" width="6" height="3" stroke="{text_color}" stroke-width="1.5" />
-            <rect x="13" y="3" width="10" height="4" rx="1" stroke="{text_color}" stroke-width="1.5" />
-            <rect x="16" y="0" width="4" height="3" rx="1" fill="{logo_color}" stroke="{text_color}" stroke-width="1" />
-        </svg>
-        <span style="font-size: 1.4rem; color: {text_color}; letter-spacing: 0.5px;">
-            <span style="font-weight: 300;">Perfume</span><span style="font-weight: 600;">Trending</span>
-        </span>
-    </div>
-    """
+    logo_html = f"""<div style="display: inline-flex; align-items: center; gap: 12px; cursor: pointer; width: fit-content;" onclick="window.location.href='/';"><svg width="34" height="34" viewBox="0 0 36 36" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M 6.8 21 L 29.2 21 C 30 25 27 32 18 32 C 9 32 6 25 6.8 21 Z" fill="{logo_color}" /><line x1="6.8" y1="21" x2="29.2" y2="21" stroke="{text_color}" stroke-width="1.5" /><line x1="18" y1="10" x2="18" y2="30" stroke="{text_color}" stroke-width="1" /><path d="M 18 32 C 9 32 5 24 7.5 17 C 9 12 13 10 15 10 L 21 10 C 23 10 27 12 28.5 17 C 31 24 27 32 18 32 Z" stroke="{text_color}" stroke-width="2" /><rect x="15" y="7" width="6" height="3" stroke="{text_color}" stroke-width="1.5" /><rect x="13" y="3" width="10" height="4" rx="1" stroke="{text_color}" stroke-width="1.5" /><rect x="16" y="0" width="4" height="3" rx="1" fill="{logo_color}" stroke="{text_color}" stroke-width="1" /></svg><span style="font-size: 1.4rem; color: {text_color}; letter-spacing: 0.5px;"><span style="font-weight: 300;">Perfume</span><span style="font-weight: 600;">Trending</span></span></div>"""
     st.markdown(logo_html, unsafe_allow_html=True)
 
 with col_actions:
@@ -337,7 +322,7 @@ with col_actions:
 
 st.markdown("<div style='margin-top: 14px;'></div>", unsafe_allow_html=True)
 
-# 4. CHIPS DE NAVEGACIÓN RÁPIDA (REUSANDO EL DISEÑO Y SVGS DE APP.PY)
+# 4. CHIPS DE NAVEGACIÓN RÁPIDA
 col_chip1, col_chip2, col_chip3, col_chip_space = st.columns([1.5, 2.0, 1.7, 3.8], vertical_alignment="center")
 
 with col_chip1:
@@ -350,11 +335,7 @@ with col_chip3:
 st.markdown("<div style='margin-top: 24px;'></div>", unsafe_allow_html=True)
 
 # 5. SECCIÓN PRINCIPAL: COMPARADOR DE PRECIOS
-st.markdown(f"""
-    <div style='text-align: center; margin-bottom: 24px; color: {text_color}; letter-spacing: 1.5px; font-weight: 300; font-size: 1.1rem; text-transform: uppercase;'>
-        COMPARADOR DE PRECIOS EN TIENDAS
-    </div>
-""", unsafe_allow_html=True)
+st.markdown(f"""<div style='text-align: center; margin-bottom: 24px; color: {text_color}; letter-spacing: 1.5px; font-weight: 300; font-size: 1.1rem; text-transform: uppercase;'>COMPARADOR DE PRECIOS EN TIENDAS</div>""", unsafe_allow_html=True)
 
 # Selección de Perfume para comparar
 perfumes_disponibles = [
@@ -403,20 +384,5 @@ for item in tiendas:
     card_class = "price-card best-deal" if item["mejordeal"] else "price-card"
     best_badge = "<span style='color: #2e7d32; font-weight: 700; margin-left: 8px; font-size: 0.8rem;'>🏆 MEJOR PRECIO</span>" if item["mejordeal"] else ""
     
-    html_card = f"""
-    <div class="{card_class}">
-        <div>
-            <span class="store-name">{item['tienda']}</span>
-            <span class="store-badge">{item['badge']}</span>
-            {best_badge}
-        </div>
-        <div style="display: flex; align-items: center; gap: 16px;">
-            <div>
-                <span class="old-price">{item['precio_ant']}</span>
-                <span class="price-value">{item['precio_actual']}</span>
-            </div>
-            <a href="{item['link']}" class="buy-btn" target="_blank">Ir a la oferta ↗</a>
-        </div>
-    </div>
-    """
+    html_card = f"""<div class="{card_class}"><div><span class="store-name">{item['tienda']}</span><span class="store-badge">{item['badge']}</span>{best_badge}</div><div style="display: flex; align-items: center; gap: 16px;"><div><span class="old-price">{item['precio_ant']}</span><span class="price-value">{item['precio_actual']}</span></div><a href="{item['link']}" class="buy-btn" target="_blank">Ir a la oferta ↗</a></div></div>"""
     st.markdown(html_card, unsafe_allow_html=True)
