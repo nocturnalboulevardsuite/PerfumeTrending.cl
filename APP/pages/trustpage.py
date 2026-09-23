@@ -326,7 +326,7 @@ st.markdown("<div style='margin-top: 16px;'></div>", unsafe_allow_html=True)
 hero_html = f"""
 <div class="hero-banner">
     <div class="hero-text">
-        <h1>🛡️ Directorio de Confianza</h1>
+        <h1>Directorio de Confianza</h1>
         <p>Comercios, perfumerías y tiendas de decants verificadas para garantizar compras 100% auténticas y seguras.</p>
     </div>
     <div class="trust-badges-row">
