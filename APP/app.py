@@ -660,8 +660,7 @@ st.markdown("<div style='margin-top: 14px;'></div>", unsafe_allow_html=True)
 col_chip1, col_chip2, col_chip3, col_chip_space = st.columns([1.3, 2.0, 1.7, 4.0], vertical_alignment="center")
 
 with col_chip1:
-    if st.button("Trend Del Hype", key="btn_trend", use_container_width=True):
-        st.session_state['current_page'] = 'hype'
+    st.button("Trend Del Hype", key="btn_trend", on_click=navigate_to, args=('hype',), use_container_width=True)
 with col_chip2:
     st.page_link("pages/trustpage.py", label="Páginas de Confianza", icon="🛡️", use_container_width=True)
 with col_chip3:
