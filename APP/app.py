@@ -56,9 +56,8 @@ bottle_svg = (
 camera_icon_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23{btn_text[1:]}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z'/><circle cx='12' cy='13' r='4'/></svg>"
 user_icon_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23{btn_text[1:]}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2'/><circle cx='12' cy='7' r='4'/></svg>"
 
-# ICONOS ILUSTRADOS EN ROJO (Vías rediseñadas y Tren clásico a vapor)
-tracks_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff3838' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M8 1v22M16 1v22M8 4h8M8 9h8M8 14h8M8 19h8'/></svg>"
-train_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff3838' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'><path d='M8 15h8v4H8z' fill='%23ff3838'/><path d='M6 15l2-3h8l2 3' stroke='%23ff3838'/><circle cx='12' cy='9' r='3.5' fill='%23ff3838'/><circle cx='12' cy='9' r='1.5' fill='%23ffffff' stroke='none'/><path d='M10.5 5.5V3h3v2.5' fill='%23ff3838'/><path d='M4 19h16' stroke-width='2'/><path d='M7 19v2M17 19v2'/></svg>"
+# ICONOS ILUSTRADOS EN ROJO (Vías rediseñadas y Tren clásico a vapor combinados)
+trend_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff3838' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'><path d='M8 1v22M16 1v22M8 4h8M8 9h8M8 14h8M8 19h8' stroke-width='1' opacity='0.5'/><path d='M8 12h8v4H8z' fill='%23ff3838'/><path d='M6 12l2-3h8l2 3' stroke='%23ff3838'/><circle cx='12' cy='6' r='3.5' fill='%23ff3838'/><circle cx='12' cy='6' r='1.5' fill='%23ffffff' stroke='none'/><path d='M10.5 2.5V0h3v2.5' fill='%23ff3838'/><path d='M4 16h16' stroke-width='2'/><path d='M7 16v2M17 16v2'/></svg>"
 
 shield_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff3838' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/><path d='m9 12 2 2 4-4'/></svg>"
 tag_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff3838' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12 2H2v10l11.29 11.29a1 1 0 0 0 1.41 0l7.58-7.58a1 1 0 0 0 0-1.41L12 2z'/><circle cx='7.5' cy='7.5' r='1.5' fill='%23ff3838'/></svg>"
@@ -186,7 +185,6 @@ js_color_script = f"""
 components.html(js_color_script, height=0, width=0)
 
 # 3. CSS ADAPTABLE Y SWITCH
-# Se han eliminado las propiedades 'will-change', 'backface-visibility' y los 'font-smoothing' que causaban la borrosidad
 st.markdown(f"""
     <style>
     header[data-testid="stHeader"] {{ display: none !important; }}
@@ -407,7 +405,7 @@ st.markdown(f"""
         margin: 0 !important;
     }}
 
-    /* DIBUJOS ILUSTRADOS EN ROJO Y ANIMACIÓN DEL TREN EN HOVER */
+    /* DIBUJOS ILUSTRADOS EN ROJO */
     a[data-testid="stPageLink-NavLink"][href*="trendhype"],
     a[data-testid="stPageLink-NavLink"][href*="trustpage"],
     a[data-testid="stPageLink-NavLink"][href*="compararprecios"] {{
@@ -417,57 +415,20 @@ st.markdown(f"""
         overflow: hidden !important;
     }}
 
-    /* 1. Trend Del Hype: Vías Fijas + Tren Animado Subiendo */
+    /* 1. Trend Del Hype: Tren clásico estático mirando hacia arriba y a la derecha */
     a[data-testid="stPageLink-NavLink"][href*="trendhype"]::before {{
-        content: '' !important;
-        position: absolute !important;
-        left: 13px !important;
-        top: 50% !important;
-        transform: translateY(-50%) !important;
-        width: 18px !important;
-        height: 24px !important;
-        background-image: url("{tracks_red_svg}") !important;
-        background-repeat: no-repeat !important;
-        background-size: contain !important;
-        background-position: center !important;
-        z-index: 1 !important;
-        opacity: 0.65 !important;
-    }}
-
-    a[data-testid="stPageLink-NavLink"][href*="trendhype"]::after {{
         content: '' !important;
         position: absolute !important;
         left: 14px !important;
         top: 50% !important;
-        transform: translateY(-50%) !important;
-        width: 16px !important;
-        height: 16px !important;
-        background-image: url("{train_red_svg}") !important;
+        transform: translateY(-50%) rotate(45deg) !important;
+        width: 20px !important;
+        height: 20px !important;
+        background-image: url("{trend_red_svg}") !important;
         background-repeat: no-repeat !important;
         background-size: contain !important;
         background-position: center !important;
-        z-index: 2 !important;
-    }}
-
-    a[data-testid="stPageLink-NavLink"][href*="trendhype"]:hover::after {{
-        animation: trainDrive 0.85s infinite linear !important;
-    }}
-
-    @keyframes trainDrive {{
-        0% {{
-            transform: translateY(16px);
-            opacity: 0;
-        }}
-        20% {{
-            opacity: 1;
-        }}
-        80% {{
-            opacity: 1;
-        }}
-        100% {{
-            transform: translateY(-18px);
-            opacity: 0;
-        }}
+        z-index: 1 !important;
     }}
 
     /* 2. Páginas de Confianza: Escudo en Rojo */
