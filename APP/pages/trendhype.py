@@ -3,30 +3,35 @@ import streamlit as st
 # 1. CONFIGURACIÓN DE PÁGINA
 st.set_page_config(page_title="Radar del Hype - PerfumeTrending", layout="wide")
 
-# 2. MANEJO DE ESTADO (Navegación, Tema y Filtro)
-if 'current_page' not in st.session_state:
-    st.session_state['current_page'] = 'home'
-if 'theme' not in st.session_state:
-    st.session_state['theme'] = 'light'
-if 'selected_perfume' not in st.session_state:
-    st.session_state['selected_perfume'] = None
-if 'selected_month' not in st.session_state:
-    st.session_state['selected_month'] = "Este Mes"
+# 2. GESTIÓN DEL TEMA Y ESTADO
+if "current_page" not in st.session_state:
+    st.session_state.current_page = "home"
+if "selected_perfume" not in st.session_state:
+    st.session_state.selected_perfume = None
+if "selected_month" not in st.session_state:
+    st.session_state.selected_month = "Este Mes"
+
+if "theme" not in st.session_state:
+    st.session_state.theme = "dark"
 
 def toggle_theme():
-    st.session_state['theme'] = 'dark' if st.session_state['theme'] == 'light' else 'light'
+    st.session_state.theme = "light" if st.session_state.theme == "dark" else "dark"
 
-is_dark = st.session_state['theme'] == 'dark'
+is_dark = st.session_state.theme == "dark"
 
-app_bg_css = "background-color: #f6efe9 !important;" if not is_dark else "background-color: #0e1117 !important;"
-text_color = "#ffffff" if is_dark else "#1a1a1a"
-subtext_color = "#a0a0a0" if is_dark else "#8c7b6d"
+# 3. PALETA DE COLORES Y SVGS DEL SWITCH (INCORPORADO DE SWITCH_2)
+bg_color = "#0c0e12" if is_dark else "#f9f9fb"
+card_bg = "#14171d" if is_dark else "#ffffff"
+border_color = "#2a2e39" if is_dark else "#e4e4e7"
+text_color = "#f0f0f0" if is_dark else "#18181b"
+subtext_color = "#9a9a9a" if is_dark else "#71717a"
+accent_color = "#d4c2a5" if is_dark else "#8c7b6d"
 
-btn_bg = "#1f242d" if is_dark else "#ffffff"
-btn_border = "#3a3f4d" if is_dark else "#d4cdc5"
-btn_hover_bg = "#2d3340" if is_dark else "#fcfaf8"
+badge_green_bg = "#162b1e" if is_dark else "#ecfdf5"
+badge_green_text = "#b8f5c8" if is_dark else "#047857"
+badge_green_border = "#2a543b" if is_dark else "#a7f3d0"
 
-# SWITCH DE TEMA
+# Configuración del Switch
 bottle_left_pos = "42px" if is_dark else "-2px"
 static_icon_pos = "12px center" if is_dark else "calc(100% - 12px) center"
 
@@ -42,13 +47,13 @@ bottle_svg = (
     "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 58'><rect x='18' y='2' width='14' height='7' rx='2' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><rect x='21' y='9' width='8' height='5' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='19' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='5' fill='none' stroke='%23111111' stroke-width='2'/><line x1='25' y1='23' x2='25' y2='26' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='25' y1='42' x2='25' y2='45' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='14' y1='34' x2='17' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='33' y1='34' x2='36' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='17' y1='26' x2='19' y2='28' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='31' y1='40' x2='33' y2='42' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='17' y1='42' x2='19' y2='40' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='31' y1='28' x2='33' y2='26' stroke='%23111111' stroke-width='2' stroke-linecap='round'/></svg>"
 )
 
-# 3. ESTILOS CSS REFINADOS Y ALINEACIÓN PERFECTA
+# 4. ESTILOS CSS REFINADOS CON PALETA UNIFICADA
 st.markdown(f"""
     <style>
     header[data-testid="stHeader"] {{ display: none !important; }}
     div[data-testid="stAppViewContainer"] {{ padding-top: 0px !important; }}
     
-    .stApp {{ {app_bg_css} }}
+    .stApp {{ background-color: {bg_color} !important; }}
     
     .main .block-container,
     div.block-container,
@@ -60,7 +65,7 @@ st.markdown(f"""
         max-width: 1200px !important;
     }}
 
-    /* SWITCH NEUTRO */
+    /* SWITCH NEUTRO Y PERSONALIZADO */
     .st-key-theme_toggle,
     .st-key-theme_toggle div[data-testid="stButton"] {{
         background: transparent !important;
@@ -132,7 +137,7 @@ st.markdown(f"""
     }}
 
     .radar-title-text {{
-        color: #d9787f !important;
+        color: #d83737 !important;
         font-weight: 900 !important;
         font-size: 2.1rem !important;
         letter-spacing: 1.5px !important;
@@ -180,9 +185,9 @@ st.markdown(f"""
         visibility: hidden;
         opacity: 0;
         width: 320px;
-        background-color: {"#181a20" if is_dark else "#ffffff"};
+        background-color: {card_bg};
         color: {text_color};
-        border: 1px solid {"#343846" if is_dark else "#e2dacd"};
+        border: 1px solid {border_color};
         border-radius: 12px;
         padding: 14px 16px;
         position: absolute;
@@ -204,7 +209,7 @@ st.markdown(f"""
         pointer-events: auto;
     }}
 
-    /* ETIQUETA "FILTRAR POR :" ALINEADA AL BOTÓN */
+    /* ETIQUETA "FILTRADO POR :" */
     .filter-label-text {{
         color: {text_color} !important;
         font-weight: 700 !important;
@@ -216,7 +221,7 @@ st.markdown(f"""
         height: 32px;
     }}
 
-    /* ESTILOS PARA EL BOTÓN PRINCIPAL DEL POPOVER */
+    /* BOTÓN PRINCIPAL DEL POPOVER */
     div[data-testid="stPopover"] {{
         display: flex !important;
         align-items: center !important;
@@ -225,9 +230,9 @@ st.markdown(f"""
 
     div[data-testid="stPopover"] > button,
     div[data-testid="stPopover"] button {{
-        background-color: {btn_bg} !important;
-        background: {btn_bg} !important;
-        border: 1px solid {btn_border} !important;
+        background-color: {card_bg} !important;
+        background: {card_bg} !important;
+        border: 1px solid {border_color} !important;
         border-radius: 8px !important;
         padding: 0 10px !important;
         height: 32px !important;
@@ -268,19 +273,19 @@ st.markdown(f"""
     }}
 
     div[data-testid="stPopover"] button:hover {{
-        background-color: {btn_hover_bg} !important;
+        background-color: {bg_color} !important;
         border-color: #d83737 !important;
         transform: translateY(-1px) !important;
         box-shadow: 0 3px 8px rgba(0,0,0,0.08) !important;
     }}
 
-    /* MENÚ DESPLEGABLE CONVENCIONAL Y COMPACTO */
+    /* MENÚ DESPLEGABLE */
     div[data-testid="stPopoverBody"] {{
         padding: 6px !important;
         min-width: 160px !important;
         border-radius: 10px !important;
-        background-color: {btn_bg} !important;
-        border: 1px solid {btn_border} !important;
+        background-color: {card_bg} !important;
+        border: 1px solid {border_color} !important;
         box-shadow: 0 10px 25px rgba(0,0,0,0.2) !important;
     }}
 
@@ -304,7 +309,7 @@ st.markdown(f"""
     }}
 
     div[data-testid="stPopoverBody"] div.stButton > button:hover {{
-        background-color: {btn_hover_bg} !important;
+        background-color: {bg_color} !important;
         color: #d83737 !important;
         transform: none !important;
         box-shadow: none !important;
@@ -339,8 +344,8 @@ st.markdown(f"""
         align-items: center;
         justify-content: center;
         gap: 6px;
-        background-color: {btn_bg};
-        border: 1px solid {btn_border};
+        background-color: {card_bg};
+        border: 1px solid {border_color};
         border-radius: 8px;
         padding: 0 10px;
         height: 32px;
@@ -365,7 +370,7 @@ st.markdown(f"""
     .yt-chip-btn:hover {{
         transform: translateY(-1px);
         border-color: #d83737;
-        background-color: {btn_hover_bg};
+        background-color: {bg_color};
         box-shadow: 0 3px 8px rgba(216, 55, 55, 0.15);
     }}
 
@@ -420,8 +425,8 @@ st.markdown(f"""
 
     /* TARJETAS DE PERFUME */
     .hype-card {{
-        background-color: {btn_bg};
-        border: 2px solid {btn_border};
+        background-color: {card_bg};
+        border: 2px solid {border_color};
         border-radius: 12px;
         padding: 14px;
         position: relative;
@@ -442,9 +447,9 @@ st.markdown(f"""
 
     .rank-badge {{
         position: absolute; top: -12px; left: -8px;
-        background-color: {btn_bg}; color: {text_color};
+        background-color: {card_bg}; color: {text_color};
         font-size: 16px; font-weight: 900; padding: 3px 10px;
-        border: 2px solid {btn_border}; border-radius: 6px; box-shadow: 2px 2px 0px {btn_border}; z-index: 2;
+        border: 2px solid {border_color}; border-radius: 6px; box-shadow: 2px 2px 0px {border_color}; z-index: 2;
         display: flex; align-items: center; gap: 6px;
         transition: border-color 0.3s ease;
     }}
@@ -473,9 +478,9 @@ st.markdown(f"""
 
     .score-circle {{
         position: absolute; top: 10px; right: 10px; width: 56px; height: 56px; border-radius: 50%;
-        border: 2px solid {btn_border}; display: flex; flex-direction: column; justify-content: center;
-        align-items: center; background-color: {btn_bg}; padding: 2px;
-        box-shadow: inset 0 0 0 2px {btn_bg}, inset 0 0 0 2px {btn_border};
+        border: 2px solid {border_color}; display: flex; flex-direction: column; justify-content: center;
+        align-items: center; background-color: {card_bg}; padding: 2px;
+        box-shadow: inset 0 0 0 2px {card_bg}, inset 0 0 0 2px {border_color};
         transition: border-color 0.3s ease;
     }}
     .hype-card:hover .score-circle {{ border-color: #d83737; }}
@@ -494,23 +499,23 @@ st.markdown(f"""
     .hype-card:hover .img-wrapper img {{ transform: scale(1.12); }}
 
     .year-badge {{
-        position: absolute; bottom: 0; right: 5px; background: {btn_bg}; border: 1px solid {btn_border};
-        border-radius: 4px; padding: 1px 6px; font-size: 11px; font-weight: bold;
+        position: absolute; bottom: 0; right: 5px; background: {card_bg}; border: 1px solid {border_color};
+        border-radius: 4px; padding: 1px 6px; font-size: 11px; font-weight: bold; color: {text_color};
     }}
-    .perfume-title {{ text-align: center; font-size: 14px; font-weight: bold; margin-top: 8px; margin-bottom: 10px; }}
+    .perfume-title {{ text-align: center; font-size: 14px; font-weight: bold; margin-top: 8px; margin-bottom: 10px; color: {text_color}; }}
     .stats-row {{ display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 10px; }}
     .stats-text {{ width: 55%; color: {text_color}; line-height: 1.25; }}
     .chile-badge {{
-        display: flex; align-items: center; gap: 4px; background-color: {btn_hover_bg}; border: 1px solid {btn_border};
-        border-radius: 16px; padding: 3px 6px; font-weight: bold; font-size: 9px; text-align: left; line-height: 1.1;
+        display: flex; align-items: center; gap: 4px; background-color: {bg_color}; border: 1px solid {border_color};
+        border-radius: 16px; padding: 3px 6px; font-weight: bold; font-size: 9px; text-align: left; line-height: 1.1; color: {text_color};
     }}
     .ai-box {{
-        display: flex; gap: 8px; align-items: center; border: 1px solid {btn_border}; border-radius: 8px;
-        padding: 8px; margin-bottom: 10px; font-size: 10px; line-height: 1.25; background-color: {btn_hover_bg};
+        display: flex; gap: 8px; align-items: center; border: 1px solid {border_color}; border-radius: 8px;
+        padding: 8px; margin-bottom: 10px; font-size: 10px; line-height: 1.25; background-color: {bg_color}; color: {subtext_color};
     }}
     .ai-icon {{
-        min-width: 22px; height: 22px; border-radius: 50%; border: 1px solid {btn_border}; display: flex;
-        justify-content: center; align-items: center; font-weight: bold; font-size: 9px; background-color: {btn_bg};
+        min-width: 22px; height: 22px; border-radius: 50%; border: 1px solid {border_color}; display: flex;
+        justify-content: center; align-items: center; font-weight: bold; font-size: 9px; background-color: {card_bg}; color: {text_color};
     }}
     .price-text {{ text-align: center; font-size: 11px; color: {text_color}; margin-bottom: 6px; }}
 
@@ -573,23 +578,22 @@ st.markdown(f"""
     </script>
 """, unsafe_allow_html=True)
 
-# 4. CABECERA CON LOGO Y TEMAS
+# 5. CABECERA CON LOGO Y SWITCH DE TEMA
 col_logo, col_theme = st.columns([6, 1], vertical_alignment="center")
 
 with col_logo:
-    logo_color = "#8c7b6d"
     logo_html = f"""
     <a href="/" target="_self" style="text-decoration: none; display: inline-flex; align-items: center; gap: 10px; cursor: pointer; width: fit-content;">
         <svg width="38" height="38" viewBox="0 0 36 36" fill="none" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M 6.8 21 L 29.2 21 C 30 25 27 32 18 32 C 9 32 6 25 6.8 21 Z" fill="{logo_color}" />
+            <path d="M 6.8 21 L 29.2 21 C 30 25 27 32 18 32 C 9 32 6 25 6.8 21 Z" fill="{accent_color}" />
             <line x1="6.8" y1="21" x2="29.2" y2="21" stroke="{text_color}" stroke-width="2" />
             <line x1="18" y1="10" x2="18" y2="30" stroke="{text_color}" stroke-width="1.5" />
             <path d="M 18 32 C 9 32 5 24 7.5 17 C 9 12 13 10 15 10 L 21 10 C 23 10 27 12 28.5 17 C 31 24 27 32 18 32 Z" stroke="{text_color}" stroke-width="2.5" />
             <rect x="15" y="7" width="6" height="3" stroke="{text_color}" stroke-width="2.5" />
             <rect x="13" y="3" width="10" height="4" rx="1" stroke="{text_color}" stroke-width="2.5" />
-            <rect x="16" y="0" width="4" height="3" rx="1" fill="{logo_color}" stroke="{text_color}" stroke-width="1.5" />
+            <rect x="16" y="0" width="4" height="3" rx="1" fill="{accent_color}" stroke="{text_color}" stroke-width="1.5" />
             <path d="M 23 5 L 26 4" stroke="{text_color}" stroke-width="2.5" />
-            <ellipse cx="29" cy="3" rx="3.5" ry="2.5" transform="rotate(-25 29 3)" fill="{logo_color}" stroke="{text_color}" stroke-width="1.5" />
+            <ellipse cx="29" cy="3" rx="3.5" ry="2.5" transform="rotate(-25 29 3)" fill="{accent_color}" stroke="{text_color}" stroke-width="1.5" />
         </svg>
         <span style="font-family: 'Inter', sans-serif; font-size: 1.55rem; color: {text_color}; letter-spacing: -0.5px;">
             <span style="font-weight: 800;">Perfume</span><span style="font-weight: 400;">Trending</span>
@@ -601,7 +605,7 @@ with col_logo:
 with col_theme:
     st.button(" ", key="theme_toggle", on_click=toggle_theme)
 
-# SECCIÓN DEL TÍTULO CON BOTÓN FLOTANTE 'i'
+# SECCIÓN DEL TÍTULO Y NAVEGACIÓN
 st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
 col_header_title, col_back_btn = st.columns([3.4, 1], vertical_alignment="center")
 
@@ -625,7 +629,7 @@ with col_back_btn:
 
 st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
 
-# 5. FILTROS ALINEADOS Y PEGADOS ("Filtrado por :" + Popover)
+# 6. FILTROS ALINEADOS
 col_title, col_fecha, col_red = st.columns([0.28, 0.42, 3.3], gap="small", vertical_alignment="center")
 
 with col_title:
@@ -633,10 +637,10 @@ with col_title:
 
 with col_fecha:
     opciones_fecha = ["Este Mes", "Hoy / Día", "Esta Semana", "Este Año", "Año Pasado"]
-    with st.popover(f"📅 {st.session_state['selected_month']}", use_container_width=False):
+    with st.popover(f"📅 {st.session_state.selected_month}", use_container_width=False):
         for opt in opciones_fecha:
             if st.button(opt, key=f"btn_m_{opt}", use_container_width=True):
-                st.session_state['selected_month'] = opt
+                st.session_state.selected_month = opt
                 st.rerun()
 
 with col_red:
@@ -657,7 +661,7 @@ with col_red:
 
 st.write("")
 
-# 6. ICONOS DE ESTRELLAS
+# 7. ICONOS DE ESTRELLAS DE RANKING
 star_ruby_svg = """
 <div class="star-minimal-ruby">
     <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
@@ -743,7 +747,7 @@ hype_data = [
     }
 ]
 
-# 7. RENDERIZADO DE TARJETAS EN REJILLA
+# 8. RENDERIZADO DE TARJETAS EN REJILLA
 cols_per_row = 3
 for row in range(0, len(hype_data), cols_per_row):
     cols = st.columns(cols_per_row, gap="medium")
