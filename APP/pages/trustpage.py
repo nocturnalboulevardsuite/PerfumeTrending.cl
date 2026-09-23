@@ -4,7 +4,7 @@ import streamlit.components.v1 as components
 # 1. CONFIGURACIÓN DE PÁGINA
 st.set_page_config(
     page_title="Páginas de Confianza - PerfumeTrending",
-    page_icon="🛡️",
+    page_icon="⚖️",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
@@ -330,8 +330,8 @@ hero_html = f"""
         <p>Comercios, perfumerías y tiendas de decants verificadas para garantizar compras 100% auténticas y seguras.</p>
     </div>
     <div class="trust-badges-row">
-        <div class="trust-pill">✨ 100% Originales</div>
-        <div class="trust-pill">🔒 Sitios Verificados</div>
+        <div class="trust-pill"> 100% Originales</div>
+        <div class="trust-pill"> Sitios Verificados</div>
     </div>
 </div>
 """
