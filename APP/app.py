@@ -56,6 +56,12 @@ bottle_svg = (
 camera_icon_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23{btn_text[1:]}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z'/><circle cx='12' cy='13' r='4'/></svg>"
 user_icon_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23{btn_text[1:]}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2'/><circle cx='12' cy='7' r='4'/></svg>"
 
+# ICONOS ILUSTRADOS EN ROJO
+tracks_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff3838' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M8 22L10 2M16 22L14 2M8.3 18h7.4M8.8 13.5h6.4M9.3 9h5.4M9.8 4.5h4.4'/></svg>"
+train_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff3838' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><rect x='5' y='11' width='14' height='9' rx='2'/><path d='M7 11V6a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v5M10 2v2M14 2v2M8 15h8'/><circle cx='8.5' cy='17.5' r='1' fill='%23ff3838'/><circle cx='15.5' cy='17.5' r='1' fill='%23ff3838'/></svg>"
+shield_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff3838' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/><path d='m9 12 2 2 4-4'/></svg>"
+tag_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff3838' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12 2H2v10l11.29 11.29a1 1 0 0 0 1.41 0l7.58-7.58a1 1 0 0 0 0-1.41L12 2z'/><circle cx='7.5' cy='7.5' r='1.5' fill='%23ff3838'/></svg>"
+
 # 2. SCRIPT DE COLORES Y SISTEMA DE SONIDO DE BURBUJA
 js_color_script = f"""
 <script>
@@ -212,8 +218,7 @@ st.markdown(f"""
     button[data-testid="stPopoverButton"],
     .st-key-btn_photo_search button,
     .st-key-login_btn button,
-    a[data-testid="stPageLink-NavLink"],
-    .custom-chip-link {{
+    a[data-testid="stPageLink-NavLink"] {{
         transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease !important;
         -webkit-font-smoothing: antialiased !important;
         -moz-osx-font-smoothing: grayscale !important;
@@ -236,8 +241,7 @@ st.markdown(f"""
     .st-key-btn_photo_search button:hover,
     .st-key-login_btn button:hover,
     div.stButton > button:focus,
-    a[data-testid="stPageLink-NavLink"]:hover,
-    .custom-chip-link:hover {{
+    a[data-testid="stPageLink-NavLink"]:hover {{
         transform: scale(1.04) !important;
         cursor: pointer !important;
         box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
@@ -246,8 +250,7 @@ st.markdown(f"""
     }}
 
     div.stButton > button:active,
-    a[data-testid="stPageLink-NavLink"]:active,
-    .custom-chip-link:active {{
+    a[data-testid="stPageLink-NavLink"]:active {{
         transform: scale(0.98) !important;
     }}
 
@@ -387,8 +390,7 @@ st.markdown(f"""
     }}
 
     /* CHIPS DE ACCESO RÁPIDO Y PAGE LINKS */
-    a[data-testid="stPageLink-NavLink"],
-    .custom-chip-link {{
+    a[data-testid="stPageLink-NavLink"] {{
         background-color: {btn_bg} !important;
         border: 1px solid {btn_border} !important;
         border-radius: 20px !important;
@@ -402,13 +404,11 @@ st.markdown(f"""
         display: inline-flex !important;
         align-items: center !important;
         justify-content: center !important;
-        gap: 8px !important;
         box-sizing: border-box !important;
     }}
     
     a[data-testid="stPageLink-NavLink"] p,
-    a[data-testid="stPageLink-NavLink"] span,
-    .custom-chip-link span {{
+    a[data-testid="stPageLink-NavLink"] span {{
         font-size: 0.85rem !important;
         font-weight: 600 !important;
         color: {btn_text} !important;
@@ -417,6 +417,100 @@ st.markdown(f"""
         text-overflow: clip !important;
         overflow: visible !important;
         margin: 0 !important;
+    }}
+
+    /* DIBUJOS ILUSTRADOS EN ROJO Y ANIMACIÓN DEL TREN EN HOVER */
+    a[data-testid="stPageLink-NavLink"][href*="trendhype"],
+    a[data-testid="stPageLink-NavLink"][href*="trustpage"],
+    a[data-testid="stPageLink-NavLink"][href*="compararprecios"] {{
+        position: relative !important;
+        padding-left: 2.7rem !important;
+        padding-right: 1.1rem !important;
+        overflow: hidden !important;
+    }}
+
+    /* 1. Trend Del Hype: Vías + Tren Animado Subiendo */
+    a[data-testid="stPageLink-NavLink"][href*="trendhype"]::before {{
+        content: '' !important;
+        position: absolute !important;
+        left: 14px !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        width: 20px !important;
+        height: 22px !important;
+        background-image: url("{tracks_red_svg}") !important;
+        background-repeat: no-repeat !important;
+        background-size: contain !important;
+        background-position: center !important;
+        z-index: 1 !important;
+        opacity: 0.8 !important;
+    }}
+
+    a[data-testid="stPageLink-NavLink"][href*="trendhype"]::after {{
+        content: '' !important;
+        position: absolute !important;
+        left: 14px !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        width: 20px !important;
+        height: 22px !important;
+        background-image: url("{train_red_svg}") !important;
+        background-repeat: no-repeat !important;
+        background-size: contain !important;
+        background-position: center !important;
+        z-index: 2 !important;
+        transition: transform 0.25s ease !important;
+    }}
+
+    a[data-testid="stPageLink-NavLink"][href*="trendhype"]:hover::after {{
+        animation: trainClimb 0.9s infinite linear !important;
+    }}
+
+    @keyframes trainClimb {{
+        0% {{
+            transform: translateY(6px);
+            opacity: 0.2;
+        }}
+        25% {{
+            opacity: 1;
+        }}
+        75% {{
+            opacity: 1;
+        }}
+        100% {{
+            transform: translateY(-10px);
+            opacity: 0.1;
+        }}
+    }}
+
+    /* 2. Páginas de Confianza: Escudo en Rojo */
+    a[data-testid="stPageLink-NavLink"][href*="trustpage"]::before {{
+        content: '' !important;
+        position: absolute !important;
+        left: 14px !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        width: 19px !important;
+        height: 19px !important;
+        background-image: url("{shield_red_svg}") !important;
+        background-repeat: no-repeat !important;
+        background-size: contain !important;
+        background-position: center !important;
+    }}
+
+    /* 3. Comparar Precios: Etiqueta en Rojo */
+    a[data-testid="stPageLink-NavLink"][href*="compararprecios"]::before {{
+        content: '' !important;
+        position: absolute !important;
+        left: 14px !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        width: 19px !important;
+        height: 19px !important;
+        background-image: url("{tag_red_svg}") !important;
+        background-repeat: no-repeat !important;
+        background-size: contain !important;
+        background-position: center !important;
     }}
 
     /* INPUTS */
@@ -652,22 +746,16 @@ with col_separator:
 with col_photo:
     st.button("Búsqueda visual", key="btn_photo_search", help="Buscar por imagen", use_container_width=True)
 
-# 7. CHIPS DE ENLACE RÁPIDO A PÁGINAS INDEPENDIENTES (CON LOGOS ROJOS EN SVG/HTML)
+# 7. CHIPS DE ENLACE RÁPIDO A PÁGINAS INDEPENDIENTES
 st.markdown("<div style='margin-top: 14px;'></div>", unsafe_allow_html=True)
-col_chip1, col_chip2, col_chip3, col_chip_space = st.columns([1.6, 2.1, 1.8, 3.5], vertical_alignment="center")
-
-svg_trend = """<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><path d="M3 19L19 3"/><polyline points="13 3 19 3 19 9"/><rect x="2" y="10" width="9" height="6" rx="1" fill="#ef4444" fill-opacity="0.25" stroke="#ef4444"/><path d="M7 10V7h3v3"/><circle cx="4.5" cy="17" r="1" fill="#ef4444"/><circle cx="8.5" cy="17" r="1" fill="#ef4444"/></svg>"""
-
-svg_shield = """<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" fill="#ef4444" fill-opacity="0.25"/><path d="M9 12l2 2 4-4"/></svg>"""
-
-svg_compare = """<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><path d="M12 2H2v10l9.29 9.29a1 1 0 0 0 1.41 0l7.29-7.29a1 1 0 0 0 0-1.41L12 2z" fill="#ef4444" fill-opacity="0.25"/><circle cx="6" cy="6" r="1.5" fill="#ef4444"/><path d="M17 7l3 3-3 3"/><path d="M13 10h7"/></svg>"""
+col_chip1, col_chip2, col_chip3, col_chip_space = st.columns([1.5, 2.0, 1.7, 3.8], vertical_alignment="center")
 
 with col_chip1:
-    st.markdown(f'<a href="trendhype" target="_self" class="custom-chip-link">{svg_trend}<span>Trend Del Hype</span></a>', unsafe_allow_html=True)
+    st.page_link("pages/trendhype.py", label="Trend Del Hype", use_container_width=True)
 with col_chip2:
-    st.markdown(f'<a href="trustpage" target="_self" class="custom-chip-link">{svg_shield}<span>Páginas de Confianza</span></a>', unsafe_allow_html=True)
+    st.page_link("pages/trustpage.py", label="Páginas de Confianza", use_container_width=True)
 with col_chip3:
-    st.markdown(f'<a href="compararprecios" target="_self" class="custom-chip-link">{svg_compare}<span>Comparar Precios</span></a>', unsafe_allow_html=True)
+    st.page_link("pages/compararprecios.py", label="Comparar Precios", use_container_width=True)
 
 st.markdown("<div style='margin-top: 24px;'></div>", unsafe_allow_html=True)
 
