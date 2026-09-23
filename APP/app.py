@@ -177,9 +177,12 @@ st.markdown(f"""
     }}
 
     div.stButton > button p,
-    div[data-testid="stPopover"] > button p,
-    button[data-testid="stPopoverButton"] p {{
+    div[data-testid="stPopover"] button,
+    div[data-testid="stPopover"] button *,
+    button[data-testid="stPopoverButton"],
+    button[data-testid="stPopoverButton"] * {{
         color: {btn_text} !important;
+        fill: {btn_text} !important;
     }}
 
     div.stButton > button:hover,
