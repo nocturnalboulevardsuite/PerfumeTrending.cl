@@ -2,13 +2,13 @@ import streamlit as st
 
 # 1. CONFIGURACIÓN DE PÁGINA
 st.set_page_config(
-    page_title="PerfumeTrending — Trust Verification",
+    page_title="PerfumeTrending — Verificación de Confianza",
     page_icon="🧴",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
-# HELPER: Elimina la indentación de cada línea para evitar que Streamlit/Markdown lo convierta en código
+# HELPER: Limpia espacios/indentaciones iniciales para evitar que Streamlit Markdown convierta HTML en código
 def clean_html(html_str: str) -> str:
     return "\n".join(line.strip() for line in html_str.splitlines())
 
@@ -21,17 +21,12 @@ def toggle_theme():
 
 is_dark = st.session_state.theme == "dark"
 
-# 3. PALETA DE COLORES Y SVGS DEL SWITCH
-bg_color = "#0c0e12" if is_dark else "#f9f9fb"
+# 3. PALETA DE COLORES Y SVGS
+bg_color = "#0c0e12" if is_dark else "#f8f9fa"
 card_bg = "#14171d" if is_dark else "#ffffff"
-border_color = "#2a2e39" if is_dark else "#e4e4e7"
-text_color = "#f0f0f0" if is_dark else "#18181b"
-subtext_color = "#9a9a9a" if is_dark else "#71717a"
-accent_color = "#d4c2a5" if is_dark else "#8c7b6d"
-
-badge_green_bg = "#162b1e" if is_dark else "#ecfdf5"
-badge_green_text = "#b8f5c8" if is_dark else "#047857"
-badge_green_border = "#2a543b" if is_dark else "#a7f3d0"
+border_color = "#232730" if is_dark else "#e2e8f0"
+text_color = "#f3f4f6" if is_dark else "#0f172a"
+subtext_color = "#8e95a5" if is_dark else "#64748b"
 
 # Configuración del Switch
 bottle_left_pos = "42px" if is_dark else "-2px"
@@ -49,13 +44,13 @@ bottle_svg = (
     "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 58'><rect x='18' y='2' width='14' height='7' rx='2' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><rect x='21' y='9' width='8' height='5' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='19' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='5' fill='none' stroke='%23111111' stroke-width='2'/><line x1='25' y1='23' x2='25' y2='26' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='25' y1='42' x2='25' y2='45' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='14' y1='34' x2='17' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='33' y1='34' x2='36' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='17' y1='26' x2='19' y2='28' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='31' y1='40' x2='33' y2='42' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='17' y1='42' x2='19' y2='40' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='31' y1='28' x2='33' y2='26' stroke='%23111111' stroke-width='2' stroke-linecap='round'/></svg>"
 )
 
-# 4. ESTILOS CSS
+# 4. ESTILOS CSS CON TIPOGRAFÍA ELEGANTE Y EDITORIAL
 css_styles = f"""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap');
 
 html, body, [class*="css"], .stApp {{
-    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif !important;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
     background-color: {bg_color} !important;
     color: {text_color} !important;
 }}
@@ -63,195 +58,205 @@ html, body, [class*="css"], .stApp {{
 header[data-testid="stHeader"] {{ display: none !important; }}
 
 .block-container {{ 
-    padding-top: 1.5rem !important; 
+    padding-top: 2rem !important; 
     padding-bottom: 2rem !important; 
-    max-width: 1280px !important;
+    max-width: 1200px !important;
 }}
 
-/* SECCIÓN IZQUIERDA: TARJETA DE PRODUCTO MINIMALISTA */
+/* TARJETA DE PRODUCTO MINIMALISTA */
 .product-card {{
     background-color: {card_bg};
     border: 1px solid {border_color};
-    border-radius: 12px;
-    padding: 28px;
+    border-radius: 16px;
+    padding: 36px 32px 28px 32px;
     display: flex;
     flex-direction: column;
     align-items: center;
     text-align: center;
 }}
+
 .product-title {{
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 1.15rem;
-    font-weight: 700;
-    letter-spacing: 1.5px;
-    margin: 16px 0 4px 0;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.8rem;
+    font-weight: 600;
+    letter-spacing: 2px;
+    margin: 20px 0 2px 0;
     text-transform: uppercase;
     color: {text_color};
 }}
+
 .product-subtitle {{
-    font-size: 0.75rem;
+    font-size: 0.72rem;
     color: {subtext_color};
-    font-weight: 600;
-    letter-spacing: 1px;
+    font-weight: 500;
+    letter-spacing: 1.5px;
     text-transform: uppercase;
-    margin-bottom: 24px;
+    margin-bottom: 28px;
 }}
 
 /* NOTAS OLFATIVAS */
 .notes-container {{
     width: 100%;
     text-align: left;
-    margin-bottom: 24px;
     border-top: 1px solid {border_color};
-    padding-top: 16px;
+    padding-top: 20px;
 }}
+
 .note-item {{
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 8px 0;
+    padding: 10px 0;
     border-bottom: 1px dashed {border_color};
 }}
+
+.note-item:last-child {{
+    border-bottom: none;
+}}
+
 .note-label {{
-    font-size: 0.7rem;
-    font-weight: 700;
-    letter-spacing: 1px;
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 1.2px;
     color: {subtext_color};
     text-transform: uppercase;
 }}
-.note-value {{
-    font-size: 0.82rem;
-    font-weight: 600;
-    color: {text_color};
-}}
 
-/* CONTENEDOR DE GRÁFICO */
-.virality-box {{
-    width: 100%;
-    border-top: 1px solid {border_color};
-    padding-top: 16px;
+.note-value {{
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: {text_color};
 }}
 
 /* TABLA DE COMPARACIÓN */
 .trust-table-container {{
     background-color: {card_bg};
     border: 1px solid {border_color};
-    border-radius: 12px;
-    padding: 8px;
+    border-radius: 16px;
+    padding: 12px;
 }}
+
 table.trust-table {{
     width: 100%;
     border-collapse: separate;
-    border-spacing: 0 6px;
+    border-spacing: 0 8px;
 }}
+
 table.trust-table th {{
-    padding: 12px 16px;
-    font-size: 0.7rem;
-    font-weight: 800;
+    padding: 12px 18px;
+    font-size: 0.68rem;
+    font-weight: 700;
     text-transform: uppercase;
     color: {subtext_color};
-    letter-spacing: 1.2px;
+    letter-spacing: 1.5px;
     border-bottom: 1px solid {border_color};
     text-align: left;
 }}
+
 table.trust-table td {{
-    padding: 14px 16px;
+    padding: 16px 18px;
     background-color: {bg_color};
     border-top: 1px solid {border_color};
     border-bottom: 1px solid {border_color};
     vertical-align: middle;
 }}
+
 table.trust-table tr td:first-child {{
     border-left: 1px solid {border_color};
-    border-top-left-radius: 8px;
-    border-bottom-left-radius: 8px;
-    font-weight: 700;
+    border-top-left-radius: 10px;
+    border-bottom-left-radius: 10px;
+    font-weight: 500;
     font-size: 0.75rem;
     color: {subtext_color};
 }}
+
 table.trust-table tr td:last-child {{
     border-right: 1px solid {border_color};
-    border-top-right-radius: 8px;
-    border-bottom-right-radius: 8px;
+    border-top-right-radius: 10px;
+    border-bottom-right-radius: 10px;
     text-align: right;
 }}
 
 .store-title {{
-    font-weight: 700;
+    font-weight: 600;
     font-size: 0.85rem;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.8px;
     text-transform: uppercase;
     color: {text_color};
 }}
 
 .price-tag {{
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 1.05rem;
-    font-weight: 700;
+    font-family: 'Inter', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
     color: {text_color};
 }}
 
-/* BADGES DE ESTADO VECTORIALES */
+/* BADGES DE ESTADO */
 .status-badge-safe {{
     display: inline-flex;
     align-items: center;
     padding: 4px 10px;
-    border-radius: 4px;
-    font-size: 0.68rem;
-    font-weight: 800;
-    letter-spacing: 0.8px;
+    border-radius: 6px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 1px;
     text-transform: uppercase;
-    background: rgba(34, 197, 94, 0.1);
+    background: rgba(34, 197, 94, 0.08);
     color: #22c55e;
-    border: 1px solid rgba(34, 197, 94, 0.25);
+    border: 1px solid rgba(34, 197, 94, 0.2);
 }}
+
 .status-badge-danger {{
     display: inline-flex;
     align-items: center;
     padding: 4px 10px;
-    border-radius: 4px;
-    font-size: 0.68rem;
-    font-weight: 800;
-    letter-spacing: 0.8px;
+    border-radius: 6px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 1px;
     text-transform: uppercase;
-    background: rgba(239, 68, 68, 0.1);
+    background: rgba(239, 68, 68, 0.08);
     color: #ef4444;
-    border: 1px solid rgba(239, 68, 68, 0.25);
+    border: 1px solid rgba(239, 68, 68, 0.2);
 }}
 
 /* BOTONES ACCIÓN MINIMALISTAS */
 .btn-buy-now {{
     background: {text_color};
     color: {bg_color} !important;
-    font-weight: 700;
-    font-size: 0.72rem;
+    font-weight: 600;
+    font-size: 0.7rem;
     letter-spacing: 1px;
-    padding: 8px 16px;
-    border-radius: 6px;
+    padding: 9px 18px;
+    border-radius: 8px;
     text-decoration: none !important;
     display: inline-block;
     text-transform: uppercase;
     transition: opacity 0.2s ease;
 }}
+
 .btn-buy-now:hover {{
     opacity: 0.85;
 }}
+
 .btn-buy-disabled {{
     background: transparent;
     color: {subtext_color} !important;
     border: 1px solid {border_color};
-    font-weight: 700;
-    font-size: 0.72rem;
+    font-weight: 600;
+    font-size: 0.7rem;
     letter-spacing: 1px;
-    padding: 8px 16px;
-    border-radius: 6px;
+    padding: 9px 18px;
+    border-radius: 8px;
     text-decoration: none !important;
     display: inline-block;
     text-transform: uppercase;
     cursor: not-allowed;
+    opacity: 0.6;
 }}
 
-/* SWITCH NEUTRO Y FLOTANTE */
+/* SWITCH FLOTANTE */
 .st-key-theme_toggle,
 .st-key-theme_toggle div[data-testid="stButton"] {{
     background: transparent !important;
@@ -318,14 +323,14 @@ div[data-testid="stElementContainer"].st-key-theme_toggle button {{
 """
 st.markdown(clean_html(css_styles), unsafe_allow_html=True)
 
-# 5. HEADER (LOGO + SWITCH SOLAMENTE)
+# 5. HEADER (LOGO + SWITCH)
 col_head_logo, col_head_switch = st.columns([8, 2], vertical_alignment="center")
 
 with col_head_logo:
-    logo_color = "#8c7b6d"
+    logo_color = "#c5a880" if is_dark else "#9a7b4f"
     logo_html = f"""
-    <div style="display: inline-flex; align-items: center; gap: 10px; cursor: pointer;" onclick="window.location.reload();">
-        <svg width="34" height="34" viewBox="0 0 36 36" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <div style="display: inline-flex; align-items: center; gap: 12px; cursor: pointer;" onclick="window.location.reload();">
+        <svg width="32" height="32" viewBox="0 0 36 36" fill="none" stroke-linecap="round" stroke-linejoin="round">
             <path d="M 6.8 21 L 29.2 21 C 30 25 27 32 18 32 C 9 32 6 25 6.8 21 Z" fill="{logo_color}" />
             <line x1="6.8" y1="21" x2="29.2" y2="21" stroke="{text_color}" stroke-width="1.5" />
             <line x1="18" y1="10" x2="18" y2="30" stroke="{text_color}" stroke-width="1" />
@@ -334,8 +339,8 @@ with col_head_logo:
             <rect x="13" y="3" width="10" height="4" rx="1" stroke="{text_color}" stroke-width="1.5" />
             <rect x="16" y="0" width="4" height="3" rx="1" fill="{logo_color}" stroke="{text_color}" stroke-width="1" />
         </svg>
-        <span style="font-size: 1.3rem; color: {text_color}; letter-spacing: 0.2px;">
-            <span style="font-weight: 300;">Perfume</span><span style="font-weight: 800;">Trending</span>
+        <span style="font-size: 1.25rem; color: {text_color}; letter-spacing: 0.5px;">
+            <span style="font-family: 'Cormorant Garamond', serif; font-weight: 500; font-size: 1.5rem;">Perfume</span><span style="font-family: 'Inter', sans-serif; font-weight: 700; font-size: 1.1rem; text-transform: uppercase; margin-left: 3px;">Trending</span>
         </span>
     </div>
     """
@@ -344,69 +349,53 @@ with col_head_logo:
 with col_head_switch:
     st.button(" ", on_click=toggle_theme, key="theme_toggle")
 
-st.markdown(f"<hr style='border: none; border-top: 1px solid {border_color}; margin: 16px 0 24px 0;' />", unsafe_allow_html=True)
+st.markdown(f"<hr style='border: none; border-top: 1px solid {border_color}; margin: 20px 0 28px 0;' />", unsafe_allow_html=True)
 
-# 6. ESTRUCTURA PRINCIPAL EN DOS COLUMNAS
+# 6. ESTRUCTURA PRINCIPAL
 left_col, right_col = st.columns([1, 1.4], gap="large")
 
-# --- COLUMNA IZQUIERDA: DETALLES DEL PERFUME ---
+# --- COLUMNA IZQUIERDA: TARJETA DE PRODUCTO MINIMALISTA ---
 with left_col:
     bottle_sketch_svg = f"""
-    <svg viewBox="0 0 200 240" fill="none" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: auto; max-width: 170px;">
-        <path d="M70 20 L130 20 L145 35 L145 55 L130 70 L70 70 L55 55 L55 35 Z" stroke="{text_color}" stroke-width="2" fill="{card_bg}"/>
-        <rect x="75" y="70" width="50" height="15" stroke="{text_color}" stroke-width="1.5" fill="{card_bg}"/>
-        <path d="M40 85 L160 85 L175 110 L175 210 L160 225 L40 225 L25 210 L25 110 Z" stroke="{text_color}" stroke-width="2" fill="{card_bg}"/>
+    <svg viewBox="0 0 200 240" fill="none" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: auto; max-width: 160px;">
+        <path d="M70 20 L130 20 L145 35 L145 55 L130 70 L70 70 L55 55 L55 35 Z" stroke="{text_color}" stroke-width="1.8" fill="{card_bg}"/>
+        <rect x="75" y="70" width="50" height="15" stroke="{text_color}" stroke-width="1.2" fill="{card_bg}"/>
+        <path d="M40 85 L160 85 L175 110 L175 210 L160 225 L40 225 L25 210 L25 110 Z" stroke="{text_color}" stroke-width="1.8" fill="{card_bg}"/>
         <rect x="55" y="115" width="90" height="65" stroke="{border_color}" stroke-width="1" fill="{bg_color}"/>
-        <text x="100" y="132" font-size="6" font-weight="700" fill="{subtext_color}" text-anchor="middle" letter-spacing="1">SKETCHED SCENTS</text>
-        <text x="100" y="150" font-size="10" font-weight="800" fill="{text_color}" text-anchor="middle" letter-spacing="1.5">MIDNIGHT</text>
-        <text x="100" y="163" font-size="10" font-weight="800" fill="{text_color}" text-anchor="middle" letter-spacing="1.5">OUD</text>
-        <text x="100" y="174" font-size="5.5" fill="{subtext_color}" text-anchor="middle">EAU DE PARFUM</text>
-    </svg>
-    """
-
-    trend_graph_svg = f"""
-    <svg viewBox="0 0 220 60" fill="none" xmlns="http://www.w3.org/2000/svg" style="width: 100%;">
-        <path d="M10 48 L80 38 L140 28 L210 8" stroke="{text_color}" stroke-width="1.8"/>
-        <path d="M10 48 L80 38 L140 28 L210 8 L210 55 L10 55 Z" fill="{text_color}" fill-opacity="0.04"/>
-        <circle cx="210" cy="8" r="3" fill="{text_color}"/>
+        <text x="100" y="132" font-size="5.5" font-weight="600" fill="{subtext_color}" text-anchor="middle" letter-spacing="1">SKETCHED SCENTS</text>
+        <text x="100" y="150" font-size="9.5" font-weight="700" fill="{text_color}" text-anchor="middle" letter-spacing="1.5">MIDNIGHT</text>
+        <text x="100" y="163" font-size="9.5" font-weight="700" fill="{text_color}" text-anchor="middle" letter-spacing="1.5">OUD</text>
+        <text x="100" y="174" font-size="5" fill="{subtext_color}" text-anchor="middle">EAU DE PARFUM</text>
     </svg>
     """
 
     card_left_html = f"""
     <div class="product-card">
-        <div style="width: 100%; display: flex; justify-content: center; margin-bottom: 8px;">
+        <div style="width: 100%; display: flex; justify-content: center; margin-bottom: 12px;">
             {bottle_sketch_svg}
         </div>
         <div class="product-title">MIDNIGHT OUD</div>
-        <div class="product-subtitle">EAU DE PARFUM — 50ML / 1.7 OZ</div>
+        <div class="product-subtitle">EAU DE PARFUM — 50 ML / 1.7 OZ</div>
         
         <div class="notes-container">
             <div class="note-item">
-                <span class="note-label">TOP NOTE</span>
-                <span class="note-value">Natural Oud Wood</span>
+                <span class="note-label">NOTA DE SALIDA</span>
+                <span class="note-value">Madera de Oud Natural</span>
             </div>
             <div class="note-item">
-                <span class="note-label">HEART NOTE</span>
-                <span class="note-value">Bulgarian Rose</span>
+                <span class="note-label">NOTA DE CORAZÓN</span>
+                <span class="note-value">Rosa de Bulgaria</span>
             </div>
             <div class="note-item">
-                <span class="note-label">BASE NOTE</span>
-                <span class="note-value">Smokey Amber</span>
+                <span class="note-label">NOTA DE FONDO</span>
+                <span class="note-value">Ámbar Ahumado</span>
             </div>
-        </div>
-
-        <div class="virality-box">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <span style="font-size: 0.68rem; font-weight: 800; letter-spacing: 1.2px; color: {subtext_color}; text-transform: uppercase;">TREND INDEX</span>
-                <span style="font-size: 0.75rem; font-weight: 800; color: {text_color};">98.4 / 100</span>
-            </div>
-            {trend_graph_svg}
         </div>
     </div>
     """
     st.markdown(clean_html(card_left_html), unsafe_allow_html=True)
 
-# --- COLUMNA DERECHA: TABLA DE VERIFICACIÓN ---
+# --- COLUMNA DERECHA: TABLA DE VERIFICACIÓN EN ESPAÑOL ---
 with right_col:
     table_html = f"""
     <div class="trust-table-container">
@@ -414,10 +403,10 @@ with right_col:
             <thead>
                 <tr>
                     <th style="width: 8%;">#</th>
-                    <th style="width: 32%;">RETAILER</th>
-                    <th style="width: 18%;">PRICE</th>
-                    <th style="width: 24%;">VERIFICATION</th>
-                    <th style="width: 18%; text-align: right;">ACTION</th>
+                    <th style="width: 32%;">TIENDA</th>
+                    <th style="width: 18%;">PRECIO</th>
+                    <th style="width: 24%;">VERIFICACIÓN</th>
+                    <th style="width: 18%; text-align: right;">ACCIÓN</th>
                 </tr>
             </thead>
             <tbody>
@@ -428,10 +417,10 @@ with right_col:
                     </td>
                     <td><span class="price-tag">$110.00</span></td>
                     <td>
-                        <span class="status-badge-safe">VERIFIED</span>
+                        <span class="status-badge-safe">VERIFICADO</span>
                     </td>
                     <td>
-                        <a href="#" class="btn-buy-now">PURCHASE</a>
+                        <a href="#" class="btn-buy-now">COMPRAR</a>
                     </td>
                 </tr>
                 <tr>
@@ -441,10 +430,10 @@ with right_col:
                     </td>
                     <td><span class="price-tag">$105.00</span></td>
                     <td>
-                        <span class="status-badge-danger">HIGH RISK</span>
+                        <span class="status-badge-danger">ALTO RIESGO</span>
                     </td>
                     <td>
-                        <span class="btn-buy-disabled">BLOCKED</span>
+                        <span class="btn-buy-disabled">BLOQUEADO</span>
                     </td>
                 </tr>
                 <tr>
@@ -454,10 +443,10 @@ with right_col:
                     </td>
                     <td><span class="price-tag">$112.50</span></td>
                     <td>
-                        <span class="status-badge-safe">VERIFIED</span>
+                        <span class="status-badge-safe">VERIFICADO</span>
                     </td>
                     <td>
-                        <a href="#" class="btn-buy-now">PURCHASE</a>
+                        <a href="#" class="btn-buy-now">COMPRAR</a>
                     </td>
                 </tr>
                 <tr>
@@ -467,10 +456,10 @@ with right_col:
                     </td>
                     <td><span class="price-tag">$108.99</span></td>
                     <td>
-                        <span class="status-badge-safe">VERIFIED</span>
+                        <span class="status-badge-safe">VERIFICADO</span>
                     </td>
                     <td>
-                        <a href="#" class="btn-buy-now">PURCHASE</a>
+                        <a href="#" class="btn-buy-now">COMPRAR</a>
                     </td>
                 </tr>
             </tbody>
