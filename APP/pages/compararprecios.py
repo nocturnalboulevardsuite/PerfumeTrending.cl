@@ -159,23 +159,6 @@ st.markdown(f"""
         z-index: 2 !important;
     }}
 
-    /* NAVEGACIÓN SUPERIOR */
-    .st-key-n_perfumes button, 
-    .st-key-n_remates button,
-    .st-key-n_esencias button {{
-        background-color: transparent !important;
-        border: none !important;
-        font-weight: 600 !important;
-        font-size: 0.95rem !important;
-        padding: 0.6rem 0rem !important;
-    }}
-    .st-key-n_perfumes button p, 
-    .st-key-n_remates button p,
-    .st-key-n_esencias button p {{
-        color: {text_color} !important;
-        font-weight: 600 !important;
-    }}
-
     /* CHIPS DE ACCESO RÁPIDO Y PAGE LINKS (IGUAL A APP.PY) */
     a[data-testid="stPageLink-NavLink"] {{
         background-color: {btn_bg} !important;
@@ -352,23 +335,9 @@ with col_actions:
     with btn_col2:
         st.button(" ", key="theme_toggle", on_click=toggle_theme)
 
-# 4. NAVEGACIÓN PRINCIPAL
 st.markdown("<div style='margin-top: 14px;'></div>", unsafe_allow_html=True)
-nav_cols = st.columns([1, 1, 1], vertical_alignment="center")
 
-with nav_cols[0]: 
-    if st.button("PERFUMES", key="n_perfumes", use_container_width=True):
-        st.switch_page("app.py")
-with nav_cols[1]: 
-    if st.button("REMATES", key="n_remates", use_container_width=True):
-        st.switch_page("pages/trendhype.py")
-with nav_cols[2]: 
-    if st.button("ESENCIAS", key="n_esencias", use_container_width=True):
-        st.switch_page("app.py")
-
-st.markdown(f"<hr style='margin: 10px 0 24px 0; border: none; border-bottom: 1px solid {btn_border}; opacity: 0.3;'>", unsafe_allow_html=True)
-
-# 5. CHIPS DE NAVEGACIÓN RÁPIDA (REUSANDO EL DISEÑO Y SVGS DE APP.PY)
+# 4. CHIPS DE NAVEGACIÓN RÁPIDA (REUSANDO EL DISEÑO Y SVGS DE APP.PY)
 col_chip1, col_chip2, col_chip3, col_chip_space = st.columns([1.5, 2.0, 1.7, 3.8], vertical_alignment="center")
 
 with col_chip1:
@@ -380,7 +349,7 @@ with col_chip3:
 
 st.markdown("<div style='margin-top: 24px;'></div>", unsafe_allow_html=True)
 
-# 6. SECCIÓN PRINCIPAL: COMPARADOR DE PRECIOS
+# 5. SECCIÓN PRINCIPAL: COMPARADOR DE PRECIOS
 st.markdown(f"""
     <div style='text-align: center; margin-bottom: 24px; color: {text_color}; letter-spacing: 1.5px; font-weight: 300; font-size: 1.1rem; text-transform: uppercase;'>
         COMPARADOR DE PRECIOS EN TIENDAS
