@@ -37,7 +37,7 @@ input_bg = "#14171d" if is_dark else "#ffffff"
 input_text = "#f0f0f0" if is_dark else "#18181b"
 input_border = "#2a2e39" if is_dark else "#d1d5db"
 
-# Posicionamiento del Switch de Tema (Sincronizado con switch.txt)
+# Posicionamiento del Switch de Tema
 bottle_left_pos = "42px" if is_dark else "-2px"
 static_icon_pos = "12px center" if is_dark else "calc(100% - 12px) center"
 
@@ -178,7 +178,7 @@ js_color_script = f"""
 
 components.html(js_color_script, height=0, width=0)
 
-# 3. CSS ADAPTABLE Y SWITCH PERFECCIONADO
+# 3. CSS ADAPTABLE Y SWITCH
 st.markdown(f"""
     <style>
     html, body, .stApp {{
@@ -205,15 +205,13 @@ st.markdown(f"""
         text-shadow: none !important;
     }}
 
-    /* EFECTO DE BOTONES GENERALES */
+    /* EFECTO DE BOTONES Y ENLACES PAGE_LINK */
     div.stButton > button,
     div.stDownloadButton > button,
     div[data-testid="stPopover"] > button,
     button[data-testid="stPopoverButton"],
     .st-key-btn_photo_search button,
     .st-key-login_btn button,
-    .st-key-btn_trend button, 
-    .st-key-btn_trust button, 
     .st-key-btn_compare button,
     a[data-testid="stPageLink-NavLink"] {{
         transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease !important;
@@ -237,7 +235,8 @@ st.markdown(f"""
     button[data-testid="stPopoverButton"]:hover,
     .st-key-btn_photo_search button:hover,
     .st-key-login_btn button:hover,
-    div.stButton > button:focus {{
+    div.stButton > button:focus,
+    a[data-testid="stPageLink-NavLink"]:hover {{
         transform: scale(1.04) !important;
         cursor: pointer !important;
         box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
@@ -245,7 +244,8 @@ st.markdown(f"""
         outline: none !important;
     }}
 
-    div.stButton > button:active {{
+    div.stButton > button:active,
+    a[data-testid="stPageLink-NavLink"]:active {{
         transform: scale(0.98) !important;
     }}
 
@@ -281,7 +281,7 @@ st.markdown(f"""
         font-weight: 600 !important;
     }}
 
-    /* SWITCH EXACTO DE TRENDYPE */
+    /* SWITCH TEMA */
     .st-key-theme_toggle,
     .st-key-theme_toggle div[data-testid="stButton"] {{
         background: transparent !important;
@@ -384,24 +384,28 @@ st.markdown(f"""
         transform: scale(1.08) !important;
     }}
 
-    /* CHIPS DE ACCESO RÁPIDO */
-    .st-key-btn_trend button, 
-    .st-key-btn_trust button, 
-    .st-key-btn_compare button {{
+    /* CHIPS DE ACCESO RÁPIDO Y PAGE LINKS */
+    .st-key-btn_compare button,
+    a[data-testid="stPageLink-NavLink"] {{
         background-color: {btn_bg} !important;
         border: 1px solid {btn_border} !important;
         border-radius: 20px !important;
-        padding: 0.4rem 1rem !important;
+        padding: 0.45rem 1rem !important;
         box-shadow: none !important;
         width: 100% !important;
         min-height: 0px !important;
         height: auto !important;
         filter: none !important;
+        text-decoration: none !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        box-sizing: border-box !important;
     }}
     
-    .st-key-btn_trend button p, 
-    .st-key-btn_trust button p, 
-    .st-key-btn_compare button p {{
+    .st-key-btn_compare button p, 
+    a[data-testid="stPageLink-NavLink"] p,
+    a[data-testid="stPageLink-NavLink"] span {{
         font-size: 0.85rem !important;
         font-weight: 600 !important;
         color: {btn_text} !important;
@@ -409,20 +413,7 @@ st.markdown(f"""
         white-space: nowrap !important;
         text-overflow: clip !important;
         overflow: visible !important;
-    }}
-
-    a[data-testid="stPageLink-NavLink"] {{
-        background-color: {btn_bg} !important;
-        border: 1px solid {btn_border} !important;
-        border-radius: 20px !important;
-        padding: 0.4rem 1rem !important;
-        transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.15s ease !important;
-    }}
-    a[data-testid="stPageLink-NavLink"] span,
-    a[data-testid="stPageLink-NavLink"] p {{
-        color: {btn_text} !important;
-        font-size: 0.85rem !important;
-        font-weight: 600 !important;
+        margin: 0 !important;
     }}
 
     /* INPUTS */
@@ -610,9 +601,12 @@ with col_actions:
 st.markdown("<div style='margin-top: 14px;'></div>", unsafe_allow_html=True)
 nav_cols = st.columns([1, 1, 1], vertical_alignment="center")
 
-with nav_cols[0]: st.button("PERFUMES", key="n_perfumes", on_click=navigate_to, args=('home',), use_container_width=True)
-with nav_cols[1]: st.button("REMATES", key="n_remates", on_click=navigate_to, args=('hype',), use_container_width=True)
-with nav_cols[2]: st.button("ESENCIAS", key="n_esencias", on_click=navigate_to, args=('esencias_page',), use_container_width=True)
+with nav_cols[0]: 
+    st.button("PERFUMES", key="n_perfumes", on_click=navigate_to, args=('home',), use_container_width=True)
+with nav_cols[1]: 
+    st.button("REMATES", key="n_remates", on_click=lambda: st.switch_page("pages/trendhype.py"), use_container_width=True)
+with nav_cols[2]: 
+    st.button("ESENCIAS", key="n_esencias", on_click=navigate_to, args=('esencias_page',), use_container_width=True)
 
 st.markdown(f"<hr style='margin: 10px 0 24px 0; border: none; border-bottom: 1px solid {btn_border}; opacity: 0.3;'>", unsafe_allow_html=True)
 
@@ -655,12 +649,12 @@ with col_separator:
 with col_photo:
     st.button("Búsqueda visual", key="btn_photo_search", help="Buscar por imagen", use_container_width=True)
 
-# 7. CHIPS DE ENLACE RÁPIDO
+# 7. CHIPS DE ENLACE RÁPIDO A PÁGINAS INDEPENDIENTES
 st.markdown("<div style='margin-top: 14px;'></div>", unsafe_allow_html=True)
-col_chip1, col_chip2, col_chip3, col_chip_space = st.columns([1.3, 2.0, 1.7, 4.0], vertical_alignment="center")
+col_chip1, col_chip2, col_chip3, col_chip_space = st.columns([1.5, 2.0, 1.7, 3.8], vertical_alignment="center")
 
 with col_chip1:
-    st.button("Trend Del Hype", key="btn_trend", on_click=navigate_to, args=('hype',), use_container_width=True)
+    st.page_link("pages/trendhype.py", label="Trend Del Hype", use_container_width=True)
 with col_chip2:
     st.page_link("pages/trustpage.py", label="Páginas de Confianza", icon="🛡️", use_container_width=True)
 with col_chip3:
@@ -919,9 +913,6 @@ elif st.session_state['current_page'] == 'esencias_page':
         st.markdown("\n".join(html_col1), unsafe_allow_html=True)
     with col_es_2:
         st.markdown("\n".join(html_col2), unsafe_allow_html=True)
-
-elif st.session_state['current_page'] == 'hype':
-    st.markdown(f"<div style='text-align: center; color: {text_color}; font-weight: 300; font-size: 1.05rem;'>Sección de Remates / Radar Hype</div>", unsafe_allow_html=True)
 
 elif st.session_state['current_page'] == 'compare_page':
     st.markdown(f"<div style='text-align: center; color: {text_color}; font-weight: 300; font-size: 1.05rem;'>Comparador de Precios</div>", unsafe_allow_html=True)
