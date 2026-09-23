@@ -56,9 +56,10 @@ bottle_svg = (
 camera_icon_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23{btn_text[1:]}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z'/><circle cx='12' cy='13' r='4'/></svg>"
 user_icon_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23{btn_text[1:]}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2'/><circle cx='12' cy='7' r='4'/></svg>"
 
-# ICONOS ILUSTRADOS EN ROJO (Vías rectilínas y Tren estilizado)
-tracks_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff3838' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M7 1v22M17 1v22M7 4h10M7 9h10M7 14h10M7 19h10'/></svg>"
-train_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff3838' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><rect x='4' y='3' width='16' height='13' rx='2.5' fill='%23ff3838'/><rect x='7' y='5.5' width='10' height='4.5' rx='1' fill='%230c0e12'/><circle cx='7.5' cy='12.5' r='1' fill='%23ffffff'/><circle cx='16.5' cy='12.5' r='1' fill='%23ffffff'/><path d='M7 16l-2 3M17 16l2 3M8 16h8' stroke='%23ff3838' stroke-width='2'/></svg>"
+# ICONOS ILUSTRADOS EN ROJO (Vías rediseñadas y Tren clásico a vapor)
+tracks_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff3838' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M8 1v22M16 1v22M8 4h8M8 9h8M8 14h8M8 19h8'/></svg>"
+train_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff3838' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'><path d='M8 15h8v4H8z' fill='%23ff3838'/><path d='M6 15l2-3h8l2 3' stroke='%23ff3838'/><circle cx='12' cy='9' r='3.5' fill='%23ff3838'/><circle cx='12' cy='9' r='1.5' fill='%23ffffff' stroke='none'/><path d='M10.5 5.5V3h3v2.5' fill='%23ff3838'/><path d='M4 19h16' stroke-width='2'/><path d='M7 19v2M17 19v2'/></svg>"
+
 shield_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff3838' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/><path d='m9 12 2 2 4-4'/></svg>"
 tag_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff3838' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12 2H2v10l11.29 11.29a1 1 0 0 0 1.41 0l7.58-7.58a1 1 0 0 0 0-1.41L12 2z'/><circle cx='7.5' cy='7.5' r='1.5' fill='%23ff3838'/></svg>"
 
@@ -185,14 +186,9 @@ js_color_script = f"""
 components.html(js_color_script, height=0, width=0)
 
 # 3. CSS ADAPTABLE Y SWITCH
+# Se han eliminado las propiedades 'will-change', 'backface-visibility' y los 'font-smoothing' que causaban la borrosidad
 st.markdown(f"""
     <style>
-    html, body, .stApp {{
-        -webkit-font-smoothing: antialiased !important;
-        -moz-osx-font-smoothing: grayscale !important;
-        text-rendering: optimizeLegibility !important;
-    }}
-
     header[data-testid="stHeader"] {{ display: none !important; }}
     
     .block-container {{ 
@@ -206,8 +202,6 @@ st.markdown(f"""
     .stApp p, .stApp span, .stApp label, .stMarkdown p {{
         color: {text_color} !important;
         font-size: 1rem !important;
-        -webkit-font-smoothing: antialiased !important;
-        -moz-osx-font-smoothing: grayscale !important;
         text-shadow: none !important;
     }}
 
@@ -220,13 +214,9 @@ st.markdown(f"""
     .st-key-login_btn button,
     a[data-testid="stPageLink-NavLink"] {{
         transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease !important;
-        -webkit-font-smoothing: antialiased !important;
-        -moz-osx-font-smoothing: grayscale !important;
         text-shadow: none !important;
         box-shadow: none !important;
         outline: none !important;
-        backface-visibility: hidden !important;
-        will-change: transform;
     }}
 
     div.stButton > button p,
@@ -370,8 +360,6 @@ st.markdown(f"""
         min-height: 0px !important;
         height: auto !important;
         transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.15s ease !important;
-        will-change: transform;
-        backface-visibility: hidden !important;
     }}
 
     .st-key-n_perfumes button p, 
