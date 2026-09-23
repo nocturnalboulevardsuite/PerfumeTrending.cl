@@ -56,11 +56,6 @@ bottle_svg = (
 camera_icon_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23{btn_text[1:]}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z'/><circle cx='12' cy='13' r='4'/></svg>"
 user_icon_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23{btn_text[1:]}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2'/><circle cx='12' cy='7' r='4'/></svg>"
 
-# ICONOS ROJOS EN VECTOR SVG EN LINEA
-trend_icon_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23e53935' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M3 19L21 7'/><path d='M16 7h5v5'/><g transform='rotate(-28 11 12)'><rect x='6' y='8' width='10' height='7' rx='1.5' fill='%23e53935'/><rect x='13' y='10' width='3' height='3' fill='%23ffffff' rx='0.5'/><circle cx='8.5' cy='16' r='1.2' fill='%23e53935' stroke='%23ffffff' stroke-width='1'/><circle cx='13.5' cy='16' r='1.2' fill='%23e53935' stroke='%23ffffff' stroke-width='1'/></g></svg>"
-shield_icon_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23e53935' stroke='%23e53935' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'><path d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/><path d='M9 12l2 2 4-4' stroke='%23ffffff' stroke-width='2.5' fill='none'/></svg>"
-price_icon_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23e53935' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M9 5H2v7l8.5 8.5a2 2 0 0 0 2.83 0l4.24-4.24a2 2 0 0 0 0-2.83L9 5z' fill='%23e53935'/><circle cx='5' cy='8' r='1' fill='%23ffffff'/><path d='M16 3h6v6l-4.5 4.5' stroke='%23e53935' stroke-width='2'/></svg>"
-
 # 2. SCRIPT DE COLORES Y SISTEMA DE SONIDO DE BURBUJA
 js_color_script = f"""
 <script>
@@ -418,46 +413,6 @@ st.markdown(f"""
         margin: 0 !important;
     }}
 
-    /* DIBUJOS SVG ROJOS PARA CADA BOTÓN DE ACCESO RÁPIDO */
-    .st-key-chip_trend a[data-testid="stPageLink-NavLink"]::before {{
-        content: '' !important;
-        display: inline-block !important;
-        width: 18px !important;
-        height: 18px !important;
-        margin-right: 8px !important;
-        background-image: url("{trend_icon_svg}") !important;
-        background-repeat: no-repeat !important;
-        background-position: center !important;
-        background-size: contain !important;
-        flex-shrink: 0 !important;
-    }}
-
-    .st-key-chip_trust a[data-testid="stPageLink-NavLink"]::before {{
-        content: '' !important;
-        display: inline-block !important;
-        width: 18px !important;
-        height: 18px !important;
-        margin-right: 8px !important;
-        background-image: url("{shield_icon_svg}") !important;
-        background-repeat: no-repeat !important;
-        background-position: center !important;
-        background-size: contain !important;
-        flex-shrink: 0 !important;
-    }}
-
-    .st-key-chip_compare a[data-testid="stPageLink-NavLink"]::before {{
-        content: '' !important;
-        display: inline-block !important;
-        width: 18px !important;
-        height: 18px !important;
-        margin-right: 8px !important;
-        background-image: url("{price_icon_svg}") !important;
-        background-repeat: no-repeat !important;
-        background-position: center !important;
-        background-size: contain !important;
-        flex-shrink: 0 !important;
-    }}
-
     /* INPUTS */
     div[data-baseweb="input"],
     div[data-baseweb="base-input"],
@@ -691,16 +646,16 @@ with col_separator:
 with col_photo:
     st.button("Búsqueda visual", key="btn_photo_search", help="Buscar por imagen", use_container_width=True)
 
-# 7. CHIPS DE ENLACE RÁPIDO A PÁGINAS INDEPENDIENTES CON DIBUJOS SVG ROJOS
+# 7. CHIPS DE ENLACE RÁPIDO A PÁGINAS INDEPENDIENTES
 st.markdown("<div style='margin-top: 14px;'></div>", unsafe_allow_html=True)
-col_chip1, col_chip2, col_chip3, col_chip_space = st.columns([1.6, 2.1, 1.8, 3.5], vertical_alignment="center")
+col_chip1, col_chip2, col_chip3, col_chip_space = st.columns([1.5, 2.0, 1.7, 3.8], vertical_alignment="center")
 
 with col_chip1:
-    st.page_link("pages/trendhype.py", label="Trend Del Hype", key="chip_trend", use_container_width=True)
+    st.page_link("pages/trendhype.py", label="Trend Del Hype", use_container_width=True)
 with col_chip2:
-    st.page_link("pages/trustpage.py", label="Páginas de Confianza", key="chip_trust", use_container_width=True)
+    st.page_link("pages/trustpage.py", label="Páginas de Confianza", icon="🛡️", use_container_width=True)
 with col_chip3:
-    st.page_link("pages/compararprecios.py", label="Comparar Precios", key="chip_compare", use_container_width=True)
+    st.page_link("pages/compararprecios.py", label="Comparar Precios", use_container_width=True)
 
 st.markdown("<div style='margin-top: 24px;'></div>", unsafe_allow_html=True)
 
