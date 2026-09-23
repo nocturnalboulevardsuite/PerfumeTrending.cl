@@ -62,7 +62,7 @@ trend_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg'
 shield_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff3838' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/><path d='m9 12 2 2 4-4'/></svg>"
 tag_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff3838' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12 2H2v10l11.29 11.29a1 1 0 0 0 1.41 0l7.58-7.58a1 1 0 0 0 0-1.41L12 2z'/><circle cx='7.5' cy='7.5' r='1.5' fill='%23ff3838'/></svg>"
 
-# 2. SCRIPT DE COLORES Y SISTEMA DE SONIDO DE BURBUJA
+# 2. SISTEMA DE SONIDO Y EVENTOS DE TARJETAS
 js_color_script = f"""
 <script>
 (function() {{
@@ -113,48 +113,7 @@ js_color_script = f"""
         }}
     }};
 
-    const colorRules = [
-        {{ keywords: ['sangre', 'cereza', 'frambuesa', 'pimienta rosa', 'rosa', 'ruibarbo', 'lichi', 'ciruela', 'grosella', 'peonía', 'geranio'], 
-          bg: isDark ? '#3d1a1e' : '#f7eaec', border: isDark ? '#5c282e' : '#e2b3b7', text: isDark ? '#f0adb4' : '#5c1b22' }},
-        {{ keywords: ['marina', 'marinas', 'agua', 'océano', 'mar', 'ozónica', 'ozónicas'], 
-          bg: isDark ? '#152933' : '#eaf2f7', border: isDark ? '#224052' : '#a8c7da', text: isDark ? '#92ccdb' : '#173a4b' }},
-        {{ keywords: ['albahaca', 'bergamota', 'cardamomo', 'higo', 'manzana', 'menta', 'pachulí', 'pera', 'romero', 'salvia', 'té verde', 'té blanco', 'vetiver', 'abedul', 'eucalipto', 'gálbano', 'hojas de violeta'], 
-          bg: isDark ? '#162b1e' : '#ebf5ee', border: isDark ? '#234530' : '#a4cca2', text: isDark ? '#93d1a3' : '#193d25' }},
-        {{ keywords: ['iris', 'lavanda', 'jazmín', 'nardos', 'neroli', 'violeta', 'fresia', 'heliotropo', 'mimosa', 'lila', 'magnolia', 'azahar', 'frangipani', 'gardenia', 'ylang'], 
-          bg: isDark ? '#2b1d33' : '#f2ebf7', border: isDark ? '#432d52' : '#c3b1d4', text: isDark ? '#c7a9db' : '#391c47' }},
-        {{ keywords: ['caramelo', 'miel', 'solares', 'vainilla', 'cacao', 'café', 'canela', 'tonka', 'nuez moscada', 'praliné', 'haba tonka', 'almendra', 'avellana', 'leche', 'malvavisco', 'chocolate', 'ron', 'cognac', 'whisky'], 
-          bg: isDark ? '#332115' : '#f7ede6', border: isDark ? '#523522' : '#d8bca7', text: isDark ? '#dbb193' : '#452914' }},
-        {{ keywords: ['ámbar gris', 'cedro', 'sándalo', 'tabaco', 'cuero', 'oud', 'incienso', 'ciprés', 'ébano', 'guayac', 'musgo', 'estoraque', 'ládano', 'benjuí'], 
-          bg: isDark ? '#23272e' : '#edeef0', border: isDark ? '#373d47' : '#bdc1c9', text: isDark ? '#aeb5c2' : '#292e36' }},
-        {{ keywords: ['azafrán', 'ámbar', 'mandarina', 'melocotón', 'durazno', 'mirra', 'naranjo', 'pomelo', 'cítrico', 'cítricos', 'limón', 'lima', 'clementina', 'yuzu', 'petit grain', 'piña', 'jengibre'], 
-          bg: isDark ? '#382013' : '#f9ede6', border: isDark ? '#59331e' : '#debca8', text: isDark ? '#dfab8c' : '#4f2711' }},
-        {{ keywords: ['almizcle', 'coco', 'civeta', 'castóreo', 'pimienta blanca', 'pimienta negra', 'iso e super', 'ambroxan', 'aldehídos', 'cachemira'], 
-          bg: isDark ? '#1f2228' : '#f2f4f7', border: isDark ? '#333842' : '#cad0d9', text: isDark ? '#bcc2cc' : '#2b3038' }}
-    ];
-
-    function applyEssenceColorsAndEvents() {{
-        const targets = doc.querySelectorAll('li[role="option"], div[role="option"], span[data-baseweb="tag"], div[data-baseweb="option"]');
-        targets.forEach(el => {{
-            if (el.dataset.colored === 'true') return;
-            const text = (el.innerText || '').toLowerCase();
-            if (!text) return;
-
-            for (const rule of colorRules) {{
-                if (rule.keywords.some(kw => text.includes(kw))) {{
-                    el.style.backgroundColor = rule.bg;
-                    el.style.border = '1px solid ' + rule.border;
-                    el.style.color = rule.text; 
-                    el.style.borderRadius = '3px';
-                    el.style.padding = '2px 6px';
-                    el.style.margin = '1px 0';
-                    el.style.fontSize = '0.85rem';
-                    el.dataset.colored = 'true';
-                    el.querySelectorAll('*').forEach(child => {{ child.style.color = rule.text; }});
-                    break;
-                }}
-            }}
-        }});
-
+    function attachCardEvents() {{
         const essenceCards = doc.querySelectorAll('.essence-card');
         essenceCards.forEach(card => {{
             if (!card.dataset.soundAttached) {{
@@ -173,11 +132,11 @@ js_color_script = f"""
     let debounceTimer = null;
     const observer = new MutationObserver(() => {{
         if (debounceTimer) clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(applyEssenceColorsAndEvents, 100);
+        debounceTimer = setTimeout(attachCardEvents, 100);
     }});
     
     observer.observe(doc.body, {{ childList: true, subtree: true }});
-    applyEssenceColorsAndEvents();
+    attachCardEvents();
 }})();
 </script>
 """
@@ -562,7 +521,7 @@ st.markdown(f"""
     .card-perfume-name {{ font-size: 0.95rem; font-weight: 600; color: {text_color}; margin-bottom: 4px; }}
     .card-perfume-brand {{ font-size: 0.8rem; font-weight: 400; color: {subtext_color}; text-transform: uppercase; letter-spacing: 0.5px; }}
 
-    /* TARJETAS ESENCIAS */
+    /* TARJETAS ESENCIAS (PÁGINA DICCIONARIO) */
     .essence-card {{ 
         border-radius: 8px; 
         padding: 14px 16px; 
