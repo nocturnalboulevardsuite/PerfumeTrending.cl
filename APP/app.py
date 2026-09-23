@@ -165,8 +165,6 @@ st.markdown(f"""
     /* EFECTO DE BOTONES Y ENLACES PAGE_LINK */
     div.stButton > button,
     div.stDownloadButton > button,
-    div[data-testid="stPopover"] > button,
-    button[data-testid="stPopoverButton"],
     .st-key-btn_photo_search button,
     .st-key-login_btn button,
     a[data-testid="stPageLink-NavLink"] {{
@@ -176,18 +174,11 @@ st.markdown(f"""
         outline: none !important;
     }}
 
-    div.stButton > button p,
-    div[data-testid="stPopover"] button,
-    div[data-testid="stPopover"] button *,
-    button[data-testid="stPopoverButton"],
-    button[data-testid="stPopoverButton"] * {{
+    div.stButton > button p {{
         color: {btn_text} !important;
-        fill: {btn_text} !important;
     }}
 
     div.stButton > button:hover,
-    div[data-testid="stPopover"] > button:hover,
-    button[data-testid="stPopoverButton"]:hover,
     .st-key-btn_photo_search button:hover,
     .st-key-login_btn button:hover,
     div.stButton > button:focus,
@@ -202,6 +193,51 @@ st.markdown(f"""
     div.stButton > button:active,
     a[data-testid="stPageLink-NavLink"]:active {{
         transform: scale(0.98) !important;
+    }}
+
+    /* ESTILO ESPECÍFICO Y COMPLETO PARA EL BOTÓN DE POPOVER ("ESENCIAS") */
+    div[data-testid="stPopover"],
+    div[data-testid="stPopover"] > button,
+    button[data-testid="stPopoverButton"],
+    div[data-testid="stPopover"] button {{
+        background-color: {btn_bg} !important;
+        color: {btn_text} !important;
+        border: 1px solid {btn_border} !important;
+        border-radius: 8px !important;
+        min-height: 44px !important;
+        transition: transform 0.22s ease, background-color 0.15s ease !important;
+    }}
+
+    div[data-testid="stPopover"] > button:hover,
+    button[data-testid="stPopoverButton"]:hover {{
+        transform: scale(1.04) !important;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+    }}
+
+    div[data-testid="stPopover"] button p,
+    div[data-testid="stPopover"] button span,
+    div[data-testid="stPopover"] button label,
+    div[data-testid="stPopover"] button div,
+    button[data-testid="stPopoverButton"] p,
+    button[data-testid="stPopoverButton"] span,
+    button[data-testid="stPopoverButton"] div {{
+        color: {btn_text} !important;
+        font-weight: 600 !important;
+    }}
+
+    div[data-testid="stPopover"] button svg,
+    button[data-testid="stPopoverButton"] svg {{
+        fill: {btn_text} !important;
+        stroke: {btn_text} !important;
+        color: {btn_text} !important;
+    }}
+
+    div[data-testid="stPopoverBody"],
+    div[data-testid="stPopoverContent"] {{
+        background-color: {input_bg} !important;
+        border: 1px solid {btn_border} !important;
+        border-radius: 8px !important;
+        color: {text_color} !important;
     }}
 
     .st-key-login_btn, .st-key-theme_toggle {{
@@ -426,8 +462,7 @@ st.markdown(f"""
     /* INPUTS */
     div[data-baseweb="input"],
     div[data-baseweb="base-input"],
-    div[data-baseweb="select"] > div,
-    button[data-testid="stBaseButton-secondary"] {{
+    div[data-baseweb="select"] > div {{
         background-color: {input_bg} !important;
         border: 1px solid {input_border} !important;
         border-radius: 8px !important;
