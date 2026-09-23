@@ -1,34 +1,44 @@
 import streamlit as st
 
-# 1. CONFIGURACIÓN DE PÁGINA
-st.set_page_config(
-    page_title="PerfumeTrending — Verificación de Confianza",
-    page_icon="🧴",
-    layout="wide",
-    initial_sidebar_state="collapsed"
-)
+# 1. CONFIGURACIÓN DE LA PÁGINA Y ESTADO
+st.set_page_config(page_title="PerfumeTrending", layout="wide", initial_sidebar_state="collapsed")
 
-# HELPER: Limpia espacios/indentaciones iniciales para evitar que Streamlit Markdown convierta HTML en código
+if 'current_page' not in st.session_state:
+    st.session_state['current_page'] = 'home'
+if 'theme' not in st.session_state:
+    st.session_state['theme'] = 'dark'
+if 'selected_perfume' not in st.session_state:
+    st.session_state['selected_perfume'] = None
+
+def toggle_theme():
+    st.session_state['theme'] = 'dark' if st.session_state['theme'] == 'light' else 'light'
+
+def navigate_to(page, perfume_data=None):
+    st.session_state['current_page'] = page
+    if perfume_data:
+        st.session_state['selected_perfume'] = perfume_data
+
 def clean_html(html_str: str) -> str:
     return "\n".join(line.strip() for line in html_str.splitlines())
 
-# 2. GESTIÓN DEL TEMA Y ESTADO
-if "theme" not in st.session_state:
-    st.session_state.theme = "dark"
+is_dark = st.session_state['theme'] == 'dark'
 
-def toggle_theme():
-    st.session_state.theme = "light" if st.session_state.theme == "dark" else "dark"
-
-is_dark = st.session_state.theme == "dark"
-
-# 3. PALETA DE COLORES Y SVGS
-bg_color = "#0c0e12" if is_dark else "#f8f9fa"
+# Colores dinámicos adaptables por tema
+app_bg = "#0c0e12" if is_dark else "#f9f9fb"
 card_bg = "#14171d" if is_dark else "#ffffff"
-border_color = "#232730" if is_dark else "#e2e8f0"
-text_color = "#f3f4f6" if is_dark else "#0f172a"
-subtext_color = "#8e95a5" if is_dark else "#64748b"
+text_color = "#f0f0f0" if is_dark else "#18181b"
+subtext_color = "#888890" if is_dark else "#666670"
+border_color = "#2a2e39" if is_dark else "#e4e4e7"
 
-# Configuración del Switch
+btn_bg = "#161920" if is_dark else "#ffffff"
+btn_text = "#ffffff" if is_dark else "#18181b"
+btn_border = "#2a2e39" if is_dark else "#d1d5db"
+
+input_bg = "#14171d" if is_dark else "#ffffff"
+input_text = "#f0f0f0" if is_dark else "#18181b"
+input_border = "#2a2e39" if is_dark else "#d1d5db"
+
+# Posicionamiento del Switch de Tema
 bottle_left_pos = "42px" if is_dark else "-2px"
 static_icon_pos = "12px center" if is_dark else "calc(100% - 12px) center"
 
@@ -44,14 +54,22 @@ bottle_svg = (
     "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 58'><rect x='18' y='2' width='14' height='7' rx='2' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><rect x='21' y='9' width='8' height='5' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='19' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='5' fill='none' stroke='%23111111' stroke-width='2'/><line x1='25' y1='23' x2='25' y2='26' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='25' y1='42' x2='25' y2='45' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='14' y1='34' x2='17' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='33' y1='34' x2='36' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='17' y1='26' x2='19' y2='28' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='31' y1='40' x2='33' y2='42' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='17' y1='42' x2='19' y2='40' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='31' y1='28' x2='33' y2='26' stroke='%23111111' stroke-width='2' stroke-linecap='round'/></svg>"
 )
 
-# 4. ESTILOS CSS CON TIPOGRAFÍA ELEGANTE Y EDITORIAL
+camera_icon_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23{btn_text[1:]}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z'/><circle cx='12' cy='13' r='4'/></svg>"
+user_icon_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23{btn_text[1:]}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2'/><circle cx='12' cy='7' r='4'/></svg>"
+
+# ICONOS EDITORIALES / SÍMBOLOS
+trend_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff3838' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'><path d='M2 19h20M2 22h20M5 19v3M9 19v3M13 19v3M17 19v3M21 19v3' stroke='%23ff3838'/><path d='M4 11h9v7H4z' fill='%23ff3838'/><path d='M13 7h6v11h-6z' fill='%23ff3838'/><rect x='15' y='9' width='3' height='3' fill='%23ffffff'/><path d='M6 7h2v4H6z' fill='%23ff3838'/><path d='M19 14l3 4h-3z' fill='%23ff3838'/><circle cx='6.5' cy='18.5' r='1.5' fill='%23ff3838' stroke='%23ffffff' stroke-width='0.5'/><circle cx='10.5' cy='18.5' r='1.5' fill='%23ff3838' stroke='%23ffffff' stroke-width='0.5'/><circle cx='16' cy='18.5' r='1.5' fill='%23ff3838' stroke='%23ffffff' stroke-width='0.5'/></svg>"
+shield_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff3838' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/><path d='m9 12 2 2 4-4'/></svg>"
+tag_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff3838' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12 2H2v10l11.29 11.29a1 1 0 0 0 1.41 0l7.58-7.58a1 1 0 0 0 0-1.41L12 2z'/><circle cx='7.5' cy='7.5' r='1.5' fill='%23ff3838'/></svg>"
+
+# 2. ESTILOS CSS CON FUENTES EDITORIALES Y MINIMALISTAS
 css_styles = f"""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap');
 
 html, body, [class*="css"], .stApp {{
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
-    background-color: {bg_color} !important;
+    background-color: {app_bg} !important;
     color: {text_color} !important;
 }}
 
@@ -155,7 +173,7 @@ table.trust-table th {{
 
 table.trust-table td {{
     padding: 16px 18px;
-    background-color: {bg_color};
+    background-color: {app_bg};
     border-top: 1px solid {border_color};
     border-bottom: 1px solid {border_color};
     vertical-align: middle;
@@ -224,7 +242,7 @@ table.trust-table tr td:last-child {{
 /* BOTONES ACCIÓN MINIMALISTAS */
 .btn-buy-now {{
     background: {text_color};
-    color: {bg_color} !important;
+    color: {app_bg} !important;
     font-weight: 600;
     font-size: 0.7rem;
     letter-spacing: 1px;
@@ -256,7 +274,7 @@ table.trust-table tr td:last-child {{
     opacity: 0.6;
 }}
 
-/* SWITCH FLOTANTE */
+/* SWITCH DE TEMA CON BOTIQUÍN DINÁMICO */
 .st-key-theme_toggle,
 .st-key-theme_toggle div[data-testid="stButton"] {{
     background: transparent !important;
@@ -323,7 +341,7 @@ div[data-testid="stElementContainer"].st-key-theme_toggle button {{
 """
 st.markdown(clean_html(css_styles), unsafe_allow_html=True)
 
-# 5. HEADER (LOGO + SWITCH)
+# 3. HEADER (LOGO + SWITCH)
 col_head_logo, col_head_switch = st.columns([8, 2], vertical_alignment="center")
 
 with col_head_logo:
@@ -351,17 +369,17 @@ with col_head_switch:
 
 st.markdown(f"<hr style='border: none; border-top: 1px solid {border_color}; margin: 20px 0 28px 0;' />", unsafe_allow_html=True)
 
-# 6. ESTRUCTURA PRINCIPAL
+# 4. ESTRUCTURA PRINCIPAL
 left_col, right_col = st.columns([1, 1.4], gap="large")
 
-# --- COLUMNA IZQUIERDA: TARJETA DE PRODUCTO MINIMALISTA ---
+# --- COLUMNA IZQUIERDA: TARJETA DE PRODUCTO MINIMALISTA (SIN EL MEDIDOR DE ABAJO) ---
 with left_col:
     bottle_sketch_svg = f"""
     <svg viewBox="0 0 200 240" fill="none" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: auto; max-width: 160px;">
         <path d="M70 20 L130 20 L145 35 L145 55 L130 70 L70 70 L55 55 L55 35 Z" stroke="{text_color}" stroke-width="1.8" fill="{card_bg}"/>
         <rect x="75" y="70" width="50" height="15" stroke="{text_color}" stroke-width="1.2" fill="{card_bg}"/>
         <path d="M40 85 L160 85 L175 110 L175 210 L160 225 L40 225 L25 210 L25 110 Z" stroke="{text_color}" stroke-width="1.8" fill="{card_bg}"/>
-        <rect x="55" y="115" width="90" height="65" stroke="{border_color}" stroke-width="1" fill="{bg_color}"/>
+        <rect x="55" y="115" width="90" height="65" stroke="{border_color}" stroke-width="1" fill="{app_bg}"/>
         <text x="100" y="132" font-size="5.5" font-weight="600" fill="{subtext_color}" text-anchor="middle" letter-spacing="1">SKETCHED SCENTS</text>
         <text x="100" y="150" font-size="9.5" font-weight="700" fill="{text_color}" text-anchor="middle" letter-spacing="1.5">MIDNIGHT</text>
         <text x="100" y="163" font-size="9.5" font-weight="700" fill="{text_color}" text-anchor="middle" letter-spacing="1.5">OUD</text>
@@ -395,7 +413,7 @@ with left_col:
     """
     st.markdown(clean_html(card_left_html), unsafe_allow_html=True)
 
-# --- COLUMNA DERECHA: TABLA DE VERIFICACIÓN EN ESPAÑOL ---
+# --- COLUMNA DERECHA: TABLA DE VERIFICACIÓN ---
 with right_col:
     table_html = f"""
     <div class="trust-table-container">
