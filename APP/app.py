@@ -429,13 +429,13 @@ st.markdown(f"""
         overflow: hidden !important;
     }}
 
-    /* 1. Trend Del Hype: Vías + Tren Animado Subiendo */
+    /* 1. Trend Del Hype: Vías inclinadas + Tren sobre vías avanzando hasta el final en hover */
     a[data-testid="stPageLink-NavLink"][href*="trendhype"]::before {{
         content: '' !important;
         position: absolute !important;
         left: 14px !important;
         top: 50% !important;
-        transform: translateY(-50%) !important;
+        transform: translateY(-50%) rotate(28deg) !important;
         width: 20px !important;
         height: 22px !important;
         background-image: url("{tracks_red_svg}") !important;
@@ -443,7 +443,7 @@ st.markdown(f"""
         background-size: contain !important;
         background-position: center !important;
         z-index: 1 !important;
-        opacity: 0.8 !important;
+        opacity: 0.85 !important;
     }}
 
     a[data-testid="stPageLink-NavLink"][href*="trendhype"]::after {{
@@ -451,7 +451,7 @@ st.markdown(f"""
         position: absolute !important;
         left: 14px !important;
         top: 50% !important;
-        transform: translateY(-50%) !important;
+        transform: translateY(3px) rotate(28deg) !important;
         width: 20px !important;
         height: 22px !important;
         background-image: url("{train_red_svg}") !important;
@@ -463,23 +463,21 @@ st.markdown(f"""
     }}
 
     a[data-testid="stPageLink-NavLink"][href*="trendhype"]:hover::after {{
-        animation: trainClimb 0.9s infinite linear !important;
+        animation: trainClimbTrack 0.85s infinite linear !important;
     }}
 
-    @keyframes trainClimb {{
+    @keyframes trainClimbTrack {{
         0% {{
-            transform: translateY(6px);
-            opacity: 0.2;
-        }}
-        25% {{
+            transform: translateY(6px) rotate(28deg);
             opacity: 1;
         }}
-        75% {{
+        80% {{
+            transform: translateY(-9px) rotate(28deg);
             opacity: 1;
         }}
         100% {{
-            transform: translateY(-10px);
-            opacity: 0.1;
+            transform: translateY(-13px) rotate(28deg);
+            opacity: 0;
         }}
     }}
 
@@ -906,7 +904,7 @@ elif st.session_state['current_page'] == 'esencias_page':
         "Geranio": "Verde, floral y rosado con matices aromáticos.",
         "Heliotropo": "Polvoso, avainillado y meloso con ecos de almendra dulce.",
         "Iris (Orris)": "Polvoso, elegante y aristocrático; evoca la finura del maquillaje.",
-        "Lavanda": "Aromática, limpia y relajante; pilar clásico que aporta serenidad.",
+        "Lavanda": "Aromática, limpia y relaxing; pilar clásico que aporta serenidad.",
         "Lilium (Lirio)": "Floral noble, verde y radiante con presencia pulcra.",
         "Mimosa": "Cálida, dulce, polvosa y mielada; evoca la primavera.",
         "Peonía": "Floral delicado, fresco y acuático similar a la rosa joven.",
