@@ -65,20 +65,22 @@ tag_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' v
 js_color_script = f"""
 <script>
 (function() {{
-    const doc = window.parent.document;
-    const isDark = {str(is_dark).lower()};
+    const topWin = window.parent || window;
+    const doc = topWin.document;
     
-    window.parent.soundMuted = window.parent.soundMuted || false;
+    if (typeof topWin.soundMuted === 'undefined') {{
+        topWin.soundMuted = false;
+    }}
     
-    window.parent.playBubbleSound = function() {{
-        if (window.parent.soundMuted) return;
+    topWin.playBubbleSound = function() {{
+        if (topWin.soundMuted) return;
         try {{
-            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            const AudioContext = window.AudioContext || window.webkitAudioContext || topWin.AudioContext || topWin.webkitAudioContext;
             if (!AudioContext) return;
-            if (!window.parent.audioCtx) {{
-                window.parent.audioCtx = new AudioContext();
+            if (!topWin.audioCtx) {{
+                topWin.audioCtx = new AudioContext();
             }}
-            const ctx = window.parent.audioCtx;
+            const ctx = topWin.audioCtx;
             if (ctx.state === 'suspended') {{
                 ctx.resume();
             }}
@@ -102,13 +104,17 @@ js_color_script = f"""
         }} catch(e) {{ console.error(e); }}
     }};
 
-    window.parent.toggleSoundMute = function() {{
-        window.parent.soundMuted = !window.parent.soundMuted;
+    topWin.toggleSoundMute = function() {{
+        topWin.soundMuted = !topWin.soundMuted;
+        topWin.updateSoundButtonUI();
+    }};
+
+    topWin.updateSoundButtonUI = function() {{
         const btn = doc.getElementById('sound-toggle-btn');
         if (btn) {{
-            btn.innerHTML = window.parent.soundMuted ? '🔇' : '🔊';
-            btn.title = window.parent.soundMuted ? 'Sonido desactivado' : 'Sonido activado';
-            btn.style.opacity = window.parent.soundMuted ? '0.55' : '1';
+            btn.innerHTML = topWin.soundMuted ? '🔇' : '🔊';
+            btn.title = topWin.soundMuted ? 'Activar sonido de burbujas' : 'Desactivar sonido de burbujas';
+            btn.style.opacity = topWin.soundMuted ? '0.5' : '1';
         }}
     }};
 
@@ -117,15 +123,11 @@ js_color_script = f"""
         essenceCards.forEach(card => {{
             if (!card.dataset.soundAttached) {{
                 card.dataset.soundAttached = 'true';
-                card.addEventListener('click', () => window.parent.playBubbleSound());
+                card.addEventListener('click', () => topWin.playBubbleSound());
             }}
         }});
 
-        const btn = doc.getElementById('sound-toggle-btn');
-        if (btn) {{
-            btn.innerHTML = window.parent.soundMuted ? '🔇' : '🔊';
-            btn.style.opacity = window.parent.soundMuted ? '0.55' : '1';
-        }}
+        topWin.updateSoundButtonUI();
     }}
 
     let debounceTimer = null;
@@ -598,8 +600,9 @@ st.markdown(f"""
         align-items: center;
         justify-content: center;
         font-size: 1.15rem;
-        transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s ease;
+        transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s ease, opacity 0.2s ease;
         margin-bottom: 24px;
+        outline: none;
     }}
     .sound-mute-btn:hover {{
         transform: scale(1.15);
@@ -796,7 +799,7 @@ elif st.session_state['current_page'] == 'esencias_page':
     with col_dict_mute:
         st.markdown(f"""
         <div style="text-align: right;">
-            <button id="sound-toggle-btn" class="sound-mute-btn" onclick="window.parent.toggleSoundMute()" title="Desactivar / Activar sonido de clic">
+            <button id="sound-toggle-btn" class="sound-mute-btn" onclick="if(window.toggleSoundMute){{window.toggleSoundMute();}}else if(window.parent.toggleSoundMute){{window.parent.toggleSoundMute();}}" title="Activar / Desactivar sonido de burbujas">
                 🔊
             </button>
         </div>
@@ -940,7 +943,7 @@ elif st.session_state['current_page'] == 'esencias_page':
         desc = essence_descriptions.get(note, "Nota olfativa distintiva que aporta carácter y equilibrio.")
         
         tarjeta_html = f"""
-        <div class="essence-card" onclick="window.parent.playBubbleSound && window.parent.playBubbleSound()" style="border-color: {border_col}; background-color: {bg_col}; color: {text_c};">
+        <div class="essence-card" onclick="(window.playBubbleSound || window.parent.playBubbleSound || function(){{}})()" style="border-color: {border_col}; background-color: {bg_col}; color: {text_c};">
             <div class="essence-title" style="color: {text_c} !important;">{note}</div>
             <div class="essence-desc" style="color: {text_c} !important;">{desc}</div>
         </div>
