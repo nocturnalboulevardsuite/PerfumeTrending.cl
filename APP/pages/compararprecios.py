@@ -1,5 +1,53 @@
 import streamlit as st
 import streamlit.components.v1 as components
+import pandas as pd
+import sys
+import os
+import base64
+
+# Configuración de rutas canónicas para importar backend
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+APP_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if BASE_DIR not in sys.path:
+    sys.path.append(BASE_DIR)
+if APP_DIR not in sys.path:
+    sys.path.append(APP_DIR)
+
+from backend.database import (
+    obtener_catalogo,
+    obtener_precios_actuales,
+    obtener_historico_precios,
+    obtener_detalle_perfume
+)
+
+def get_image_src(img_path_or_url):
+    """Retorna URL remota o data URI en base64 para imágenes locales."""
+    if not img_path_or_url:
+        return "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=500&q=80"
+    
+    if img_path_or_url.startswith("http://") or img_path_or_url.startswith("https://") or img_path_or_url.startswith("data:"):
+        return img_path_or_url
+
+    local_path = img_path_or_url
+    if not os.path.isabs(local_path):
+        cand1 = os.path.join(BASE_DIR, local_path)
+        cand2 = os.path.join(BASE_DIR, "APP", local_path)
+        if os.path.exists(cand1):
+            local_path = cand1
+        elif os.path.exists(cand2):
+            local_path = cand2
+
+    if os.path.exists(local_path):
+        ext = os.path.splitext(local_path)[1].lower().replace(".", "")
+        mime = "image/png" if ext == "png" else "image/jpeg"
+        try:
+            with open(local_path, "rb") as f:
+                b64 = base64.b64encode(f.read()).decode("utf-8")
+                return f"data:{mime};base64,{b64}"
+        except Exception:
+            pass
+
+    return img_path_or_url
 
 # 1. CONFIGURACIÓN DE LA PÁGINA Y ESTADO
 st.set_page_config(page_title="Comparador de Precios - PerfumeTrending", layout="wide", initial_sidebar_state="collapsed")
@@ -199,7 +247,7 @@ st.markdown(f"""
         overflow: hidden !important;
     }}
 
-    /* 1. Trend Del Hype: Tren rojo */
+    /* 1. Trend Del Hype */
     a[data-testid="stPageLink-NavLink"][href*="trendhype"]::before {{
         content: '' !important;
         position: absolute !important;
@@ -215,7 +263,7 @@ st.markdown(f"""
         z-index: 1 !important;
     }}
 
-    /* 2. Páginas de Confianza: Escudo Rojo */
+    /* 2. Páginas de Confianza */
     a[data-testid="stPageLink-NavLink"][href*="trustpage"]::before {{
         content: '' !important;
         position: absolute !important;
@@ -230,7 +278,7 @@ st.markdown(f"""
         background-position: center !important;
     }}
 
-    /* 3. Comparar Precios: Etiqueta Roja */
+    /* 3. Comparar Precios */
     a[data-testid="stPageLink-NavLink"][href*="compararprecios"]::before {{
         content: '' !important;
         position: absolute !important;
@@ -243,6 +291,27 @@ st.markdown(f"""
         background-repeat: no-repeat !important;
         background-size: contain !important;
         background-position: center !important;
+    }}
+
+    /* TARJETA CABECERA DEL PERFUME */
+    .perfume-header-card {{
+        background-color: {btn_bg};
+        border: 1px solid {btn_border};
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 24px;
+        display: flex;
+        gap: 24px;
+        align-items: center;
+    }}
+
+    .perfume-header-img {{
+        width: 130px;
+        height: 130px;
+        object-fit: contain;
+        background: #ffffff;
+        border-radius: 8px;
+        padding: 8px;
     }}
 
     /* TARJETAS DE COMPARACIÓN DE PRECIOS */
@@ -298,6 +367,7 @@ st.markdown(f"""
         font-weight: 600;
         font-size: 0.85rem;
         display: inline-block;
+        transition: background-color 0.2s ease;
     }}
     .buy-btn:hover {{
         background-color: #726255;
@@ -335,54 +405,127 @@ with col_chip3:
 st.markdown("<div style='margin-top: 24px;'></div>", unsafe_allow_html=True)
 
 # 5. SECCIÓN PRINCIPAL: COMPARADOR DE PRECIOS
-st.markdown(f"""<div style='text-align: center; margin-bottom: 24px; color: {text_color}; letter-spacing: 1.5px; font-weight: 300; font-size: 1.1rem; text-transform: uppercase;'>COMPARADOR DE PRECIOS EN TIENDAS</div>""", unsafe_allow_html=True)
+st.markdown(f"""<div style='text-align: center; margin-bottom: 24px; color: {text_color}; letter-spacing: 1.5px; font-weight: 300; font-size: 1.1rem; text-transform: uppercase;'>COMPARADOR DE PRECIOS EN TIENDAS CHILENAS</div>""", unsafe_allow_html=True)
 
-# Selección de Perfume para comparar
-perfumes_disponibles = [
-    "Bleu de Chanel Eau de Parfum 100ml",
-    "Sauvage Elixir Dior 60ml",
-    "Baccarat Rouge 540 Extrait de Parfum 70ml",
-    "Club de Nuit Intense Man Armaf 105ml",
-    "Angels' Share by Kilian 50ml",
-    "YSL Libre EDP 90ml"
-]
+# Cargar catálogo dinámico desde SQLite
+catalogo = obtener_catalogo()
 
-selected_perfume = st.selectbox("Selecciona un perfume para comparar:", perfumes_disponibles, index=0)
+if not catalogo:
+    st.warning("No hay perfumes disponibles en el catálogo en este momento.")
+    st.stop()
 
-# Datos de tiendas simulados para la comparación
-precios_data = {
-    "Bleu de Chanel Eau de Parfum 100ml": [
-        {"tienda": "Paris", "badge": "Retail Oficial", "precio_actual": "$145.990", "precio_ant": "$165.000", "link": "#", "mejordeal": True},
-        {"tienda": "Falabella", "badge": "Retail Oficial", "precio_actual": "$149.990", "precio_ant": "$165.000", "link": "#", "mejordeal": False},
-        {"tienda": "Ripley", "badge": "Retail Oficial", "precio_actual": "$152.990", "precio_ant": "$165.000", "link": "#", "mejordeal": False},
-        {"tienda": "PerfumesCL", "badge": "Tienda Nicho", "precio_actual": "$154.900", "precio_ant": "$160.000", "link": "#", "mejordeal": False},
-    ],
-    "Sauvage Elixir Dior 60ml": [
-        {"tienda": "Falabella", "badge": "Retail Oficial", "precio_actual": "$162.990", "precio_ant": "$180.000", "link": "#", "mejordeal": True},
-        {"tienda": "Ripley", "badge": "Retail Oficial", "precio_actual": "$168.990", "precio_ant": "$180.000", "link": "#", "mejordeal": False},
-        {"tienda": "AromaStore", "badge": "Verificada", "precio_actual": "$172.000", "precio_ant": "$178.000", "link": "#", "mejordeal": False},
-    ],
-    "Baccarat Rouge 540 Extrait de Parfum 70ml": [
-        {"tienda": "Luxury Perfumes", "badge": "Importador Nicho", "precio_actual": "$380.000", "precio_ant": "$410.000", "link": "#", "mejordeal": True},
-        {"tienda": "Maison Perfumes", "badge": "Tienda Verificada", "precio_actual": "$395.000", "precio_ant": "$410.000", "link": "#", "mejordeal": False},
-    ],
-    "Club de Nuit Intense Man Armaf 105ml": [
-        {"tienda": "PerfumeLover", "badge": "Online", "precio_actual": "$42.990", "precio_ant": "$55.000", "link": "#", "mejordeal": True},
-        {"tienda": "MercadoLíder Platinum", "badge": "Vendedor Top", "precio_actual": "$45.500", "precio_ant": "$52.000", "link": "#", "mejordeal": False},
-        {"tienda": "Falabella Marketplace", "badge": "Marketplace", "precio_actual": "$48.990", "precio_ant": "$58.000", "link": "#", "mejordeal": False},
-    ]
-}
+# Diccionario de selección: Nombre Completo -> Objeto Perfume
+opciones_perfumes = {f"{p['nombre']} — {p['marca']}": p for p in catalogo}
+lista_nombres = list(opciones_perfumes.keys())
 
-tiendas = precios_data.get(selected_perfume, [
-    {"tienda": "Tienda Oficial", "badge": "Verificada", "precio_actual": "$89.990", "precio_ant": "$99.990", "link": "#", "mejordeal": True},
-    {"tienda": "Retail Partner", "badge": "Oficial", "precio_actual": "$94.990", "precio_ant": "$99.990", "link": "#", "mejordeal": False}
-])
+# Determinar perfume pre-seleccionado
+default_index = 0
+selected_session = st.session_state.get('selected_perfume')
+if selected_session is not None:
+    for idx, (lbl, p) in enumerate(opciones_perfumes.items()):
+        if str(selected_session) == str(p['id']) or (isinstance(selected_session, str) and selected_session.lower() in p['nombre'].lower()):
+            default_index = idx
+            break
 
-st.markdown("<div style='margin-top: 16px;'></div>", unsafe_allow_html=True)
+selected_label = st.selectbox("Selecciona un perfume para comparar ofertas en Chile:", lista_nombres, index=default_index)
+perfume = opciones_perfumes[selected_label]
+selected_id = perfume['id']
 
-for item in tiendas:
-    card_class = "price-card best-deal" if item["mejordeal"] else "price-card"
-    best_badge = "<span style='color: #2e7d32; font-weight: 700; margin-left: 8px; font-size: 0.8rem;'>🏆 MEJOR PRECIO</span>" if item["mejordeal"] else ""
+# Obtener detalle enriquecido
+detalle = obtener_detalle_perfume(selected_id) or perfume
+
+# Mostrar ficha cabecera del perfume con packshot de alta resolución
+img_src = get_image_src(detalle.get('imagen_url'))
+notas_txt = detalle.get('notas', 'Notas olfativas exclusivas')
+genero_txt = detalle.get('genero', 'Unisex')
+tipo_txt = detalle.get('tipo', 'Eau de Parfum')
+
+col_img, col_info = st.columns([1, 3], gap="medium")
+with col_img:
+    st.markdown(f"""
+    <div style="background: #ffffff; border-radius: 12px; padding: 12px; display: flex; align-items: center; justify-content: center; border: 1px solid {btn_border};">
+        <img src="{img_src}" alt="{detalle['nombre']}" style="max-height: 180px; max-width: 100%; object-fit: contain;">
+    </div>
+    """, unsafe_allow_html=True)
+
+with col_info:
+    ref_precio = detalle.get('precio_referencia')
+    ref_str = f"${ref_precio:,.0f} CLP".replace(",", ".") if ref_precio else "Consultar"
     
-    html_card = f"""<div class="{card_class}"><div><span class="store-name">{item['tienda']}</span><span class="store-badge">{item['badge']}</span>{best_badge}</div><div style="display: flex; align-items: center; gap: 16px;"><div><span class="old-price">{item['precio_ant']}</span><span class="price-value">{item['precio_actual']}</span></div><a href="{item['link']}" class="buy-btn" target="_blank">Ir a la oferta ↗</a></div></div>"""
-    st.markdown(html_card, unsafe_allow_html=True)
+    st.markdown(f"""
+    <div style="padding-top: 4px;">
+        <h2 style="margin: 0 0 6px 0; color: {text_color}; font-size: 1.6rem; font-weight: 700;">{detalle['nombre']}</h2>
+        <div style="color: {subtext_color}; font-size: 0.95rem; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px;">
+            {detalle['marca']} &bull; {tipo_txt} &bull; {genero_txt}
+        </div>
+        <p style="margin: 0 0 8px 0; color: {text_color}; font-size: 0.9rem; line-height: 1.5;">
+            <b>Notas olfativas:</b> {notas_txt}
+        </p>
+        <div style="margin-top: 10px; display: flex; gap: 16px; align-items: center;">
+            <span style="font-size: 0.85rem; color: {subtext_color};">Precio referencial de mercado: <b style="color: {text_color};">{ref_str}</b></span>
+            <span style="background-color: #2e7d3222; color: #4caf50; font-size: 0.78rem; font-weight: 700; padding: 3px 8px; border-radius: 4px; border: 1px solid #4caf5044;">DISPONIBLE EN TIENDAS AUDITADAS</span>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+st.markdown("<div style='margin-top: 24px;'></div>", unsafe_allow_html=True)
+st.markdown(f"<h3 style='font-size: 1.15rem; color: {text_color}; font-weight: 600; margin-bottom: 16px;'>Ofertas en tiendas chilenas verificadas</h3>", unsafe_allow_html=True)
+
+# Obtener ofertas y precios actuales desde la base de datos
+tiendas_db = obtener_precios_actuales(selected_id)
+
+if not tiendas_db:
+    st.info("Actualmente estamos sincronizando los precios en tiempo real para esta fragancia.")
+else:
+    # Identificar el mejor precio (mínimo precio_actual > 0)
+    precios_validos = [t['precio_actual'] for t in tiendas_db if t.get('precio_actual', 0) > 0]
+    min_precio = min(precios_validos) if precios_validos else 0
+
+    for item in tiendas_db:
+        p_act = item.get('precio_actual', 0)
+        p_norm = item.get('precio_normal', 0)
+        is_best_deal = (p_act == min_precio and p_act > 0)
+        
+        card_class = "price-card best-deal" if is_best_deal else "price-card"
+        best_badge = "<span style='color: #2e7d32; font-weight: 700; margin-left: 8px; font-size: 0.8rem;'>🏆 MEJOR PRECIO</span>" if is_best_deal else ""
+        
+        precio_actual_str = f"${p_act:,.0f}".replace(",", ".")
+        precio_ant_str = f"${p_norm:,.0f}".replace(",", ".") if p_norm and p_norm > p_act else ""
+        old_price_html = f"<span class='old-price'>{precio_ant_str}</span>" if precio_ant_str else ""
+        
+        # Enlace 100% directo a la ficha del producto en la tienda
+        url_directa = item.get('url_producto') or item.get('url_base') or "#"
+        badge_tienda = item.get('badge', 'Tienda Verificada')
+        
+        html_card = f"""
+        <div class="{card_class}">
+            <div>
+                <span class="store-name">{item['tienda_nombre']}</span>
+                <span class="store-badge">{badge_tienda}</span>
+                {best_badge}
+            </div>
+            <div style="display: flex; align-items: center; gap: 16px;">
+                <div>
+                    {old_price_html}
+                    <span class="price-value">{precio_actual_str} CLP</span>
+                </div>
+                <a href="{url_directa}" class="buy-btn" target="_blank" rel="noopener noreferrer">Ir a la oferta ↗</a>
+            </div>
+        </div>
+        """
+        st.markdown(html_card, unsafe_allow_html=True)
+
+# 6. HISTORIAL Y EVOLUCIÓN DE PRECIOS
+st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
+with st.expander("📈 Ver Evolución Histórica de Precios en Tiendas Chilenas"):
+    historico = obtener_historico_precios(selected_id)
+    if historico:
+        df_hist = pd.DataFrame(historico)
+        if 'fecha' in df_hist.columns and 'precio' in df_hist.columns and 'tienda' in df_hist.columns:
+            df_hist['fecha'] = pd.to_datetime(df_hist['fecha'])
+            df_pivot = df_hist.pivot_table(index='fecha', columns='tienda', values='precio', aggfunc='min')
+            st.line_chart(df_pivot)
+        else:
+            st.write(df_hist)
+    else:
+        st.write("Recopilando datos históricos de variaciones de precio en comercios auditados.")
