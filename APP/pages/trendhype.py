@@ -1,5 +1,36 @@
 import streamlit as st
 import streamlit.components.v1 as components
+import sys
+import os
+import base64
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+if BASE_DIR not in sys.path:
+    sys.path.append(BASE_DIR)
+
+def get_image_src(img_path_or_url):
+    if not img_path_or_url:
+        return "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=500&q=80"
+    if img_path_or_url.startswith("http://") or img_path_or_url.startswith("https://") or img_path_or_url.startswith("data:"):
+        return img_path_or_url
+    local_path = img_path_or_url
+    if not os.path.isabs(local_path):
+        cand1 = os.path.join(BASE_DIR, local_path)
+        cand2 = os.path.join(BASE_DIR, "APP", local_path)
+        if os.path.exists(cand1):
+            local_path = cand1
+        elif os.path.exists(cand2):
+            local_path = cand2
+    if os.path.exists(local_path):
+        ext = os.path.splitext(local_path)[1].lower().replace(".", "")
+        mime = "image/png" if ext == "png" else "image/jpeg"
+        try:
+            with open(local_path, "rb") as f:
+                b64 = base64.b64encode(f.read()).decode("utf-8")
+                return f"data:{mime};base64,{b64}"
+        except Exception:
+            pass
+    return img_path_or_url
 
 # 1. CONFIGURACIÓN DE PÁGINA Y ESTADO
 st.set_page_config(page_title="PerfumeTrending", layout="wide", initial_sidebar_state="collapsed")
@@ -763,38 +794,38 @@ star_silver_svg = """
 
 hype_data = [
     {
-        "rank": "#1", "star": star_ruby_svg, "name": "Bleu de Chanel", "score": "95%", "year": "2010", "price": "$180,000 CLP",
-        "img": "https://fimgs.net/mdig/rx_perfume/58/28/6005828.jpg",
+        "perfume_id": 1, "rank": "#1", "star": star_ruby_svg, "name": "Bleu de Chanel", "score": "95%", "year": "2010", "price": "$145.990 CLP",
+        "img": get_image_src("APP/assets/perfumes/bleu_de_chanel.jpg"),
         "stats": "↗ 75 videos y 1.5M<br>visitas este mes",
         "ai_text": "Tendencia por su versatilidad fresca y estética de 'lujo silencioso' en YouTube."
     },
     {
-        "rank": "#2", "star": star_gold_svg, "name": "YSL Libre EDP", "score": "90%", "year": "2019", "price": "$150,000 CLP",
-        "img": "https://fimgs.net/mdig/rx_perfume/56/55/5605655.jpg",
+        "perfume_id": 2, "rank": "#2", "star": star_gold_svg, "name": "YSL Libre EDP", "score": "90%", "year": "2019", "price": "$129.990 CLP",
+        "img": get_image_src("APP/assets/perfumes/ysl_libre.jpg"),
         "stats": "↗ 60 videos y 1.0M<br>visitas este mes",
         "ai_text": "Gran popularidad por su elegante nota de lavanda floral para uso diario o de noche."
     },
     {
-        "rank": "#3", "star": star_silver_svg, "name": "Dior Sauvage", "score": "88%", "year": "2015", "price": "$165,000 CLP",
-        "img": "https://fimgs.net/mdig/rx_perfume/31/86/31861.jpg",
+        "perfume_id": 3, "rank": "#3", "star": star_silver_svg, "name": "Dior Sauvage", "score": "88%", "year": "2015", "price": "$149.990 CLP",
+        "img": get_image_src("APP/assets/perfumes/dior_sauvage.jpg"),
         "stats": "↗ 55 videos y 900k<br>visitas este mes",
         "ai_text": "Dominio constante en redes por su proyección masiva y versatilidad inigualable."
     },
     {
-        "rank": "#4", "star": "", "name": "Baccarat Rouge 540", "score": "86%", "year": "2015", "price": "$310,000 CLP",
-        "img": "https://fimgs.net/mdig/rx_perfume/30/88/30886.jpg",
+        "perfume_id": 6, "rank": "#4", "star": "", "name": "Baccarat Rouge 540", "score": "86%", "year": "2015", "price": "$310.000 CLP",
+        "img": get_image_src("APP/assets/perfumes/baccarat_rouge.jpg"),
         "stats": "↗ 48 videos y 820k<br>visitas este mes",
         "ai_text": "El aroma nicho dulzón y ambarado más clonado e influyente de YouTube."
     },
     {
-        "rank": "#5", "star": "", "name": "Club de Nuit Intense", "score": "84%", "year": "2015", "price": "$45,000 CLP",
-        "img": "https://fimgs.net/mdig/rx_perfume/27/65/27656.jpg",
+        "perfume_id": 4, "rank": "#5", "star": "", "name": "Club de Nuit Intense", "score": "84%", "year": "2015", "price": "$39.990 CLP",
+        "img": get_image_src("APP/assets/perfumes/club_de_nuit.jpg"),
         "stats": "↗ 42 videos y 750k<br>visitas este mes",
         "ai_text": "Rey indiscutido de las fragancias árabes relación precio-calidad."
     },
     {
-        "rank": "#6", "star": "", "name": "Angels' Share", "score": "82%", "year": "2020", "price": "$240,000 CLP",
-        "img": "https://fimgs.net/mdig/rx_perfume/62/61/62615.jpg",
+        "perfume_id": 5, "rank": "#6", "star": "", "name": "Khamrah Lattafa", "score": "82%", "year": "2022", "price": "$34.990 CLP",
+        "img": get_image_src("APP/assets/perfumes/lattafa_khamrah.jpg"),
         "stats": "↗ 38 videos y 680k<br>visitas este mes",
         "ai_text": "Tendencia invernal gourmand con notas de licor de canela y praliné."
     }
@@ -836,4 +867,6 @@ for row in range(0, len(hype_data), cols_per_row):
                 </div>
                 """
                 st.markdown(html_card, unsafe_allow_html=True)
-                st.button("Comparar Precios", key=f"btn_compare_{idx}", use_container_width=True)
+                if st.button("Comparar Precios", key=f"btn_compare_{idx}", use_container_width=True):
+                    st.session_state['selected_perfume'] = data['perfume_id']
+                    st.switch_page("pages/compararprecios.py")
