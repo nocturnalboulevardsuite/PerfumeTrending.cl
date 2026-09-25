@@ -1,9 +1,60 @@
 import streamlit as st
 import streamlit.components.v1 as components
 import pandas as pd
+import sys
+import os
+import base64
+
+# Configurar rutas para importar backend
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+APP_DIR = os.path.dirname(os.path.abspath(__file__))
+if BASE_DIR not in sys.path:
+    sys.path.append(BASE_DIR)
+if APP_DIR not in sys.path:
+    sys.path.append(APP_DIR)
+
+from backend.database import (
+    obtener_catalogo,
+    obtener_detalle_perfume,
+    obtener_precios_actuales,
+    obtener_tiendas,
+    init_db
+)
+
+def get_image_src(img_path_or_url):
+    """Retorna URL remota o data URI en base64 para imágenes locales."""
+    if not img_path_or_url:
+        return "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=500&q=80"
+    
+    if img_path_or_url.startswith("http://") or img_path_or_url.startswith("https://") or img_path_or_url.startswith("data:"):
+        return img_path_or_url
+
+    local_path = img_path_or_url
+    if not os.path.isabs(local_path):
+        cand1 = os.path.join(BASE_DIR, local_path)
+        cand2 = os.path.join(BASE_DIR, "APP", local_path)
+        if os.path.exists(cand1):
+            local_path = cand1
+        elif os.path.exists(cand2):
+            local_path = cand2
+
+    if os.path.exists(local_path):
+        ext = os.path.splitext(local_path)[1].lower().replace(".", "")
+        mime = "image/png" if ext == "png" else "image/jpeg"
+        try:
+            with open(local_path, "rb") as f:
+                b64 = base64.b64encode(f.read()).decode("utf-8")
+                return f"data:{mime};base64,{b64}"
+        except Exception:
+            pass
+
+    return img_path_or_url
 
 # 1. CONFIGURACIÓN DE LA PÁGINA Y ESTADO
 st.set_page_config(page_title="PerfumeTrending", layout="wide", initial_sidebar_state="collapsed")
+
+# Inicializar esquema de base de datos relacional
+init_db()
 
 if 'current_page' not in st.session_state:
     st.session_state['current_page'] = 'home'
@@ -509,7 +560,7 @@ st.markdown(f"""
         border-radius: 8px;
         overflow: hidden;
         position: relative;
-        margin-bottom: 16px;
+        margin-bottom: 10px;
         transition: border-color 0.2s ease, transform 0.22s ease;
     }}
     .catalog-card:hover {{
@@ -708,87 +759,56 @@ st.markdown("<div style='margin-top: 24px;'></div>", unsafe_allow_html=True)
 
 # 8. SECCIONES Y CONTENIDOS
 if st.session_state['current_page'] == 'home':
-    st.markdown(f"<div style='text-align: center; margin-bottom: 24px; color: {text_color}; letter-spacing: 1.5px; font-weight: 300; font-size: 1.1rem; text-transform: uppercase;'>CATÁLOGO Y TENDENCIAS</div>", unsafe_allow_html=True)
+    st.markdown(f"<div style='text-align: center; margin-bottom: 24px; color: {text_color}; letter-spacing: 1.5px; font-weight: 300; font-size: 1.1rem; text-transform: uppercase;'>CATÁLOGO Y TENDENCIAS EN CHILE</div>", unsafe_allow_html=True)
     
     if selected_essences:
-        st.write(f"**Filtro activo:** {', '.join(selected_essences)}")
+        st.write(f"**Filtro activo por notas:** {', '.join(selected_essences)}")
 
-    catalog_perfumes = [
-        {
-            "name": "Bleu de Chanel",
-            "brand": "Chanel",
-            "country": "Francia 🇫🇷",
-            "perfumer": "Jacques Polge",
-            "notes": "Toronja, Limón, Menta, Jengibre, Incienso, Cedro, Sándalo",
-            "img": "https://m.media-amazon.com/images/I/71R2e1U3JYL._SL1500_.jpg"
-        },
-        {
-            "name": "Sauvage Elixir",
-            "brand": "Dior",
-            "country": "Francia 🇫🇷",
-            "perfumer": "François Demachy",
-            "notes": "Canela, Nuez Moscada, Lavanda, Regaliz, Sándalo, Ámbar",
-            "img": "https://m.media-amazon.com/images/I/71xSg5Wf0-L._SL1500_.jpg"
-        },
-        {
-            "name": "Baccarat Rouge 540",
-            "brand": "Maison Francis Kurkdjian",
-            "country": "Francia 🇫🇷",
-            "perfumer": "Francis Kurkdjian",
-            "notes": "Azafrán, Jazmín, Ámbar Gris, Madera de Cedro, Resina de Abeto",
-            "img": "https://m.media-amazon.com/images/I/61yD-8sK6yL._SL1500_.jpg"
-        },
-        {
-            "name": "Club de Nuit Intense",
-            "brand": "Armaf",
-            "country": "Emiratos Árabes 🇦🇪",
-            "perfumer": "Christian Provenzano",
-            "notes": "Limón, Piña, Grosellas Negras, Abedul, Jazmín, Almizcle",
-            "img": "https://m.media-amazon.com/images/I/61Yg40gX3mL._SL1500_.jpg"
-        },
-        {
-            "name": "Angels' Share",
-            "brand": "Kilian",
-            "country": "Francia 🇫🇷",
-            "perfumer": "Benoist Lapouza",
-            "notes": "Cognac, Canela, Haba Tonka, Roble, Vainilla, Sándalo, Praliné",
-            "img": "https://m.media-amazon.com/images/I/61sN52z4wEL._SL1500_.jpg"
-        },
-        {
-            "name": "YSL Libre EDP",
-            "brand": "Yves Saint Laurent",
-            "country": "Francia 🇫🇷",
-            "perfumer": "Anne Flipo & Carlos Benaïm",
-            "notes": "Lavanda, Mandarina, Grosellas Negras, Flor de Azahar, Vainilla",
-            "img": "https://m.media-amazon.com/images/I/61A+-0V2VFL._SL1500_.jpg"
-        }
-    ]
+    # Obtener catálogo desde base de datos con filtros
+    catalog_perfumes = obtener_catalogo(busqueda=search_query, esencias=selected_essences)
 
-    cols_per_row = 3
-    for i in range(0, len(catalog_perfumes), cols_per_row):
-        cols = st.columns(cols_per_row, gap="medium")
-        for j in range(cols_per_row):
-            if i + j < len(catalog_perfumes):
-                p = catalog_perfumes[i + j]
-                card_html = f"""
-                <div class="catalog-card">
-                    <div class="square-img-box">
-                        <img src="{p['img']}" alt="{p['name']}" referrerpolicy="no-referrer">
-                        <div class="card-hover-overlay">
-                            <div class="overlay-title">{p['name']}</div>
-                            <div class="overlay-info"><b>Orígenes:</b> {p['country']}</div>
-                            <div class="overlay-info"><b>Perfumista:</b> {p['perfumer']}</div>
-                            <div class="overlay-info" style="margin-top: 6px;"><b>Notas:</b> {p['notes']}</div>
+    if not catalog_perfumes:
+        st.info("No se encontraron perfumes que coincidan con la búsqueda o notas seleccionadas.")
+    else:
+        cols_per_row = 3
+        for i in range(0, len(catalog_perfumes), cols_per_row):
+            cols = st.columns(cols_per_row, gap="medium")
+            for j in range(cols_per_row):
+                if i + j < len(catalog_perfumes):
+                    p = catalog_perfumes[i + j]
+                    
+                    # Determinar país y notas para el hover overlay
+                    pais_origen = "Emiratos Árabes 🇦🇪" if p.get('es_arabe') else "Francia 🇫🇷" if p.get('marca') in ['Chanel', 'Dior', 'Yves Saint Laurent', 'Jean Paul Gaultier', 'Kilian', 'Maison Francis Kurkdjian'] else "Italia 🇮🇹" if p.get('marca') in ['Giorgio Armani', 'Versace'] else "Estados Unidos 🇺🇸" if p.get('marca') in ['Tom Ford'] else "Internacional"
+                    notas_txt = p.get('notas', 'Notas aromáticas selectas')
+                    tipo_txt = p.get('tipo', 'Eau de Parfum')
+                    img_src = get_image_src(p.get('imagen_url'))
+                    
+                    mejor_p = p.get('mejor_precio')
+                    mejor_p_txt = f"${mejor_p:,.0f} CLP".replace(",", ".") if mejor_p else "Ver tiendas"
+
+                    card_html = f"""
+                    <div class="catalog-card">
+                        <div class="square-img-box">
+                            <img src="{img_src}" alt="{p['nombre']}">
+                            <div class="card-hover-overlay">
+                                <div class="overlay-title">{p['nombre']}</div>
+                                <div class="overlay-info"><b>Marca:</b> {p['marca']} ({tipo_txt})</div>
+                                <div class="overlay-info"><b>Origen:</b> {pais_origen}</div>
+                                <div class="overlay-info" style="margin-top: 6px;"><b>Notas:</b> {notas_txt}</div>
+                                <div class="overlay-info" style="margin-top: 8px; color: #4caf50; font-weight: 700;">Mejor precio: {mejor_p_txt}</div>
+                            </div>
+                        </div>
+                        <div class="card-footer-info">
+                            <div class="card-perfume-name">{p['nombre']}</div>
+                            <div class="card-perfume-brand">{p['marca']}</div>
                         </div>
                     </div>
-                    <div class="card-footer-info">
-                        <div class="card-perfume-name">{p['name']}</div>
-                        <div class="card-perfume-brand">{p['brand']}</div>
-                    </div>
-                </div>
-                """
-                with cols[j]:
-                    st.markdown(card_html, unsafe_allow_html=True)
+                    """
+                    with cols[j]:
+                        st.markdown(card_html, unsafe_allow_html=True)
+                        if st.button("📊 Comparar Precios", key=f"btn_comp_{p['id']}", use_container_width=True):
+                            st.session_state['selected_perfume'] = p['id']
+                            st.switch_page("pages/compararprecios.py")
 
 elif st.session_state['current_page'] == 'esencias_page':
     col_dict_title, col_dict_mute = st.columns([9, 1], vertical_alignment="center")
