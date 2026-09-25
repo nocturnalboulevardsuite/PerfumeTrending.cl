@@ -1,4 +1,12 @@
 import streamlit as st
+import sys
+import os
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+if BASE_DIR not in sys.path:
+    sys.path.append(BASE_DIR)
+
+from backend.database import obtener_tiendas
 
 # 1. CONFIGURACIÓN DE PÁGINA
 st.set_page_config(
@@ -401,71 +409,59 @@ with left_col:
 
 # --- COLUMNA DERECHA: TABLA DE VERIFICACIÓN EN ESPAÑOL ---
 with right_col:
+    tiendas_auditadas = obtener_tiendas()
+    
+    filas_html = []
+    for idx, t in enumerate(tiendas_auditadas, 1):
+        num_str = f"{idx:02d}"
+        score = t.get('trust_score', 95)
+        badge_status = '<span class="status-badge-safe">VERIFICADO</span>' if score >= 85 else '<span class="status-badge-danger">AUDITORÍA</span>'
+        accion_html = f'<a href="{t.get("url_base", "#")}" target="_blank" rel="noopener noreferrer" class="btn-buy-now">VISITAR</a>'
+        
+        fila = f"""
+        <tr>
+            <td>{num_str}</td>
+            <td>
+                <div class="store-title">{t['nombre'].upper()}</div>
+                <div style="font-size: 0.65rem; color: {subtext_color};">{t.get('badge', 'Comercio Oficial')} &bull; RUT: {t.get('rut', 'Verificado')}</div>
+            </td>
+            <td><span class="price-tag">{score}/100</span></td>
+            <td>{badge_status}</td>
+            <td>{accion_html}</td>
+        </tr>
+        """
+        filas_html.append(fila)
+
+    # Fila de ejemplo de comercio de alto riesgo no verificado para alertar a compradores
+    num_alerta = f"{len(tiendas_auditadas) + 1:02d}"
+    fila_riesgo = f"""
+    <tr>
+        <td>{num_alerta}</td>
+        <td>
+            <div class="store-title">VENDEDOR NO AUDITADO</div>
+            <div style="font-size: 0.65rem; color: #ef4444;">Sin RUT tributario ni boleta legal</div>
+        </td>
+        <td><span class="price-tag" style="color: #ef4444;">38/100</span></td>
+        <td><span class="status-badge-danger">ALTO RIESGO</span></td>
+        <td><span class="btn-buy-disabled">BLOQUEADO</span></td>
+    </tr>
+    """
+    filas_html.append(fila_riesgo)
+
     table_html = f"""
     <div class="trust-table-container">
         <table class="trust-table">
             <thead>
                 <tr>
                     <th style="width: 8%;">#</th>
-                    <th style="width: 32%;">TIENDA</th>
-                    <th style="width: 18%;">PRECIO</th>
-                    <th style="width: 24%;">VERIFICACIÓN</th>
-                    <th style="width: 18%; text-align: right;">ACCIÓN</th>
+                    <th style="width: 36%;">COMERCIO AUDITADO</th>
+                    <th style="width: 18%;">CONFIANZA</th>
+                    <th style="width: 22%;">ESTADO</th>
+                    <th style="width: 16%; text-align: right;">ACCIÓN</th>
                 </tr>
             </thead>
             <tbody>
-                <tr>
-                    <td>01</td>
-                    <td>
-                        <div class="store-title">AURA SCENTS</div>
-                    </td>
-                    <td><span class="price-tag">$110.00</span></td>
-                    <td>
-                        <span class="status-badge-safe">VERIFICADO</span>
-                    </td>
-                    <td>
-                        <a href="#" class="btn-buy-now">COMPRAR</a>
-                    </td>
-                </tr>
-                <tr>
-                    <td>02</td>
-                    <td>
-                        <div class="store-title">THE PERFUME BARN</div>
-                    </td>
-                    <td><span class="price-tag">$105.00</span></td>
-                    <td>
-                        <span class="status-badge-danger">ALTO RIESGO</span>
-                    </td>
-                    <td>
-                        <span class="btn-buy-disabled">BLOQUEADO</span>
-                    </td>
-                </tr>
-                <tr>
-                    <td>03</td>
-                    <td>
-                        <div class="store-title">ELEGANT FRAGRANCE</div>
-                    </td>
-                    <td><span class="price-tag">$112.50</span></td>
-                    <td>
-                        <span class="status-badge-safe">VERIFICADO</span>
-                    </td>
-                    <td>
-                        <a href="#" class="btn-buy-now">COMPRAR</a>
-                    </td>
-                </tr>
-                <tr>
-                    <td>04</td>
-                    <td>
-                        <div class="store-title">FRAGRANCE DIRECT</div>
-                    </td>
-                    <td><span class="price-tag">$108.99</span></td>
-                    <td>
-                        <span class="status-badge-safe">VERIFICADO</span>
-                    </td>
-                    <td>
-                        <a href="#" class="btn-buy-now">COMPRAR</a>
-                    </td>
-                </tr>
+                {''.join(filas_html)}
             </tbody>
         </table>
     </div>
