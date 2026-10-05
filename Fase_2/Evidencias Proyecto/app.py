@@ -1,0 +1,979 @@
+import streamlit as st
+import streamlit.components.v1 as components
+import pandas as pd
+import sys
+import os
+import base64
+
+# Configurar rutas para importar backend
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+APP_DIR = os.path.dirname(os.path.abspath(__file__))
+if BASE_DIR not in sys.path:
+    sys.path.append(BASE_DIR)
+if APP_DIR not in sys.path:
+    sys.path.append(APP_DIR)
+
+from backend.database import (
+    obtener_catalogo,
+    obtener_detalle_perfume,
+    obtener_precios_actuales,
+    obtener_tiendas,
+    init_db
+)
+
+def get_image_src(img_path_or_url):
+    """Retorna URL remota o data URI en base64 para imágenes locales."""
+    if not img_path_or_url:
+        return "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=500&q=80"
+    
+    if img_path_or_url.startswith("http://") or img_path_or_url.startswith("https://") or img_path_or_url.startswith("data:"):
+        return img_path_or_url
+
+    local_path = img_path_or_url
+    if not os.path.isabs(local_path):
+        cand1 = os.path.join(BASE_DIR, local_path)
+        cand2 = os.path.join(BASE_DIR, "APP", local_path)
+        if os.path.exists(cand1):
+            local_path = cand1
+        elif os.path.exists(cand2):
+            local_path = cand2
+
+    if os.path.exists(local_path):
+        ext = os.path.splitext(local_path)[1].lower().replace(".", "")
+        mime = "image/png" if ext == "png" else "image/jpeg"
+        try:
+            with open(local_path, "rb") as f:
+                b64 = base64.b64encode(f.read()).decode("utf-8")
+                return f"data:{mime};base64,{b64}"
+        except Exception:
+            pass
+
+    return img_path_or_url
+
+# 1. CONFIGURACIÓN DE LA PÁGINA Y ESTADO
+st.set_page_config(page_title="PerfumeTrending", layout="wide", initial_sidebar_state="collapsed")
+
+# Inicializar esquema de base de datos relacional
+init_db()
+
+if 'current_page' not in st.session_state:
+    st.session_state['current_page'] = 'home'
+if 'theme' not in st.session_state:
+    st.session_state['theme'] = 'dark'
+if 'selected_perfume' not in st.session_state:
+    st.session_state['selected_perfume'] = None
+
+def toggle_theme():
+    st.session_state['theme'] = 'dark' if st.session_state['theme'] == 'light' else 'light'
+
+def navigate_to(page, perfume_data=None):
+    st.session_state['current_page'] = page
+    if perfume_data:
+        st.session_state['selected_perfume'] = perfume_data
+
+is_dark = st.session_state['theme'] == 'dark'
+
+# Colores dinámicos adaptables por tema
+app_bg = "#0c0e12" if is_dark else "#f9f9fb"
+app_bg_css = f"background-color: {app_bg} !important;"
+
+text_color = "#f0f0f0" if is_dark else "#18181b"
+subtext_color = "#888890" if is_dark else "#666670"
+
+btn_bg = "#161920" if is_dark else "#ffffff"
+btn_text = "#ffffff" if is_dark else "#18181b"
+btn_border = "#2a2e39" if is_dark else "#d1d5db"
+
+input_bg = "#14171d" if is_dark else "#ffffff"
+input_text = "#f0f0f0" if is_dark else "#18181b"
+input_border = "#2a2e39" if is_dark else "#d1d5db"
+
+# Posicionamiento del Switch de Tema
+bottle_left_pos = "42px" if is_dark else "-2px"
+static_icon_pos = "12px center" if is_dark else "calc(100% - 12px) center"
+
+static_icon_svg = (
+    "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='4'/><line x1='12' y1='1' x2='12' y2='3'/><line x1='12' y1='21' x2='12' y2='23'/><line x1='4.22' y1='4.22' x2='5.64' y2='5.64'/><line x1='18.36' y1='18.36' x2='19.78' y2='19.78'/><line x1='1' y1='12' x2='3' y2='12'/><line x1='21' y1='12' x2='23' y2='12'/><line x1='4.22' y1='19.78' x2='5.64' y2='18.36'/><line x1='18.36' y1='5.64' x2='19.78' y2='4.22'/></svg>"
+    if is_dark else
+    "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z'/></svg>"
+)
+
+bottle_svg = (
+    "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 58'><rect x='18' y='2' width='14' height='7' rx='2' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><rect x='21' y='9' width='8' height='5' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='19' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><path d='M21 28a8 8 0 0 0 9 10.5 8.5 8.5 0 0 1-9-10.5z' fill='none' stroke='%23111111' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/></svg>"
+    if is_dark else
+    "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 58'><rect x='18' y='2' width='14' height='7' rx='2' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><rect x='21' y='9' width='8' height='5' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='19' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='5' fill='none' stroke='%23111111' stroke-width='2'/><line x1='25' y1='23' x2='25' y2='26' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='25' y1='42' x2='25' y2='45' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='14' y1='34' x2='17' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='33' y1='34' x2='36' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='17' y1='26' x2='19' y2='28' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='31' y1='40' x2='33' y2='42' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='17' y1='42' x2='19' y2='40' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='31' y1='28' x2='33' y2='26' stroke='%23111111' stroke-width='2' stroke-linecap='round'/></svg>"
+)
+
+camera_icon_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23{btn_text[1:]}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z'/><circle cx='12' cy='13' r='4'/></svg>"
+user_icon_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23{btn_text[1:]}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2'/><circle cx='12' cy='7' r='4'/></svg>"
+
+# ICONOS ILUSTRADOS EN ROJO
+trend_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff3838' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'><path d='M2 19h20M2 22h20M5 19v3M9 19v3M13 19v3M17 19v3M21 19v3' stroke='%23ff3838'/><path d='M4 11h9v7H4z' fill='%23ff3838'/><path d='M13 7h6v11h-6z' fill='%23ff3838'/><rect x='15' y='9' width='3' height='3' fill='%23ffffff'/><path d='M6 7h2v4H6z' fill='%23ff3838'/><path d='M19 14l3 4h-3z' fill='%23ff3838'/><circle cx='6.5' cy='18.5' r='1.5' fill='%23ff3838' stroke='%23ffffff' stroke-width='0.5'/><circle cx='10.5' cy='18.5' r='1.5' fill='%23ff3838' stroke='%23ffffff' stroke-width='0.5'/><circle cx='16' cy='18.5' r='1.5' fill='%23ff3838' stroke='%23ffffff' stroke-width='0.5'/></svg>"
+shield_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff3838' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/><path d='m9 12 2 2 4-4'/></svg>"
+tag_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff3838' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12 2H2v10l11.29 11.29a1 1 0 0 0 1.41 0l7.58-7.58a1 1 0 0 0 0-1.41L12 2z'/><circle cx='7.5' cy='7.5' r='1.5' fill='%23ff3838'/></svg>"
+
+# 2. SISTEMA DE SONIDO Y EVENTOS DE TARJETAS
+js_color_script = f"""
+<script>
+(function() {{
+    const topWin = window.parent || window;
+    const doc = topWin.document;
+    
+    if (typeof topWin.soundMuted === 'undefined') {{
+        topWin.soundMuted = false;
+    }}
+    
+    topWin.playBubbleSound = function() {{
+        if (topWin.soundMuted) return;
+        try {{
+            const AudioContext = window.AudioContext || window.webkitAudioContext || topWin.AudioContext || topWin.webkitAudioContext;
+            if (!AudioContext) return;
+            if (!topWin.audioCtx) {{
+                topWin.audioCtx = new AudioContext();
+            }}
+            const ctx = topWin.audioCtx;
+            if (ctx.state === 'suspended') {{
+                ctx.resume();
+            }}
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+
+            osc.type = 'sine';
+            const now = ctx.currentTime;
+
+            osc.frequency.setValueAtTime(220, now);
+            osc.frequency.exponentialRampToValueAtTime(750, now + 0.07);
+
+            gain.gain.setValueAtTime(0.25, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
+
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+
+            osc.start(now);
+            osc.stop(now + 0.07);
+        }} catch(e) {{ console.error(e); }}
+    }};
+
+    topWin.toggleSoundMute = function() {{
+        topWin.soundMuted = !topWin.soundMuted;
+        topWin.updateSoundButtonUI();
+    }};
+
+    topWin.updateSoundButtonUI = function() {{
+        const btn = doc.getElementById('sound-toggle-btn');
+        if (btn) {{
+            btn.innerHTML = topWin.soundMuted ? '🔇' : '🔊';
+            btn.title = topWin.soundMuted ? 'Activar sonido de burbujas' : 'Desactivar sonido de burbujas';
+            btn.style.opacity = topWin.soundMuted ? '0.5' : '1';
+        }}
+    }};
+
+    function attachCardEvents() {{
+        const essenceCards = doc.querySelectorAll('.essence-card');
+        essenceCards.forEach(card => {{
+            if (!card.dataset.soundAttached) {{
+                card.dataset.soundAttached = 'true';
+                card.addEventListener('click', () => topWin.playBubbleSound());
+            }}
+        }});
+
+        topWin.updateSoundButtonUI();
+    }}
+
+    let debounceTimer = null;
+    const observer = new MutationObserver(() => {{
+        if (debounceTimer) clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(attachCardEvents, 100);
+    }});
+    
+    observer.observe(doc.body, {{ childList: true, subtree: true }});
+    attachCardEvents();
+}})();
+</script>
+"""
+
+components.html(js_color_script, height=0, width=0)
+
+# 3. CSS ADAPTABLE Y SWITCH
+st.markdown(f"""
+    <style>
+    header[data-testid="stHeader"] {{ display: none !important; }}
+    
+    .block-container {{ 
+        padding-top: 1.2rem !important; 
+        padding-bottom: 2rem !important; 
+        max-width: 1200px !important;
+    }}
+    
+    .stApp {{ {app_bg_css} color: {text_color} !important; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }}
+
+    .stApp p, .stApp span, .stApp label, .stMarkdown p {{
+        color: {text_color} !important;
+        font-size: 1rem !important;
+        text-shadow: none !important;
+    }}
+
+    /* EFECTO DE BOTONES Y ENLACES PAGE_LINK */
+    div.stButton > button,
+    div.stDownloadButton > button,
+    .st-key-btn_photo_search button,
+    .st-key-login_btn button,
+    a[data-testid="stPageLink-NavLink"] {{
+        transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease !important;
+        text-shadow: none !important;
+        box-shadow: none !important;
+        outline: none !important;
+    }}
+
+    div.stButton > button p {{
+        color: {btn_text} !important;
+    }}
+
+    div.stButton > button:hover,
+    .st-key-btn_photo_search button:hover,
+    .st-key-login_btn button:hover,
+    div.stButton > button:focus,
+    a[data-testid="stPageLink-NavLink"]:hover {{
+        transform: scale(1.04) !important;
+        cursor: pointer !important;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+        filter: none !important;
+        outline: none !important;
+    }}
+
+    div.stButton > button:active,
+    a[data-testid="stPageLink-NavLink"]:active {{
+        transform: scale(0.98) !important;
+    }}
+
+    /* ESTILO ESPECÍFICO Y COMPLETO PARA EL BOTÓN DE POPOVER ("ESENCIAS") */
+    div[data-testid="stPopover"],
+    div[data-testid="stPopover"] > button,
+    button[data-testid="stPopoverButton"],
+    div[data-testid="stPopover"] button {{
+        background-color: {btn_bg} !important;
+        color: {btn_text} !important;
+        border: 1px solid {btn_border} !important;
+        border-radius: 8px !important;
+        min-height: 44px !important;
+        transition: transform 0.22s ease, background-color 0.15s ease !important;
+    }}
+
+    div[data-testid="stPopover"] > button:hover,
+    button[data-testid="stPopoverButton"]:hover {{
+        transform: scale(1.04) !important;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+    }}
+
+    div[data-testid="stPopover"] button p,
+    div[data-testid="stPopover"] button span,
+    div[data-testid="stPopover"] button label,
+    div[data-testid="stPopover"] button div,
+    button[data-testid="stPopoverButton"] p,
+    button[data-testid="stPopoverButton"] span,
+    button[data-testid="stPopoverButton"] div {{
+        color: {btn_text} !important;
+        font-weight: 600 !important;
+    }}
+
+    div[data-testid="stPopover"] button svg,
+    button[data-testid="stPopoverButton"] svg {{
+        fill: {btn_text} !important;
+        stroke: {btn_text} !important;
+        color: {btn_text} !important;
+    }}
+
+    div[data-testid="stPopoverBody"],
+    div[data-testid="stPopoverContent"] {{
+        background-color: {input_bg} !important;
+        border: 1px solid {btn_border} !important;
+        border-radius: 8px !important;
+        color: {text_color} !important;
+    }}
+
+    .st-key-login_btn, .st-key-theme_toggle {{
+        display: flex !important;
+        align-items: center !important;
+        height: 100% !important;
+    }}
+
+    .st-key-login_btn button {{
+        background-color: {btn_bg} !important;
+        color: {btn_text} !important;
+        border: 1px solid {btn_border} !important;
+        border-radius: 8px !important;
+        height: 44px !important;
+        min-height: 44px !important;
+        padding: 0 1rem 0 2.5rem !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        background-image: url("{user_icon_svg}") !important;
+        background-repeat: no-repeat !important;
+        background-position: 14px center !important;
+        background-size: 18px 18px !important;
+        font-size: 0.95rem !important;
+        margin: 0 !important;
+    }}
+    .st-key-login_btn button p {{
+        font-size: 0.95rem !important;
+        line-height: 1 !important;
+        margin: 0 !important;
+        color: {btn_text} !important;
+        font-weight: 600 !important;
+    }}
+
+    /* SWITCH TEMA */
+    .st-key-theme_toggle,
+    .st-key-theme_toggle div[data-testid="stButton"] {{
+        background: transparent !important;
+        background-color: transparent !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-end !important;
+    }}
+
+    .st-key-theme_toggle div[data-testid="stButton"] > button,
+    .st-key-theme_toggle button,
+    .st-key-theme_toggle button:hover,
+    .st-key-theme_toggle button:focus,
+    .st-key-theme_toggle button:active,
+    .st-key-theme_toggle button:focus-visible,
+    div[data-testid="stElementContainer"].st-key-theme_toggle button {{
+        background: transparent !important;
+        background-color: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        outline: none !important;
+        padding: 0 !important;
+        width: 82px !important;
+        height: 48px !important;
+        min-height: 48px !important;
+        position: relative !important;
+        cursor: pointer !important;
+        overflow: visible !important;
+        margin-left: auto !important;
+        margin-right: 0 !important;
+        display: block !important;
+        transform: none !important;
+    }}
+
+    .st-key-theme_toggle button * {{ display: none !important; }}
+    
+    .st-key-theme_toggle button::before {{
+        content: '' !important;
+        position: absolute !important;
+        top: 7px !important; left: 0 !important;
+        width: 80px !important; height: 36px !important;
+        background-color: #2b2c34 !important;
+        border: 2px solid #1a1b20 !important;
+        border-radius: 20px !important;
+        box-shadow: inset 0 2px 5px rgba(0,0,0,0.4) !important;
+        box-sizing: border-box !important;
+        background-image: url("{static_icon_svg}") !important;
+        background-repeat: no-repeat !important;
+        background-position: {static_icon_pos} !important;
+        background-size: 18px 18px !important;
+        transition: all 0.3s ease !important;
+    }}
+    
+    .st-key-theme_toggle button::after {{
+        content: '' !important;
+        position: absolute !important;
+        top: -1px !important;
+        left: {bottle_left_pos} !important;
+        width: 40px !important; height: 46px !important;
+        background-image: url("{bottle_svg}") !important;
+        background-repeat: no-repeat !important;
+        background-size: contain !important;
+        transition: left 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+        filter: drop-shadow(2px 3px 4px rgba(0,0,0,0.3)) !important;
+        z-index: 2 !important;
+    }}
+
+    /* NAVEGACIÓN SUPERIOR */
+    .st-key-n_perfumes button, 
+    .st-key-n_remates button,
+    .st-key-n_esencias button {{
+        background-color: transparent !important;
+        border: none !important;
+        border-bottom: 1px solid transparent !important;
+        border-radius: 0px !important;
+        font-weight: 600 !important;
+        font-size: 0.95rem !important;
+        padding: 0.6rem 0rem !important;
+        box-shadow: none !important;
+        letter-spacing: 0.8px !important;
+        min-height: 0px !important;
+        height: auto !important;
+        transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.15s ease !important;
+    }}
+
+    .st-key-n_perfumes button p, 
+    .st-key-n_remates button p,
+    .st-key-n_esencias button p {{
+        color: {text_color} !important;
+        font-weight: 600 !important;
+        white-space: nowrap !important;
+        font-size: 0.95rem !important;
+    }}
+
+    .st-key-n_perfumes button:hover, 
+    .st-key-n_remates button:hover,
+    .st-key-n_esencias button:hover {{
+        transform: scale(1.08) !important;
+    }}
+
+    /* CHIPS DE ACCESO RÁPIDO Y PAGE LINKS */
+    a[data-testid="stPageLink-NavLink"] {{
+        background-color: {btn_bg} !important;
+        border: 1px solid {btn_border} !important;
+        border-radius: 20px !important;
+        padding: 0.45rem 1rem !important;
+        box-shadow: none !important;
+        width: 100% !important;
+        min-height: 0px !important;
+        height: auto !important;
+        filter: none !important;
+        text-decoration: none !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        box-sizing: border-box !important;
+    }}
+    
+    a[data-testid="stPageLink-NavLink"] p,
+    a[data-testid="stPageLink-NavLink"] span {{
+        font-size: 0.85rem !important;
+        font-weight: 600 !important;
+        color: {btn_text} !important;
+        letter-spacing: 0.2px;
+        white-space: nowrap !important;
+        text-overflow: clip !important;
+        overflow: visible !important;
+        margin: 0 !important;
+    }}
+
+    /* DIBUJOS ILUSTRADOS EN ROJO */
+    a[data-testid="stPageLink-NavLink"][href*="trendhype"],
+    a[data-testid="stPageLink-NavLink"][href*="trustpage"],
+    a[data-testid="stPageLink-NavLink"][href*="compararprecios"] {{
+        position: relative !important;
+        padding-left: 2.8rem !important;
+        padding-right: 1.1rem !important;
+        overflow: hidden !important;
+    }}
+
+    /* 1. Trend Del Hype */
+    a[data-testid="stPageLink-NavLink"][href*="trendhype"]::before {{
+        content: '' !important;
+        position: absolute !important;
+        left: 14px !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        width: 20px !important;
+        height: 20px !important;
+        background-image: url("{trend_red_svg}") !important;
+        background-repeat: no-repeat !important;
+        background-size: contain !important;
+        background-position: center !important;
+        z-index: 1 !important;
+    }}
+
+    /* 2. Páginas de Confianza */
+    a[data-testid="stPageLink-NavLink"][href*="trustpage"]::before {{
+        content: '' !important;
+        position: absolute !important;
+        left: 14px !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        width: 19px !important;
+        height: 19px !important;
+        background-image: url("{shield_red_svg}") !important;
+        background-repeat: no-repeat !important;
+        background-size: contain !important;
+        background-position: center !important;
+    }}
+
+    /* 3. Comparar Precios */
+    a[data-testid="stPageLink-NavLink"][href*="compararprecios"]::before {{
+        content: '' !important;
+        position: absolute !important;
+        left: 14px !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        width: 19px !important;
+        height: 19px !important;
+        background-image: url("{tag_red_svg}") !important;
+        background-repeat: no-repeat !important;
+        background-size: contain !important;
+        background-position: center !important;
+    }}
+
+    /* INPUTS */
+    div[data-baseweb="input"],
+    div[data-baseweb="base-input"],
+    div[data-baseweb="select"] > div {{
+        background-color: {input_bg} !important;
+        border: 1px solid {input_border} !important;
+        border-radius: 8px !important;
+        box-shadow: none !important;
+        padding-top: 6px !important;
+        padding-bottom: 6px !important;
+        min-height: 44px !important;
+        color: {input_text} !important;
+    }}
+
+    div[data-baseweb="input"] input,
+    div[data-baseweb="base-input"] input {{
+        font-size: 0.95rem !important;
+        padding: 8px 14px !important;
+        color: {input_text} !important;
+        background-color: {input_bg} !important;
+    }}
+
+    /* BÚSQUEDA VISUAL */
+    .st-key-btn_photo_search button {{
+        background-color: {input_bg} !important;
+        border: 1px solid {input_border} !important;
+        border-radius: 8px !important;
+        padding: 0.3rem 0.6rem 0.3rem 2.5rem !important;
+        background-image: url("{camera_icon_svg}") !important;
+        background-repeat: no-repeat !important;
+        background-position: 14px center !important;
+        background-size: 18px 18px !important;
+        font-size: 0.95rem !important;
+        min-height: 44px !important;
+    }}
+    
+    .stApp .st-key-btn_photo_search button p {{
+        font-size: 0.95rem !important;
+        color: {btn_text} !important;
+        font-weight: 600 !important;
+    }}
+
+    /* TARJETAS CATÁLOGO */
+    .catalog-card {{
+        background-color: transparent;
+        border: 1px solid {btn_border};
+        border-radius: 8px;
+        overflow: hidden;
+        position: relative;
+        margin-bottom: 10px;
+        transition: border-color 0.2s ease, transform 0.22s ease;
+    }}
+    .catalog-card:hover {{
+        border-color: #7a6a5d;
+        transform: translateY(-2px);
+    }}
+    .square-img-box {{
+        position: relative;
+        width: 100%;
+        aspect-ratio: 1 / 1;
+        background-color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        padding: 14px;
+        box-sizing: border-box;
+    }}
+    .square-img-box img {{
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+    }}
+    .card-hover-overlay {{
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(12, 14, 18, 0.94);
+        color: #ffffff;
+        padding: 18px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+        text-align: left;
+    }}
+    .catalog-card:hover .card-hover-overlay {{ opacity: 1; }}
+    .overlay-title {{
+        font-size: 1.05rem;
+        font-weight: 600;
+        color: #d4c2a5;
+        margin-bottom: 8px;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+        padding-bottom: 6px;
+    }}
+    .overlay-info {{ font-size: 0.85rem; font-weight: 400; line-height: 1.5; color: #e0e0e0; margin-bottom: 6px; }}
+    .card-footer-info {{ padding: 14px 12px; text-align: center; background-color: {btn_bg}; }}
+    .card-perfume-name {{ font-size: 0.95rem; font-weight: 600; color: {text_color}; margin-bottom: 4px; }}
+    .card-perfume-brand {{ font-size: 0.8rem; font-weight: 400; color: {subtext_color}; text-transform: uppercase; letter-spacing: 0.5px; }}
+
+    /* TARJETAS ESENCIAS */
+    .essence-card {{ 
+        border-radius: 8px; 
+        padding: 14px 16px; 
+        margin-bottom: 12px; 
+        border-width: 1px; 
+        border-style: solid;
+        cursor: pointer;
+        user-select: none;
+        transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.22s ease, border-color 0.22s ease;
+    }}
+    .essence-card:hover {{
+        transform: translateY(-4px) scale(1.025);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    }}
+    .essence-title {{ 
+        font-size: 0.98rem; 
+        font-weight: 700; 
+        margin-bottom: 6px; 
+        letter-spacing: 0.3px; 
+    }}
+    .essence-desc {{ 
+        font-size: 0.88rem; 
+        font-weight: 500; 
+        line-height: 1.5; 
+        opacity: 0.95; 
+    }}
+
+    .sound-mute-btn {{
+        background: transparent;
+        border: 1px solid {btn_border};
+        color: {text_color};
+        border-radius: 50%;
+        width: 44px;
+        height: 44px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.15rem;
+        transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s ease, opacity 0.2s ease;
+        margin-bottom: 24px;
+        outline: none;
+    }}
+    .sound-mute-btn:hover {{
+        transform: scale(1.15);
+        background-color: {btn_bg};
+    }}
+    </style>
+""", unsafe_allow_html=True)
+
+# 4. CABECERA CON LOGO COMPACTO
+col_logo, col_espacio, col_actions = st.columns([5.5, 1.3, 2.4], vertical_alignment="center")
+
+with col_logo:
+    logo_color = "#8c7b6d"
+    logo_html = f"""
+    <div style="display: inline-flex; align-items: center; gap: 10px; cursor: pointer; width: fit-content;" onclick="window.location.reload();">
+        <svg width="32" height="32" viewBox="0 0 36 36" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M 6.8 21 L 29.2 21 C 30 25 27 32 18 32 C 9 32 6 25 6.8 21 Z" fill="{logo_color}" />
+            <line x1="6.8" y1="21" x2="29.2" y2="21" stroke="{text_color}" stroke-width="1.5" />
+            <line x1="18" y1="10" x2="18" y2="30" stroke="{text_color}" stroke-width="1" />
+            <path d="M 18 32 C 9 32 5 24 7.5 17 C 9 12 13 10 15 10 L 21 10 C 23 10 27 12 28.5 17 C 31 24 27 32 18 32 Z" stroke="{text_color}" stroke-width="2" />
+            <rect x="15" y="7" width="6" height="3" stroke="{text_color}" stroke-width="1.5" />
+            <rect x="13" y="3" width="10" height="4" rx="1" stroke="{text_color}" stroke-width="1.5" />
+            <rect x="16" y="0" width="4" height="3" rx="1" fill="{logo_color}" stroke="{text_color}" stroke-width="1" />
+        </svg>
+        <span style="font-size: 1.5rem; color: {text_color}; letter-spacing: 0.3px; line-height: 1;">
+            <span style="font-weight: 300;">Perfume</span><span style="font-weight: 700;">Trending</span>
+        </span>
+    </div>
+    """
+    st.markdown(logo_html, unsafe_allow_html=True)
+
+with col_actions:
+    btn_col1, btn_col2 = st.columns([1.4, 1], vertical_alignment="center")
+    with btn_col1:
+        st.button("Ingresar", key="login_btn", use_container_width=True)
+    with btn_col2:
+        st.button(" ", key="theme_toggle", on_click=toggle_theme)
+
+# 5. NAVEGACIÓN PRINCIPAL
+st.markdown("<div style='margin-top: 14px;'></div>", unsafe_allow_html=True)
+nav_cols = st.columns([1, 1, 1], vertical_alignment="center")
+
+with nav_cols[0]: 
+    st.button("PERFUMES", key="n_perfumes", on_click=navigate_to, args=('home',), use_container_width=True)
+with nav_cols[1]: 
+    st.button("REMATES", key="n_remates", on_click=lambda: st.switch_page("pages/trendhype.py"), use_container_width=True)
+with nav_cols[2]: 
+    st.button("ESENCIAS", key="n_esencias", on_click=navigate_to, args=('esencias_page',), use_container_width=True)
+
+st.markdown(f"<hr style='margin: 10px 0 24px 0; border: none; border-bottom: 1px solid {btn_border}; opacity: 0.3;'>", unsafe_allow_html=True)
+
+# 6. BÚSQUEDA Y FILTRO DE ESENCIAS
+col_search, col_filter, col_separator, col_photo = st.columns([5.5, 1.8, 0.1, 2.0], vertical_alignment="center")
+
+with col_search:
+    search_query = st.text_input("Buscar", placeholder="Buscar perfume, marca o esencias...", label_visibility="collapsed")
+
+raw_notes = [
+    "Bergamota", "Clementina", "Limón", "Lima", "Mandarina", "Neroli", "Petit Grain", "Pomelo (Toronja)", "Yuzu",
+    "Almendra", "Avellana", "Ciruela", "Coco", "Durazno (Melocotón)", "Frambuesa", "Grosellas Negras", 
+    "Higo", "Lichi", "Manzana", "Melón", "Pera", "Piña", "Ruibarbo", "Sandía",
+    "Fresia", "Geranio", "Heliotropo", "Iris (Orris)", "Lavanda", "Lilium (Lirio)", "Mimosa", "Peonía", "Rosa", "Violeta",
+    "Flor de Azahar del Naranjo", "Flor de Frangipani", "Gardenia", "Jazmín", "Magnolia", "Tuberosa (Nardo)", "Ylang-Ylang",
+    "Abedul", "Albahaca", "Eucalipto", "Gálbano", "Hojas de Violeta", "Menta", "Pachulí", "Romero", "Salvia", "Té Blanco", "Té Negro", "Té Verde", "Vetiver",
+    "Anís Estrellado", "Azafrán", "Canela", "Cardamomo", "Clavo de Olor", "Jengibre", "Nuez Moscada", "Pimienta Blanca", "Pimienta Negra", "Pimienta Rosa",
+    "Cacao / Chocolate", "Café", "Caramelo", "Haba Tonka", "Leche", "Malvavisco", "Miel", "Praliné", "Vainilla",
+    "Cedro", "Ciprés", "Ébano", "Guayac", "Musgo de Roble", "Oud (Madera de Agar)", "Sándalo",
+    "Ámbar (Cálido)", "Bálsamo del Perú", "Benjuí", "Estoraque", "Incienso (Olíbano)", "Ládano", "Mirra",
+    "Almizcle (Blanco/Musk)", "Almizcle Vegetal", "Ámbar Gris", "Castóreo", "Civeta",
+    "Amaretto", "Champán", "Cognac", "Ginebra", "Mojito", "Ron", "Whisky",
+    "Aldehídos", "Ambroxan", "Cachemira (Cashmeran)", "Cuero", "Iso E Super", "Notas Marinas", "Notas Solares", "Sangre (Metálica)"
+]
+
+all_notes = sorted(raw_notes)
+
+with col_filter:
+    with st.popover("Esencias", use_container_width=True):
+        selected_essences = st.multiselect(
+            "Selecciona notas olfativas:",
+            options=all_notes,
+            placeholder="Filtrar...",
+            label_visibility="collapsed"
+        )
+
+with col_separator:
+    st.markdown(f"<div style='border-left: 1px solid {btn_border}; height: 32px; margin: auto;'></div>", unsafe_allow_html=True)
+
+with col_photo:
+    st.button("Búsqueda visual", key="btn_photo_search", help="Buscar por imagen", use_container_width=True)
+
+# 7. CHIPS DE ENLACE RÁPIDO A PÁGINAS INDEPENDIENTES
+st.markdown("<div style='margin-top: 14px;'></div>", unsafe_allow_html=True)
+col_chip1, col_chip2, col_chip3, col_chip_space = st.columns([1.5, 2.0, 1.7, 3.8], vertical_alignment="center")
+
+with col_chip1:
+    st.page_link("pages/trendhype.py", label="Trend Del Hype", use_container_width=True)
+with col_chip2:
+    st.page_link("pages/trustpage.py", label="Páginas de Confianza", use_container_width=True)
+with col_chip3:
+    st.page_link("pages/compararprecios.py", label="Comparar Precios", use_container_width=True)
+
+st.markdown("<div style='margin-top: 24px;'></div>", unsafe_allow_html=True)
+
+# 8. SECCIONES Y CONTENIDOS
+if st.session_state['current_page'] == 'home':
+    st.markdown(f"<div style='text-align: center; margin-bottom: 24px; color: {text_color}; letter-spacing: 1.5px; font-weight: 300; font-size: 1.1rem; text-transform: uppercase;'>CATÁLOGO Y TENDENCIAS EN CHILE</div>", unsafe_allow_html=True)
+    
+    if selected_essences:
+        st.write(f"**Filtro activo por notas:** {', '.join(selected_essences)}")
+
+    # Obtener catálogo desde base de datos con filtros
+    catalog_perfumes = obtener_catalogo(busqueda=search_query, esencias=selected_essences)
+
+    if not catalog_perfumes:
+        st.info("No se encontraron perfumes que coincidan con la búsqueda o notas seleccionadas.")
+    else:
+        cols_per_row = 3
+        for i in range(0, len(catalog_perfumes), cols_per_row):
+            cols = st.columns(cols_per_row, gap="medium")
+            for j in range(cols_per_row):
+                if i + j < len(catalog_perfumes):
+                    p = catalog_perfumes[i + j]
+                    
+                    # Determinar país y notas para el hover overlay
+                    pais_origen = "Emiratos Árabes 🇦🇪" if p.get('es_arabe') else "Francia 🇫🇷" if p.get('marca') in ['Chanel', 'Dior', 'Yves Saint Laurent', 'Jean Paul Gaultier', 'Kilian', 'Maison Francis Kurkdjian'] else "Italia 🇮🇹" if p.get('marca') in ['Giorgio Armani', 'Versace'] else "Estados Unidos 🇺🇸" if p.get('marca') in ['Tom Ford'] else "Internacional"
+                    notas_txt = p.get('notas', 'Notas aromáticas selectas')
+                    tipo_txt = p.get('tipo', 'Eau de Parfum')
+                    img_src = get_image_src(p.get('imagen_url'))
+                    
+                    mejor_p = p.get('mejor_precio')
+                    mejor_p_txt = f"${mejor_p:,.0f} CLP".replace(",", ".") if mejor_p else "Ver tiendas"
+
+                    card_html = f"""
+                    <div class="catalog-card">
+                        <div class="square-img-box">
+                            <img src="{img_src}" alt="{p['nombre']}">
+                            <div class="card-hover-overlay">
+                                <div class="overlay-title">{p['nombre']}</div>
+                                <div class="overlay-info"><b>Marca:</b> {p['marca']} ({tipo_txt})</div>
+                                <div class="overlay-info"><b>Origen:</b> {pais_origen}</div>
+                                <div class="overlay-info" style="margin-top: 6px;"><b>Notas:</b> {notas_txt}</div>
+                                <div class="overlay-info" style="margin-top: 8px; color: #4caf50; font-weight: 700;">Mejor precio: {mejor_p_txt}</div>
+                            </div>
+                        </div>
+                        <div class="card-footer-info">
+                            <div class="card-perfume-name">{p['nombre']}</div>
+                            <div class="card-perfume-brand">{p['marca']}</div>
+                        </div>
+                    </div>
+                    """
+                    with cols[j]:
+                        st.markdown(card_html, unsafe_allow_html=True)
+                        if st.button("📊 Comparar Precios", key=f"btn_comp_{p['id']}", use_container_width=True):
+                            st.session_state['selected_perfume'] = p['id']
+                            st.switch_page("pages/compararprecios.py")
+
+elif st.session_state['current_page'] == 'esencias_page':
+    col_dict_title, col_dict_mute = st.columns([9, 1], vertical_alignment="center")
+    
+    with col_dict_title:
+        st.markdown(f"<div style='text-align: center; color: {text_color}; letter-spacing: 1px; font-weight: 300; margin-bottom: 24px; font-size: 1.1rem; text-transform: uppercase;'>DICCIONARIO DE ESENCIAS Y NOTAS</div>", unsafe_allow_html=True)
+    
+    with col_dict_mute:
+        st.markdown(f"""
+        <div style="text-align: right;">
+            <button id="sound-toggle-btn" class="sound-mute-btn" onclick="if(window.toggleSoundMute){{window.toggleSoundMute();}}else if(window.parent.toggleSoundMute){{window.parent.toggleSoundMute();}}" title="Activar / Desactivar sonido de burbujas">
+                🔊
+            </button>
+        </div>
+        """, unsafe_allow_html=True)
+
+    def get_essence_colors(name):
+        n = name.lower()
+        if any(k in n for k in ['sangre', 'cereza', 'frambuesa', 'pimienta rosa', 'rosa', 'ruibarbo', 'lichi', 'ciruela', 'grosella', 'peonía', 'geranio']):
+            return ("#5c282e" if is_dark else "#e2b3b7", "#3d1a1e" if is_dark else "#f7eaec", "#f0adb4" if is_dark else "#5c1b22")
+        elif any(k in n for k in ['marina', 'marinas', 'agua', 'océano', 'ozónica']):
+            return ("#224052" if is_dark else "#a8c7da", "#152933" if is_dark else "#eaf2f7", "#92ccdb" if is_dark else "#173a4b")
+        elif any(k in n for k in ['albahaca', 'bergamota', 'cardamomo', 'higo', 'manzana', 'menta', 'pachulí', 'pera', 'romero', 'salvia', 'té verde', 'té blanco', 'vetiver', 'abedul', 'eucalipto', 'gálbano']):
+            return ("#234530" if is_dark else "#a4cca2", "#162b1e" if is_dark else "#ebf5ee", "#93d1a3" if is_dark else "#193d25")
+        elif any(k in n for k in ['iris', 'lavanda', 'jazmín', 'nardos', 'neroli', 'violeta', 'fresia', 'gardenia', 'ylang', 'magnolia', 'azahar']):
+            return ("#432d52" if is_dark else "#c3b1d4", "#2b1d33" if is_dark else "#f2ebf7", "#c7a9db" if is_dark else "#391c47")
+        elif any(k in n for k in ['caramelo', 'miel', 'solares', 'vainilla', 'cacao', 'café', 'canela', 'tonka', 'nuez moscada', 'praliné', 'almendra', 'avellana', 'ron', 'cognac', 'whisky']):
+            return ("#523522" if is_dark else "#d8bca7", "#332115" if is_dark else "#f7ede6", "#dbb193" if is_dark else "#452914")
+        elif any(k in n for k in ['ámbar gris', 'cedro', 'sándalo', 'tabaco', 'cuero', 'oud', 'incienso', 'ciprés', 'ébano', 'guayac', 'musgo', 'benjuí', 'ládano']):
+            return ("#373d47" if is_dark else "#bdc1c9", "#23272e" if is_dark else "#edeef0", "#aeb5c2" if is_dark else "#292e36")
+        elif any(k in n for k in ['azafrán', 'ámbar', 'mandarina', 'melocotón', 'durazno', 'mirra', 'naranjo', 'pomelo', 'cítrico', 'cítricos', 'limón', 'lima', 'piña', 'jengibre', 'yuzu']):
+            return ("#59331e" if is_dark else "#debca8", "#382013" if is_dark else "#f9ede6", "#dfab8c" if is_dark else "#4f2711")
+        else:
+            return ("#333842" if is_dark else "#cad0d9", "#1f2228" if is_dark else "#f2f4f7", "#bcc2cc" if is_dark else "#2b3038")
+
+    essence_descriptions = {
+        "Bergamota": "Cítrico efervescente y luminoso con delicados matices florales.",
+        "Clementina": "Cítrico dulce, jugoso y chispeante que transmite alegría inmediata.",
+        "Limón": "Ácido, limpio y deslumbrante; inyección de luz y energía viva.",
+        "Lima": "Verde, amarga y brillante; aporta un matiz tropical muy refrescante.",
+        "Mandarina": "Frutal dulce y suave que brinda una frescura risueña y festiva.",
+        "Neroli": "Fresco, cítrico y floral blanco; evoca la elegancia mediterránea.",
+        "Petit Grain": "Verde, amargo y leñoso; destilado de las hojas del naranjo amargo.",
+        "Pomelo (Toronja)": "Cítrico amargo, efervescente y vigorizante con un toque seco.",
+        "Yuzu": "Cítrico japonés con matices entre pomelo y mandarina.",
+        "Almendra": "Nota cremosa, suavemente amarga y avainillada.",
+        "Avellana": "Cálida, tostada y lactónica; evoca la riqueza cremosa.",
+        "Ciruela": "Frutal, rica y aterciopelada; añade una profundidad oscura.",
+        "Coco": "Cremoso, exótico y lácteo; transmite una sensación solar.",
+        "Durazno (Melocotón)": "Carnoso, jugoso y suave; brinda una dulzura frutal sensual.",
+        "Frambuesa": "Frutal, chispeante y acidulada; aporta un matiz alegre.",
+        "Grosellas Negras": "Frutal oscuro, ácido y vegetal; genera contrastes refinados.",
+        "Higo": "Nota verde, frutal y láctea; evoca la frescura del árbol.",
+        "Lichi": "Frutal, acuoso y delicadamente floral; añade frescura exótica.",
+        "Manzana": "Crujiente, fresca y jugosa; infunde un toque limpio.",
+        "Melón": "Acuoso, frutal y dulce; aporta un perfil estival muy refrescante.",
+        "Pera": "Jugosa, cristalina y delicada; añade una frescura acuática.",
+        "Piña": "Tropical, efervescente y jugosa; añade una salida radiante.",
+        "Ruibarbo": "Ácido, verde y chispeante; aporta un contraste vanguardista.",
+        "Sandía": "Fresca, ozónica y dulce; transmite ligereza acuosa.",
+        "Fresia": "Floral suave, limpio y ligeramente afrutado.",
+        "Geranio": "Verde, floral y rosado con matices aromáticos.",
+        "Heliotropo": "Polvoso, avainillado y meloso con ecos de almendra dulce.",
+        "Iris (Orris)": "Polvoso, elegante y aristocrático; evoca la finura del maquillaje.",
+        "Lavanda": "Aromática, limpia y relajante; pilar clásico que aporta serenidad.",
+        "Lilium (Lirio)": "Floral noble, verde y radiante con presencia pulcra.",
+        "Mimosa": "Cálida, dulce, polvosa y mielada; evoca la primavera.",
+        "Peonía": "Floral delicado, fresco y acuático similar a la rosa joven.",
+        "Rosa": "La reina de las flores; romántica, atemporal y rica.",
+        "Violeta": "Floral verde, polvoso y dulce; evoca nostalgia elegante.",
+        "Flor de Azahar del Naranjo": "Radiante, solar y limpia con matices mielados.",
+        "Flor de Frangipani": "Exótica, cremosa y embriagadora con acentos solares.",
+        "Gardenia": "Floral opulento, cremoso y verde de gran sensualidad.",
+        "Jazmín": "La reina blanca de las flores; voluptuosa y embriagadora.",
+        "Magnolia": "Floral fresca, cítrica y cerosa de una elegancia luminosa.",
+        "Tuberosa (Nardo)": "Flor blanca intensa, carnal y dramática.",
+        "Ylang-Ylang": "Flor exótica, embriagadora y marcadamente sensual.",
+        "Abedul": "Nota ahumada, leñosa y balsámica que evoca cuero suave.",
+        "Albahaca": "Aromática, fresca y picante; infunde una energía mentolada.",
+        "Eucalipto": "Helado, mentolado y balsámico; despeja la composición.",
+        "Gálbano": "Resina verde, amarga y silvestre de gran carácter botánico.",
+        "Hojas de Violeta": "Verde, metálica y terrosa; aporta un matiz de césped cortado.",
+        "Menta": "Vigorizante, fresca y helada; impacto aromático estimulante.",
+        "Pachulí": "Terroso, oscuro y balsámico; pilar de la perfumería chipre.",
+        "Romero": "Herbal, aromático y balsámico; brinda aire mediterráneo.",
+        "Salvia": "Aromática, herbal y ambarina; aporta sofisticación.",
+        "Té Blanco": "Delicado, transparente y zen; matiz pulcro y sereno.",
+        "Té Negro": "Ahumado, tanino y profundo; aporta estructura seca.",
+        "Té Verde": "Herbal, sereno y reconfortante; infunde frescura limpia.",
+        "Vetiver": "Terroso, leñoso y ahumado; clásico de la elegancia masculina.",
+        "Anís Estrellado": "Especiado, dulce y licoroso con destellos mentolados.",
+        "Azafrán": "Especiado, leñoso y de elegancia amarga refinada.",
+        "Canela": "Especiada, dulce y cálida; añade una presencia reconfortante.",
+        "Cardamomo": "Especiado, fresco y resinoso; brinda una sofisticación vibrante.",
+        "Clavo de Olor": "Picante, cálido y penetrante con carácter audaz.",
+        "Jengibre": "Picante, efervescente y cítrico; inyecta una chispa moderna.",
+        "Nuez Moscada": "Cálida, especiada y amaderada; agrega un contraste misterioso.",
+        "Pimienta Blanca": "Especiada suave, seca y sutil; aporta calidez.",
+        "Pimienta Negra": "Vigorosa, picante y aromática; infunde un dinamismo directo.",
+        "Pimienta Rosa": "Especiada, brillante y frutal; aporta un matiz efervescente.",
+        "Cacao / Chocolate": "Profundo, amargo y reconfortante; aporta calidez adictiva.",
+        "Café": "Tostado, energizante y oscuro; perfecto para fragancias audaces.",
+        "Caramelo": "Dulce, cremoso y tentador; agrega un toque goloso.",
+        "Haba Tonka": "Cálida, avainillada y con matices a almendra.",
+        "Leche": "Lactónica, suave y envolvente; recrea bienestar reconfortante.",
+        "Malvavisco": "Dulce esponjoso, azucarado y algodonoso.",
+        "Miel": "Dorada, viscosa y melosa; envuelve en una riqueza cálida.",
+        "Praliné": "Dulce de frutos secos y azúcar caramelizada.",
+        "Vainilla": "Dulce, sensual y reconfortante; reina de la adicción olfativa.",
+        "Cedro": "Seco, noble y leñoso; estructura la base aportando fuerza.",
+        "Ciprés": "Resinoso, verde y seco; proyecta serenidad de arboleda.",
+        "Ébano": "Madera oscura, densa y refinada de gran presencia.",
+        "Guayac": "Madera ahumada, dulce y balsámica con matices rosados.",
+        "Musgo de Roble": "Terroso, boscoso y húmedo; esencial para la estructura Chipre.",
+        "Oud (Madera de Agar)": "Profundo, resinoso y complejo; tesoro de Oriente.",
+        "Sándalo": "Madera cremosa, suave y balsámica; transmite serenidad.",
+        "Ámbar (Cálido)": "Nota resinosa y dorada que envuelve en riqueza dulzona.",
+        "Bálsamo del Perú": "Balsámico, dulce y acanelado de rica densidad.",
+        "Benjuí": "Resina dulce con olor a vainilla tostada e incienso suave.",
+        "Estoraque": "Ahumado, leñoso y con matices de cuero resinoso.",
+        "Incienso (Olíbano)": "Místico, resinoso y ahumado; añade solemnidad.",
+        "Ládano": "Ambarino, denso y profundamente cuero-resinoso.",
+        "Mirra": "Balsámica, cálida y milenaria; ofrece un aura mística.",
+        "Almizcle (Blanco/Musk)": "Piel limpia, suavidad algodonosa y fijación sensual.",
+        "Almizcle Vegetal": "Alternativa botánica limpia de perfil transparente.",
+        "Ámbar Gris": "Marino, terroso y aterciopelada; fija la fragancia.",
+        "Castóreo": "Nota animalic ahumada que evoca cuero profundo.",
+        "Civeta": "Sensualidad animalica cálida que aporta densidad.",
+        "Amaretto": "Licoroso, dulce y almendrado de perfil tentador.",
+        "Champán": "Burbujeante, efervescente y festivo de tono cristalino.",
+        "Cognac": "Embriagador, leñoso y ambarino con distinción.",
+        "Ginebra": "Fresca, botánica y de enebro vigorizante.",
+        "Mojito": "Cítrico, mentolado y azucarado de máxima frescura.",
+        "Ron": "Licoroso, dulce y especiado con notas de barrica.",
+        "Whisky": "Malteado, ahumado y cálido con presencia elegante.",
+        "Aldehídos": "Chispeantes, jabonosos y efervescentes; elevan el perfume.",
+        "Ambroxan": "Ambarino, leñoso y salino de proyección moderna.",
+        "Cachemira (Cashmeran)": "Suave como la lana, leñoso, ambarino y almizclado.",
+        "Cuero": "Seco, ahumado y sofisticado; proyecta distinción.",
+        "Iso E Super": "Molécula maderosa, suave y aterciopelada.",
+        "Notas Marinas": "Brisa salada y aire ozónico; aportan frescura oceánica.",
+        "Notas Solares": "Calidez de la piel bajo el sol y tardes de verano.",
+        "Sangre (Metálica)": "Nota vanguardista nicho; evoca hierro y un matiz salado."
+    }
+
+    col_es_1, col_es_2 = st.columns(2, gap="medium")
+    html_col1 = []
+    html_col2 = []
+    
+    for i, note in enumerate(all_notes):
+        border_col, bg_col, text_c = get_essence_colors(note)
+        desc = essence_descriptions.get(note, "Nota olfativa distintiva que aporta carácter y equilibrio.")
+        
+        tarjeta_html = f"""
+        <div class="essence-card" onclick="(window.playBubbleSound || window.parent.playBubbleSound || function(){{}})()" style="border-color: {border_col}; background-color: {bg_col}; color: {text_c};">
+            <div class="essence-title" style="color: {text_c} !important;">{note}</div>
+            <div class="essence-desc" style="color: {text_c} !important;">{desc}</div>
+        </div>
+        """
+        if i % 2 == 0:
+            html_col1.append(tarjeta_html)
+        else:
+            html_col2.append(tarjeta_html)
+
+    with col_es_1:
+        st.markdown("\n".join(html_col1), unsafe_allow_html=True)
+    with col_es_2:
+        st.markdown("\n".join(html_col2), unsafe_allow_html=True)
