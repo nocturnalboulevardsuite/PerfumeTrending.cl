@@ -44,28 +44,24 @@ def clean_html(html_str: str) -> str:
 
 def resolver_url_oferta(tienda_nombre: str, perfume_nombre: str, url_prod: str, url_base: str) -> str:
     """
-    Retorna URL directa verificada.
-    En grandes tiendas de retail (Falabella, Paris, Ripley), los enlaces por ID numérico
-    suelen rotar y quedar 'no disponible' cuando se agota una partida específica.
-    El enlace de búsqueda oficial garantiza mostrar siempre el producto con stock vigente.
-    Para tiendas especializadas (Silk, Elite, Alisha), usa la URL directa del catálogo.
+    Retorna el enlace directo a la ficha del perfume exacto en la tienda.
+    Si por algún motivo no existe URL directa, usa la búsqueda directa en la tienda.
     """
+    # 1. Prioridad absoluta: Si hay enlace directo al producto, usarlo siempre
+    if url_prod and url_prod.startswith("http") and url_prod != "#" and "/search" not in url_prod:
+        return url_prod
+
+    # 2. Respaldo de búsqueda si no hay link directo guardado
     t = (tienda_nombre or "").lower()
     q = urllib.parse.quote(perfume_nombre.strip())
-    
-    # 1. Retail oficial: Búsqueda garantizada con productos en stock en tiempo real
+
     if "falabella" in t:
         return f"https://www.falabella.com/falabella-cl/search?Ntt={q}"
     elif "paris" in t:
         return f"https://www.paris.cl/search?q={q}"
     elif "ripley" in t:
         return f"https://simple.ripley.cl/search/{q}"
-    
-    # 2. Tiendas especializadas Shopify con URLs permanentes
-    if url_prod and url_prod.startswith("http") and url_prod != "#" and "/search" not in url_prod:
-        return url_prod
-    
-    if "silk" in t:
+    elif "silk" in t:
         return f"https://www.silkperfumes.cl/search?q={q}"
     elif "elite" in t:
         return f"https://www.eliteperfumes.cl/search?q={q}"
@@ -73,7 +69,7 @@ def resolver_url_oferta(tienda_nombre: str, perfume_nombre: str, url_prod: str, 
         return f"https://www.alisha.cl/search?q={q}"
     elif "dbs" in t:
         return f"https://www.dbs.cl/search?q={q}"
-    
+
     return url_base or "#"
 
 def get_image_src(img_path_or_url):
@@ -436,7 +432,7 @@ col_logo, col_espacio, col_actions = st.columns([5, 1.8, 2.4], vertical_alignmen
 
 with col_logo:
     logo_color = "#8c7b6d"
-    logo_html = f"""<div style="display: inline-flex; align-items: center; gap: 12px; cursor: pointer; width: fit-content;" onclick="window.location.href='/';"><svg width="34" height="34" viewBox="0 0 36 36" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M 6.8 21 L 29.2 21 C 30 25 27 32 18 32 C 9 32 6 25 6.8 21 Z" fill="{logo_color}" /><line x1="6.8" y1="21" x2="29.2" y2="21" stroke="{text_color}" stroke-width="1.5" /><line x1="18" y1="10" x2="18" y2="30" stroke="{text_color}" stroke-width="1" /><path d="M 18 32 C 9 32 5 24 7.5 17 C 9 12 13 10 15 10 L 21 10 C 23 10 27 12 28.5 17 C 31 24 27 32 18 32 Z" stroke="{text_color}" stroke-width="2" /><rect x="15" y="7" width="6" height="3" stroke="{text_color}" stroke-width="1.5" /><rect x="13" y="3" width="10" height="4" rx="1" stroke="{text_color}" stroke-width="1.5" /><rect x="16" y="0" width="4" height="3" rx="1" fill="{logo_color}" stroke="{text_color}" stroke-width="1" /></svg><span style="font-size: 1.4rem; color: {text_color}; letter-spacing: 0.5px;"><span style="font-weight: 300;">Perfume</span><span style="font-weight: 600;">Trending</span></span></div>"""
+    logo_html = f"""<a href="/" target="_top" style="text-decoration: none; display: inline-flex; align-items: center; gap: 12px; cursor: pointer; width: fit-content;"><svg width="34" height="34" viewBox="0 0 36 36" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M 6.8 21 L 29.2 21 C 30 25 27 32 18 32 C 9 32 6 25 6.8 21 Z" fill="{logo_color}" /><line x1="6.8" y1="21" x2="29.2" y2="21" stroke="{text_color}" stroke-width="1.5" /><line x1="18" y1="10" x2="18" y2="30" stroke="{text_color}" stroke-width="1" /><path d="M 18 32 C 9 32 5 24 7.5 17 C 9 12 13 10 15 10 L 21 10 C 23 10 27 12 28.5 17 C 31 24 27 32 18 32 Z" stroke="{text_color}" stroke-width="2" /><rect x="15" y="7" width="6" height="3" stroke="{text_color}" stroke-width="1.5" /><rect x="13" y="3" width="10" height="4" rx="1" stroke="{text_color}" stroke-width="1.5" /><rect x="16" y="0" width="4" height="3" rx="1" fill="{logo_color}" stroke="{text_color}" stroke-width="1" /></svg><span style="font-size: 1.4rem; color: {text_color}; letter-spacing: 0.5px;"><span style="font-weight: 300;">Perfume</span><span style="font-weight: 600;">Trending</span></span></a>"""
     st.markdown(logo_html, unsafe_allow_html=True)
 
 with col_actions:
@@ -450,8 +446,10 @@ with col_actions:
 st.markdown("<div style='margin-top: 14px;'></div>", unsafe_allow_html=True)
 
 # 4. CHIPS DE NAVEGACIÓN RÁPIDA
-col_chip1, col_chip2, col_chip3, col_chip_space = st.columns([1.5, 2.0, 1.7, 3.8], vertical_alignment="center")
+col_chip_home, col_chip1, col_chip2, col_chip3, col_chip_space = st.columns([1.6, 1.5, 2.0, 1.7, 2.2], vertical_alignment="center")
 
+with col_chip_home:
+    st.page_link("app.py", label="Inicio / Catálogo", icon="🏠", use_container_width=True)
 with col_chip1:
     st.page_link("pages/trendhype.py", label="Trend Del Hype", use_container_width=True)
 with col_chip2:
@@ -459,10 +457,14 @@ with col_chip2:
 with col_chip3:
     st.page_link("pages/compararprecios.py", label="Comparar Precios", use_container_width=True)
 
-st.markdown("<div style='margin-top: 24px;'></div>", unsafe_allow_html=True)
+st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
 
 # 5. SECCIÓN PRINCIPAL: COMPARADOR DE PRECIOS
-st.markdown(f"""<div style='text-align: center; margin-bottom: 24px; color: {text_color}; letter-spacing: 1.5px; font-weight: 300; font-size: 1.1rem; text-transform: uppercase;'>COMPARADOR DE PRECIOS EN TIENDAS CHILENAS</div>""", unsafe_allow_html=True)
+col_title_text, col_title_back = st.columns([7, 3], vertical_alignment="center")
+with col_title_text:
+    st.markdown(f"""<div style='color: {text_color}; letter-spacing: 1.5px; font-weight: 300; font-size: 1.1rem; text-transform: uppercase;'>COMPARADOR DE PRECIOS EN TIENDAS CHILENAS</div>""", unsafe_allow_html=True)
+with col_title_back:
+    st.page_link("app.py", label="← Volver al Catálogo")
 
 # Cargar catálogo dinámico con caché
 catalogo = get_cached_catalogo()

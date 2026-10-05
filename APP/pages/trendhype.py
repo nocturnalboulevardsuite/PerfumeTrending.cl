@@ -542,6 +542,92 @@ st.markdown(f"""
         color: {text_color} !important;
     }}
 
+    /* CHIPS DE ACCESO RÁPIDO Y PAGE LINKS */
+    a[data-testid="stPageLink-NavLink"] {{
+        background-color: {btn_bg} !important;
+        border: 1px solid {btn_border} !important;
+        border-radius: 20px !important;
+        padding: 0.45rem 1rem !important;
+        box-shadow: none !important;
+        width: 100% !important;
+        min-height: 0px !important;
+        height: auto !important;
+        filter: none !important;
+        text-decoration: none !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        box-sizing: border-box !important;
+    }}
+    
+    a[data-testid="stPageLink-NavLink"] p,
+    a[data-testid="stPageLink-NavLink"] span {{
+        font-size: 0.85rem !important;
+        font-weight: 600 !important;
+        color: {btn_text} !important;
+        letter-spacing: 0.2px;
+        white-space: nowrap !important;
+        text-overflow: clip !important;
+        overflow: visible !important;
+        margin: 0 !important;
+    }}
+
+    /* DIBUJOS ILUSTRADOS EN ROJO PARA LOS BOTONES */
+    a[data-testid="stPageLink-NavLink"][href*="trendhype"],
+    a[data-testid="stPageLink-NavLink"][href*="trustpage"],
+    a[data-testid="stPageLink-NavLink"][href*="compararprecios"] {{
+        position: relative !important;
+        padding-left: 2.8rem !important;
+        padding-right: 1.1rem !important;
+        overflow: hidden !important;
+    }}
+
+    /* 1. Trend Del Hype */
+    a[data-testid="stPageLink-NavLink"][href*="trendhype"]::before {{
+        content: '' !important;
+        position: absolute !important;
+        left: 14px !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        width: 20px !important;
+        height: 20px !important;
+        background-image: url("{trend_red_svg}") !important;
+        background-repeat: no-repeat !important;
+        background-size: contain !important;
+        background-position: center !important;
+        z-index: 1 !important;
+    }}
+
+    /* 2. Páginas de Confianza */
+    a[data-testid="stPageLink-NavLink"][href*="trustpage"]::before {{
+        content: '' !important;
+        position: absolute !important;
+        left: 14px !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        width: 19px !important;
+        height: 19px !important;
+        background-image: url("{shield_red_svg}") !important;
+        background-repeat: no-repeat !important;
+        background-size: contain !important;
+        background-position: center !important;
+    }}
+
+    /* 3. Comparar Precios */
+    a[data-testid="stPageLink-NavLink"][href*="compararprecios"]::before {{
+        content: '' !important;
+        position: absolute !important;
+        left: 14px !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        width: 19px !important;
+        height: 19px !important;
+        background-image: url("{tag_red_svg}") !important;
+        background-repeat: no-repeat !important;
+        background-size: contain !important;
+        background-position: center !important;
+    }}
+
     /* TARJETAS DE PERFUME */
     .hype-card {{
         background-color: {card_bg};
@@ -670,7 +756,7 @@ col_logo, col_login, col_theme = st.columns([5, 1.2, 0.8], vertical_alignment="c
 with col_logo:
     logo_color = "#8c7b6d"
     logo_html = f"""
-    <a href="/" target="_self" style="text-decoration: none; display: inline-flex; align-items: center; gap: 12px; cursor: pointer; width: fit-content;">
+    <a href="/" target="_top" style="text-decoration: none; display: inline-flex; align-items: center; gap: 12px; cursor: pointer; width: fit-content;">
         <svg width="34" height="34" viewBox="0 0 36 36" fill="none" stroke-linecap="round" stroke-linejoin="round">
             <path d="M 6.8 21 L 29.2 21 C 30 25 27 32 18 32 C 9 32 6 25 6.8 21 Z" fill="{logo_color}" />
             <line x1="6.8" y1="21" x2="29.2" y2="21" stroke="{text_color}" stroke-width="1.5" />
@@ -694,8 +780,22 @@ with col_login:
 with col_theme:
     st.button(" ", key="theme_toggle", on_click=toggle_theme)
 
+st.markdown("<div style='margin-top: 14px;'></div>", unsafe_allow_html=True)
+
+# CHIPS DE NAVEGACIÓN RÁPIDA
+col_chip_home, col_chip1, col_chip2, col_chip3, col_chip_space = st.columns([1.6, 1.5, 2.0, 1.7, 2.2], vertical_alignment="center")
+
+with col_chip_home:
+    st.page_link("app.py", label="Inicio / Catálogo", icon="🏠", use_container_width=True)
+with col_chip1:
+    st.page_link("pages/trendhype.py", label="Trend Del Hype", use_container_width=True)
+with col_chip2:
+    st.page_link("pages/trustpage.py", label="Páginas de Confianza", use_container_width=True)
+with col_chip3:
+    st.page_link("pages/compararprecios.py", label="Comparar Precios", use_container_width=True)
+
 # 5. SECCIÓN DEL TÍTULO Y NAVEGACIÓN
-st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
+st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
 col_header_title, col_back_btn = st.columns([3.4, 1], vertical_alignment="center")
 
 with col_header_title:
@@ -714,7 +814,7 @@ with col_header_title:
     st.markdown(title_html, unsafe_allow_html=True)
 
 with col_back_btn:
-    st.markdown('<a href="/" target="_self" class="nav-back-link">← Volver al Catálogo principal</a>', unsafe_allow_html=True)
+    st.page_link("app.py", label="← Volver al Catálogo")
 
 st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
 

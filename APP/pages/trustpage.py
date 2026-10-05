@@ -52,10 +52,97 @@ bottle_svg = (
     "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 58'><rect x='18' y='2' width='14' height='7' rx='2' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><rect x='21' y='9' width='8' height='5' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='19' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='5' fill='none' stroke='%23111111' stroke-width='2'/><line x1='25' y1='23' x2='25' y2='26' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='25' y1='42' x2='25' y2='45' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='14' y1='34' x2='17' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='33' y1='34' x2='36' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='17' y1='26' x2='19' y2='28' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='31' y1='40' x2='33' y2='42' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='17' y1='42' x2='19' y2='40' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='31' y1='28' x2='33' y2='26' stroke='%23111111' stroke-width='2' stroke-linecap='round'/></svg>"
 )
 
+trend_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff3838' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'><path d='M2 19h20M2 22h20M5 19v3M9 19v3M13 19v3M17 19v3M21 19v3' stroke='%23ff3838'/><path d='M4 11h9v7H4z' fill='%23ff3838'/><path d='M13 7h6v11h-6z' fill='%23ff3838'/><rect x='15' y='9' width='3' height='3' fill='%23ffffff'/><path d='M6 7h2v4H6z' fill='%23ff3838'/><path d='M19 14l3 4h-3z' fill='%23ff3838'/><circle cx='6.5' cy='18.5' r='1.5' fill='%23ff3838' stroke='%23ffffff' stroke-width='0.5'/><circle cx='10.5' cy='18.5' r='1.5' fill='%23ff3838' stroke='%23ffffff' stroke-width='0.5'/><circle cx='16' cy='18.5' r='1.5' fill='%23ff3838' stroke='%23ffffff' stroke-width='0.5'/></svg>"
+shield_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff3838' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/><path d='m9 12 2 2 4-4'/></svg>"
+tag_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff3838' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12 2H2v10l11.29 11.29a1 1 0 0 0 1.41 0l7.58-7.58a1 1 0 0 0 0-1.41L12 2z'/><circle cx='7.5' cy='7.5' r='1.5' fill='%23ff3838'/></svg>"
+
 # 4. ESTILOS CSS CON TIPOGRAFÍA ELEGANTE Y EDITORIAL
 css_styles = f"""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* CHIPS DE ACCESO RÁPIDO Y PAGE LINKS */
+a[data-testid="stPageLink-NavLink"] {{
+    background-color: {card_bg} !important;
+    border: 1px solid {border_color} !important;
+    border-radius: 20px !important;
+    padding: 0.45rem 1rem !important;
+    box-shadow: none !important;
+    width: 100% !important;
+    min-height: 0px !important;
+    height: auto !important;
+    filter: none !important;
+    text-decoration: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-sizing: border-box !important;
+}}
+
+a[data-testid="stPageLink-NavLink"] p,
+a[data-testid="stPageLink-NavLink"] span {{
+    font-size: 0.85rem !important;
+    font-weight: 600 !important;
+    color: {text_color} !important;
+    letter-spacing: 0.2px;
+    white-space: nowrap !important;
+    text-overflow: clip !important;
+    overflow: visible !important;
+    margin: 0 !important;
+}}
+
+/* DIBUJOS ILUSTRADOS EN ROJO PARA LOS BOTONES */
+a[data-testid="stPageLink-NavLink"][href*="trendhype"],
+a[data-testid="stPageLink-NavLink"][href*="trustpage"],
+a[data-testid="stPageLink-NavLink"][href*="compararprecios"] {{
+    position: relative !important;
+    padding-left: 2.8rem !important;
+    padding-right: 1.1rem !important;
+    overflow: hidden !important;
+}}
+
+a[data-testid="stPageLink-NavLink"][href*="trendhype"]::before {{
+    content: '' !important;
+    position: absolute !important;
+    left: 14px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    width: 20px !important;
+    height: 20px !important;
+    background-image: url("{trend_red_svg}") !important;
+    background-repeat: no-repeat !important;
+    background-size: contain !important;
+    background-position: center !important;
+    z-index: 1 !important;
+}}
+
+a[data-testid="stPageLink-NavLink"][href*="trustpage"]::before {{
+    content: '' !important;
+    position: absolute !important;
+    left: 14px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    width: 19px !important;
+    height: 19px !important;
+    background-image: url("{shield_red_svg}") !important;
+    background-repeat: no-repeat !important;
+    background-size: contain !important;
+    background-position: center !important;
+}}
+
+a[data-testid="stPageLink-NavLink"][href*="compararprecios"]::before {{
+    content: '' !important;
+    position: absolute !important;
+    left: 14px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    width: 19px !important;
+    height: 19px !important;
+    background-image: url("{tag_red_svg}") !important;
+    background-repeat: no-repeat !important;
+    background-size: contain !important;
+    background-position: center !important;
+}}
 
 html, body, [class*="css"], .stApp {{
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
@@ -341,7 +428,7 @@ col_head_logo, col_head_switch = st.columns([8, 2], vertical_alignment="center")
 with col_head_logo:
     logo_color = "#8c7b6d"
     logo_html = f"""
-    <div style="display: inline-flex; align-items: center; gap: 12px; cursor: pointer; width: fit-content;" onclick="window.location.reload();">
+    <a href="/" target="_top" style="text-decoration: none; display: inline-flex; align-items: center; gap: 12px; cursor: pointer; width: fit-content;">
         <svg width="34" height="34" viewBox="0 0 36 36" fill="none" stroke-linecap="round" stroke-linejoin="round">
             <path d="M 6.8 21 L 29.2 21 C 30 25 27 32 18 32 C 9 32 6 25 6.8 21 Z" fill="{logo_color}" />
             <line x1="6.8" y1="21" x2="29.2" y2="21" stroke="{text_color}" stroke-width="1.5" />
@@ -354,14 +441,35 @@ with col_head_logo:
         <span style="font-size: 1.4rem; color: {text_color}; letter-spacing: 0.5px;">
             <span style="font-weight: 300;">Perfume</span><span style="font-weight: 600;">Trending</span>
         </span>
-    </div>
+    </a>
     """
     st.markdown(logo_html, unsafe_allow_html=True)
 
 with col_head_switch:
     st.button(" ", on_click=toggle_theme, key="theme_toggle")
 
-st.markdown(f"<hr style='border: none; border-top: 1px solid {border_color}; margin: 20px 0 28px 0;' />", unsafe_allow_html=True)
+st.markdown("<div style='margin-top: 14px;'></div>", unsafe_allow_html=True)
+
+# CHIPS DE NAVEGACIÓN RÁPIDA
+col_chip_home, col_chip1, col_chip2, col_chip3, col_chip_space = st.columns([1.6, 1.5, 2.0, 1.7, 2.2], vertical_alignment="center")
+
+with col_chip_home:
+    st.page_link("app.py", label="Inicio / Catálogo", icon="🏠", use_container_width=True)
+with col_chip1:
+    st.page_link("pages/trendhype.py", label="Trend Del Hype", use_container_width=True)
+with col_chip2:
+    st.page_link("pages/trustpage.py", label="Páginas de Confianza", use_container_width=True)
+with col_chip3:
+    st.page_link("pages/compararprecios.py", label="Comparar Precios", use_container_width=True)
+
+st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
+col_sub_title, col_sub_back = st.columns([7, 3], vertical_alignment="center")
+with col_sub_title:
+    st.markdown(f"<div style='color: {subtext_color}; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;'>AUDITORÍA DE TIENDAS Y SEGURIDAD</div>", unsafe_allow_html=True)
+with col_sub_back:
+    st.page_link("app.py", label="← Volver al Catálogo")
+
+st.markdown(f"<hr style='border: none; border-top: 1px solid {border_color}; margin: 16px 0 24px 0;' />", unsafe_allow_html=True)
 
 # 6. ESTRUCTURA PRINCIPAL
 left_col, right_col = st.columns([1, 1.4], gap="large")

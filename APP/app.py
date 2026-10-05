@@ -686,7 +686,7 @@ col_logo, col_espacio, col_actions = st.columns([5.5, 1.3, 2.4], vertical_alignm
 with col_logo:
     logo_color = "#8c7b6d"
     logo_html = f"""
-    <div style="display: inline-flex; align-items: center; gap: 10px; cursor: pointer; width: fit-content;" onclick="window.location.reload();">
+    <a href="/" target="_top" style="text-decoration: none; display: inline-flex; align-items: center; gap: 10px; cursor: pointer; width: fit-content;">
         <svg width="32" height="32" viewBox="0 0 36 36" fill="none" stroke-linecap="round" stroke-linejoin="round">
             <path d="M 6.8 21 L 29.2 21 C 30 25 27 32 18 32 C 9 32 6 25 6.8 21 Z" fill="{logo_color}" />
             <line x1="6.8" y1="21" x2="29.2" y2="21" stroke="{text_color}" stroke-width="1.5" />
@@ -699,7 +699,7 @@ with col_logo:
         <span style="font-size: 1.5rem; color: {text_color}; letter-spacing: 0.3px; line-height: 1;">
             <span style="font-weight: 300;">Perfume</span><span style="font-weight: 700;">Trending</span>
         </span>
-    </div>
+    </a>
     """
     st.markdown(logo_html, unsafe_allow_html=True)
 
