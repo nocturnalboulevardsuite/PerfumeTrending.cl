@@ -21,6 +21,11 @@ from backend.database import (
     init_db
 )
 
+@st.cache_data(ttl=300, show_spinner=False)
+def get_cached_catalogo(busqueda=None, esencias_tuple=None):
+    esencias = list(esencias_tuple) if esencias_tuple else None
+    return obtener_catalogo(busqueda=busqueda, esencias=esencias)
+
 def get_image_src(img_path_or_url):
     """Retorna URL remota o data URI en base64 para imágenes locales."""
     if not img_path_or_url:
@@ -189,6 +194,15 @@ js_color_script = f"""
     
     observer.observe(doc.body, {{ childList: true, subtree: true }});
     attachCardEvents();
+
+    // Heartbeat periódico para evitar desconexiones de sesión en Streamlit Cloud
+    setInterval(function() {{
+        try {{
+            if (topWin && topWin.document) {{
+                topWin.document.dispatchEvent(new Event('visibilitychange'));
+            }}
+        }} catch(e) {{}}
+    }}, 180000);
 }})();
 </script>
 """
@@ -688,7 +702,8 @@ with col_logo:
 with col_actions:
     btn_col1, btn_col2 = st.columns([1.4, 1], vertical_alignment="center")
     with btn_col1:
-        st.button("Ingresar", key="login_btn", use_container_width=True)
+        if st.button("Ingresar", key="login_btn", use_container_width=True):
+            st.toast("👤 Próximamente: Podrás crear tu cuenta, guardar alertas de precio y armar tu lista de deseos.", icon="✨")
     with btn_col2:
         st.button(" ", key="theme_toggle", on_click=toggle_theme)
 
@@ -764,8 +779,11 @@ if st.session_state['current_page'] == 'home':
     if selected_essences:
         st.write(f"**Filtro activo por notas:** {', '.join(selected_essences)}")
 
-    # Obtener catálogo desde base de datos con filtros
-    catalog_perfumes = obtener_catalogo(busqueda=search_query, esencias=selected_essences)
+    # Obtener catálogo desde base de datos con filtros y caché optimizado
+    catalog_perfumes = get_cached_catalogo(
+        busqueda=search_query, 
+        esencias_tuple=tuple(selected_essences) if selected_essences else None
+    )
 
     if not catalog_perfumes:
         st.info("No se encontraron perfumes que coincidan con la búsqueda o notas seleccionadas.")

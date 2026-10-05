@@ -13,12 +13,55 @@ if BASE_DIR not in sys.path:
 if APP_DIR not in sys.path:
     sys.path.append(APP_DIR)
 
+import urllib.parse
+
 from backend.database import (
     obtener_catalogo,
     obtener_precios_actuales,
     obtener_historico_precios,
     obtener_detalle_perfume
 )
+
+@st.cache_data(ttl=300, show_spinner=False)
+def get_cached_catalogo():
+    return obtener_catalogo()
+
+@st.cache_data(ttl=300, show_spinner=False)
+def get_cached_precios(perfume_id):
+    return obtener_precios_actuales(perfume_id)
+
+@st.cache_data(ttl=300, show_spinner=False)
+def get_cached_historico(perfume_id):
+    return obtener_historico_precios(perfume_id)
+
+@st.cache_data(ttl=300, show_spinner=False)
+def get_cached_detalle(perfume_id):
+    return obtener_detalle_perfume(perfume_id)
+
+def resolver_url_oferta(tienda_nombre: str, perfume_nombre: str, url_prod: str, url_base: str) -> str:
+    """Retorna URL directa verificada o fallback a búsqueda exacta en la tienda chilena correspondiente."""
+    if url_prod and url_prod.startswith("http") and url_prod != "#" and "/search" not in url_prod:
+        return url_prod
+    
+    q = urllib.parse.quote(perfume_nombre.strip())
+    t = (tienda_nombre or "").lower()
+    
+    if "falabella" in t:
+        return f"https://www.falabella.com/falabella-cl/search?Ntt={q}"
+    elif "paris" in t:
+        return f"https://www.paris.cl/search?q={q}"
+    elif "ripley" in t:
+        return f"https://simple.ripley.cl/search/{q}"
+    elif "silk" in t:
+        return f"https://www.silkperfumes.cl/search?q={q}"
+    elif "elite" in t:
+        return f"https://www.eliteperfumes.cl/search?q={q}"
+    elif "alisha" in t:
+        return f"https://www.alisha.cl/search?q={q}"
+    elif "dbs" in t:
+        return f"https://www.dbs.cl/search?q={q}"
+    
+    return url_base or "#"
 
 def get_image_src(img_path_or_url):
     """Retorna URL remota o data URI en base64 para imágenes locales."""
@@ -386,7 +429,8 @@ with col_logo:
 with col_actions:
     btn_col1, btn_col2 = st.columns([1.4, 1], vertical_alignment="center")
     with btn_col1:
-        st.button("Ingresar", key="login_btn", use_container_width=True)
+        if st.button("Ingresar", key="login_btn", use_container_width=True):
+            st.toast("👤 Próximamente: Podrás crear tu cuenta, guardar alertas de precio y armar tu lista de deseos.", icon="✨")
     with btn_col2:
         st.button(" ", key="theme_toggle", on_click=toggle_theme)
 
@@ -407,8 +451,8 @@ st.markdown("<div style='margin-top: 24px;'></div>", unsafe_allow_html=True)
 # 5. SECCIÓN PRINCIPAL: COMPARADOR DE PRECIOS
 st.markdown(f"""<div style='text-align: center; margin-bottom: 24px; color: {text_color}; letter-spacing: 1.5px; font-weight: 300; font-size: 1.1rem; text-transform: uppercase;'>COMPARADOR DE PRECIOS EN TIENDAS CHILENAS</div>""", unsafe_allow_html=True)
 
-# Cargar catálogo dinámico desde SQLite
-catalogo = obtener_catalogo()
+# Cargar catálogo dinámico con caché
+catalogo = get_cached_catalogo()
 
 if not catalogo:
     st.warning("No hay perfumes disponibles en el catálogo en este momento.")
@@ -431,8 +475,8 @@ selected_label = st.selectbox("Selecciona un perfume para comparar ofertas en Ch
 perfume = opciones_perfumes[selected_label]
 selected_id = perfume['id']
 
-# Obtener detalle enriquecido
-detalle = obtener_detalle_perfume(selected_id) or perfume
+# Obtener detalle enriquecido desde caché
+detalle = get_cached_detalle(selected_id) or perfume
 
 # Mostrar ficha cabecera del perfume con packshot de alta resolución
 img_src = get_image_src(detalle.get('imagen_url'))
@@ -471,8 +515,8 @@ with col_info:
 st.markdown("<div style='margin-top: 24px;'></div>", unsafe_allow_html=True)
 st.markdown(f"<h3 style='font-size: 1.15rem; color: {text_color}; font-weight: 600; margin-bottom: 16px;'>Ofertas en tiendas chilenas verificadas</h3>", unsafe_allow_html=True)
 
-# Obtener ofertas y precios actuales desde la base de datos
-tiendas_db = obtener_precios_actuales(selected_id)
+# Obtener ofertas y precios actuales desde la base de datos (con caché)
+tiendas_db = get_cached_precios(selected_id)
 
 if not tiendas_db:
     st.info("Actualmente estamos sincronizando los precios en tiempo real para esta fragancia.")
@@ -484,6 +528,7 @@ else:
     for item in tiendas_db:
         p_act = item.get('precio_actual', 0)
         p_norm = item.get('precio_normal', 0)
+        vol_ml = item.get('volumen_ml', 100) or 100
         is_best_deal = (p_act == min_precio and p_act > 0)
         
         card_class = "price-card best-deal" if is_best_deal else "price-card"
@@ -493,8 +538,19 @@ else:
         precio_ant_str = f"${p_norm:,.0f}".replace(",", ".") if p_norm and p_norm > p_act else ""
         old_price_html = f"<span class='old-price'>{precio_ant_str}</span>" if precio_ant_str else ""
         
-        # Enlace 100% directo a la ficha del producto en la tienda
-        url_directa = item.get('url_producto') or item.get('url_base') or "#"
+        # Precio por mililitro
+        ml_txt = ""
+        if p_act > 0 and vol_ml > 0:
+            p_ml = int(round(p_act / vol_ml))
+            ml_txt = f"<span style='font-size: 0.78rem; color: {subtext_color}; display: block; text-align: right;'>${p_ml:,.0f}/ml ({vol_ml}ml)</span>".replace(",", ".")
+        
+        # Enlace inteligente verificado directo a la ficha del producto en la tienda
+        url_directa = resolver_url_oferta(
+            tienda_nombre=item.get('tienda_nombre', ''),
+            perfume_nombre=detalle.get('nombre', ''),
+            url_prod=item.get('url_producto', ''),
+            url_base=item.get('url_base', '')
+        )
         badge_tienda = item.get('badge', 'Tienda Verificada')
         
         html_card = f"""
@@ -508,6 +564,7 @@ else:
                 <div>
                     {old_price_html}
                     <span class="price-value">{precio_actual_str} CLP</span>
+                    {ml_txt}
                 </div>
                 <a href="{url_directa}" class="buy-btn" target="_blank" rel="noopener noreferrer">Ir a la oferta ↗</a>
             </div>
@@ -518,7 +575,7 @@ else:
 # 6. HISTORIAL Y EVOLUCIÓN DE PRECIOS
 st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
 with st.expander("📈 Ver Evolución Histórica de Precios en Tiendas Chilenas"):
-    historico = obtener_historico_precios(selected_id)
+    historico = get_cached_historico(selected_id)
     if historico:
         df_hist = pd.DataFrame(historico)
         if 'fecha' in df_hist.columns and 'precio' in df_hist.columns and 'tienda' in df_hist.columns:

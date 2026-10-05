@@ -1,0 +1,22 @@
+name: Keep-Alive Streamlit Cloud
+
+on:
+  schedule:
+    # Ejecuta cada 6 horas para evitar que Streamlit Cloud hiberne por inactividad
+    - cron: '0 */6 * * *'
+  workflow_dispatch: # Permite ejecutar manualmente desde la pestaña Actions en GitHub
+
+jobs:
+  keepalive:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Streamlit Production App
+        run: |
+          echo "Pinging https://perfumetrending-cl.streamlit.app/ ..."
+          HTTP_RESPONSE=$(curl -s -L -o /dev/null -w "%{http_code}" https://perfumetrending-cl.streamlit.app/)
+          echo "HTTP Status Code recibido: $HTTP_RESPONSE"
+          if [ "$HTTP_RESPONSE" -ge 200 ] && [ "$HTTP_RESPONSE" -lt 500 ]; then
+            echo "✅ Aplicación activa y despierta en producción."
+          else
+            echo "⚠️ Alerta: Código HTTP $HTTP_RESPONSE recibido."
+          fi

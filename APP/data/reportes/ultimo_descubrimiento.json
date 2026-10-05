@@ -2,98 +2,107 @@
   "metadata": {
     "version": "1.0.0",
     "sistema": "PerfumeTrending Autonomous Discovery Crawler",
-    "fecha_ejecucion": "2026-09-16 15:30:40",
-    "duracion_segundos": 3.02,
+    "fecha_ejecucion": "2026-10-05 17:26:05",
+    "duracion_segundos": 2.39,
     "estado": "EXITOSO"
   },
   "metricas": {
-    "total_productos_analizados": 10,
-    "descartados_no_perfume": 0,
-    "nuevos_perfumes_descubiertos": 9,
-    "precios_variantes_registrados": 10,
+    "total_productos_analizados": 30,
+    "descartados_no_perfume": 1,
+    "nuevos_perfumes_descubiertos": 29,
+    "precios_variantes_registrados": 29,
     "errores_totales": 0
   },
   "muestras_nuevas": [
     {
-      "id": 13,
-      "nombre": "Pure Seduction Shimmer Loción Nueva Colección",
-      "marca": "Victoria Secret",
+      "id": 22,
+      "nombre": "Petra",
+      "marca": "Lattafa",
       "tipo": "Eau de Parfum",
-      "es_arabe": false,
+      "es_arabe": true,
       "tienda": "Silk Perfumes",
-      "precio": 13490
+      "precio": 29990
     },
     {
-      "id": 14,
-      "nombre": "Flowerbomb + Mini + Crema",
-      "marca": "Viktor & Rolf",
+      "id": 23,
+      "nombre": "Pride Lahdath",
+      "marca": "Lattafa",
       "tipo": "Eau de Parfum",
-      "es_arabe": false,
+      "es_arabe": true,
       "tienda": "Silk Perfumes",
-      "precio": 104990
+      "precio": 26990
     },
     {
-      "id": 15,
-      "nombre": "Flowerbomb + Loción + Crema",
-      "marca": "Viktor & Rolf",
+      "id": 24,
+      "nombre": "Pride Love In Paris",
+      "marca": "Lattafa",
       "tipo": "Eau de Parfum",
-      "es_arabe": false,
+      "es_arabe": true,
       "tienda": "Silk Perfumes",
-      "precio": 104990
+      "precio": 24990
     },
     {
-      "id": 16,
-      "nombre": "Velvet Orchid",
-      "marca": "Tom Ford",
+      "id": 25,
+      "nombre": "Pride King Of Arabia",
+      "marca": "Lattafa",
       "tipo": "Eau de Parfum",
-      "es_arabe": false,
+      "es_arabe": true,
       "tienda": "Silk Perfumes",
-      "precio": 144990
-    },
-    {
-      "id": 17,
-      "nombre": "Chrome H",
-      "marca": "Azzaro",
-      "tipo": "Eau de Toilette",
-      "es_arabe": false,
-      "tienda": "Elite Perfumes",
-      "precio": 49990
-    },
-    {
-      "id": 18,
-      "nombre": "Azzaro Pour Homme Edt 200 Ml (H)",
-      "marca": "Azzaro",
-      "tipo": "Eau de Toilette",
-      "es_arabe": false,
-      "tienda": "Elite Perfumes",
       "precio": 39990
     },
     {
-      "id": 19,
-      "nombre": "Code Men H",
-      "marca": "Giorgio Armani",
-      "tipo": "Eau de Toilette",
+      "id": 26,
+      "nombre": "Hoor Extrait De",
+      "marca": "Riiffs",
+      "tipo": "Extrait de Parfum",
       "es_arabe": false,
-      "tienda": "Elite Perfumes",
-      "precio": 59492
+      "tienda": "Silk Perfumes",
+      "precio": 27990
     },
     {
-      "id": 20,
-      "nombre": "Fancy Girl M",
-      "marca": "Jessica Simpson",
-      "tipo": "Eau de Parfum",
+      "id": 27,
+      "nombre": "Hulm Extrait De",
+      "marca": "Riiffs",
+      "tipo": "Extrait de Parfum",
       "es_arabe": false,
-      "tienda": "Elite Perfumes",
-      "precio": 21990
+      "tienda": "Silk Perfumes",
+      "precio": 27990
     },
     {
-      "id": 21,
-      "nombre": "Jungle Tiger M",
-      "marca": "Cuba",
-      "tipo": "Eau de Parfum",
+      "id": 28,
+      "nombre": "Tahira Extrait De",
+      "marca": "Riiffs",
+      "tipo": "Extrait de Parfum",
       "es_arabe": false,
-      "tienda": "Elite Perfumes",
-      "precio": 6490
+      "tienda": "Silk Perfumes",
+      "precio": 27990
+    },
+    {
+      "id": 29,
+      "nombre": "Pride London The City Of Contrast",
+      "marca": "Lattafa",
+      "tipo": "Eau de Parfum",
+      "es_arabe": true,
+      "tienda": "Silk Perfumes",
+      "precio": 24990
+    },
+    {
+      "id": 30,
+      "nombre": "Momento Extrait De",
+      "marca": "Riiffs",
+      "tipo": "Extrait de Parfum",
+      "es_arabe": false,
+      "tienda": "Silk Perfumes",
+      "precio": 27990
+    },
+    {
+      "id": 31,
+      "nombre": "Virtus Extrait De",
+      "marca": "Riiffs",
+      "tipo": "Extrait de Parfum",
+      "es_arabe": false,
+      "tienda": "Silk Perfumes",
+      "precio": 27990
     }
   ],
   "errores": []

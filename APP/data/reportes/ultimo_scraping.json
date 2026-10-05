@@ -1,16 +1,19 @@
 {
+  "actualizaciones": 42,
+  "fecha": "2026-10-05 17:27:25",
+  "duracion_segundos": 8.87,
   "metadata": {
     "version_etl": "2.0.0",
     "sistema": "PerfumeTrending ETL Engine",
-    "fecha_ejecucion": "2026-09-16 13:36:10",
-    "duracion_segundos": 7.51,
+    "fecha_ejecucion": "2026-10-05 17:27:25",
+    "duracion_segundos": 8.87,
     "estado": "EXITOSO"
   },
   "metricas": {
-    "total_perfumes_catalogo": 12,
+    "total_perfumes_catalogo": 41,
     "total_tiendas_registradas": 7,
     "precios_actualizados": 42,
-    "exclusiones_marca": 42,
+    "exclusiones_marca": 245,
     "errores_totales": 0
   },
   "estadisticas_tiendas": {
@@ -54,13 +57,13 @@
     {
       "perfume": "Bleu de Chanel",
       "tienda": "Falabella",
-      "precio": 184000,
+      "precio": 183000,
       "origen": "Retail Oficial Snapshot"
     },
     {
       "perfume": "Bleu de Chanel",
       "tienda": "Paris",
-      "precio": 186000,
+      "precio": 183000,
       "origen": "Retail Oficial Snapshot"
     },
     {
@@ -72,43 +75,43 @@
     {
       "perfume": "YSL Libre",
       "tienda": "Falabella",
-      "precio": 89000,
+      "precio": 90000,
       "origen": "Retail Oficial Snapshot"
     },
     {
       "perfume": "YSL Libre",
       "tienda": "Paris",
-      "precio": 150000,
+      "precio": 149000,
       "origen": "Retail Oficial Snapshot"
     },
     {
       "perfume": "YSL Libre",
       "tienda": "Ripley",
-      "precio": 146000,
+      "precio": 149000,
       "origen": "Retail Oficial Snapshot"
     },
     {
       "perfume": "YSL Libre",
       "tienda": "Silk Perfumes",
-      "precio": 79990,
+      "precio": 99990,
       "origen": "API Shopify Live"
     },
     {
       "perfume": "YSL Libre",
       "tienda": "Elite Perfumes",
-      "precio": 107990,
+      "precio": 108770,
       "origen": "API Shopify Live"
     },
     {
       "perfume": "Dior Sauvage",
       "tienda": "Falabella",
-      "precio": 145000,
+      "precio": 144000,
       "origen": "Retail Oficial Snapshot"
     },
     {
       "perfume": "Dior Sauvage",
       "tienda": "Paris",
-      "precio": 168000,
+      "precio": 165000,
       "origen": "Retail Oficial Snapshot"
     }
   ],

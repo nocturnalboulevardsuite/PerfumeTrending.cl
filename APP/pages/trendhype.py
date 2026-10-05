@@ -684,7 +684,8 @@ with col_logo:
     st.markdown(logo_html, unsafe_allow_html=True)
 
 with col_login:
-    st.button("Ingresar", key="login_btn")
+    if st.button("Ingresar", key="login_btn"):
+        st.toast("👤 Próximamente: Podrás crear tu cuenta, guardar alertas de precio y armar tu lista de deseos.", icon="✨")
 
 with col_theme:
     st.button(" ", key="theme_toggle", on_click=toggle_theme)
