@@ -38,21 +38,34 @@ def get_cached_historico(perfume_id):
 def get_cached_detalle(perfume_id):
     return obtener_detalle_perfume(perfume_id)
 
+def clean_html(html_str: str) -> str:
+    """Limpia espacios iniciales por línea para evitar que Streamlit Markdown interprete HTML como código."""
+    return "\n".join(line.strip() for line in html_str.splitlines())
+
 def resolver_url_oferta(tienda_nombre: str, perfume_nombre: str, url_prod: str, url_base: str) -> str:
-    """Retorna URL directa verificada o fallback a búsqueda exacta en la tienda chilena correspondiente."""
-    if url_prod and url_prod.startswith("http") and url_prod != "#" and "/search" not in url_prod:
-        return url_prod
-    
-    q = urllib.parse.quote(perfume_nombre.strip())
+    """
+    Retorna URL directa verificada.
+    En grandes tiendas de retail (Falabella, Paris, Ripley), los enlaces por ID numérico
+    suelen rotar y quedar 'no disponible' cuando se agota una partida específica.
+    El enlace de búsqueda oficial garantiza mostrar siempre el producto con stock vigente.
+    Para tiendas especializadas (Silk, Elite, Alisha), usa la URL directa del catálogo.
+    """
     t = (tienda_nombre or "").lower()
+    q = urllib.parse.quote(perfume_nombre.strip())
     
+    # 1. Retail oficial: Búsqueda garantizada con productos en stock en tiempo real
     if "falabella" in t:
         return f"https://www.falabella.com/falabella-cl/search?Ntt={q}"
     elif "paris" in t:
         return f"https://www.paris.cl/search?q={q}"
     elif "ripley" in t:
         return f"https://simple.ripley.cl/search/{q}"
-    elif "silk" in t:
+    
+    # 2. Tiendas especializadas Shopify con URLs permanentes
+    if url_prod and url_prod.startswith("http") and url_prod != "#" and "/search" not in url_prod:
+        return url_prod
+    
+    if "silk" in t:
         return f"https://www.silkperfumes.cl/search?q={q}"
     elif "elite" in t:
         return f"https://www.eliteperfumes.cl/search?q={q}"
@@ -570,7 +583,7 @@ else:
             </div>
         </div>
         """
-        st.markdown(html_card, unsafe_allow_html=True)
+        st.markdown(clean_html(html_card), unsafe_allow_html=True)
 
 # 6. HISTORIAL Y EVOLUCIÓN DE PRECIOS
 st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)

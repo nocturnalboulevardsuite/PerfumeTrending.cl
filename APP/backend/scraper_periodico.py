@@ -58,6 +58,7 @@ try:
         tienda_comercializa_marca,
         obtener_url_directa_tienda
     )
+    from backend.normalizador import es_producto_perfume_valido
 except ImportError:
     from database import (
         guardar_o_actualizar_perfume_scraped,
@@ -67,6 +68,7 @@ except ImportError:
         tienda_comercializa_marca,
         obtener_url_directa_tienda
     )
+    from normalizador import es_producto_perfume_valido
 
 USER_AGENTS = [
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
@@ -118,7 +120,13 @@ def consultar_shopify_store(
             data = res.json()
             productos = data.get("resources", {}).get("results", {}).get("products", [])
             for p in productos:
-                titulo = p.get("title", "").lower()
+                raw_title = p.get("title", "")
+                
+                # Descartar productos que no sean fragancias (desodorantes, bodysprays, cremas)
+                if not es_producto_perfume_valido(raw_title):
+                    continue
+
+                titulo = raw_title.lower()
                 palabras_clave = [w.lower() for w in perfume_nombre.split() if len(w) > 3]
                 coincide = any(w in titulo for w in palabras_clave) or (marca.lower() in titulo)
                 
@@ -128,10 +136,14 @@ def consultar_shopify_store(
 
                 if coincide:
                     precio = int(p.get("price", 0))
+                    # Sanity check: Una fragancia no cuesta menos de 10.000 CLP (salvo decant o muestra)
+                    if precio < 10000 and "decant" not in titulo and "muestra" not in titulo:
+                        continue
+
                     url_prod = f"https://www.{dominio}{p.get('url')}"
                     return {
                         "encontrado": True,
-                        "titulo": p.get("title"),
+                        "titulo": raw_title,
                         "precio": precio,
                         "url": url_prod,
                         "imagen": p.get("image")

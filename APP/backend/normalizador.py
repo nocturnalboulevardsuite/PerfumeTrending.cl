@@ -15,12 +15,13 @@ MARCAS_ARABES_CONOCIDAS = {
     "swiss arabian", "maison alhambra", "alhambra", "fragrance world", "paris corner"
 }
 
-# Palabras clave de productos no deseados (desodorantes, cremas, etc.)
+# Palabras clave de productos no deseados (desodorantes, cremas, sprays corporales, etc.)
 PALABRAS_EXCLUSION = [
-    "desodorante", "deodorant", "body mist", "body spray", "body lotion",
-    "crema corporal", "locion corporal", "shampoo", "champu", "gel de ducha",
-    "shower gel", "jabon", "vela", "after shave", "after-shave", "balsamo",
-    "neceser", "estuche vacio", "atomizador recargable", "labial", "mascara pestañas"
+    "desodorante", "deodorant", "body mist", "bodymist", "body spray", "bodyspray",
+    "body splash", "bodysplash", "body lotion", "crema corporal", "locion corporal",
+    "shampoo", "champu", "gel de ducha", "shower gel", "jabon", "vela", "after shave",
+    "after-shave", "balsamo", "neceser", "estuche vacio", "atomizador recargable",
+    "labial", "mascara pestañas", "roll on", "roll-on"
 ]
 
 

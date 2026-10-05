@@ -26,6 +26,10 @@ def get_cached_catalogo(busqueda=None, esencias_tuple=None):
     esencias = list(esencias_tuple) if esencias_tuple else None
     return obtener_catalogo(busqueda=busqueda, esencias=esencias)
 
+def clean_html(html_str: str) -> str:
+    """Limpia espacios iniciales por línea para evitar que Streamlit Markdown interprete HTML como código."""
+    return "\n".join(line.strip() for line in html_str.splitlines())
+
 def get_image_src(img_path_or_url):
     """Retorna URL remota o data URI en base64 para imágenes locales."""
     if not img_path_or_url:
@@ -823,7 +827,7 @@ if st.session_state['current_page'] == 'home':
                     </div>
                     """
                     with cols[j]:
-                        st.markdown(card_html, unsafe_allow_html=True)
+                        st.markdown(clean_html(card_html), unsafe_allow_html=True)
                         if st.button("📊 Comparar Precios", key=f"btn_comp_{p['id']}", use_container_width=True):
                             st.session_state['selected_perfume'] = p['id']
                             st.switch_page("pages/compararprecios.py")

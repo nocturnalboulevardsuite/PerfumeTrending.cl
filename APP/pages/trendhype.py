@@ -32,6 +32,10 @@ def get_image_src(img_path_or_url):
             pass
     return img_path_or_url
 
+def clean_html(html_str: str) -> str:
+    """Limpia espacios iniciales por línea para evitar que Streamlit Markdown interprete HTML como código."""
+    return "\n".join(line.strip() for line in html_str.splitlines())
+
 # 1. CONFIGURACIÓN DE PÁGINA Y ESTADO
 st.set_page_config(page_title="PerfumeTrending", layout="wide", initial_sidebar_state="collapsed")
 
@@ -867,7 +871,7 @@ for row in range(0, len(hype_data), cols_per_row):
                     <div class="price-text">Precio prom. mercado: <b>{data['price']}</b></div>
                 </div>
                 """
-                st.markdown(html_card, unsafe_allow_html=True)
+                st.markdown(clean_html(html_card), unsafe_allow_html=True)
                 if st.button("Comparar Precios", key=f"btn_compare_{idx}", use_container_width=True):
                     st.session_state['selected_perfume'] = data['perfume_id']
                     st.switch_page("pages/compararprecios.py")
