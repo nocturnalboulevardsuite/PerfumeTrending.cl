@@ -45,6 +45,8 @@ logger = logging.getLogger("CrawlerAutonomo")
 
 # Rutas del sistema
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if BASE_DIR not in sys.path:
+    sys.path.insert(0, BASE_DIR)
 REPORTES_DIR = os.path.join(BASE_DIR, "data", "reportes")
 REPORTE_DESCUBRIMIENTO_PATH = os.path.join(REPORTES_DIR, "ultimo_descubrimiento.json")
 

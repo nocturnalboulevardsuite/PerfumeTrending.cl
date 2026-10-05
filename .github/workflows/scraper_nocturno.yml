@@ -1,0 +1,47 @@
+name: Actualizacion Nocturna de Precios y Stock
+
+on:
+  schedule:
+    # Se ejecuta todos los dias a las 04:00 AM hora de Chile (07:00 UTC)
+    - cron: '0 7 * * *'
+  workflow_dispatch: # Permite ejecutar manualmente en cualquier momento desde GitHub
+
+permissions:
+  contents: write
+
+jobs:
+  actualizar-precios:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar codigo del repositorio
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configurar entorno Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Instalar dependencias
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Ejecutar Scraper Periodico de Precios y Stock
+        run: |
+          python APP/backend/scraper_periodico.py
+
+      - name: Sincronizar cambios en GitHub si hubo variacion de precios
+        run: |
+          git config --global user.name "PerfumeTrending Bot"
+          git config --global user.email "bot@perfumetrending.cl"
+          git add APP/data/
+          if git diff --staged --quiet; then
+            echo "No se registraron cambios de precio en esta ejecucion."
+          else
+            git commit -m "Actualizacion automatica de precios y stock"
+            git push origin main
+            echo "Nuevos precios sincronizados exitosamente con produccion."
+          fi
