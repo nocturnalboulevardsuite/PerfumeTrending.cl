@@ -567,12 +567,14 @@ else:
             url_base=item.get('url_base', '')
         )
         badge_tienda = item.get('badge', 'Tienda Verificada')
+        badge_vol = f"<span class='store-badge' style='background: {btn_bg}; border: 1px solid {btn_border}; font-weight: 600;'>{vol_ml}ml</span>" if vol_ml else ""
         
         html_card = f"""
         <div class="{card_class}">
             <div>
                 <span class="store-name">{item['tienda_nombre']}</span>
                 <span class="store-badge">{badge_tienda}</span>
+                {badge_vol}
                 {best_badge}
             </div>
             <div style="display: flex; align-items: center; gap: 16px;">

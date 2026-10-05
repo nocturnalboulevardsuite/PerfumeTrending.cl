@@ -207,15 +207,20 @@ def poblar_datos_semilla(cursor: sqlite3.Cursor) -> None:
             precio_act = enlace.get("precio_actual", p["precio_referencia"])
             precio_norm = enlace.get("precio_normal", int(precio_act * 1.15))
             url_prod = enlace.get("url_producto", "")
+            vol_ml = enlace.get("volumen_ml", p.get("volumen_ml", 100))
 
             for dia in dias_atras:
                 fecha = hoy - timedelta(days=dia, hours=dia, minutes=dia * 4)
-                fluc = 1.0 + (dia * 0.004) - (0.015 if dia == 0 else 0)
-                p_actual_hist = int(round((precio_act * fluc) / 1000) * 1000)
-                p_norm_hist = int(round((precio_norm * 1.05) / 1000) * 1000)
+                if dia == 0:
+                    p_actual_hist = precio_act
+                    p_norm_hist = precio_norm
+                else:
+                    fluc = 1.0 + (dia * 0.004)
+                    p_actual_hist = int(round((precio_act * fluc) / 1000) * 1000)
+                    p_norm_hist = int(round((precio_norm * 1.05) / 1000) * 1000)
 
                 registros_precios.append((
-                    p_id, t_id, p_actual_hist, p_norm_hist, 1, 100, url_prod, fecha.strftime("%Y-%m-%d %H:%M:%S")
+                    p_id, t_id, p_actual_hist, p_norm_hist, 1, vol_ml, url_prod, fecha.strftime("%Y-%m-%d %H:%M:%S")
                 ))
 
     cursor.executemany("""

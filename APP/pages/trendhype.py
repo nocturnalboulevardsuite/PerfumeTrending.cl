@@ -8,6 +8,13 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__fil
 if BASE_DIR not in sys.path:
     sys.path.append(BASE_DIR)
 
+from backend.database import obtener_catalogo
+
+@st.cache_data(ttl=300, show_spinner=False)
+def get_cached_catalogo_map():
+    cat = obtener_catalogo()
+    return {p['id']: p for p in cat}
+
 def get_image_src(img_path_or_url):
     if not img_path_or_url:
         return "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=500&q=80"
@@ -944,6 +951,13 @@ for row in range(0, len(hype_data), cols_per_row):
         idx = row + i
         if idx < len(hype_data):
             data = hype_data[idx]
+            cat_map = get_cached_catalogo_map()
+            perf_info = cat_map.get(data['perfume_id'])
+            if perf_info:
+                p_disp = perf_info.get('mejor_precio') or perf_info.get('precio_referencia')
+                price_disp = f"${p_disp:,.0f} CLP".replace(",", ".")
+            else:
+                price_disp = data['price']
             with cols[i]:
                 html_card = f"""
                 <div class="hype-card">
@@ -968,7 +982,7 @@ for row in range(0, len(hype_data), cols_per_row):
                         <div class="ai-icon">AI</div>
                         <div>"{data['ai_text']}"</div>
                     </div>
-                    <div class="price-text">Precio prom. mercado: <b>{data['price']}</b></div>
+                    <div class="price-text">Mejor precio hoy: <b>{price_disp}</b></div>
                 </div>
                 """
                 st.markdown(clean_html(html_card), unsafe_allow_html=True)
