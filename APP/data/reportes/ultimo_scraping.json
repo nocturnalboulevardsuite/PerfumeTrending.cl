@@ -1,19 +1,19 @@
 {
-  "actualizaciones": 42,
-  "fecha": "2026-10-05 18:47:18",
-  "duracion_segundos": 7.6,
+  "actualizaciones": 41,
+  "fecha": "2026-10-06 13:52:17",
+  "duracion_segundos": 9.64,
   "metadata": {
     "version_etl": "2.0.0",
     "sistema": "PerfumeTrending ETL Engine",
-    "fecha_ejecucion": "2026-10-05 18:47:18",
-    "duracion_segundos": 7.6,
+    "fecha_ejecucion": "2026-10-06 13:52:17",
+    "duracion_segundos": 9.64,
     "estado": "EXITOSO"
   },
   "metricas": {
-    "total_perfumes_catalogo": 41,
+    "total_perfumes_catalogo": 12,
     "total_tiendas_registradas": 7,
-    "precios_actualizados": 42,
-    "exclusiones_marca": 245,
+    "precios_actualizados": 41,
+    "exclusiones_marca": 43,
     "errores_totales": 0
   },
   "estadisticas_tiendas": {
@@ -38,8 +38,8 @@
       "trust_score": 92
     },
     "Elite Perfumes": {
-      "consultas": 8,
-      "exitos": 8,
+      "consultas": 7,
+      "exitos": 7,
       "trust_score": 89
     },
     "DBS Beauty Store": {
@@ -57,37 +57,37 @@
     {
       "perfume": "Bleu de Chanel",
       "tienda": "Falabella",
-      "precio": 187000,
+      "precio": 181000,
       "origen": "Retail Oficial Snapshot"
     },
     {
       "perfume": "Bleu de Chanel",
       "tienda": "Paris",
-      "precio": 185000,
+      "precio": 184000,
       "origen": "Retail Oficial Snapshot"
     },
     {
       "perfume": "Bleu de Chanel",
       "tienda": "Ripley",
-      "precio": 180000,
+      "precio": 184000,
       "origen": "Retail Oficial Snapshot"
     },
     {
       "perfume": "YSL Libre",
       "tienda": "Falabella",
-      "precio": 89000,
+      "precio": 91000,
       "origen": "Retail Oficial Snapshot"
     },
     {
       "perfume": "YSL Libre",
       "tienda": "Paris",
-      "precio": 149000,
+      "precio": 151000,
       "origen": "Retail Oficial Snapshot"
     },
     {
       "perfume": "YSL Libre",
       "tienda": "Ripley",
-      "precio": 150000,
+      "precio": 149000,
       "origen": "Retail Oficial Snapshot"
     },
     {
@@ -105,13 +105,13 @@
     {
       "perfume": "Dior Sauvage",
       "tienda": "Falabella",
-      "precio": 143000,
+      "precio": 146000,
       "origen": "Retail Oficial Snapshot"
     },
     {
       "perfume": "Dior Sauvage",
       "tienda": "Paris",
-      "precio": 166000,
+      "precio": 146000,
       "origen": "Retail Oficial Snapshot"
     }
   ],
