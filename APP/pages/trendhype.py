@@ -782,7 +782,7 @@ with col_logo:
 
 with col_login:
     if st.button("Ingresar", key="login_btn"):
-        st.toast("👤 Próximamente: Podrás crear tu cuenta, guardar alertas de precio y armar tu lista de deseos.", icon="✨")
+        st.toast("Próximamente: Podrás crear tu cuenta, guardar alertas de precio y armar tu lista de deseos.")
 
 with col_theme:
     st.button(" ", key="theme_toggle", on_click=toggle_theme)
@@ -793,7 +793,7 @@ st.markdown("<div style='margin-top: 14px;'></div>", unsafe_allow_html=True)
 col_chip_home, col_chip1, col_chip2, col_chip3, col_chip_space = st.columns([1.6, 1.5, 2.0, 1.7, 2.2], vertical_alignment="center")
 
 with col_chip_home:
-    st.page_link("app.py", label="Inicio / Catálogo", icon="🏠", use_container_width=True)
+    st.page_link("app.py", label="Inicio / Catálogo", use_container_width=True)
 with col_chip1:
     st.page_link("pages/trendhype.py", label="Trend Del Hype", use_container_width=True)
 with col_chip2:
@@ -812,7 +812,7 @@ with col_header_title:
         <div class="info-icon-container">
             <div class="info-btn-badge">i</div>
             <div class="info-tooltip-box">
-                <div style="font-weight: 800; color: #d83737; margin-bottom: 6px; font-size: 0.92rem;">📡 ¿Qué es el Radar del Hype?</div>
+                <div style="font-weight: 800; color: #d83737; margin-bottom: 6px; font-size: 0.92rem;">¿Qué es el Radar del Hype?</div>
                 Es nuestro sistema inteligente que detecta qué fragancias se están volviendo virales en tiempo real analizando menciones y reproducciones en <b>YouTube</b>. Una herramienta clave para <b>revendedores, influencers y entusiastas</b> que buscan adelantarse a las tendencias del mercado.
             </div>
         </div>
@@ -833,7 +833,7 @@ with col_title:
 
 with col_fecha:
     opciones_fecha = ["Este Mes", "Hoy / Día", "Esta Semana", "Este Año", "Año Pasado"]
-    with st.popover(f"📅 {st.session_state.selected_month}", use_container_width=False):
+    with st.popover(f"{st.session_state.selected_month}", use_container_width=False):
         for opt in opciones_fecha:
             if st.button(opt, key=f"btn_m_{opt}", use_container_width=True):
                 st.session_state.selected_month = opt
@@ -974,8 +974,7 @@ for row in range(0, len(hype_data), cols_per_row):
                     <div class="stats-row">
                         <div class="stats-text">{data['stats']}</div>
                         <div class="chile-badge">
-                            <span style="font-size:12px;">👤</span>
-                            <div>Disponible<br>en Chile 🇨🇱</div>
+                            <div>Disponible<br>en Chile</div>
                         </div>
                     </div>
                     <div class="ai-box">

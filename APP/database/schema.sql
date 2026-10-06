@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS tiendas (
     url_base TEXT NOT NULL,
     trust_score INTEGER DEFAULT 85,
     badge TEXT DEFAULT 'Verificado',
-    logo_emoji TEXT DEFAULT '🏬',
+    logo_emoji TEXT DEFAULT '',
     rut TEXT DEFAULT '',
     tipo_tienda TEXT DEFAULT 'Comercio Especializado',
     ssl_seguro BOOLEAN DEFAULT 1,

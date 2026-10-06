@@ -150,7 +150,7 @@ def poblar_datos_semilla(cursor: sqlite3.Cursor) -> None:
     tiendas_tuples = [
         (
             t["nombre"], t["url_base"], t.get("trust_score", 85), t.get("badge", "Verificado"),
-            t.get("logo_emoji", "🏬"), t.get("rut", ""), t.get("tipo_tienda", "Comercio Especializado"),
+            t.get("logo_emoji", ""), t.get("rut", ""), t.get("tipo_tienda", "Comercio Especializado"),
             int(t.get("ssl_seguro", 1)), t.get("anios_antiguedad", 5), int(t.get("sello_ccs", 0)),
             t.get("reclamos_sernac", "Bajo"), t.get("politica_devolucion", "30 días"),
             t.get("direccion_fiscal", "Santiago, Chile"), t.get("puntos_seguridad", 25),
@@ -435,7 +435,7 @@ def guardar_o_actualizar_perfume_scraped(
             base_url = url_producto.split('/')[0] + "//" + url_producto.split('/')[2] if '://' in url_producto else 'https://'
             cursor.execute("""
             INSERT INTO tiendas (nombre, url_base, trust_score, badge, logo_emoji)
-            VALUES (?, ?, 90, 'Tienda Verificada 🇨🇱', '🏬');
+            VALUES (?, ?, 90, 'Tienda Verificada', '');
             """, (tienda_nombre, base_url))
             tienda_id = cursor.lastrowid
 

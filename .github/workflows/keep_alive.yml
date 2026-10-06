@@ -16,7 +16,7 @@ jobs:
           HTTP_RESPONSE=$(curl -s -L -o /dev/null -w "%{http_code}" https://perfumetrending-cl.streamlit.app/)
           echo "HTTP Status Code recibido: $HTTP_RESPONSE"
           if [ "$HTTP_RESPONSE" -ge 200 ] && [ "$HTTP_RESPONSE" -lt 500 ]; then
-            echo "✅ Aplicación activa y despierta en producción."
+            echo "[SUCCESS] Aplicacion activa y en ejecucion en produccion."
           else
-            echo "⚠️ Alerta: Código HTTP $HTTP_RESPONSE recibido."
+            echo "[WARNING] Alerta: Codigo HTTP $HTTP_RESPONSE recibido."
           fi

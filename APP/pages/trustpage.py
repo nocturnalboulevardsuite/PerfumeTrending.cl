@@ -11,7 +11,6 @@ from backend.database import obtener_tiendas
 # 1. CONFIGURACIÓN DE PÁGINA
 st.set_page_config(
     page_title="PerfumeTrending — Verificación de Confianza",
-    page_icon="🧴",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
@@ -454,7 +453,7 @@ st.markdown("<div style='margin-top: 14px;'></div>", unsafe_allow_html=True)
 col_chip_home, col_chip1, col_chip2, col_chip3, col_chip_space = st.columns([1.6, 1.5, 2.0, 1.7, 2.2], vertical_alignment="center")
 
 with col_chip_home:
-    st.page_link("app.py", label="Inicio / Catálogo", icon="🏠", use_container_width=True)
+    st.page_link("app.py", label="Inicio / Catálogo", use_container_width=True)
 with col_chip1:
     st.page_link("pages/trendhype.py", label="Trend Del Hype", use_container_width=True)
 with col_chip2:

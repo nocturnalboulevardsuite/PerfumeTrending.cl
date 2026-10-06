@@ -83,13 +83,15 @@ def navigate_to(page, perfume_data=None):
 is_dark = st.session_state['theme'] == 'dark'
 
 # Colores dinámicos adaptables por tema
-app_bg = "#0c0e12" if is_dark else "#f9f9fb"
+app_bg = "#0c0e12" if is_dark else "#f8f9fa"
 app_bg_css = f"background-color: {app_bg} !important;"
 
+card_bg = "#14171d" if is_dark else "#ffffff"
+border_color = "#2a2e39" if is_dark else "#e4e4e7"
 text_color = "#f0f0f0" if is_dark else "#18181b"
 subtext_color = "#888890" if is_dark else "#666670"
 
-btn_bg = "#161920" if is_dark else "#ffffff"
+btn_bg = "#181c24" if is_dark else "#ffffff"
 btn_text = "#ffffff" if is_dark else "#18181b"
 btn_border = "#2a2e39" if is_dark else "#d1d5db"
 
@@ -172,9 +174,11 @@ js_color_script = f"""
     topWin.updateSoundButtonUI = function() {{
         const btn = doc.getElementById('sound-toggle-btn');
         if (btn) {{
-            btn.innerHTML = topWin.soundMuted ? '🔇' : '🔊';
+            const speakerSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>';
+            const muteSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>';
+            btn.innerHTML = topWin.soundMuted ? muteSvg : speakerSvg;
             btn.title = topWin.soundMuted ? 'Activar sonido de burbujas' : 'Desactivar sonido de burbujas';
-            btn.style.opacity = topWin.soundMuted ? '0.5' : '1';
+            btn.style.opacity = topWin.soundMuted ? '0.45' : '1';
         }}
     }};
 
@@ -234,19 +238,48 @@ st.markdown(f"""
 
     /* EFECTO DE BOTONES Y ENLACES PAGE_LINK */
     div.stButton > button,
-    div.stDownloadButton > button,
-    .st-key-btn_photo_search button,
-    .st-key-login_btn button,
-    a[data-testid="stPageLink-NavLink"] {{
+    div.stDownloadButton > button {
+        background-color: {btn_bg} !important;
+        border: 1px solid {btn_border} !important;
+        color: {btn_text} !important;
+        border-radius: 8px !important;
         transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease !important;
         text-shadow: none !important;
-        box-shadow: none !important;
+        box-shadow: { "none" if is_dark else "0 1px 3px rgba(0,0,0,0.05)" } !important;
         outline: none !important;
-    }}
+    }
 
-    div.stButton > button p {{
+    div.stButton > button p,
+    div.stDownloadButton > button p {
         color: {btn_text} !important;
-    }}
+        font-weight: 600 !important;
+    }
+
+    /* BOTONES DE COMPARAR PRECIOS EN CATÁLOGO - ALTO IMPACTO Y LEGIBILIDAD DÍA/NOCHE */
+    div[data-testid="stElementContainer"] div.stButton button[key*="btn_comp_"],
+    div.stButton > button[key*="btn_comp_"] {
+        background-color: #d83737 !important;
+        color: #ffffff !important;
+        border: 1px solid #d83737 !important;
+        border-radius: 8px !important;
+        font-weight: 700 !important;
+        box-shadow: 0 3px 10px rgba(216, 55, 55, 0.25) !important;
+    }
+
+    div[data-testid="stElementContainer"] div.stButton button[key*="btn_comp_"] p,
+    div.stButton > button[key*="btn_comp_"] p {
+        color: #ffffff !important;
+        font-weight: 700 !important;
+    }
+
+    div[data-testid="stElementContainer"] div.stButton button[key*="btn_comp_"]:hover,
+    div.stButton > button[key*="btn_comp_"]:hover {
+        background-color: #be2e2e !important;
+        border-color: #be2e2e !important;
+        color: #ffffff !important;
+        transform: scale(1.03) !important;
+        box-shadow: 0 5px 14px rgba(216, 55, 55, 0.35) !important;
+    }
 
     div.stButton > button:hover,
     .st-key-btn_photo_search button:hover,
@@ -573,29 +606,32 @@ st.markdown(f"""
 
     /* TARJETAS CATÁLOGO */
     .catalog-card {{
-        background-color: transparent;
-        border: 1px solid {btn_border};
-        border-radius: 8px;
+        background-color: {card_bg};
+        border: 1px solid {border_color};
+        border-radius: 10px;
         overflow: hidden;
         position: relative;
-        margin-bottom: 10px;
-        transition: border-color 0.2s ease, transform 0.22s ease;
+        margin-bottom: 12px;
+        box-shadow: { "0 4px 14px rgba(0,0,0,0.25)" if is_dark else "0 2px 10px rgba(0,0,0,0.04)" };
+        transition: border-color 0.2s ease, transform 0.22s ease, box-shadow 0.22s ease;
     }}
     .catalog-card:hover {{
-        border-color: #7a6a5d;
-        transform: translateY(-2px);
+        border-color: { "#7a6a5d" if is_dark else "#b5a494" };
+        transform: translateY(-3px);
+        box-shadow: { "0 8px 22px rgba(0,0,0,0.35)" if is_dark else "0 6px 18px rgba(0,0,0,0.08)" };
     }}
     .square-img-box {{
         position: relative;
         width: 100%;
         aspect-ratio: 1 / 1;
-        background-color: #ffffff;
+        background-color: { "#101217" if is_dark else "#fdfdfd" };
         display: flex;
         align-items: center;
         justify-content: center;
         overflow: hidden;
         padding: 14px;
         box-sizing: border-box;
+        border-bottom: 1px solid {border_color};
     }}
     .square-img-box img {{
         max-width: 100%;
@@ -605,8 +641,8 @@ st.markdown(f"""
     .card-hover-overlay {{
         position: absolute;
         top: 0; left: 0; right: 0; bottom: 0;
-        background: rgba(12, 14, 18, 0.94);
-        color: #ffffff;
+        background: { "rgba(12, 14, 18, 0.95)" if is_dark else "rgba(255, 255, 255, 0.96)" };
+        color: { "#ffffff" if is_dark else "#18181b" };
         padding: 18px;
         display: flex;
         flex-direction: column;
@@ -619,15 +655,36 @@ st.markdown(f"""
     .overlay-title {{
         font-size: 1.05rem;
         font-weight: 600;
-        color: #d4c2a5;
+        color: { "#d4c2a5" if is_dark else "#8c7b6d" };
         margin-bottom: 8px;
-        border-bottom: 1px solid rgba(255,255,255,0.1);
+        border-bottom: 1px solid { "rgba(255,255,255,0.12)" if is_dark else "rgba(0,0,0,0.1)" };
         padding-bottom: 6px;
     }}
-    .overlay-info {{ font-size: 0.85rem; font-weight: 400; line-height: 1.5; color: #e0e0e0; margin-bottom: 6px; }}
-    .card-footer-info {{ padding: 14px 12px; text-align: center; background-color: {btn_bg}; }}
-    .card-perfume-name {{ font-size: 0.95rem; font-weight: 600; color: {text_color}; margin-bottom: 4px; }}
-    .card-perfume-brand {{ font-size: 0.8rem; font-weight: 400; color: {subtext_color}; text-transform: uppercase; letter-spacing: 0.5px; }}
+    .overlay-info {{ 
+        font-size: 0.85rem; 
+        font-weight: 400; 
+        line-height: 1.5; 
+        color: { "#e0e0e0" if is_dark else "#374151" }; 
+        margin-bottom: 6px; 
+    }}
+    .card-footer-info {{ 
+        padding: 14px 12px; 
+        text-align: center; 
+        background-color: {card_bg}; 
+    }}
+    .card-perfume-name {{ 
+        font-size: 0.95rem; 
+        font-weight: 600; 
+        color: {text_color}; 
+        margin-bottom: 4px; 
+    }}
+    .card-perfume-brand {{ 
+        font-size: 0.8rem; 
+        font-weight: 400; 
+        color: {subtext_color}; 
+        text-transform: uppercase; 
+        letter-spacing: 0.5px; 
+    }}
 
     /* TARJETAS ESENCIAS */
     .essence-card {{ 
@@ -707,7 +764,7 @@ with col_actions:
     btn_col1, btn_col2 = st.columns([1.4, 1], vertical_alignment="center")
     with btn_col1:
         if st.button("Ingresar", key="login_btn", use_container_width=True):
-            st.toast("👤 Próximamente: Podrás crear tu cuenta, guardar alertas de precio y armar tu lista de deseos.", icon="✨")
+            st.toast("Próximamente: Podrás crear tu cuenta, guardar alertas de precio y armar tu lista de deseos.")
     with btn_col2:
         st.button(" ", key="theme_toggle", on_click=toggle_theme)
 
@@ -800,7 +857,7 @@ if st.session_state['current_page'] == 'home':
                     p = catalog_perfumes[i + j]
                     
                     # Determinar país y notas para el hover overlay
-                    pais_origen = "Emiratos Árabes 🇦🇪" if p.get('es_arabe') else "Francia 🇫🇷" if p.get('marca') in ['Chanel', 'Dior', 'Yves Saint Laurent', 'Jean Paul Gaultier', 'Kilian', 'Maison Francis Kurkdjian'] else "Italia 🇮🇹" if p.get('marca') in ['Giorgio Armani', 'Versace'] else "Estados Unidos 🇺🇸" if p.get('marca') in ['Tom Ford'] else "Internacional"
+                    pais_origen = "Emiratos Árabes" if p.get('es_arabe') else "Francia" if p.get('marca') in ['Chanel', 'Dior', 'Yves Saint Laurent', 'Jean Paul Gaultier', 'Kilian', 'Maison Francis Kurkdjian'] else "Italia" if p.get('marca') in ['Giorgio Armani', 'Versace'] else "Estados Unidos" if p.get('marca') in ['Tom Ford'] else "Internacional"
                     notas_txt = p.get('notas', 'Notas aromáticas selectas')
                     tipo_txt = p.get('tipo', 'Eau de Parfum')
                     img_src = get_image_src(p.get('imagen_url'))
@@ -828,7 +885,7 @@ if st.session_state['current_page'] == 'home':
                     """
                     with cols[j]:
                         st.markdown(clean_html(card_html), unsafe_allow_html=True)
-                        if st.button("📊 Comparar Precios", key=f"btn_comp_{p['id']}", use_container_width=True):
+                        if st.button("Comparar Precios", key=f"btn_comp_{p['id']}", use_container_width=True):
                             st.session_state['selected_perfume'] = p['id']
                             st.switch_page("pages/compararprecios.py")
 
@@ -842,7 +899,7 @@ elif st.session_state['current_page'] == 'esencias_page':
         st.markdown(f"""
         <div style="text-align: right;">
             <button id="sound-toggle-btn" class="sound-mute-btn" onclick="if(window.toggleSoundMute){{window.toggleSoundMute();}}else if(window.parent.toggleSoundMute){{window.parent.toggleSoundMute();}}" title="Activar / Desactivar sonido de burbujas">
-                🔊
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
             </button>
         </div>
         """, unsafe_allow_html=True)

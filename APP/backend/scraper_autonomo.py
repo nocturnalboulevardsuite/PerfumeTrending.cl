@@ -173,7 +173,7 @@ def ejecutar_descubrimiento_autonomo(
             if t_nombre not in tiendas_map:
                 cursor.execute("""
                 INSERT INTO tiendas (nombre, url_base, trust_score, badge, logo_emoji)
-                VALUES (?, ?, ?, 'Comercio Auditado 🇨🇱', '🏬');
+                VALUES (?, ?, ?, 'Comercio Auditado', '');
                 """, (t_nombre, t_url_base, tienda_cfg["trust_score"]))
                 t_id = cursor.lastrowid
                 tiendas_map[t_nombre] = t_id

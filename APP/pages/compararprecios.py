@@ -175,13 +175,28 @@ st.markdown(f"""
     }}
 
     /* EFECTO DE BOTONES Y ENLACES PAGE_LINK */
-    div.stButton > button,
-    a[data-testid="stPageLink-NavLink"] {{
+    div.stButton > button {
+        background-color: {btn_bg} !important;
+        border: 1px solid {btn_border} !important;
+        color: {btn_text} !important;
+        border-radius: 8px !important;
+        transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease !important;
+        text-shadow: none !important;
+        box-shadow: { "none" if is_dark else "0 1px 3px rgba(0,0,0,0.05)" } !important;
+        outline: none !important;
+    }
+
+    div.stButton > button p {
+        color: {btn_text} !important;
+        font-weight: 600 !important;
+    }
+
+    a[data-testid="stPageLink-NavLink"] {
         transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease !important;
         text-shadow: none !important;
         box-shadow: none !important;
         outline: none !important;
-    }}
+    }
 
     div.stButton > button:hover,
     a[data-testid="stPageLink-NavLink"]:hover {{
@@ -361,7 +376,8 @@ st.markdown(f"""
         width: 130px;
         height: 130px;
         object-fit: contain;
-        background: #ffffff;
+        background: { "#14171d" if is_dark else "#ffffff" };
+        border: 1px solid {btn_border};
         border-radius: 8px;
         padding: 8px;
     }}
@@ -383,8 +399,9 @@ st.markdown(f"""
         border-color: #d4c2a5;
     }}
     .best-deal {{
-        border: 2px solid #2e7d32 !important;
-        background-color: { "#122415" if is_dark else "#eef7f0" } !important;
+        border: 1px solid { "rgba(74, 222, 128, 0.45)" if is_dark else "rgba(46, 125, 50, 0.4)" } !important;
+        background-color: { "rgba(34, 197, 94, 0.08)" if is_dark else "rgba(46, 125, 50, 0.06)" } !important;
+        box-shadow: { "0 0 16px rgba(34, 197, 94, 0.08)" if is_dark else "0 2px 8px rgba(46, 125, 50, 0.06)" };
     }}
     .store-name {{
         font-size: 1.1rem;
@@ -439,7 +456,7 @@ with col_actions:
     btn_col1, btn_col2 = st.columns([1.4, 1], vertical_alignment="center")
     with btn_col1:
         if st.button("Ingresar", key="login_btn", use_container_width=True):
-            st.toast("👤 Próximamente: Podrás crear tu cuenta, guardar alertas de precio y armar tu lista de deseos.", icon="✨")
+            st.toast("Próximamente: Podrás crear tu cuenta, guardar alertas de precio y armar tu lista de deseos.")
     with btn_col2:
         st.button(" ", key="theme_toggle", on_click=toggle_theme)
 
@@ -449,7 +466,7 @@ st.markdown("<div style='margin-top: 14px;'></div>", unsafe_allow_html=True)
 col_chip_home, col_chip1, col_chip2, col_chip3, col_chip_space = st.columns([1.6, 1.5, 2.0, 1.7, 2.2], vertical_alignment="center")
 
 with col_chip_home:
-    st.page_link("app.py", label="Inicio / Catálogo", icon="🏠", use_container_width=True)
+    st.page_link("app.py", label="Inicio / Catálogo", use_container_width=True)
 with col_chip1:
     st.page_link("pages/trendhype.py", label="Trend Del Hype", use_container_width=True)
 with col_chip2:
@@ -547,7 +564,7 @@ else:
         is_best_deal = (p_act == min_precio and p_act > 0)
         
         card_class = "price-card best-deal" if is_best_deal else "price-card"
-        best_badge = "<span style='color: #2e7d32; font-weight: 700; margin-left: 8px; font-size: 0.8rem;'>🏆 MEJOR PRECIO</span>" if is_best_deal else ""
+        best_badge = f"<span style='background: {'rgba(34, 197, 94, 0.15)' if is_dark else '#e8f5e9'}; color: {'#4ade80' if is_dark else '#2e7d32'}; border: 1px solid {'rgba(74, 222, 128, 0.35)' if is_dark else 'rgba(46, 125, 50, 0.3)'}; font-weight: 700; margin-left: 8px; font-size: 0.72rem; padding: 2px 8px; border-radius: 4px; letter-spacing: 0.5px;'>MEJOR PRECIO</span>" if is_best_deal else ""
         
         precio_actual_str = f"${p_act:,.0f}".replace(",", ".")
         precio_ant_str = f"${p_norm:,.0f}".replace(",", ".") if p_norm and p_norm > p_act else ""
@@ -591,7 +608,7 @@ else:
 
 # 6. HISTORIAL Y EVOLUCIÓN DE PRECIOS
 st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
-with st.expander("📈 Ver Evolución Histórica de Precios en Tiendas Chilenas"):
+with st.expander("Ver Evolución Histórica de Precios en Tiendas Chilenas"):
     historico = get_cached_historico(selected_id)
     if historico:
         df_hist = pd.DataFrame(historico)
