@@ -51,9 +51,11 @@ bottle_svg = (
     "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 58'><rect x='18' y='2' width='14' height='7' rx='2' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><rect x='21' y='9' width='8' height='5' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='19' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='5' fill='none' stroke='%23111111' stroke-width='2'/><line x1='25' y1='23' x2='25' y2='26' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='25' y1='42' x2='25' y2='45' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='14' y1='34' x2='17' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='33' y1='34' x2='36' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='17' y1='26' x2='19' y2='28' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='31' y1='40' x2='33' y2='42' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='17' y1='42' x2='19' y2='40' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='31' y1='28' x2='33' y2='26' stroke='%23111111' stroke-width='2' stroke-linecap='round'/></svg>"
 )
 
-trend_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff3838' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'><path d='M2 19h20M2 22h20M5 19v3M9 19v3M13 19v3M17 19v3M21 19v3' stroke='%23ff3838'/><path d='M4 11h9v7H4z' fill='%23ff3838'/><path d='M13 7h6v11h-6z' fill='%23ff3838'/><rect x='15' y='9' width='3' height='3' fill='%23ffffff'/><path d='M6 7h2v4H6z' fill='%23ff3838'/><path d='M19 14l3 4h-3z' fill='%23ff3838'/><circle cx='6.5' cy='18.5' r='1.5' fill='%23ff3838' stroke='%23ffffff' stroke-width='0.5'/><circle cx='10.5' cy='18.5' r='1.5' fill='%23ff3838' stroke='%23ffffff' stroke-width='0.5'/><circle cx='16' cy='18.5' r='1.5' fill='%23ff3838' stroke='%23ffffff' stroke-width='0.5'/></svg>"
-shield_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff3838' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/><path d='m9 12 2 2 4-4'/></svg>"
-tag_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff3838' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12 2H2v10l11.29 11.29a1 1 0 0 0 1.41 0l7.58-7.58a1 1 0 0 0 0-1.41L12 2z'/><circle cx='7.5' cy='7.5' r='1.5' fill='%23ff3838'/></svg>"
+# ICONOS VECTORIALES DE ALTA PRECISIÓN (ESTILO LINEAR / STRIPE / LUCIDE)
+trend_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d83737' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='23 6 13.5 15.5 8.5 10.5 1 18'/><polyline points='17 6 23 6 23 12'/></svg>"
+shield_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d83737' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/><polyline points='9 12 11 14 15 10'/></svg>"
+tag_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d83737' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z'/><circle cx='7' cy='7' r='1.5' fill='%23d83737'/></svg>"
+home_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d83737' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z'/><polyline points='9 22 9 12 15 12 15 22'/></svg>"
 
 # 4. ESTILOS CSS CON TIPOGRAFÍA ELEGANTE Y EDITORIAL
 css_styles = f"""
@@ -90,12 +92,14 @@ a[data-testid="stPageLink-NavLink"] span {{
     margin: 0 !important;
 }}
 
-/* DIBUJOS ILUSTRADOS EN ROJO PARA LOS BOTONES */
+/* DIBUJOS ILUSTRADOS VECTORIALES EN ROJO PARA LOS BOTONES */
 a[data-testid="stPageLink-NavLink"][href*="trendhype"],
 a[data-testid="stPageLink-NavLink"][href*="trustpage"],
-a[data-testid="stPageLink-NavLink"][href*="compararprecios"] {{
+a[data-testid="stPageLink-NavLink"][href*="compararprecios"],
+a[data-testid="stPageLink-NavLink"][href$="app.py"],
+a[data-testid="stPageLink-NavLink"][href="/"] {{
     position: relative !important;
-    padding-left: 2.8rem !important;
+    padding-left: 2.7rem !important;
     padding-right: 1.1rem !important;
     overflow: hidden !important;
 }}
@@ -106,8 +110,8 @@ a[data-testid="stPageLink-NavLink"][href*="trendhype"]::before {{
     left: 14px !important;
     top: 50% !important;
     transform: translateY(-50%) !important;
-    width: 20px !important;
-    height: 20px !important;
+    width: 17px !important;
+    height: 17px !important;
     background-image: url("{trend_red_svg}") !important;
     background-repeat: no-repeat !important;
     background-size: contain !important;
@@ -121,12 +125,13 @@ a[data-testid="stPageLink-NavLink"][href*="trustpage"]::before {{
     left: 14px !important;
     top: 50% !important;
     transform: translateY(-50%) !important;
-    width: 19px !important;
-    height: 19px !important;
+    width: 17px !important;
+    height: 17px !important;
     background-image: url("{shield_red_svg}") !important;
     background-repeat: no-repeat !important;
     background-size: contain !important;
     background-position: center !important;
+    z-index: 1 !important;
 }}
 
 a[data-testid="stPageLink-NavLink"][href*="compararprecios"]::before {{
@@ -135,12 +140,29 @@ a[data-testid="stPageLink-NavLink"][href*="compararprecios"]::before {{
     left: 14px !important;
     top: 50% !important;
     transform: translateY(-50%) !important;
-    width: 19px !important;
-    height: 19px !important;
+    width: 17px !important;
+    height: 17px !important;
     background-image: url("{tag_red_svg}") !important;
     background-repeat: no-repeat !important;
     background-size: contain !important;
     background-position: center !important;
+    z-index: 1 !important;
+}}
+
+a[data-testid="stPageLink-NavLink"][href$="app.py"]::before,
+a[data-testid="stPageLink-NavLink"][href="/"]::before {{
+    content: '' !important;
+    position: absolute !important;
+    left: 14px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    width: 17px !important;
+    height: 17px !important;
+    background-image: url("{home_red_svg}") !important;
+    background-repeat: no-repeat !important;
+    background-size: contain !important;
+    background-position: center !important;
+    z-index: 1 !important;
 }}
 
 html, body, [class*="css"], .stApp {{
