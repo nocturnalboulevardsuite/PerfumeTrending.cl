@@ -1,12 +1,12 @@
 {
   "actualizaciones": 41,
-  "fecha": "2026-10-06 13:52:17",
-  "duracion_segundos": 9.64,
+  "fecha": "2026-10-07 14:09:58",
+  "duracion_segundos": 6.12,
   "metadata": {
     "version_etl": "2.0.0",
     "sistema": "PerfumeTrending ETL Engine",
-    "fecha_ejecucion": "2026-10-06 13:52:17",
-    "duracion_segundos": 9.64,
+    "fecha_ejecucion": "2026-10-07 14:09:58",
+    "duracion_segundos": 6.12,
     "estado": "EXITOSO"
   },
   "metricas": {
@@ -57,19 +57,19 @@
     {
       "perfume": "Bleu de Chanel",
       "tienda": "Falabella",
-      "precio": 181000,
+      "precio": 179000,
       "origen": "Retail Oficial Snapshot"
     },
     {
       "perfume": "Bleu de Chanel",
       "tienda": "Paris",
-      "precio": 184000,
+      "precio": 180000,
       "origen": "Retail Oficial Snapshot"
     },
     {
       "perfume": "Bleu de Chanel",
       "tienda": "Ripley",
-      "precio": 184000,
+      "precio": 181000,
       "origen": "Retail Oficial Snapshot"
     },
     {
@@ -81,7 +81,7 @@
     {
       "perfume": "YSL Libre",
       "tienda": "Paris",
-      "precio": 151000,
+      "precio": 150000,
       "origen": "Retail Oficial Snapshot"
     },
     {
@@ -105,7 +105,7 @@
     {
       "perfume": "Dior Sauvage",
       "tienda": "Falabella",
-      "precio": 146000,
+      "precio": 145000,
       "origen": "Retail Oficial Snapshot"
     },
     {
