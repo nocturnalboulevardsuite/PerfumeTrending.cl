@@ -47,8 +47,8 @@ def resolver_url_oferta(tienda_nombre: str, perfume_nombre: str, url_prod: str, 
     Retorna el enlace directo a la ficha del perfume exacto en la tienda.
     Si por algún motivo no existe URL directa, usa la búsqueda directa en la tienda.
     """
-    # 1. Prioridad absoluta: Si hay enlace directo al producto, usarlo siempre
-    if url_prod and url_prod.startswith("http") and url_prod != "#" and "/search" not in url_prod:
+    # 1. Prioridad absoluta: Si hay enlace directo al producto o búsqueda directa, usarlo
+    if url_prod and url_prod.startswith("http") and url_prod != "#":
         return url_prod
 
     # 2. Respaldo de búsqueda si no hay link directo guardado

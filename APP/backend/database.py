@@ -252,9 +252,26 @@ def obtener_url_directa_tienda(perfume_id: int, tienda_nombre: str) -> Optional[
 
 
 def generar_url_tienda(tienda_nombre: str, perfume_nombre: str, url_directa: Optional[str] = None) -> Optional[str]:
-    """Retorna la URL directa verificada descartando búsquedas genéricas con /search."""
-    if url_directa and url_directa.startswith("http") and "/search" not in url_directa:
+    """Retorna la URL directa verificada o genera la búsqueda directa en la tienda."""
+    if url_directa and url_directa.startswith("http") and url_directa != "#":
         return url_directa
+    
+    t = (tienda_nombre or "").lower()
+    q = urllib.parse.quote(perfume_nombre.strip())
+    if "falabella" in t:
+        return f"https://www.falabella.com/falabella-cl/search?Ntt={q}"
+    elif "paris" in t:
+        return f"https://www.paris.cl/search?q={q}"
+    elif "ripley" in t:
+        return f"https://simple.ripley.cl/search/{q}"
+    elif "silk" in t:
+        return f"https://www.silkperfumes.cl/search?q={q}"
+    elif "elite" in t:
+        return f"https://www.eliteperfumes.cl/search?q={q}"
+    elif "alisha" in t:
+        return f"https://www.alisha.cl/search?q={q}"
+    elif "dbs" in t:
+        return f"https://www.dbs.cl/search?q={q}"
     return None
 
 
@@ -381,7 +398,6 @@ def obtener_precios_actuales(perfume_id: int) -> List[Dict[str, Any]]:
       AND pr.en_stock = 1
       AND pr.precio_actual > 0
       AND pr.url_producto IS NOT NULL
-      AND pr.url_producto NOT LIKE '%/search%'
       AND pr.fecha_registro = (
           SELECT MAX(fecha_registro)
           FROM precios_registro
@@ -404,7 +420,6 @@ def obtener_historico_precios(perfume_id: int) -> List[Dict[str, Any]]:
     WHERE pr.perfume_id = ? 
       AND pr.en_stock = 1 
       AND pr.precio_actual > 0
-      AND pr.url_producto NOT LIKE '%/search%'
     ORDER BY pr.fecha_registro ASC;
     """
     with get_db_cursor() as cursor:
