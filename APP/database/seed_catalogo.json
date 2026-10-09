@@ -154,22 +154,22 @@
         {
           "tienda": "Falabella",
           "url_producto": "https://www.falabella.com/falabella-cl/product/4192038/bleu-de-chanel-eau-de-parfum-vaporizador/4524081",
-          "precio_actual": 181500,
-          "precio_normal": 209990,
+          "precio_actual": 188100,
+          "precio_normal": 220000,
           "volumen_ml": 100
         },
         {
           "tienda": "Paris",
-          "url_producto": "https://www.paris.cl/search?q=Chanel%20Bleu%20de%20Chanel",
-          "precio_actual": 181500,
-          "precio_normal": 209990,
+          "url_producto": "https://www.paris.cl/bleu-de-chanel-eau-de-parfum-vaporizador-100-ml-916524999.html",
+          "precio_actual": 188100,
+          "precio_normal": 216315,
           "volumen_ml": 100
         },
         {
           "tienda": "Ripley",
-          "url_producto": "https://simple.ripley.cl/search/Chanel%20Bleu%20de%20Chanel",
-          "precio_actual": 181500,
-          "precio_normal": 205990,
+          "url_producto": "https://simple.ripley.cl/bleu-de-chanel-eau-de-parfum-vaporizador-2000349451349p",
+          "precio_actual": 188100,
+          "precio_normal": 216315,
           "volumen_ml": 100
         }
       ]
@@ -189,37 +189,37 @@
       "enlaces_tiendas": [
         {
           "tienda": "Silk Perfumes",
-          "url_producto": "https://www.silkperfumes.cl/search?q=Yves%20Saint%20Laurent%20YSL%20Libre",
-          "precio_actual": 79990,
-          "precio_normal": 99990,
+          "url_producto": "https://www.silkperfumes.cl/products/ysl-libre-de-ysl-edp-90ml",
+          "precio_actual": 99990,
+          "precio_normal": 114988,
           "volumen_ml": 50
         },
         {
           "tienda": "Falabella",
-          "url_producto": "https://www.falabella.com/falabella-cl/search?Ntt=Yves%20Saint%20Laurent%20YSL%20Libre",
-          "precio_actual": 89990,
+          "url_producto": "https://www.falabella.com/falabella-cl/product/8472576/perfume-mujer-libre-edp-yves-saint-laurent",
+          "precio_actual": 86990,
           "precio_normal": 104990,
           "volumen_ml": 50
         },
         {
           "tienda": "Elite Perfumes",
-          "url_producto": "https://www.eliteperfumes.cl/search?q=Yves%20Saint%20Laurent%20YSL%20Libre",
-          "precio_actual": 116990,
-          "precio_normal": 139990,
+          "url_producto": "https://www.eliteperfumes.cl/products/yves-saint-laurent-libre-intense-edp-90-ml-m",
+          "precio_actual": 108770,
+          "precio_normal": 125085,
           "volumen_ml": 90
         },
         {
           "tienda": "Ripley",
-          "url_producto": "https://simple.ripley.cl/search/Yves%20Saint%20Laurent%20YSL%20Libre",
-          "precio_actual": 147990,
-          "precio_normal": 169990,
+          "url_producto": "https://simple.ripley.cl/perfume-yves-saint-laurent-libre-edp-mujer-90-ml-2000377045768p",
+          "precio_actual": 169990,
+          "precio_normal": 195488,
           "volumen_ml": 90
         },
         {
           "tienda": "Paris",
-          "url_producto": "https://www.paris.cl/search?q=Yves%20Saint%20Laurent%20YSL%20Libre",
-          "precio_actual": 149990,
-          "precio_normal": 169990,
+          "url_producto": "https://www.paris.cl/perfume-yves-saint-laurent-libre-eau-de-parfum-90-ml-954094999.html",
+          "precio_actual": 176990,
+          "precio_normal": 203538,
           "volumen_ml": 90
         }
       ]
@@ -239,30 +239,30 @@
       "enlaces_tiendas": [
         {
           "tienda": "Silk Perfumes",
-          "url_producto": "https://www.silkperfumes.cl/search?q=Dior%20Dior%20Sauvage",
-          "precio_actual": 124990,
-          "precio_normal": 149990,
+          "url_producto": "https://www.silkperfumes.cl/products/dior-sauvage-edt-100-ml-dior56",
+          "precio_actual": 119990,
+          "precio_normal": 137988,
           "volumen_ml": 100
         },
         {
           "tienda": "Falabella",
-          "url_producto": "https://www.falabella.com/falabella-cl/search?Ntt=Dior%20Dior%20Sauvage",
-          "precio_actual": 144990,
-          "precio_normal": 165990,
+          "url_producto": "https://www.falabella.com/falabella-cl/product/50190732/Perfume-Hombre-Sauvage-Recarga-Edp-300Ml-Dior",
+          "precio_actual": 188100,
+          "precio_normal": 216315,
           "volumen_ml": 100
         },
         {
           "tienda": "Paris",
-          "url_producto": "https://www.paris.cl/search?q=Dior%20Dior%20Sauvage",
-          "precio_actual": 144990,
-          "precio_normal": 165990,
+          "url_producto": "https://www.paris.cl/perfume-sauvage-edp-hombre-100-ml-943519999.html",
+          "precio_actual": 188100,
+          "precio_normal": 216315,
           "volumen_ml": 100
         },
         {
           "tienda": "Ripley",
-          "url_producto": "https://simple.ripley.cl/search/Dior%20Dior%20Sauvage",
-          "precio_actual": 144990,
-          "precio_normal": 165990,
+          "url_producto": "https://simple.ripley.cl/perfume-hombre-dior-sauvage-extrait-parfum-50ml-2000412637151p",
+          "precio_actual": 227800,
+          "precio_normal": 261969,
           "volumen_ml": 100
         }
       ]
@@ -282,23 +282,23 @@
       "enlaces_tiendas": [
         {
           "tienda": "Silk Perfumes",
-          "url_producto": "https://www.silkperfumes.cl/search?q=Armaf%20Club%20de%20Nuit%20Intense%20Man",
+          "url_producto": "https://www.silkperfumes.cl/products/club-de-nuit-intense-man-edt-105-ml-armaf-armf2",
           "precio_actual": 29990,
-          "precio_normal": 42990,
+          "precio_normal": 34488,
           "volumen_ml": 105
         },
         {
           "tienda": "Elite Perfumes",
-          "url_producto": "https://www.eliteperfumes.cl/search?q=Armaf%20Club%20de%20Nuit%20Intense%20Man",
-          "precio_actual": 29990,
-          "precio_normal": 45990,
+          "url_producto": "https://www.eliteperfumes.cl/products/sterling-parfums-club-de-nuit-intense-man-105-ml-h",
+          "precio_actual": 30990,
+          "precio_normal": 35638,
           "volumen_ml": 105
         },
         {
           "tienda": "Falabella",
-          "url_producto": "https://www.falabella.com/falabella-cl/search?Ntt=Armaf%20Club%20de%20Nuit%20Intense%20Man",
-          "precio_actual": 32990,
-          "precio_normal": 44990,
+          "url_producto": "https://www.falabella.com/falabella-cl/product/155986997/perfume-arabe-club-de-nuit-intense-overdose-edp-100-ml",
+          "precio_actual": 45990,
+          "precio_normal": 52888,
           "volumen_ml": 105
         }
       ]
@@ -318,23 +318,23 @@
       "enlaces_tiendas": [
         {
           "tienda": "Silk Perfumes",
-          "url_producto": "https://www.silkperfumes.cl/search?q=Lattafa%20Khamrah",
+          "url_producto": "https://www.silkperfumes.cl/products/lattafa-khamrah-edp-100ml",
           "precio_actual": 22990,
-          "precio_normal": 34990,
+          "precio_normal": 26438,
           "volumen_ml": 100
         },
         {
           "tienda": "Elite Perfumes",
-          "url_producto": "https://www.eliteperfumes.cl/search?q=Lattafa%20Khamrah",
-          "precio_actual": 23490,
-          "precio_normal": 36990,
+          "url_producto": "https://www.eliteperfumes.cl/products/lattafa-khamrah-edp-100-ml-u",
+          "precio_actual": 23491,
+          "precio_normal": 27014,
           "volumen_ml": 100
         },
         {
           "tienda": "Falabella",
-          "url_producto": "https://www.falabella.com/falabella-cl/search?Ntt=Lattafa%20Khamrah",
-          "precio_actual": 25990,
-          "precio_normal": 39990,
+          "url_producto": "https://www.falabella.com/falabella-cl/product/148205572/Perfume-Dulce-Edp-Unisex-Arabe-Lattafa-Khamrah-100-Ml",
+          "precio_actual": 32890,
+          "precio_normal": 37823,
           "volumen_ml": 100
         }
       ]
@@ -354,16 +354,16 @@
       "enlaces_tiendas": [
         {
           "tienda": "Falabella",
-          "url_producto": "https://www.falabella.com/falabella-cl/search?Ntt=Maison%20Francis%20Kurkdjian%20Baccarat%20Rouge%20540",
-          "precio_actual": 329990,
-          "precio_normal": 369990,
+          "url_producto": "https://www.falabella.com/falabella-cl/product/142907409/Maison-Francis-Kurkdjian-Baccarat-Rouge-540-Extrait-De-Parfum-70ml",
+          "precio_actual": 369990,
+          "precio_normal": 425488,
           "volumen_ml": 70
         },
         {
           "tienda": "Paris",
-          "url_producto": "https://www.paris.cl/search?q=Maison%20Francis%20Kurkdjian%20Baccarat%20Rouge%20540",
-          "precio_actual": 339990,
-          "precio_normal": 379990,
+          "url_producto": "https://www.paris.cl/baccarat-rouge-540-eau-de-parfum-70-ml-MK67U28976.html",
+          "precio_actual": 349990,
+          "precio_normal": 402488,
           "volumen_ml": 70
         }
       ]
@@ -383,37 +383,37 @@
       "enlaces_tiendas": [
         {
           "tienda": "Silk Perfumes",
-          "url_producto": "https://www.silkperfumes.cl/search?q=Giorgio%20Armani%20Acqua%20Di%20Gio",
-          "precio_actual": 89990,
-          "precio_normal": 119990,
+          "url_producto": "https://www.silkperfumes.cl/products/acqua-di-gio-edt-100-ml-arma3",
+          "precio_actual": 79990,
+          "precio_normal": 91988,
           "volumen_ml": 100
         },
         {
           "tienda": "Elite Perfumes",
-          "url_producto": "https://www.eliteperfumes.cl/search?q=Giorgio%20Armani%20Acqua%20Di%20Gio",
-          "precio_actual": 102990,
-          "precio_normal": 129990,
+          "url_producto": "https://www.eliteperfumes.cl/products/giorgio-armani-giorgio-armani-acqua-di-gio-profondo-edp-100-ml-h",
+          "precio_actual": 98990,
+          "precio_normal": 113838,
           "volumen_ml": 100
         },
         {
           "tienda": "Ripley",
-          "url_producto": "https://simple.ripley.cl/search/Giorgio%20Armani%20Acqua%20Di%20Gio",
-          "precio_actual": 108990,
-          "precio_normal": 124990,
+          "url_producto": "https://simple.ripley.cl/perfume-hombre-giorgio-armani-acqua-di-gio-profondo-parfum-50ml-2000412066883p",
+          "precio_actual": 111990,
+          "precio_normal": 128788,
           "volumen_ml": 100
         },
         {
           "tienda": "Falabella",
-          "url_producto": "https://www.falabella.com/falabella-cl/search?Ntt=Giorgio%20Armani%20Acqua%20Di%20Gio",
-          "precio_actual": 109990,
-          "precio_normal": 124990,
+          "url_producto": "https://www.falabella.com/falabella-cl/product/80800496/perfume-hombre-acqua-di-gio-profondo-edp-200-30-ml-giorgio-armani",
+          "precio_actual": 141990,
+          "precio_normal": 163288,
           "volumen_ml": 100
         },
         {
           "tienda": "Paris",
-          "url_producto": "https://www.paris.cl/search?q=Giorgio%20Armani%20Acqua%20Di%20Gio",
-          "precio_actual": 112990,
-          "precio_normal": 129990,
+          "url_producto": "https://www.paris.cl/perfume-acqua-di-gio-profondo-edp-hombre-100-ml-giorgio-armani-579378999.html",
+          "precio_actual": 154990,
+          "precio_normal": 178238,
           "volumen_ml": 100
         }
       ]
@@ -433,30 +433,30 @@
       "enlaces_tiendas": [
         {
           "tienda": "Silk Perfumes",
-          "url_producto": "https://www.silkperfumes.cl/search?q=Jean%20Paul%20Gaultier%20Scandal%20Pour%20Homme",
-          "precio_actual": 109990,
-          "precio_normal": 129990,
+          "url_producto": "https://www.silkperfumes.cl/products/jean-paul-gaultier-scandal-pour-homme-edp-intense-100-ml",
+          "precio_actual": 106990,
+          "precio_normal": 123038,
           "volumen_ml": 100
         },
         {
           "tienda": "Elite Perfumes",
-          "url_producto": "https://www.eliteperfumes.cl/search?q=Jean%20Paul%20Gaultier%20Scandal%20Pour%20Homme",
-          "precio_actual": 112990,
-          "precio_normal": 134990,
+          "url_producto": "https://www.eliteperfumes.cl/products/jean-paul-gaultier-scandal-le-parfum-intense-100-ml-h",
+          "precio_actual": 109241,
+          "precio_normal": 125627,
           "volumen_ml": 100
         },
         {
           "tienda": "Falabella",
-          "url_producto": "https://www.falabella.com/falabella-cl/search?Ntt=Jean%20Paul%20Gaultier%20Scandal%20Pour%20Homme",
-          "precio_actual": 114990,
-          "precio_normal": 129990,
+          "url_producto": "https://www.falabella.com/falabella-cl/product/50044704/Perfume-Hombre-Scandal-Pour-Homme-Le-Parfum-For-Him-Edp-100Ml-Jean-Paul-Gaultier",
+          "precio_actual": 155990,
+          "precio_normal": 179388,
           "volumen_ml": 100
         },
         {
           "tienda": "Paris",
-          "url_producto": "https://www.paris.cl/search?q=Jean%20Paul%20Gaultier%20Scandal%20Pour%20Homme",
-          "precio_actual": 116990,
-          "precio_normal": 132990,
+          "url_producto": "https://www.paris.cl/perfume-jean-paul-gaultier-scandal-pour-homme-le-parfum-for-him-edp-150-ml-517295999.html",
+          "precio_actual": 182990,
+          "precio_normal": 210438,
           "volumen_ml": 100
         }
       ]
@@ -476,23 +476,23 @@
       "enlaces_tiendas": [
         {
           "tienda": "Elite Perfumes",
-          "url_producto": "https://www.eliteperfumes.cl/search?q=Rasasi%20Hawas%20for%20Men",
-          "precio_actual": 27990,
-          "precio_normal": 38990,
+          "url_producto": "https://www.eliteperfumes.cl/products/rasasi-rasasi-gift-set-hawas-men-edp-100-ml-edp-10-ml-all-over-shower-gel-60ml-set-h",
+          "precio_actual": 35990,
+          "precio_normal": 41388,
           "volumen_ml": 100
         },
         {
           "tienda": "Silk Perfumes",
-          "url_producto": "https://www.silkperfumes.cl/search?q=Rasasi%20Hawas%20for%20Men",
+          "url_producto": "https://www.silkperfumes.cl/products/rasasi-hawas-elixir-men-edp-100-ml",
           "precio_actual": 29990,
-          "precio_normal": 39990,
+          "precio_normal": 34488,
           "volumen_ml": 100
         },
         {
           "tienda": "Falabella",
-          "url_producto": "https://www.falabella.com/falabella-cl/search?Ntt=Rasasi%20Hawas%20for%20Men",
-          "precio_actual": 32990,
-          "precio_normal": 42990,
+          "url_producto": "https://www.falabella.com/falabella-cl/product/151494796/perfume-arabe-rasasi-hawas-for-him-atlantis-edp-100-ml",
+          "precio_actual": 42790,
+          "precio_normal": 49208,
           "volumen_ml": 100
         }
       ]
@@ -512,23 +512,23 @@
       "enlaces_tiendas": [
         {
           "tienda": "Silk Perfumes",
-          "url_producto": "https://www.silkperfumes.cl/search?q=Versace%20Eros",
-          "precio_actual": 74990,
-          "precio_normal": 94990,
+          "url_producto": "https://www.silkperfumes.cl/products/versace-eros-edp-100-ml-vers41",
+          "precio_actual": 79990,
+          "precio_normal": 91988,
           "volumen_ml": 100
         },
         {
           "tienda": "Falabella",
-          "url_producto": "https://www.falabella.com/falabella-cl/search?Ntt=Versace%20Eros",
-          "precio_actual": 89990,
-          "precio_normal": 104990,
-          "volumen_ml": 100
+          "url_producto": "https://www.falabella.com/falabella-cl/product/154970630/perfume-hombre-versace-eros-energy-pour-homme-edp-50-ml",
+          "precio_actual": 57990,
+          "precio_normal": 66688,
+          "volumen_ml": 50
         },
         {
           "tienda": "Ripley",
-          "url_producto": "https://simple.ripley.cl/search/Versace%20Eros",
-          "precio_actual": 89990,
-          "precio_normal": 109990,
+          "url_producto": "https://simple.ripley.cl/perfume-versace-eros-energy-hombre-edp-100-ml-2000408174875p",
+          "precio_actual": 122990,
+          "precio_normal": 141438,
           "volumen_ml": 100
         }
       ]
@@ -548,16 +548,16 @@
       "enlaces_tiendas": [
         {
           "tienda": "Falabella",
-          "url_producto": "https://www.falabella.com/falabella-cl/search?Ntt=Tom%20Ford%20Tobacco%20Vanille",
-          "precio_actual": 279990,
-          "precio_normal": 319990,
+          "url_producto": "https://www.falabella.com/falabella-cl/product/16609950/Perfume-Unisex-Tobacco-Vanille-Edp-50-Ml-Tom-Ford",
+          "precio_actual": 349990,
+          "precio_normal": 402488,
           "volumen_ml": 50
         },
         {
           "tienda": "Paris",
-          "url_producto": "https://www.paris.cl/search?q=Tom%20Ford%20Tobacco%20Vanille",
-          "precio_actual": 289990,
-          "precio_normal": 329990,
+          "url_producto": "https://www.paris.cl/tom-ford-tobacco-vanille-50ml-edp-MK17ABG88B.html",
+          "precio_actual": 375990,
+          "precio_normal": 432388,
           "volumen_ml": 50
         }
       ]
@@ -577,30 +577,30 @@
       "enlaces_tiendas": [
         {
           "tienda": "Silk Perfumes",
-          "url_producto": "https://www.silkperfumes.cl/search?q=Jean%20Paul%20Gaultier%20Le%20Male%20Elixir",
+          "url_producto": "https://www.silkperfumes.cl/products/jean-pual-gaultier-le-male-elixir-parfum-75-ml",
           "precio_actual": 89990,
-          "precio_normal": 115990,
+          "precio_normal": 103488,
           "volumen_ml": 75
         },
         {
           "tienda": "Elite Perfumes",
-          "url_producto": "https://www.eliteperfumes.cl/search?q=Jean%20Paul%20Gaultier%20Le%20Male%20Elixir",
-          "precio_actual": 124990,
-          "precio_normal": 145990,
+          "url_producto": "https://www.eliteperfumes.cl/products/jean-paul-gaultier-le-male-elixir-parfum-200-ml-m",
+          "precio_actual": 173891,
+          "precio_normal": 199974,
           "volumen_ml": 125
         },
         {
           "tienda": "Falabella",
-          "url_producto": "https://www.falabella.com/falabella-cl/search?Ntt=Jean%20Paul%20Gaultier%20Le%20Male%20Elixir",
-          "precio_actual": 132990,
-          "precio_normal": 154990,
+          "url_producto": "https://www.falabella.com/falabella-cl/product/80055749/Perfume-Hombre-Le-Male-Elixir-Parfum-200-ML-Jean-Paul-Gaultier",
+          "precio_actual": 169990,
+          "precio_normal": 195488,
           "volumen_ml": 125
         },
         {
           "tienda": "Paris",
-          "url_producto": "https://www.paris.cl/search?q=Jean%20Paul%20Gaultier%20Le%20Male%20Elixir",
-          "precio_actual": 134990,
-          "precio_normal": 156990,
+          "url_producto": "https://www.paris.cl/perfume-le-male-elixir-parfum-hombre-200-ml-jean-paul-gaultier-774496999.html",
+          "precio_actual": 204990,
+          "precio_normal": 235738,
           "volumen_ml": 125
         }
       ]
