@@ -965,7 +965,7 @@ elif st.session_state['current_page'] == 'esencias_page':
         "Higo": "Nota verde, frutal y láctea; evoca la frescura del árbol.",
         "Lichi": "Frutal, acuoso y delicadamente floral; añade frescura exótica.",
         "Manzana": "Crujiente, fresca y jugosa; infunde un toque limpio.",
-        "Melón": "Acuoso, frutal y dulce; aporta un perfil estival muy refrescante.",
+        "Melón": "Acuoso, frutal dulce; aporta un perfil estival muy refrescante.",
         "Pera": "Jugosa, cristalina y delicada; añade una frescura acuática.",
         "Piña": "Tropical, efervescente y jugosa; añade una salida radiante.",
         "Ruibarbo": "Ácido, verde y chispeante; aporta un contraste vanguardista.",
@@ -1078,3 +1078,11 @@ elif st.session_state['current_page'] == 'esencias_page':
         st.markdown("\n".join(html_col1), unsafe_allow_html=True)
     with col_es_2:
         st.markdown("\n".join(html_col2), unsafe_allow_html=True)
+
+# 9. PIE DE PÁGINA (FOOTER)
+st.markdown(f"<hr style='margin: 40px 0 20px 0; border: none; border-bottom: 1px solid {btn_border}; opacity: 0.3;'>", unsafe_allow_html=True)
+st.markdown(f"""
+    <div style="text-align: center; padding: 10px 0 20px 0; color: {subtext_color}; font-size: 0.85rem;">
+        © 2026 Perfume Trending. Todos los derechos reservados.
+    </div>
+""", unsafe_allow_html=True)
