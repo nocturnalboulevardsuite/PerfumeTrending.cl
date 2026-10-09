@@ -205,7 +205,8 @@ def poblar_datos_semilla(cursor: sqlite3.Cursor) -> None:
                 continue
             t_id = tiendas_map[t_nombre]
             precio_act = enlace.get("precio_actual", p["precio_referencia"])
-            precio_norm = enlace.get("precio_normal", int(precio_act * 1.15))
+            p_normal_val = enlace.get("precio_normal")
+            precio_norm = p_normal_val if (p_normal_val and p_normal_val > precio_act) else precio_act
             url_prod = enlace.get("url_producto", "")
             vol_ml = enlace.get("volumen_ml", p.get("volumen_ml", 100))
 
@@ -217,7 +218,7 @@ def poblar_datos_semilla(cursor: sqlite3.Cursor) -> None:
                 else:
                     fluc = 1.0 + (dia * 0.004)
                     p_actual_hist = int(round((precio_act * fluc) / 1000) * 1000)
-                    p_norm_hist = int(round((precio_norm * 1.05) / 1000) * 1000)
+                    p_norm_hist = precio_norm if precio_norm > precio_act else p_actual_hist
 
                 registros_precios.append((
                     p_id, t_id, p_actual_hist, p_norm_hist, 1, vol_ml, url_prod, fecha.strftime("%Y-%m-%d %H:%M:%S")
