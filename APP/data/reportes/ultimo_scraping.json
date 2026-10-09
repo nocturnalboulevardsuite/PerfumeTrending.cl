@@ -1,12 +1,12 @@
 {
   "actualizaciones": 41,
-  "fecha": "2026-10-09 14:04:51",
-  "duracion_segundos": 3.52,
+  "fecha": "2026-10-09 15:47:24",
+  "duracion_segundos": 79.94,
   "metadata": {
-    "version_etl": "2.0.0",
-    "sistema": "PerfumeTrending ETL Engine",
-    "fecha_ejecucion": "2026-10-09 14:04:51",
-    "duracion_segundos": 3.52,
+    "version_etl": "3.0.0",
+    "sistema": "PerfumeTrending Professional Anti-Bot ETL",
+    "fecha_ejecucion": "2026-10-09 15:47:24",
+    "duracion_segundos": 79.94,
     "estado": "EXITOSO"
   },
   "metricas": {
@@ -19,37 +19,44 @@
   "estadisticas_tiendas": {
     "Falabella": {
       "consultas": 12,
-      "exitos": 12,
+      "exitos_en_vivo": 10,
+      "fallbacks_seguridad": 2,
       "trust_score": 96
     },
     "Paris": {
       "consultas": 8,
-      "exitos": 8,
+      "exitos_en_vivo": 8,
+      "fallbacks_seguridad": 0,
       "trust_score": 95
     },
     "Ripley": {
       "consultas": 5,
-      "exitos": 5,
+      "exitos_en_vivo": 4,
+      "fallbacks_seguridad": 1,
       "trust_score": 94
     },
     "Silk Perfumes": {
       "consultas": 9,
-      "exitos": 9,
+      "exitos_en_vivo": 9,
+      "fallbacks_seguridad": 0,
       "trust_score": 92
     },
     "Elite Perfumes": {
       "consultas": 7,
-      "exitos": 7,
+      "exitos_en_vivo": 6,
+      "fallbacks_seguridad": 1,
       "trust_score": 89
     },
     "DBS Beauty Store": {
       "consultas": 0,
-      "exitos": 0,
+      "exitos_en_vivo": 0,
+      "fallbacks_seguridad": 0,
       "trust_score": 91
     },
     "Alisha Perfumes": {
       "consultas": 0,
-      "exitos": 0,
+      "exitos_en_vivo": 0,
+      "fallbacks_seguridad": 0,
       "trust_score": 88
     }
   },
@@ -57,62 +64,137 @@
     {
       "perfume": "Bleu de Chanel",
       "tienda": "Falabella",
-      "precio": 183000,
-      "origen": "Retail Oficial Snapshot"
+      "precio_actual": 145200,
+      "precio_normal": 145200,
+      "tiene_descuento": false,
+      "origen": "Falabella Next Direct",
+      "volumen_ml": 100
     },
     {
       "perfume": "Bleu de Chanel",
       "tienda": "Paris",
-      "precio": 180000,
-      "origen": "Retail Oficial Snapshot"
+      "precio_actual": 258500,
+      "precio_normal": 258500,
+      "tiene_descuento": false,
+      "origen": "Paris JSON-LD Direct",
+      "volumen_ml": 100
     },
     {
       "perfume": "Bleu de Chanel",
       "tienda": "Ripley",
-      "precio": 180000,
-      "origen": "Retail Oficial Snapshot"
+      "precio_actual": 145200,
+      "precio_normal": 145200,
+      "tiene_descuento": false,
+      "origen": "Ripley DOM Price",
+      "volumen_ml": 100
     },
     {
       "perfume": "YSL Libre",
       "tienda": "Falabella",
-      "precio": 91000,
-      "origen": "Retail Oficial Snapshot"
+      "precio_actual": 86990,
+      "precio_normal": 86990,
+      "tiene_descuento": false,
+      "origen": "Falabella Next Direct",
+      "volumen_ml": 90
     },
     {
       "perfume": "YSL Libre",
       "tienda": "Paris",
-      "precio": 151000,
-      "origen": "Retail Oficial Snapshot"
+      "precio_actual": 176990,
+      "precio_normal": 176990,
+      "tiene_descuento": false,
+      "origen": "Paris JSON-LD Direct",
+      "volumen_ml": 90
     },
     {
       "perfume": "YSL Libre",
       "tienda": "Ripley",
-      "precio": 150000,
-      "origen": "Retail Oficial Snapshot"
+      "precio_actual": 169990,
+      "precio_normal": 169990,
+      "tiene_descuento": false,
+      "origen": "Respaldo Histórico Verificado",
+      "volumen_ml": 90
     },
     {
       "perfume": "YSL Libre",
       "tienda": "Silk Perfumes",
-      "precio": 99990,
-      "origen": "API Shopify Live"
+      "precio_actual": 99990,
+      "precio_normal": 235390,
+      "tiene_descuento": true,
+      "origen": "Shopify Live Suggest",
+      "volumen_ml": 90
     },
     {
       "perfume": "YSL Libre",
       "tienda": "Elite Perfumes",
-      "precio": 108770,
-      "origen": "API Shopify Live"
+      "precio_actual": 108770,
+      "precio_normal": 129990,
+      "tiene_descuento": true,
+      "origen": "Shopify Live Suggest",
+      "volumen_ml": 90
     },
     {
       "perfume": "Dior Sauvage",
       "tienda": "Falabella",
-      "precio": 146000,
-      "origen": "Retail Oficial Snapshot"
+      "precio_actual": 149990,
+      "precio_normal": 149990,
+      "tiene_descuento": false,
+      "origen": "Respaldo Histórico Verificado",
+      "volumen_ml": 100
     },
     {
       "perfume": "Dior Sauvage",
       "tienda": "Paris",
-      "precio": 144000,
-      "origen": "Retail Oficial Snapshot"
+      "precio_actual": 188100,
+      "precio_normal": 188100,
+      "tiene_descuento": false,
+      "origen": "Paris JSON-LD Direct",
+      "volumen_ml": 100
+    },
+    {
+      "perfume": "Dior Sauvage",
+      "tienda": "Ripley",
+      "precio_actual": 227800,
+      "precio_normal": 227800,
+      "tiene_descuento": false,
+      "origen": "Ripley DOM Price",
+      "volumen_ml": 50
+    },
+    {
+      "perfume": "Dior Sauvage",
+      "tienda": "Silk Perfumes",
+      "precio_actual": 119990,
+      "precio_normal": 274990,
+      "tiene_descuento": true,
+      "origen": "Shopify Live Suggest",
+      "volumen_ml": 100
+    },
+    {
+      "perfume": "Club de Nuit Intense Man",
+      "tienda": "Falabella",
+      "precio_actual": 45990,
+      "precio_normal": 91990,
+      "tiene_descuento": true,
+      "origen": "Falabella Next Direct",
+      "volumen_ml": 100
+    },
+    {
+      "perfume": "Club de Nuit Intense Man",
+      "tienda": "Silk Perfumes",
+      "precio_actual": 29990,
+      "precio_normal": 72590,
+      "tiene_descuento": true,
+      "origen": "Shopify Live Suggest",
+      "volumen_ml": 105
+    },
+    {
+      "perfume": "Club de Nuit Intense Man",
+      "tienda": "Elite Perfumes",
+      "precio_actual": 30990,
+      "precio_normal": 59990,
+      "tiene_descuento": true,
+      "origen": "Shopify Live Suggest",
+      "volumen_ml": 105
     }
   ],
   "errores": []

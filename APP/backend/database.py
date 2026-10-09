@@ -235,19 +235,23 @@ def poblar_datos_semilla(cursor: sqlite3.Cursor) -> None:
 # -----------------------------------------------------------------------------
 # REGLAS DE NEGOCIO Y RESOLUCIÓN DE CATÁLOGO
 # -----------------------------------------------------------------------------
-def obtener_url_directa_tienda(perfume_id: int, tienda_nombre: str) -> Optional[Tuple[str, int, int]]:
+def obtener_url_directa_tienda(perfume_id: int, tienda_nombre: str) -> Optional[Tuple[str, int, int, int]]:
     """
-    Retorna la tupla (url_producto, precio_actual, precio_normal) configurada en el catálogo semilla.
+    Retorna la tupla (url_producto, precio_actual, precio_normal, volumen_ml) configurada en el catálogo semilla.
     """
     catalogo = cargar_datos_semilla_json()
     for p in catalogo.get("perfumes", []):
         if p["id"] == perfume_id:
             for enlace in p.get("enlaces_tiendas", []):
                 if enlace.get("tienda") == tienda_nombre:
+                    p_act = enlace.get("precio_actual", p["precio_referencia"])
+                    p_norm = enlace.get("precio_normal", p_act)
+                    vol = enlace.get("volumen_ml", p.get("volumen_ml", 100))
                     return (
                         enlace.get("url_producto", ""),
-                        enlace.get("precio_actual", p["precio_referencia"]),
-                        enlace.get("precio_normal", int(enlace.get("precio_actual", p["precio_referencia"]) * 1.15))
+                        p_act,
+                        p_norm,
+                        vol
                     )
     return None
 

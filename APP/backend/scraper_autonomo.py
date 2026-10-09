@@ -263,7 +263,7 @@ def ejecutar_descubrimiento_autonomo(
                             if v_price <= 0:
                                 continue
 
-                            v_compare = int(float(v.get("compare_at_price") or (v_price * 1.15)))
+                            v_compare = int(float(v.get("compare_at_price") or v_price))
                             v_stock = 1 if v.get("available", True) else 0
                             v_title = v.get("title", "")
                             volumen_ml = extraer_volumen_ml(f"{raw_title} {v_title}")

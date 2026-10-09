@@ -205,8 +205,10 @@ def main():
             
             if precio_res and precio_res >= 10000:
                 enlace["precio_actual"] = precio_res
-                enlace["precio_normal"] = int(precio_res * 1.15)
-                logger.info(f"  [{tienda}] Precio real actualizado: ${precio_res:,} CLP")
+                # Solo mantener precio_normal si ya tiene un descuento real superior
+                p_norm_exist = enlace.get("precio_normal")
+                enlace["precio_normal"] = p_norm_exist if (p_norm_exist and p_norm_exist > precio_res) else precio_res
+                logger.info(f"  [{tienda}] Precio real actualizado: ${precio_res:,} CLP (Normal: ${enlace['precio_normal']:,})")
                 actualizados += 1
 
     with open(seed_path, "w", encoding="utf-8") as f:
