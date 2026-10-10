@@ -1,12 +1,12 @@
 {
   "actualizaciones": 41,
-  "fecha": "2026-10-09 15:47:24",
-  "duracion_segundos": 79.94,
+  "fecha": "2026-10-10 13:15:14",
+  "duracion_segundos": 57.28,
   "metadata": {
     "version_etl": "3.0.0",
     "sistema": "PerfumeTrending Professional Anti-Bot ETL",
-    "fecha_ejecucion": "2026-10-09 15:47:24",
-    "duracion_segundos": 79.94,
+    "fecha_ejecucion": "2026-10-10 13:15:14",
+    "duracion_segundos": 57.28,
     "estado": "EXITOSO"
   },
   "metricas": {
@@ -25,14 +25,14 @@
     },
     "Paris": {
       "consultas": 8,
-      "exitos_en_vivo": 8,
-      "fallbacks_seguridad": 0,
+      "exitos_en_vivo": 0,
+      "fallbacks_seguridad": 8,
       "trust_score": 95
     },
     "Ripley": {
       "consultas": 5,
-      "exitos_en_vivo": 4,
-      "fallbacks_seguridad": 1,
+      "exitos_en_vivo": 0,
+      "fallbacks_seguridad": 5,
       "trust_score": 94
     },
     "Silk Perfumes": {
@@ -43,8 +43,8 @@
     },
     "Elite Perfumes": {
       "consultas": 7,
-      "exitos_en_vivo": 6,
-      "fallbacks_seguridad": 1,
+      "exitos_en_vivo": 7,
+      "fallbacks_seguridad": 0,
       "trust_score": 89
     },
     "DBS Beauty Store": {
@@ -73,19 +73,19 @@
     {
       "perfume": "Bleu de Chanel",
       "tienda": "Paris",
-      "precio_actual": 258500,
-      "precio_normal": 258500,
+      "precio_actual": 188100,
+      "precio_normal": 188100,
       "tiene_descuento": false,
-      "origen": "Paris JSON-LD Direct",
+      "origen": "Respaldo Histórico Verificado",
       "volumen_ml": 100
     },
     {
       "perfume": "Bleu de Chanel",
       "tienda": "Ripley",
-      "precio_actual": 145200,
-      "precio_normal": 145200,
+      "precio_actual": 188100,
+      "precio_normal": 188100,
       "tiene_descuento": false,
-      "origen": "Ripley DOM Price",
+      "origen": "Respaldo Histórico Verificado",
       "volumen_ml": 100
     },
     {
@@ -103,7 +103,7 @@
       "precio_actual": 176990,
       "precio_normal": 176990,
       "tiene_descuento": false,
-      "origen": "Paris JSON-LD Direct",
+      "origen": "Respaldo Histórico Verificado",
       "volumen_ml": 90
     },
     {
@@ -148,7 +148,7 @@
       "precio_actual": 188100,
       "precio_normal": 188100,
       "tiene_descuento": false,
-      "origen": "Paris JSON-LD Direct",
+      "origen": "Respaldo Histórico Verificado",
       "volumen_ml": 100
     },
     {
@@ -157,7 +157,7 @@
       "precio_actual": 227800,
       "precio_normal": 227800,
       "tiene_descuento": false,
-      "origen": "Ripley DOM Price",
+      "origen": "Respaldo Histórico Verificado",
       "volumen_ml": 50
     },
     {
