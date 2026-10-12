@@ -1,12 +1,12 @@
 {
   "actualizaciones": 41,
-  "fecha": "2026-10-11 13:44:12",
-  "duracion_segundos": 61.54,
+  "fecha": "2026-10-12 16:25:20",
+  "duracion_segundos": 62.41,
   "metadata": {
     "version_etl": "3.0.0",
     "sistema": "PerfumeTrending Professional Anti-Bot ETL",
-    "fecha_ejecucion": "2026-10-11 13:44:12",
-    "duracion_segundos": 61.54,
+    "fecha_ejecucion": "2026-10-12 16:25:20",
+    "duracion_segundos": 62.41,
     "estado": "EXITOSO"
   },
   "metricas": {
@@ -118,7 +118,7 @@
     {
       "perfume": "YSL Libre",
       "tienda": "Silk Perfumes",
-      "precio_actual": 99990,
+      "precio_actual": 106990,
       "precio_normal": 235390,
       "tiene_descuento": true,
       "origen": "Shopify Live Suggest",
@@ -127,7 +127,7 @@
     {
       "perfume": "YSL Libre",
       "tienda": "Elite Perfumes",
-      "precio_actual": 108770,
+      "precio_actual": 110990,
       "precio_normal": 129990,
       "tiene_descuento": true,
       "origen": "Shopify Live Suggest",
@@ -163,7 +163,7 @@
     {
       "perfume": "Dior Sauvage",
       "tienda": "Silk Perfumes",
-      "precio_actual": 119990,
+      "precio_actual": 124990,
       "precio_normal": 274990,
       "tiene_descuento": true,
       "origen": "Shopify Live Suggest",
@@ -181,7 +181,7 @@
     {
       "perfume": "Club de Nuit Intense Man",
       "tienda": "Silk Perfumes",
-      "precio_actual": 29990,
+      "precio_actual": 32990,
       "precio_normal": 72590,
       "tiene_descuento": true,
       "origen": "Shopify Live Suggest",
@@ -190,7 +190,7 @@
     {
       "perfume": "Club de Nuit Intense Man",
       "tienda": "Elite Perfumes",
-      "precio_actual": 30990,
+      "precio_actual": 32990,
       "precio_normal": 59990,
       "tiene_descuento": true,
       "origen": "Shopify Live Suggest",
