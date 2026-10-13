@@ -95,25 +95,23 @@ if 'theme' not in st.session_state:
 if 'selected_perfume' not in st.session_state:
     st.session_state['selected_perfume'] = None
 
-# CONTROL DE NAVEGACIÓN ENTRE PÁGINAS Y LIMPIEZA DE MODALES
+# CONTROL ESTRICTO DE ESTADO DE MODALES
+if 'show_login_modal' not in st.session_state:
+    st.session_state['show_login_modal'] = False
+if 'show_visual_modal' not in st.session_state:
+    st.session_state['show_visual_modal'] = False
+
+# Resetear modales automáticamente al cargar o cambiar vistas
 if 'last_loaded_page' not in st.session_state:
     st.session_state['last_loaded_page'] = 'home'
-
-# Si venimos de otra página o se recargó la vista, resetear estados de modal para evitar emergentes indeseados
-if st.session_state.get('last_loaded_page') != 'home':
     st.session_state['show_login_modal'] = False
     st.session_state['show_visual_modal'] = False
-    st.session_state['last_loaded_page'] = 'home'
 
 # ESTADOS DE AUTENTICACIÓN Y CONTROL DE MODALES
 if 'logged_in' not in st.session_state:
     st.session_state['logged_in'] = False
 if 'user_info' not in st.session_state:
     st.session_state['user_info'] = None
-if 'show_login_modal' not in st.session_state:
-    st.session_state['show_login_modal'] = False
-if 'show_visual_modal' not in st.session_state:
-    st.session_state['show_visual_modal'] = False
 
 # ESTADOS PARA INICIO POR CÓDIGO (OTP)
 if 'otp_code_sent' not in st.session_state:
@@ -126,10 +124,14 @@ if 'otp_secret' not in st.session_state:
 def toggle_theme():
     st.session_state['theme'] = 'dark' if st.session_state['theme'] == 'light' else 'light'
 
-def navigate_to(page, perfume_data=None):
-    st.session_state['current_page'] = page
+def reset_modals():
+    """Función para garantizar que ningún modal emergente quede abierto por error."""
     st.session_state['show_login_modal'] = False
     st.session_state['show_visual_modal'] = False
+
+def navigate_to(page, perfume_data=None):
+    st.session_state['current_page'] = page
+    reset_modals()
     if perfume_data:
         st.session_state['selected_perfume'] = perfume_data
 
@@ -362,17 +364,17 @@ def modal_busqueda_visual():
                     st.markdown(f"<span style='color:#4caf50; font-weight:600;'>Mejor precio: {p_txt}</span>", unsafe_allow_html=True)
                     if st.button("Comparar Precios", key=f"btn_vis_select_{p['id']}", use_container_width=True):
                         st.session_state['selected_perfume'] = p['id']
-                        st.session_state['show_visual_modal'] = False
+                        reset_modals()
                         st.session_state['last_loaded_page'] = 'compararprecios'
                         st.switch_page("pages/compararprecios.py")
                 st.markdown("<div style='margin-bottom: 8px;'></div>", unsafe_allow_html=True)
 
     st.markdown(f"<hr style='margin: 14px 0; border: none; border-bottom: 1px solid {btn_border};'>", unsafe_allow_html=True)
     if st.button("Cerrar Ventana", key="btn_close_vis_modal", use_container_width=True):
-        st.session_state['show_visual_modal'] = False
+        reset_modals()
         st.rerun()
 
-# 3. RENDERIZADO EXCLUSIVO DE MODALES EN CONTENEDOR RAÍZ
+# 3. RENDERIZADO EXCLUSIVO DE MODALES
 if st.session_state.get('show_login_modal', False):
     st.session_state['show_visual_modal'] = False
     modal_autenticacion()
@@ -843,13 +845,31 @@ st.markdown(f"""
         margin: 0 !important;
     }}
 
-    /* DIBUJOS ILUSTRADOS VECTORIALES EN ROJO */
+    /* DIBUJOS ILUSTRADOS VECTORIALES EN ROJO PARA CHIPS */
+    .st-key-btn_chip_home button {{
+        position: relative !important;
+        padding-left: 2.7rem !important;
+        border-radius: 20px !important;
+    }}
+    .st-key-btn_chip_home button::before {{
+        content: '' !important;
+        position: absolute !important;
+        left: 14px !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        width: 17px !important;
+        height: 17px !important;
+        background-image: url("{home_red_svg}") !important;
+        background-repeat: no-repeat !important;
+        background-size: contain !important;
+        background-position: center !important;
+        z-index: 1 !important;
+    }}
+
     a[data-testid="stPageLink-NavLink"][href*="trendhype"],
     a[data-testid="stPageLink-NavLink"][href*="trustpage"],
     a[data-testid="stPageLink-NavLink"][href*="compararprecios"],
-    a[data-testid="stPageLink-NavLink"][href*="remates"],
-    a[data-testid="stPageLink-NavLink"][href$="app.py"],
-    a[data-testid="stPageLink-NavLink"][href="/"] {{
+    a[data-testid="stPageLink-NavLink"][href*="remates"] {{
         position: relative !important;
         padding-left: 2.7rem !important;
         padding-right: 1.1rem !important;
@@ -914,23 +934,6 @@ st.markdown(f"""
         width: 17px !important;
         height: 17px !important;
         background-image: url("{flame_red_svg}") !important;
-        background-repeat: no-repeat !important;
-        background-size: contain !important;
-        background-position: center !important;
-        z-index: 1 !important;
-    }}
-
-    /* 5. Inicio / Catálogo */
-    a[data-testid="stPageLink-NavLink"][href$="app.py"]::before,
-    a[data-testid="stPageLink-NavLink"][href="/"]::before {{
-        content: '' !important;
-        position: absolute !important;
-        left: 14px !important;
-        top: 50% !important;
-        transform: translateY(-50%) !important;
-        width: 17px !important;
-        height: 17px !important;
-        background-image: url("{home_red_svg}") !important;
         background-repeat: no-repeat !important;
         background-size: contain !important;
         background-position: center !important;
@@ -1148,20 +1151,6 @@ st.markdown(f"""
             justify-content: space-between !important;
         }}
 
-        div[data-testid="column"]:has(a[href="/"]) {{
-            flex: 1 1 auto !important;
-            width: auto !important;
-        }}
-
-        a[href="/"] span {{
-            font-size: 1.15rem !important;
-        }}
-
-        a[href="/"] svg {{
-            width: 24px !important;
-            height: 24px !important;
-        }}
-
         .st-key-login_btn {{
             flex: 0 0 auto !important;
             width: auto !important;
@@ -1368,11 +1357,13 @@ with btn_col1:
             st.markdown("<div style='margin-top: 8px;'></div>", unsafe_allow_html=True)
             
             if st.button("Mi Perfil y Alertas", key="btn_go_profile", use_container_width=True):
+                reset_modals()
                 st.switch_page("pages/perfil.py")
                 
             if st.button("Cerrar Sesión", key="btn_logout", use_container_width=True):
                 st.session_state['logged_in'] = False
                 st.session_state['user_info'] = None
+                reset_modals()
                 st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
     else:
@@ -1437,10 +1428,14 @@ with col_photo:
         st.session_state['show_login_modal'] = False
         st.rerun()
 
-# 9. CHIPS DE ENLACE RÁPIDO A PÁGINAS INDEPENDIENTES
+# 9. CHIPS DE ENLACE RÁPIDO CON BOTÓN LIMPIO PARA INICIO / CATÁLOGO
 st.markdown("<div style='margin-top: 14px;'></div>", unsafe_allow_html=True)
-col_chip1, col_chip2, col_chip3, col_chip4, col_chip_space = st.columns([1.5, 2.0, 1.7, 1.6, 2.2])
+col_chip0, col_chip1, col_chip2, col_chip3, col_chip4 = st.columns([1.6, 1.5, 2.0, 1.7, 1.6])
 
+with col_chip0:
+    if st.button("Inicio / Catálogo", key="btn_chip_home", use_container_width=True):
+        navigate_to('home')
+        st.rerun()
 with col_chip1:
     st.page_link("pages/trendhype.py", label="Trend Del Hype", use_container_width=True)
 with col_chip2:
@@ -1505,7 +1500,7 @@ if st.session_state['current_page'] == 'home':
                         st.markdown(clean_html(card_html), unsafe_allow_html=True)
                         if st.button("Comparar Precios", key=f"btn_comp_{p['id']}", use_container_width=True):
                             st.session_state['selected_perfume'] = p['id']
-                            st.session_state['show_visual_modal'] = False
+                            reset_modals()
                             st.session_state['last_loaded_page'] = 'compararprecios'
                             st.switch_page("pages/compararprecios.py")
 
