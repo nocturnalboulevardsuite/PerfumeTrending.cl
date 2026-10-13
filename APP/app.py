@@ -95,6 +95,16 @@ if 'theme' not in st.session_state:
 if 'selected_perfume' not in st.session_state:
     st.session_state['selected_perfume'] = None
 
+# CONTROL DE NAVEGACIÓN ENTRE PÁGINAS Y LIMPIEZA DE MODALES
+if 'last_loaded_page' not in st.session_state:
+    st.session_state['last_loaded_page'] = 'home'
+
+# Si venimos de otra página o se recargó la vista, resetear estados de modal para evitar emergentes indeseados
+if st.session_state.get('last_loaded_page') != 'home':
+    st.session_state['show_login_modal'] = False
+    st.session_state['show_visual_modal'] = False
+    st.session_state['last_loaded_page'] = 'home'
+
 # ESTADOS DE AUTENTICACIÓN Y CONTROL DE MODALES
 if 'logged_in' not in st.session_state:
     st.session_state['logged_in'] = False
@@ -118,6 +128,8 @@ def toggle_theme():
 
 def navigate_to(page, perfume_data=None):
     st.session_state['current_page'] = page
+    st.session_state['show_login_modal'] = False
+    st.session_state['show_visual_modal'] = False
     if perfume_data:
         st.session_state['selected_perfume'] = perfume_data
 
@@ -245,6 +257,11 @@ def modal_autenticacion():
                 else:
                     st.info("Función de backend en proceso de actualización.")
 
+    st.markdown(f"<hr style='margin: 14px 0; border: none; border-bottom: 1px solid {btn_border};'>", unsafe_allow_html=True)
+    if st.button("Cerrar Ventana", key="btn_close_auth_modal", use_container_width=True):
+        st.session_state['show_login_modal'] = False
+        st.rerun()
+
 # MODAL FLOTANTE PARA BÚSQUEDA VISUAL CON DIBUJOS HTML VECTORIALES
 @st.dialog("Búsqueda Visual de Perfumes")
 def modal_busqueda_visual():
@@ -346,8 +363,14 @@ def modal_busqueda_visual():
                     if st.button("Comparar Precios", key=f"btn_vis_select_{p['id']}", use_container_width=True):
                         st.session_state['selected_perfume'] = p['id']
                         st.session_state['show_visual_modal'] = False
+                        st.session_state['last_loaded_page'] = 'compararprecios'
                         st.switch_page("pages/compararprecios.py")
                 st.markdown("<div style='margin-bottom: 8px;'></div>", unsafe_allow_html=True)
+
+    st.markdown(f"<hr style='margin: 14px 0; border: none; border-bottom: 1px solid {btn_border};'>", unsafe_allow_html=True)
+    if st.button("Cerrar Ventana", key="btn_close_vis_modal", use_container_width=True):
+        st.session_state['show_visual_modal'] = False
+        st.rerun()
 
 # 3. RENDERIZADO EXCLUSIVO DE MODALES EN CONTENEDOR RAÍZ
 if st.session_state.get('show_login_modal', False):
@@ -1482,6 +1505,8 @@ if st.session_state['current_page'] == 'home':
                         st.markdown(clean_html(card_html), unsafe_allow_html=True)
                         if st.button("Comparar Precios", key=f"btn_comp_{p['id']}", use_container_width=True):
                             st.session_state['selected_perfume'] = p['id']
+                            st.session_state['show_visual_modal'] = False
+                            st.session_state['last_loaded_page'] = 'compararprecios'
                             st.switch_page("pages/compararprecios.py")
 
 elif st.session_state['current_page'] == 'esencias_page':
