@@ -1,803 +1,591 @@
 import streamlit as st
 import streamlit.components.v1 as components
-import pandas as pd
-import sys
-import os
-import base64
-import urllib.parse
-import random
 
-# Configuración de rutas canónicas para importar backend
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-APP_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-if BASE_DIR not in sys.path:
-    sys.path.append(BASE_DIR)
-if APP_DIR not in sys.path:
-    sys.path.append(APP_DIR)
+# ---------------------------------------------------------
+# CONFIGURACIÓN DE PÁGINA
+# ---------------------------------------------------------
+st.set_page_config(
+    page_title="Abogadas Hermandad | Defensa Legal de la Mujer",
+    page_icon="⚖", 
+    layout="wide",
+    initial_sidebar_state="collapsed"
+)
 
-try:
-    from backend.database import (
-        obtener_catalogo,
-        obtener_precios_actuales,
-        obtener_historico_precios,
-        obtener_detalle_perfume,
-        crear_usuario,
-        verificar_usuario
-    )
-except ImportError:
-    from backend.database import (
-        obtener_catalogo,
-        obtener_precios_actuales,
-        obtener_historico_precios,
-        obtener_detalle_perfume
-    )
-    crear_usuario = None
-    verificar_usuario = None
-
-@st.cache_data(ttl=300, show_spinner=False)
-def get_cached_catalogo():
-    return obtener_catalogo()
-
-@st.cache_data(ttl=300, show_spinner=False)
-def get_cached_precios(perfume_id):
-    return obtener_precios_actuales(perfume_id)
-
-@st.cache_data(ttl=300, show_spinner=False)
-def get_cached_historico(perfume_id):
-    return obtener_historico_precios(perfume_id)
-
-@st.cache_data(ttl=300, show_spinner=False)
-def get_cached_detalle(perfume_id):
-    return obtener_detalle_perfume(perfume_id)
-
-def clean_html(html_str: str) -> str:
-    """Limpia espacios iniciales por línea para evitar que Streamlit Markdown interprete HTML como código."""
-    return "\n".join(line.strip() for line in html_str.splitlines())
-
-def resolver_url_oferta(tienda_nombre: str, perfume_nombre: str, url_prod: str, url_base: str) -> str:
-    """
-    Retorna el enlace directo a la ficha del perfume exacto en la tienda.
-    Si por algún motivo no existe URL directa, usa la búsqueda directa en la tienda.
-    """
-    if url_prod and url_prod.startswith("http") and url_prod != "#":
-        return url_prod
-
-    t = (tienda_nombre or "").lower()
-    q = urllib.parse.quote(perfume_nombre.strip())
-
-    if "falabella" in t:
-        return f"https://www.falabella.com/falabella-cl/search?Ntt={q}"
-    elif "paris" in t:
-        return f"https://www.paris.cl/search?q={q}"
-    elif "ripley" in t:
-        return f"https://simple.ripley.cl/search/{q}"
-    elif "silk" in t:
-        return f"https://www.silkperfumes.cl/search?q={q}"
-    elif "elite" in t:
-        return f"https://www.eliteperfumes.cl/search?q={q}"
-    elif "alisha" in t:
-        return f"https://www.alisha.cl/search?q={q}"
-    elif "dbs" in t:
-        return f"https://www.dbs.cl/search?q={q}"
-
-    return url_base or "#"
-
-def get_image_src(img_path_or_url):
-    """Retorna URL remota o data URI en base64 para imágenes locales."""
-    if not img_path_or_url:
-        return "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=500&q=80"
-    
-    if img_path_or_url.startswith("http://") or img_path_or_url.startswith("https://") or img_path_or_url.startswith("data:"):
-        return img_path_or_url
-
-    local_path = img_path_or_url
-    if not os.path.isabs(local_path):
-        cand1 = os.path.join(BASE_DIR, local_path)
-        cand2 = os.path.join(BASE_DIR, "APP", local_path)
-        if os.path.exists(cand1):
-            local_path = cand1
-        elif os.path.exists(cand2):
-            local_path = cand2
-
-    if os.path.exists(local_path):
-        ext = os.path.splitext(local_path)[1].lower().replace(".", "")
-        mime = "image/png" if ext == "png" else "image/jpeg"
-        try:
-            with open(local_path, "rb") as f:
-                b64 = base64.b64encode(f.read()).decode("utf-8")
-                return f"data:{mime};base64,{b64}"
-        except Exception:
-            pass
-
-    return img_path_or_url
-
-# 1. CONFIGURACIÓN DE LA PÁGINA Y ESTADO
-st.set_page_config(page_title="Comparador de Precios - PerfumeTrending", layout="wide", initial_sidebar_state="collapsed")
-
-if 'theme' not in st.session_state:
-    st.session_state['theme'] = 'dark'
-
-# ESTADOS DE AUTENTICACIÓN Y CONTROL DE MODAL
-if 'logged_in' not in st.session_state:
-    st.session_state['logged_in'] = False
-if 'user_info' not in st.session_state:
-    st.session_state['user_info'] = None
-if 'show_login_modal' not in st.session_state:
-    st.session_state['show_login_modal'] = False
-
-# ESTADOS PARA INICIO POR CÓDIGO (OTP)
-if 'otp_code_sent' not in st.session_state:
-    st.session_state['otp_code_sent'] = False
-if 'otp_contact' not in st.session_state:
-    st.session_state['otp_contact'] = ""
-if 'otp_secret' not in st.session_state:
-    st.session_state['otp_secret'] = ""
+# ---------------------------------------------------------
+# ESTADO DEL TEMA
+# ---------------------------------------------------------
+if "theme_mode" not in st.session_state:
+    st.session_state.theme_mode = "light"
 
 def toggle_theme():
-    st.session_state['theme'] = 'dark' if st.session_state['theme'] == 'light' else 'light'
+    if st.session_state.theme_mode == "light":
+        st.session_state.theme_mode = "dark"
+    else:
+        st.session_state.theme_mode = "light"
 
-# MODAL FLOTANTE DE INICIO DE SESIÓN Y REGISTRO
-@st.dialog("Acceso a PerfumeTrending")
-def modal_autenticacion():
-    tab_codigo, tab_login, tab_registro = st.tabs(["Inicio por Código", "Iniciar Sesión", "Registrarse"])
-    
-    # OPCIÓN PREDETERMINADA: INICIO POR CÓDIGO
-    with tab_codigo:
-        st.markdown("#### Ingresa con tu Correo o Teléfono")
-        
-        if not st.session_state['otp_code_sent']:
-            with st.form("form_send_otp", clear_on_submit=False):
-                contact_input = st.text_input("Correo electrónico o número de teléfono", key="otp_contact_input", placeholder="ejemplo@correo.cl o +56912345678")
-                btn_send = st.form_submit_button("Enviar código de verificación", use_container_width=True)
-                
-                if btn_send:
-                    if not contact_input.strip():
-                        st.error("Por favor ingresa un correo electrónico o teléfono válido.")
-                    else:
-                        code = str(random.randint(100000, 999999))
-                        st.session_state['otp_code_sent'] = True
-                        st.session_state['otp_contact'] = contact_input.strip()
-                        st.session_state['otp_secret'] = code
-                        st.rerun()
-        else:
-            st.info(f"Un código de verificación ha sido enviado a **{st.session_state['otp_contact']}**")
-            st.caption(f"*(Código de prueba rápido: **{st.session_state['otp_secret']}**)*")
-            
-            with st.form("form_verify_otp", clear_on_submit=False):
-                input_code = st.text_input("Ingresa el código de 6 dígitos", key="otp_code_input", placeholder="123456", max_chars=6)
-                btn_verify = st.form_submit_button("Verificar e Ingresar", use_container_width=True)
-                
-                if btn_verify:
-                    if input_code.strip() == st.session_state['otp_secret']:
-                        contact_str = st.session_state['otp_contact']
-                        
-                        st.session_state['logged_in'] = True
-                        st.session_state['user_info'] = {
-                            'nombre': contact_str,
-                            'email': contact_str
-                        }
-                        
-                        # Resetear estados de login y cerrar modal
-                        st.session_state['otp_code_sent'] = False
-                        st.session_state['otp_contact'] = ""
-                        st.session_state['otp_secret'] = ""
-                        st.session_state['show_login_modal'] = False
-                        st.rerun()
-                    else:
-                        st.error("Código incorrecto. Revisa e intenta nuevamente.")
-                        
-            if st.button("Cambiar correo/teléfono", key="btn_reset_otp", use_container_width=True):
-                st.session_state['otp_code_sent'] = False
-                st.session_state['otp_contact'] = ""
-                st.session_state['otp_secret'] = ""
-                st.rerun()
+is_dark = st.session_state.theme_mode == "dark"
 
-    # OPCIÓN 2: CON TRADICIONAL CORREO / CONTRASEÑA
-    with tab_login:
-        st.markdown("#### Ingresa a tu cuenta")
-        with st.form("form_login_pass", clear_on_submit=False):
-            login_email = st.text_input("Correo Electrónico", key="login_email_input", placeholder="usuario@correo.cl")
-            login_pass = st.text_input("Contraseña", type="password", key="login_pass_input", placeholder="••••••••")
-            btn_login = st.form_submit_button("Ingresar a la plataforma", use_container_width=True)
-            
-            if btn_login:
-                if not login_email or not login_pass:
-                    st.error("Por favor ingresa tu correo y contraseña.")
-                elif verificar_usuario:
-                    exito, usuario_data = verificar_usuario(login_email, login_pass)
-                    if exito:
-                        st.session_state['logged_in'] = True
-                        st.session_state['user_info'] = usuario_data
-                        st.session_state['show_login_modal'] = False
-                        st.rerun()
-                    else:
-                        st.error("Correo o contraseña incorrectos.")
-                else:
-                    st.info("Función de backend en proceso de actualización.")
+# ---------------------------------------------------------
+# PALETA DE COLORES (CREMA CÁLIDO Y DORADO)
+# ---------------------------------------------------------
+if is_dark:
+    bg_app = "#12110E"
+    bg_nav = "#181714"
+    bg_card = "#1C1A17"
+    bg_secondary = "#26231E"
+    border_color = "#3A342C"
+    text_main = "#F7F4ED"
+    text_muted = "#B8B0A1"
+    gold_main = "#E5C06A"
+    gold_bright = "#FFD700"
+    btn_text = "CAMBIAR A TEMA CLARO"
+    beam_transform = "rotate(14deg)" # Inclinación suave en modo oscuro
+else:
+    bg_app = "#FAF6E8"        # Blanco amarillento / crema cálido elegante
+    bg_nav = "#FFFFFF"
+    bg_card = "#FFFFFF"
+    bg_secondary = "#F3EDDF"
+    border_color = "#E6DCB8"
+    text_main = "#1E1A15"     
+    text_muted = "#6B6255"
+    gold_main = "#D4AF37"     
+    gold_bright = "#E5B80B"   
+    btn_text = "CAMBIAR A TEMA OSCURO"
+    beam_transform = "rotate(0deg)"  # Balanza recta equilibrada en modo claro
 
-    # OPCIÓN 3: REGISTRO NUEVO USUARIO
-    with tab_registro:
-        st.markdown("#### Crea una cuenta nueva")
-        with st.form("form_reg_user", clear_on_submit=False):
-            reg_nombre = st.text_input("Nombre completo", key="reg_nombre_input", placeholder="Juan Pérez")
-            reg_email = st.text_input("Correo Electrónico", key="reg_email_input", placeholder="usuario@correo.cl")
-            reg_pass1 = st.text_input("Contraseña", type="password", key="reg_pass1_input", placeholder="••••••••")
-            reg_pass2 = st.text_input("Confirmar Contraseña", type="password", key="reg_pass2_input", placeholder="••••••••")
-            btn_reg = st.form_submit_button("Crear mi cuenta", use_container_width=True)
-            
-            if btn_reg:
-                if not reg_nombre or not reg_email or not reg_pass1:
-                    st.error("Todos los campos son obligatorios.")
-                elif reg_pass1 != reg_pass2:
-                    st.error("Las contraseñas no coinciden.")
-                elif len(reg_pass1) < 6:
-                    st.warning("La contraseña debe tener al menos 6 caracteres.")
-                elif crear_usuario:
-                    exito, msg = crear_usuario(reg_nombre, reg_email, reg_pass1)
-                    if exito:
-                        st.success("¡Cuenta creada con éxito! Ya puedes iniciar sesión.")
-                    else:
-                        st.error(msg)
-                else:
-                    st.info("Función de backend en proceso de actualización.")
-
-is_dark = st.session_state['theme'] == 'dark'
-
-# Colores dinámicos adaptables por tema
-app_bg = "#0c0e12" if is_dark else "#f9f9fb"
-app_bg_css = f"background-color: {app_bg} !important;"
-
-text_color = "#f0f0f0" if is_dark else "#18181b"
-subtext_color = "#888890" if is_dark else "#666670"
-
-btn_bg = "#181c24" if is_dark else "#ffffff"
-btn_text = "#ffffff" if is_dark else "#18181b"
-btn_border = "#2a2e39" if is_dark else "#d1d5db"
-
-input_bg = "#14171d" if is_dark else "#ffffff"
-input_text = "#f0f0f0" if is_dark else "#18181b"
-input_border = "#2a2e39" if is_dark else "#d1d5db"
-
-# SWITCH DE TEMA - POSICIONAMIENTO Y SVGS
-bottle_left_pos = "42px" if is_dark else "-2px"
-static_icon_pos = "12px center" if is_dark else "calc(100% - 12px) center"
-
-static_icon_svg = (
-    "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='4'/><line x1='12' y1='1' x2='12' y2='3'/><line x1='12' y1='21' x2='12' y2='23'/><line x1='4.22' y1='4.22' x2='5.64' y2='5.64'/><line x1='18.36' y1='18.36' x2='19.78' y2='19.78'/><line x1='1' y1='12' x2='3' y2='12'/><line x1='21' y1='12' x2='23' y2='12'/><line x1='4.22' y1='19.78' x2='5.64' y2='18.36'/><line x1='18.36' y1='5.64' x2='19.78' y2='4.22'/></svg>"
-    if is_dark else
-    "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M21 12.79A9 9 0 0 1 11.21 3 7 7 0 0 0 21 12.79z'/></svg>"
-)
-
-bottle_svg = (
-    "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 58'><rect x='18' y='2' width='14' height='7' rx='2' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><rect x='21' y='9' width='8' height='5' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='19' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><path d='M21 28a8 8 0 0 0 9 10.5 8.5 8.5 0 0 1-9-10.5z' fill='none' stroke='%23111111' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/></svg>"
-    if is_dark else
-    "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 58'><rect x='18' y='2' width='14' height='7' rx='2' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><rect x='21' y='9' width='8' height='5' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='19' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='5' fill='none' stroke='%23111111' stroke-width='2'/><line x1='25' y1='23' x2='25' y2='26' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='25' y1='42' x2='25' y2='45' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='14' y1='34' x2='17' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='33' y1='34' x2='36' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='17' y1='26' x2='19' y2='28' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='31' y1='40' x2='33' y2='42' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='17' y1='42' x2='19' y2='40' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='31' y1='28' x2='33' y2='26' stroke='%23111111' stroke-width='2' stroke-linecap='round'/></svg>"
-)
-
-user_icon_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23{btn_text[1:]}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2'/><circle cx='12' cy='7' r='4'/></svg>"
-
-# ICONOS VECTORIALES DE ALTA PRECISIÓN (ESTILO LINEAR / STRIPE / LUCIDE)
-trend_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d83737' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='23 6 13.5 15.5 8.5 10.5 1 18'/><polyline points='17 6 23 6 23 12'/></svg>"
-shield_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d83737' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/><polyline points='9 12 11 14 15 10'/></svg>"
-tag_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d83737' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z'/><circle cx='7' cy='7' r='1.5' fill='%23d83737'/></svg>"
-home_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d83737' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z'/><polyline points='9 22 9 12 15 12 15 22'/></svg>"
-
-# 2. CSS ADAPTABLE Y ESTILOS PRINCIPALES
+# ---------------------------------------------------------
+# ESTILOS CSS DINÁMICOS
+# ---------------------------------------------------------
 st.markdown(f"""
     <style>
-    html, body, .stApp {{
-        -webkit-font-smoothing: antialiased !important;
-        -moz-osx-font-smoothing: grayscale !important;
-        text-rendering: optimizeLegibility !important;
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap');
+
+    [data-testid="stAppViewContainer"], 
+    .stApp, body, html {{
+        background-color: {bg_app} !important;
+        color: {text_main} !important;
+        font-family: 'Plus Jakarta Sans', sans-serif !important;
+        transition: background-color 0.4s ease, color 0.4s ease;
     }}
 
-    header[data-testid="stHeader"] {{ display: none !important; }}
-    
-    .block-container {{ 
-        padding-top: 1.2rem !important; 
-        padding-bottom: 2rem !important; 
-        max-width: 1200px !important;
-    }}
-    
-    .stApp {{ {app_bg_css} color: {text_color} !important; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }}
-
-    .stApp p, .stApp span, .stApp label, .stMarkdown p {{
-        color: {text_color} !important;
-        text-shadow: none !important;
+    #MainMenu, footer, header, [data-testid="stHeader"] {{
+        visibility: hidden !important;
+        height: 0px !important;
     }}
 
-    /* BOTÓN INGRESAR (LOGIN) Y CONTENEDORES DE LA CABECERA */
-    .st-key-login_btn, .st-key-theme_toggle {{
-        display: flex !important;
-        align-items: center !important;
-        height: 100% !important;
+    .block-container {{
+        padding-top: 5.5rem !important;
+        padding-bottom: 4rem !important;
+        max-width: 1100px !important;
     }}
 
-    .st-key-login_btn button {{
-        background-color: {btn_bg} !important;
-        color: {btn_text} !important;
-        border: 1px solid {btn_border} !important;
-        border-radius: 8px !important;
-        height: 44px !important;
-        min-height: 44px !important;
-        padding: 0 0.8rem 0 2.2rem !important;
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        background-image: url("{user_icon_svg}") !important;
-        background-repeat: no-repeat !important;
-        background-position: 10px center !important;
-        background-size: 18px 18px !important;
-        font-size: 0.95rem !important;
-        margin: 0 !important;
-        white-space: nowrap !important;
-    }}
-
-    .st-key-login_btn button p {{
-        font-size: 0.95rem !important;
-        line-height: 1 !important;
-        margin: 0 !important;
-        color: {btn_text} !important;
-        font-weight: 600 !important;
-        white-space: nowrap !important;
-    }}
-
-    /* ESTILO PARA BOTÓN POPOVER DE PERFIL Y ESENCIAS */
-    div[data-testid="stPopover"],
-    div[data-testid="stPopover"] > button,
-    button[data-testid="stPopoverButton"],
-    div[data-testid="stPopover"] button {{
-        background-color: {btn_bg} !important;
-        color: {btn_text} !important;
-        border: 1px solid {btn_border} !important;
-        border-radius: 8px !important;
-        min-height: 44px !important;
-        transition: transform 0.22s ease, background-color 0.15s ease !important;
-    }}
-
-    div[data-testid="stPopover"] button p,
-    div[data-testid="stPopover"] button span,
-    button[data-testid="stPopoverButton"] p,
-    button[data-testid="stPopoverButton"] span {{
-        color: {btn_text} !important;
-        font-weight: 600 !important;
-        white-space: nowrap !important;
-    }}
-
-    div[data-testid="stPopoverBody"],
-    div[data-testid="stPopoverContent"] {{
-        background-color: {input_bg} !important;
-        border: 1px solid {btn_border} !important;
-        border-radius: 8px !important;
-        color: {text_color} !important;
-    }}
-
-    /* SWITCH TEMA */
-    .st-key-theme_toggle button,
-    .st-key-theme_toggle button:hover,
-    .st-key-theme_toggle button:focus {{
-        background: transparent !important;
-        border: none !important;
-        padding: 0 !important;
-        width: 82px !important;
-        height: 48px !important;
-        position: relative !important;
-        cursor: pointer !important;
-        margin-left: auto !important;
-    }}
-
-    .st-key-theme_toggle button * {{ display: none !important; }}
-    
-    .st-key-theme_toggle button::before {{
-        content: '' !important;
-        position: absolute !important;
-        top: 7px !important; left: 0 !important;
-        width: 80px !important; height: 36px !important;
-        background-color: #2b2c34 !important;
-        border: 2px solid #1a1b20 !important;
-        border-radius: 20px !important;
-        background-image: url("{static_icon_svg}") !important;
-        background-repeat: no-repeat !important;
-        background-position: {static_icon_pos} !important;
-        background-size: 18px 18px !important;
-        transition: all 0.3s ease !important;
-    }}
-    
-    .st-key-theme_toggle button::after {{
-        content: '' !important;
-        position: absolute !important;
-        top: -1px !important;
-        left: {bottle_left_pos} !important;
-        width: 40px !important; height: 46px !important;
-        background-image: url("{bottle_svg}") !important;
-        background-repeat: no-repeat !important;
-        background-size: contain !important;
-        transition: left 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
-        z-index: 2 !important;
-    }}
-
-    /* CHIPS DE ACCESO RÁPIDO Y PAGE LINKS */
-    a[data-testid="stPageLink-NavLink"] {{
-        background-color: {btn_bg} !important;
-        border: 1px solid {btn_border} !important;
-        border-radius: 20px !important;
-        padding: 0.45rem 1rem !important;
-        box-shadow: none !important;
-        width: 100% !important;
-        min-height: 0px !important;
-        height: auto !important;
-        filter: none !important;
-        text-decoration: none !important;
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        box-sizing: border-box !important;
-    }}
-    
-    a[data-testid="stPageLink-NavLink"] p,
-    a[data-testid="stPageLink-NavLink"] span {{
-        font-size: 0.85rem !important;
-        font-weight: 600 !important;
-        color: {btn_text} !important;
-        letter-spacing: 0.2px;
-        white-space: nowrap !important;
-        text-overflow: clip !important;
-        overflow: visible !important;
-        margin: 0 !important;
-    }}
-
-    /* DIBUJOS ILUSTRADOS VECTORIALES EN ROJO PARA LOS BOTONES */
-    a[data-testid="stPageLink-NavLink"][href*="trendhype"],
-    a[data-testid="stPageLink-NavLink"][href*="trustpage"],
-    a[data-testid="stPageLink-NavLink"][href*="compararprecios"],
-    a[data-testid="stPageLink-NavLink"][href$="app.py"],
-    a[data-testid="stPageLink-NavLink"][href="/"] {{
-        position: relative !important;
-        padding-left: 2.7rem !important;
-        padding-right: 1.1rem !important;
-        overflow: hidden !important;
-    }}
-
-    /* 1. Trend Del Hype */
-    a[data-testid="stPageLink-NavLink"][href*="trendhype"]::before {{
-        content: '' !important;
-        position: absolute !important;
-        left: 14px !important;
-        top: 50% !important;
-        transform: translateY(-50%) !important;
-        width: 17px !important;
-        height: 17px !important;
-        background-image: url("{trend_red_svg}") !important;
-        background-repeat: no-repeat !important;
-        background-size: contain !important;
-        background-position: center !important;
-        z-index: 1 !important;
-    }}
-
-    /* 2. Páginas de Confianza */
-    a[data-testid="stPageLink-NavLink"][href*="trustpage"]::before {{
-        content: '' !important;
-        position: absolute !important;
-        left: 14px !important;
-        top: 50% !important;
-        transform: translateY(-50%) !important;
-        width: 17px !important;
-        height: 17px !important;
-        background-image: url("{shield_red_svg}") !important;
-        background-repeat: no-repeat !important;
-        background-size: contain !important;
-        background-position: center !important;
-        z-index: 1 !important;
-    }}
-
-    /* 3. Comparar Precios */
-    a[data-testid="stPageLink-NavLink"][href*="compararprecios"]::before {{
-        content: '' !important;
-        position: absolute !important;
-        left: 14px !important;
-        top: 50% !important;
-        transform: translateY(-50%) !important;
-        width: 17px !important;
-        height: 17px !important;
-        background-image: url("{tag_red_svg}") !important;
-        background-repeat: no-repeat !important;
-        background-size: contain !important;
-        background-position: center !important;
-        z-index: 1 !important;
-    }}
-
-    /* 4. Inicio / Catálogo */
-    a[data-testid="stPageLink-NavLink"][href$="app.py"]::before,
-    a[data-testid="stPageLink-NavLink"][href="/"]::before {{
-        content: '' !important;
-        position: absolute !important;
-        left: 14px !important;
-        top: 50% !important;
-        transform: translateY(-50%) !important;
-        width: 17px !important;
-        height: 17px !important;
-        background-image: url("{home_red_svg}") !important;
-        background-repeat: no-repeat !important;
-        background-size: contain !important;
-        background-position: center !important;
-        z-index: 1 !important;
-    }}
-
-    /* TARJETA CABECERA DEL PERFUME */
-    .perfume-header-card {{
-        background-color: {btn_bg};
-        border: 1px solid {btn_border};
-        border-radius: 12px;
-        padding: 20px;
-        margin-bottom: 24px;
+    /* NAVBAR FIJO DE LUJO */
+    .custom-navbar {{
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 70px;
+        background-color: {bg_nav};
+        border-bottom: 1px solid {border_color};
         display: flex;
-        gap: 24px;
-        align-items: center;
-    }}
-
-    .perfume-header-img {{
-        width: 130px;
-        height: 130px;
-        object-fit: contain;
-        background: { "#14171d" if is_dark else "#ffffff" };
-        border: 1px solid {btn_border};
-        border-radius: 8px;
-        padding: 8px;
-    }}
-
-    /* TARJETAS DE COMPARACIÓN DE PRECIOS */
-    .price-card {{
-        background-color: {btn_bg};
-        border: 1px solid {btn_border};
-        border-radius: 10px;
-        padding: 16px 20px;
-        margin-bottom: 12px;
-        display: flex;
-        align-items: center;
         justify-content: space-between;
-        transition: transform 0.2s ease, border-color 0.2s ease;
+        align-items: center;
+        padding: 0 5%;
+        z-index: 999999;
+        box-shadow: 0 2px 15px rgba(0,0,0,0.03);
+        transition: background-color 0.4s ease;
     }}
-    .price-card:hover {{
-        transform: translateY(-2px);
-        border-color: #d4c2a5;
-    }}
-    .best-deal {{
-        border: 1px solid { "rgba(74, 222, 128, 0.45)" if is_dark else "rgba(46, 125, 50, 0.4)" } !important;
-        background-color: { "rgba(34, 197, 94, 0.08)" if is_dark else "rgba(46, 125, 50, 0.06)" } !important;
-        box-shadow: { "0 0 16px rgba(34, 197, 94, 0.08)" if is_dark else "0 2px 8px rgba(46, 125, 50, 0.06)" };
-    }}
-    .store-name {{
-        font-size: 1.1rem;
+
+    .nav-brand {{
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        font-family: 'Playfair Display', serif;
+        font-size: 1.35rem;
         font-weight: 700;
-        color: {text_color};
+        color: {text_main};
+        letter-spacing: 1.5px;
     }}
-    .store-badge {{
-        font-size: 0.75rem;
-        padding: 2px 8px;
-        border-radius: 4px;
-        background-color: {btn_border};
-        color: {text_color};
-        margin-left: 8px;
-    }}
-    .price-value {{
-        font-size: 1.25rem;
-        font-weight: 800;
-        color: {text_color};
-    }}
-    .old-price {{
-        font-size: 0.85rem;
-        text-decoration: line-through;
-        color: {subtext_color};
-        margin-right: 8px;
-    }}
-    .buy-btn {{
-        background-color: #8c7b6d;
-        color: #ffffff !important;
-        padding: 8px 16px;
-        border-radius: 6px;
-        text-decoration: none;
+
+    .nav-links {{
+        display: flex;
+        gap: 2.2rem;
+        font-size: 0.82rem;
         font-weight: 600;
-        font-size: 0.85rem;
-        display: inline-block;
-        transition: background-color 0.2s ease;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        color: {text_main};
     }}
-    .buy-btn:hover {{
-        background-color: #726255;
+    
+    .nav-links span {{
+        cursor: pointer;
+        transition: color 0.3s;
+    }}
+
+    .nav-links span:hover {{
+        color: {gold_bright};
+    }}
+
+    /* CONTENEDOR DE LA BALANZA ANIMADA (SIN CORTES) */
+    .theme-wrapper {{
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 1.5rem auto 1rem auto;
+        text-align: center;
+        overflow: visible !important;
+    }}
+
+    /* CENTRADO ABSOLUTO DEL BOTÓN Y SU CONTENEDOR STREAMLIT */
+    div[data-testid="stElementContainer"]:has(div[data-testid="stButton"]),
+    div[data-testid="stButton"] {{
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        width: 100% !important;
+        margin: 0 auto !important;
+    }}
+
+    div[data-testid="stButton"] > button {{
+        background-color: {bg_card} !important;
+        color: {text_main} !important;
+        border: 1px solid {border_color} !important;
+        border-radius: 6px !important;
+        padding: 0.75rem 1.8rem !important;
+        font-size: 0.82rem !important;
+        font-weight: 700 !important;
+        letter-spacing: 1.5px !important;
+        text-transform: uppercase !important;
+        white-space: nowrap !important;
+        width: 100% !important;
+        max-width: 280px !important;
+        cursor: pointer !important;
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+        margin: 0 auto !important;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.02) !important;
+        text-align: center !important;
+    }}
+
+    div[data-testid="stButton"] > button:hover {{
+        border-color: {gold_bright} !important;
+        color: {gold_bright} !important;
+        transform: scale(1.04) !important;
+        box-shadow: 0 6px 20px rgba(212, 175, 55, 0.22) !important;
+    }}
+
+    .btn-primary > button {{
+        background-color: {gold_main} !important;
+        color: #FFFFFF !important;
+        border: none !important;
+        font-size: 0.9rem !important;
+        padding: 0.85rem 2.5rem !important;
+    }}
+    
+    .btn-primary > button:hover {{
+        background-color: {gold_bright} !important;
+        color: #FFFFFF !important;
+        transform: scale(1.05) !important;
+        box-shadow: 0 8px 25px rgba(212, 175, 55, 0.35) !important;
+    }}
+
+    /* HERO BANNER */
+    .hero-section {{
+        text-align: center;
+        padding: 2.5rem 1rem 1rem 1rem;
+    }}
+
+    .hero-title {{
+        font-family: 'Playfair Display', serif;
+        font-size: 3.5rem;
+        font-weight: 700;
+        color: {text_main};
+        line-height: 1.15;
+        margin-bottom: 1.5rem;
+    }}
+
+    .hero-subtitle {{
+        font-size: 1.1rem;
+        color: {text_muted};
+        max-width: 800px;
+        margin: 0 auto 2rem auto;
+        line-height: 1.6;
+    }}
+
+    .gold-line {{
+        width: 60px;
+        height: 2px;
+        background-color: {gold_bright};
+        margin: 0 auto 2rem auto;
+    }}
+
+    /* CAJA DE URGENCIA */
+    .alert-box {{
+        background-color: {bg_secondary};
+        border-left: 4px solid {gold_bright};
+        padding: 1.5rem 2rem;
+        margin: 2rem 0;
+        border-radius: 4px;
+        color: {text_main};
+        transition: background-color 0.4s ease;
+    }}
+    
+    .alert-title {{
+        font-weight: 700;
+        font-size: 1.1rem;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }}
+
+    /* REGLA DE SIMETRÍA 100% RIGUROSA EN CONTENEDORES DE COLUMNA */
+    div[data-testid="stHorizontalBlock"] {{
+        display: flex !important;
+        align-items: stretch !important;
+        gap: 1.5rem !important;
+    }}
+
+    div[data-testid="stHorizontalBlock"] > div[data-testid="column"] {{
+        flex: 1 1 0px !important;
+        min-width: 0 !important;
+        display: flex !important;
+        flex-direction: column !important;
+    }}
+
+    div[data-testid="stHorizontalBlock"] > div[data-testid="column"] > div {{
+        height: 100% !important;
+        display: flex !important;
+        flex-direction: column !important;
+    }}
+
+    div[data-testid="stHorizontalBlock"] > div[data-testid="column"] .stMarkdown {{
+        height: 100% !important;
+        display: flex !important;
+        flex-direction: column !important;
+    }}
+
+    div[data-testid="stHorizontalBlock"] > div[data-testid="column"] .stMarkdown > div {{
+        height: 100% !important;
+        display: flex !important;
+        flex-direction: column !important;
+    }}
+
+    /* TARJETAS DENTRO DE COLUMNAS */
+    .service-card {{
+        background-color: {bg_card};
+        border: 1px solid {border_color};
+        padding: 2.5rem 1.8rem;
+        border-radius: 8px;
+        transition: transform 0.4s ease, box-shadow 0.4s ease, border-color 0.4s ease;
+        height: 100% !important;
+        box-sizing: border-box !important;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        flex: 1 1 auto !important;
+    }}
+
+    .service-card:hover {{
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+        border-color: {gold_bright};
+    }}
+
+    .service-icon {{
+        margin-bottom: 1.2rem;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 48px;
+        width: 100%;
+    }}
+
+    /* TÍTULOS Y DESCRIPCIONES DE TARJETAS */
+    .service-title {{
+        font-family: 'Playfair Display', serif;
+        font-size: 1.35rem;
+        font-weight: 600;
+        color: {text_main};
+        margin-bottom: 1.2rem;
+        min-height: 3.6rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        line-height: 1.25;
+        width: 100%;
+    }}
+
+    .service-desc {{
+        font-size: 0.92rem;
+        color: {text_muted};
+        line-height: 1.6;
+        margin: 0;
+        flex: 1;
+        display: flex;
+        align-items: center;
+        text-align: center;
+        width: 100%;
+    }}
+
+    h1, h2, h3, h4 {{
+        font-family: 'Playfair Display', serif !important;
+        color: {text_main} !important;
+    }}
+    
+    p, label, span {{
+        color: {text_main} !important;
     }}
     </style>
 """, unsafe_allow_html=True)
 
-# 3. ENCABEZADO SUPERIOR: LOGO, BOTÓN "INGRESAR" / PERFIL Y SWITCH DE TEMA
-if st.session_state['logged_in']:
-    col_logo, col_espacio, col_actions = st.columns([4.0, 0.5, 4.5], vertical_alignment="center")
-    btn_col1, btn_col2 = col_actions.columns([3.5, 1.0], vertical_alignment="center")
-else:
-    col_logo, col_espacio, col_actions = st.columns([5.5, 0.8, 2.7], vertical_alignment="center")
-    btn_col1, btn_col2 = col_actions.columns([1.8, 1.0], vertical_alignment="center")
+# ---------------------------------------------------------
+# ÍCONOS VECTORIALES PROFESIONALES DE ALTA PRECISIÓN
+# ---------------------------------------------------------
+nav_logo_svg = f"""<svg width="34" height="34" viewBox="0 0 36 36" fill="none" stroke="{gold_bright}" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="18" r="16" stroke-width="1.5"/><path d="M18 9v18M12 27h12M11 14h14M11 14l-3 8h6l-3-8zM25 14l-3 8h6l-3-8z" stroke-width="1.5"/></svg>"""
 
-with col_logo:
-    logo_color = "#8c7b6d"
-    logo_html = f"""<a href="/" target="_top" style="text-decoration: none; display: inline-flex; align-items: center; gap: 12px; cursor: pointer; width: fit-content;"><svg width="34" height="34" viewBox="0 0 36 36" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M 6.8 21 L 29.2 21 C 30 25 27 32 18 32 C 9 32 6 25 6.8 21 Z" fill="{logo_color}" /><line x1="6.8" y1="21" x2="29.2" y2="21" stroke="{text_color}" stroke-width="1.5" /><line x1="18" y1="10" x2="18" y2="30" stroke="{text_color}" stroke-width="1" /><path d="M 18 32 C 9 32 5 24 7.5 17 C 9 12 13 10 15 10 L 21 10 C 23 10 27 12 28.5 17 C 31 24 27 32 18 32 Z" stroke="{text_color}" stroke-width="2" /><rect x="15" y="7" width="6" height="3" stroke="{text_color}" stroke-width="1.5" /><rect x="13" y="3" width="10" height="4" rx="1" stroke="{text_color}" stroke-width="1.5" /><rect x="16" y="0" width="4" height="3" rx="1" fill="{logo_color}" stroke="{text_color}" stroke-width="1" /></svg><span style="font-size: 1.4rem; color: {text_color}; letter-spacing: 0.5px;"><span style="font-weight: 300;">Perfume</span><span style="font-weight: 600;">Trending</span></span></a>"""
-    st.markdown(logo_html, unsafe_allow_html=True)
+# BALANZA PRINCIPAL CON MARGEN AMPLIO Y OVERFLOW LIBRE (PREVIENE RECORTE DE ENCUADRE)
+main_scale_svg = f"""<svg width="78" height="74" viewBox="-10 -6 84 76" style="overflow: visible !important;" fill="none" stroke="{gold_main}" stroke-linecap="round" stroke-linejoin="round"><path d="M32 10v42M18 52h28M25 52l7-5 7 5" stroke-width="2.5"/><circle cx="32" cy="10" r="3" fill="{gold_main}"/><g style="transform: {beam_transform}; transform-origin: 32px 16px; transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);"><path d="M10 16h44" stroke-width="3"/><path d="M32 11v5" stroke-width="2"/><path d="M10 16l-7 18h14l-7-18z" stroke-width="1.5"/><path d="M3 34c0 3.5 3.1 6 7 6s7-2.5 7-6H3z" fill="{gold_main}" fill-opacity="0.25" stroke-width="1.5"/><path d="M54 16l-7 18h14l-7-18z" stroke-width="1.5"/><path d="M47 34c0 3.5 3.1 6 7 6s7-2.5 7-6H47z" fill="{gold_main}" fill-opacity="0.25" stroke-width="1.5"/></g></svg>"""
 
-with btn_col1:
-    if st.session_state['logged_in']:
-        user_display = st.session_state['user_info'].get('nombre') or st.session_state['user_info'].get('email', 'Usuario')
-        with st.popover(f"👤 {user_display}", use_container_width=True):
-            st.write(f"**Conectado como:**")
-            st.write(st.session_state['user_info'].get('email', ''))
-            if st.button("Cerrar Sesión", key="btn_logout", use_container_width=True):
-                st.session_state['logged_in'] = False
-                st.session_state['user_info'] = None
-                st.rerun()
-    else:
-        if st.button("Ingresar", key="login_btn", use_container_width=True):
-            st.session_state['show_login_modal'] = True
+icon_alert = f"""<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="{gold_bright}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0zM12 9v4M12 17h.01"/></svg>"""
 
-with btn_col2:
-    st.button(" ", key="theme_toggle", on_click=toggle_theme)
+# 1. Escudo de Protección Legal y VIF
+icon_shield_pro = f"""<svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="{gold_main}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M12 8v7"/><path d="M9 11h6"/><path d="M9 11l-1.5 3h3L9 11z"/><path d="M15 11l-1.5 3h3L15 11z"/></svg>"""
 
-# MONITOREO Y RENDERIZADO PERSISTENTE DEL MODAL
-if st.session_state.get('show_login_modal', False):
-    modal_autenticacion()
+# 2. Sello de Familia e Integridad de Derechos
+icon_family_pro = f"""<svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="{gold_main}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z"/><path d="M9 10a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/><path d="M15 10a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/><path d="M6.5 16.5v-.5a2.5 2.5 0 0 1 5 0v.5"/><path d="M12.5 16.5v-.5a2.5 2.5 0 0 1 5 0v.5"/></svg>"""
 
-st.markdown("<div style='margin-top: 14px;'></div>", unsafe_allow_html=True)
+# 3. Maletín Ejecutivo y Tutela Laboral (Ley Karin)
+icon_work_pro = f"""<svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="{gold_main}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M16 7V4a1 1 0 0 0-1-1h-6a1 1 0 0 0-1 1v3"/><circle cx="12" cy="13.5" r="2.5"/><path d="M12 11v5"/></svg>"""
 
-# 4. CHIPS DE NAVEGACIÓN RÁPIDA
-col_chip_home, col_chip1, col_chip2, col_chip3, col_chip_space = st.columns([1.6, 1.5, 2.0, 1.7, 2.2], vertical_alignment="center")
+icon_check = f"""<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2E8B57" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>"""
 
-with col_chip_home:
-    st.page_link("app.py", label="Inicio / Catálogo", use_container_width=True)
-with col_chip1:
-    st.page_link("pages/trendhype.py", label="Trend Del Hype", use_container_width=True)
-with col_chip2:
-    st.page_link("pages/trustpage.py", label="Páginas de Confianza", use_container_width=True)
-with col_chip3:
-    st.page_link("pages/compararprecios.py", label="Comparar Precios", use_container_width=True)
-
-st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
-
-# 5. SECCIÓN PRINCIPAL: COMPARADOR DE PRECIOS
-col_title_text, col_title_back = st.columns([7, 3], vertical_alignment="center")
-with col_title_text:
-    st.markdown(f"""<div style='color: {text_color}; letter-spacing: 1.5px; font-weight: 300; font-size: 1.1rem; text-transform: uppercase;'>COMPARADOR DE PRECIOS EN TIENDAS CHILENAS</div>""", unsafe_allow_html=True)
-with col_title_back:
-    st.page_link("app.py", label="← Volver al Catálogo")
-
-# Cargar catálogo dinámico con caché
-catalogo = get_cached_catalogo()
-
-if not catalogo:
-    st.warning("No hay perfumes disponibles en el catálogo en este momento.")
-    st.stop()
-
-# Diccionario de selección: Nombre Completo -> Objeto Perfume
-opciones_perfumes = {f"{p['nombre']} — {p['marca']}": p for p in catalogo}
-lista_nombres = list(opciones_perfumes.keys())
-
-# Determinar perfume pre-seleccionado
-default_index = 0
-selected_session = st.session_state.get('selected_perfume')
-if selected_session is not None:
-    for idx, (lbl, p) in enumerate(opciones_perfumes.items()):
-        if str(selected_session) == str(p['id']) or (isinstance(selected_session, str) and selected_session.lower() in p['nombre'].lower()):
-            default_index = idx
-            break
-
-selected_label = st.selectbox("Selecciona un perfume para comparar ofertas en Chile:", lista_nombres, index=default_index)
-perfume = opciones_perfumes[selected_label]
-selected_id = perfume['id']
-
-# Obtener detalle enriquecido desde caché
-detalle = get_cached_detalle(selected_id) or perfume
-
-# Mostrar ficha cabecera del perfume con packshot de alta resolución
-img_src = get_image_src(detalle.get('imagen_url'))
-notas_txt = detalle.get('notas', 'Notas olfativas exclusivas')
-genero_txt = detalle.get('genero', 'Unisex')
-tipo_txt = detalle.get('tipo', 'Eau de Parfum')
-
-col_img, col_info = st.columns([1, 3], gap="medium")
-with col_img:
-    st.markdown(f"""
-    <div style="background: #ffffff; border-radius: 12px; padding: 12px; display: flex; align-items: center; justify-content: center; border: 1px solid {btn_border};">
-        <img src="{img_src}" alt="{detalle['nombre']}" style="max-height: 180px; max-width: 100%; object-fit: contain;">
+# ---------------------------------------------------------
+# NAVBAR SUPERIOR
+# ---------------------------------------------------------
+st.markdown(f"""
+    <div class="custom-navbar">
+        <div class="nav-brand">
+            {nav_logo_svg}
+            ABOGADAS HERMANDAD
+        </div>
+        <div class="nav-links">
+            <span>Inicio</span>
+            <span>Áreas de Práctica</span>
+            <span>Equipo</span>
+            <span>Contacto</span>
+        </div>
     </div>
+""", unsafe_allow_html=True)
+
+# ---------------------------------------------------------
+# BALANZA Y BOTÓN DE CAMBIO DE TEMA (CENTRADO TOTAL)
+# ---------------------------------------------------------
+_, col_center, _ = st.columns([1, 1.2, 1])
+with col_center:
+    st.markdown(f'<div class="theme-wrapper">{main_scale_svg}</div>', unsafe_allow_html=True)
+    st.button(btn_text, on_click=toggle_theme, use_container_width=True)
+
+# ---------------------------------------------------------
+# HERO PRINCIPAL
+# ---------------------------------------------------------
+st.markdown(f"""
+    <div class="hero-section">
+        <div class="gold-line"></div>
+        <div class="hero-title">Defensa legal especializada,<br>humana y libre de prejuicios.</div>
+        <div class="hero-subtitle">
+            Te acompañamos con rigor técnico y máxima confidencialidad ante situaciones complejas de violencia intrafamiliar, vulneración de derechos, acoso laboral y conflictos de familia en Chile. Tu tranquilidad jurídica es nuestro compromiso.
+        </div>
+    </div>
+""", unsafe_allow_html=True)
+
+# ---------------------------------------------------------
+# ALERTA DE URGENCIA
+# ---------------------------------------------------------
+st.markdown(f"""
+    <div class="alert-box">
+        <div class="alert-title">{icon_alert} ¿Enfrentas una situación de riesgo inminente?</div>
+        <div style="font-size: 0.95rem; line-height: 1.6; margin-top: 8px;">
+            En casos de Violencia Intrafamiliar (VIF) aguda, comunícate directamente al <b>Fono Familia de Carabineros (149)</b> o al <b>1455 (SernamEG)</b>. 
+            Para representación legal express e interposición urgente de medidas de protección y alejamiento, cuenta con nuestro equipo.
+        </div>
+    </div>
+""", unsafe_allow_html=True)
+
+st.write("---")
+
+# ---------------------------------------------------------
+# ÁREAS DE PRÁCTICA
+# ---------------------------------------------------------
+st.markdown("<h2 style='text-align: center; font-size: 2.5rem; margin: 3rem 0 2.5rem 0;'>Áreas de Especialización</h2>", unsafe_allow_html=True)
+
+col1, col2, col3 = st.columns(3)
+
+with col1:
+    st.markdown(f"""
+        <div class="service-card">
+            <div class="service-icon">{icon_shield_pro}</div>
+            <div class="service-title">Protección y VIF</div>
+            <div class="service-desc">
+                Tramitación prioritaria de medidas cautelares de alejamiento, expulsión del agresor del hogar común y querellas criminales por agresiones.
+            </div>
+        </div>
     """, unsafe_allow_html=True)
 
-with col_info:
-    ref_precio = detalle.get('precio_referencia')
-    ref_str = f"${ref_precio:,.0f} CLP".replace(",", ".") if ref_precio else "Consultar"
+with col2:
+    st.markdown(f"""
+        <div class="service-card">
+            <div class="service-icon">{icon_family_pro}</div>
+            <div class="service-title">Derecho de Familia</div>
+            <div class="service-desc">
+                Demandas de pensión de alimentos, retención de fondos (AFP y bancos), cuidado personal, relación directa y regular (visitas) y divorcios.
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
+
+with col3:
+    st.markdown(f"""
+        <div class="service-card">
+            <div class="service-icon">{icon_work_pro}</div>
+            <div class="service-title">Acoso Laboral (Ley Karin)</div>
+            <div class="service-desc">
+                Intervención legal estratégica ante acoso laboral o sexual en el trabajo, tutela de derechos fundamentales y despidos por maternidad.
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
+
+st.write("---")
+
+# ---------------------------------------------------------
+# FORMULARIO DE CONSULTA CONFIDENCIAL
+# ---------------------------------------------------------
+st.markdown("<h2 style='text-align: center; font-size: 2.5rem; margin-top: 3rem; margin-bottom: 0.5rem;'>Agenda tu Consulta Confidencial</h2>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center; font-size: 1rem; margin-bottom: 3rem;'>Tus datos están protegidos bajo estricto secreto profesional.</p>", unsafe_allow_html=True)
+
+with st.form("contact_form", clear_on_submit=True):
+    fc1, fc2 = st.columns(2)
     
-    st.markdown(f"""
-    <div style="padding-top: 4px;">
-        <h2 style="margin: 0 0 6px 0; color: {text_color}; font-size: 1.6rem; font-weight: 700;">{detalle['nombre']}</h2>
-        <div style="color: {subtext_color}; font-size: 0.95rem; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px;">
-            {detalle['marca']} &bull; {tipo_txt} &bull; {genero_txt}
-        </div>
-        <p style="margin: 0 0 8px 0; color: {text_color}; font-size: 0.9rem; line-height: 1.5;">
-            <b>Notas olfativas:</b> {notas_txt}
-        </p>
-        <div style="margin-top: 10px; display: flex; gap: 16px; align-items: center;">
-            <span style="font-size: 0.85rem; color: {subtext_color};">Precio referencial de mercado: <b style="color: {text_color};">{ref_str}</b></span>
-            <span style="background-color: #2e7d3222; color: #4caf50; font-size: 0.78rem; font-weight: 700; padding: 3px 8px; border-radius: 4px; border: 1px solid #4caf5044;">DISPONIBLE EN TIENDAS AUDITADAS</span>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+    with fc1:
+        nombre = st.text_input("Nombre completo")
+        telefono = st.text_input("Teléfono / WhatsApp (+56 9...)")
 
-st.markdown("<div style='margin-top: 24px;'></div>", unsafe_allow_html=True)
-st.markdown(f"<h3 style='font-size: 1.15rem; color: {text_color}; font-weight: 600; margin-bottom: 16px;'>Ofertas en tiendas chilenas verificadas</h3>", unsafe_allow_html=True)
+    with fc2:
+        correo = st.text_input("Correo electrónico")
+        materia = st.selectbox("Materia de la consulta", [
+            "Violencia Intrafamiliar (VIF) / Alejamiento",
+            "Pensión de Alimentos / Retención de Fondos",
+            "Cuidado Personal / Visitas",
+            "Acoso Laboral / Ley Karin",
+            "Otra consulta legal"
+        ])
 
-# Obtener ofertas y precios actuales desde la base de datos (con caché)
-tiendas_db = get_cached_precios(selected_id)
-
-if not tiendas_db:
-    st.info("Actualmente estamos sincronizando los precios en tiempo real para esta fragancia.")
-else:
-    # Identificar el mejor precio (mínimo precio_actual > 0)
-    precios_validos = [t['precio_actual'] for t in tiendas_db if t.get('precio_actual', 0) > 0]
-    min_precio = min(precios_validos) if precios_validos else 0
-
-    for item in tiendas_db:
-        p_act = item.get('precio_actual', 0)
-        p_norm = item.get('precio_normal', 0)
-        vol_ml = item.get('volumen_ml', 100) or 100
-        is_best_deal = (p_act == min_precio and p_act > 0)
-        
-        card_class = "price-card best-deal" if is_best_deal else "price-card"
-        best_badge = f"<span style='background: {'rgba(34, 197, 94, 0.15)' if is_dark else '#e8f5e9'}; color: {'#4ade80' if is_dark else '#2e7d32'}; border: 1px solid {'rgba(74, 222, 128, 0.35)' if is_dark else 'rgba(46, 125, 50, 0.3)'}; font-weight: 700; margin-left: 8px; font-size: 0.72rem; padding: 2px 8px; border-radius: 4px; letter-spacing: 0.5px;'>MEJOR PRECIO</span>" if is_best_deal else ""
-        
-        precio_actual_str = f"${p_act:,.0f}".replace(",", ".")
-        precio_ant_str = f"${p_norm:,.0f}".replace(",", ".") if p_norm and p_norm > p_act else ""
-        old_price_html = f"<span class='old-price'>{precio_ant_str}</span>" if precio_ant_str else ""
-        
-        # Precio por mililitro
-        ml_txt = ""
-        if p_act > 0 and vol_ml > 0:
-            p_ml = int(round(p_act / vol_ml))
-            ml_txt = f"<span style='font-size: 0.78rem; color: {subtext_color}; display: block; text-align: right;'>${p_ml:,.0f}/ml ({vol_ml}ml)</span>".replace(",", ".")
-        
-        # Enlace inteligente verificado directo a la ficha del producto en la tienda
-        url_directa = resolver_url_oferta(
-            tienda_nombre=item.get('tienda_nombre', ''),
-            perfume_nombre=detalle.get('nombre', ''),
-            url_prod=item.get('url_producto', ''),
-            url_base=item.get('url_base', '')
-        )
-        badge_tienda = item.get('badge', 'Tienda Verificada')
-        badge_vol = f"<span class='store-badge' style='background: {btn_bg}; border: 1px solid {btn_border}; font-weight: 600;'>{vol_ml}ml</span>" if vol_ml else ""
-        
-        html_card = f"""
-        <div class="{card_class}">
-            <div>
-                <span class="store-name">{item['tienda_nombre']}</span>
-                <span class="store-badge">{badge_tienda}</span>
-                {badge_vol}
-                {best_badge}
-            </div>
-            <div style="display: flex; align-items: center; gap: 16px;">
-                <div>
-                    {old_price_html}
-                    <span class="price-value">{precio_actual_str} CLP</span>
-                    {ml_txt}
+    mensaje = st.text_area("Cuéntanos brevemente tu caso (sin tecnicismos legales)")
+    
+    st.markdown('<div class="btn-primary">', unsafe_allow_html=True)
+    submitted = st.form_submit_button("Enviar consulta confidencial")
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    if submitted:
+        if nombre and (telefono or correo):
+            st.markdown(f"""
+                <div style="background-color: rgba(46, 139, 87, 0.1); border-left: 4px solid #2E8B57; padding: 1rem; color: #2E8B57; font-weight: 600; display: flex; align-items: center; gap: 10px; margin-top: 1rem; border-radius: 4px;">
+                    {icon_check} Tu consulta ha sido enviada con éxito. Te contactaremos a la brevedad.
                 </div>
-                <a href="{url_directa}" class="buy-btn" target="_blank" rel="noopener noreferrer">Ir a la oferta ↗</a>
-            </div>
-        </div>
-        """
-        st.markdown(clean_html(html_card), unsafe_allow_html=True)
-
-# 6. HISTORIAL Y EVOLUCIÓN DE PRECIOS
-st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
-with st.expander("Ver Evolución Histórica de Precios en Tiendas Chilenas"):
-    historico = get_cached_historico(selected_id)
-    if historico:
-        df_hist = pd.DataFrame(historico)
-        if 'fecha' in df_hist.columns and 'precio' in df_hist.columns and 'tienda' in df_hist.columns:
-            df_hist['fecha'] = pd.to_datetime(df_hist['fecha'])
-            df_pivot = df_hist.pivot_table(index='fecha', columns='tienda', values='precio', aggfunc='min')
-            st.line_chart(df_pivot)
+            """, unsafe_allow_html=True)
         else:
-            st.write(df_hist)
-    else:
-        st.write("Recopilando datos históricos de variaciones de precio en comercios auditados.")
+            st.error("Por favor completa tu nombre y al menos un método de contacto (Teléfono o Correo).")
+
+# ---------------------------------------------------------
+# FOOTER
+# ---------------------------------------------------------
+st.markdown(f"""
+    <div style="text-align: center; font-size: 0.9rem; color: {text_muted}; padding-top: 4rem; padding-bottom: 2rem;">
+        <div class="gold-line" style="width: 40px; margin-bottom: 1.5rem;"></div>
+        © 2026 <b>Abogadas Hermandad</b> • Estudio Jurídico de la Mujer en Chile<br>
+        <span style="font-style: italic;">Compromiso, Integridad y Defensa Legal Efectiva.</span>
+    </div>
+""", unsafe_allow_html=True)
+
+# ---------------------------------------------------------
+# SCRIPT DE AUDIO: SINTETIZADOR DE IMPACTO DE MADERA NATURAL
+# ---------------------------------------------------------
+components.html("""
+<script>
+    const doc = window.parent.document;
+    
+    function playWoodClick() {
+        const AudioContext = window.parent.AudioContext || window.parent.webkitAudioContext;
+        if (!AudioContext) return;
+        const ctx = new AudioContext();
+        const t = ctx.currentTime;
+        
+        // 1. Tono principal de la madera
+        const osc1 = ctx.createOscillator();
+        const gain1 = ctx.createGain();
+        osc1.type = 'sine';
+        osc1.frequency.setValueAtTime(1050, t);
+        osc1.frequency.exponentialRampToValueAtTime(400, t + 0.035);
+        
+        gain1.gain.setValueAtTime(0.85, t);
+        gain1.gain.exponentialRampToValueAtTime(0.001, t + 0.04);
+        
+        osc1.connect(gain1);
+        gain1.connect(ctx.destination);
+        
+        // 2. Resonancia secundaria del bloque de madera
+        const osc2 = ctx.createOscillator();
+        const gain2 = ctx.createGain();
+        osc2.type = 'sine';
+        osc2.frequency.setValueAtTime(1600, t);
+        osc2.frequency.exponentialRampToValueAtTime(800, t + 0.02);
+        
+        gain2.gain.setValueAtTime(0.35, t);
+        gain2.gain.exponentialRampToValueAtTime(0.001, t + 0.025);
+        
+        osc2.connect(gain2);
+        gain2.connect(ctx.destination);
+        
+        // 3. Transitorio percusivo
+        const bufferSize = Math.floor(ctx.sampleRate * 0.008);
+        const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+            data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.25));
+        }
+        
+        const noise = ctx.createBufferSource();
+        noise.buffer = buffer;
+        
+        const filter = ctx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.setValueAtTime(1300, t);
+        filter.Q.setValueAtTime(2.5, t);
+        
+        const gainNoise = ctx.createGain();
+        gainNoise.gain.setValueAtTime(0.5, t);
+        gainNoise.gain.exponentialRampToValueAtTime(0.001, t + 0.012);
+        
+        noise.connect(filter);
+        filter.connect(gainNoise);
+        gainNoise.connect(ctx.destination);
+        
+        osc1.start(t);
+        osc1.stop(t + 0.045);
+        osc2.start(t);
+        osc2.stop(t + 0.03);
+        noise.start(t);
+    }
+
+    if (!doc.bambooListenerAdded) {
+        doc.addEventListener('mousedown', function(e) {
+            if (e.target.closest('.stButton > button') || e.target.closest('.btn-primary > button')) {
+                playWoodClick();
+            }
+        });
+        doc.bambooListenerAdded = true;
+    }
+</script>
+""", height=0, width=0)
