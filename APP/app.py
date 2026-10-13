@@ -495,16 +495,17 @@ st.markdown(f"""
         border-radius: 8px !important;
         height: 44px !important;
         min-height: 44px !important;
-        padding: 0 1rem 0 2.5rem !important;
+        padding: 0 0.8rem 0 2.2rem !important;
         display: inline-flex !important;
         align-items: center !important;
         justify-content: center !important;
         background-image: url("{user_icon_svg}") !important;
         background-repeat: no-repeat !important;
-        background-position: 14px center !important;
+        background-position: 10px center !important;
         background-size: 18px 18px !important;
         font-size: 0.95rem !important;
         margin: 0 !important;
+        white-space: nowrap !important;
     }}
     .st-key-login_btn button p {{
         font-size: 0.95rem !important;
@@ -512,6 +513,7 @@ st.markdown(f"""
         margin: 0 !important;
         color: {btn_text} !important;
         font-weight: 600 !important;
+        white-space: nowrap !important;
     }}
 
     /* SWITCH TEMA */
@@ -902,8 +904,8 @@ if st.session_state['logged_in']:
     col_logo, col_espacio, col_actions = st.columns([4.0, 0.5, 4.5], vertical_alignment="center")
     btn_col1, btn_col2 = col_actions.columns([3.5, 1.0], vertical_alignment="center")
 else:
-    col_logo, col_espacio, col_actions = st.columns([6.8, 0.7, 1.5], vertical_alignment="center")
-    btn_col1, btn_col2 = col_actions.columns([1.1, 1.0], vertical_alignment="center")
+    col_logo, col_espacio, col_actions = st.columns([5.5, 0.8, 2.7], vertical_alignment="center")
+    btn_col1, btn_col2 = col_actions.columns([1.8, 1.0], vertical_alignment="center")
 
 with col_logo:
     logo_color = "#8c7b6d"
@@ -1188,7 +1190,7 @@ elif st.session_state['current_page'] == 'esencias_page':
         "Estoraque": "Ahumado, leñoso y con matices de cuero resinoso.",
         "Incienso (Olíbano)": "Místico, resinoso y ahumado; añade solemnidad.",
         "Ládano": "Ambarino, denso y profundamente cuero-resinoso.",
-        "Mirra": "Balsámica, cálida y milenaria; ofrece un aura mística.",
+        "Mirra": "Balsámica, cálida y milenaria; offers un aura mística.",
         "Almizcle (Blanco/Musk)": "Piel limpia, suavidad algodonosa y fijación sensual.",
         "Almizcle Vegetal": "Alternativa botánica limpia de perfil transparente.",
         "Ámbar Gris": "Marino, terroso y aterciopelada; fija la fragancia.",
