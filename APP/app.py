@@ -349,11 +349,12 @@ def modal_busqueda_visual():
                         st.switch_page("pages/compararprecios.py")
                 st.markdown("<div style='margin-bottom: 8px;'></div>", unsafe_allow_html=True)
 
-# 3. RENDERIZADO DE MODALES EN EL CONTENEDOR RAIZ (Evita StreamlitInvalidLayoutContextError)
+# 3. RENDERIZADO EXCLUSIVO DE MODALES EN CONTENEDOR RAÍZ
 if st.session_state.get('show_login_modal', False):
+    st.session_state['show_visual_modal'] = False
     modal_autenticacion()
-
-if st.session_state.get('show_visual_modal', False):
+elif st.session_state.get('show_visual_modal', False):
+    st.session_state['show_login_modal'] = False
     modal_busqueda_visual()
 
 # Posicionamiento del Switch de Tema
@@ -1354,6 +1355,8 @@ with btn_col1:
     else:
         if st.button("Ingresar", key="login_btn", use_container_width=True):
             st.session_state['show_login_modal'] = True
+            st.session_state['show_visual_modal'] = False
+            st.rerun()
             
 with btn_col2:
     st.button(" ", key="theme_toggle", on_click=toggle_theme)
@@ -1408,6 +1411,8 @@ with col_separator:
 with col_photo:
     if st.button("Búsqueda visual", key="btn_photo_search", help="Buscar por imagen o cámara", use_container_width=True):
         st.session_state['show_visual_modal'] = True
+        st.session_state['show_login_modal'] = False
+        st.rerun()
 
 # 9. CHIPS DE ENLACE RÁPIDO A PÁGINAS INDEPENDIENTES
 st.markdown("<div style='margin-top: 14px;'></div>", unsafe_allow_html=True)
