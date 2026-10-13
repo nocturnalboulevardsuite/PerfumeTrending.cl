@@ -3,12 +3,22 @@ import streamlit.components.v1 as components
 import sys
 import os
 import base64
+import random
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 if BASE_DIR not in sys.path:
     sys.path.append(BASE_DIR)
 
-from backend.database import obtener_catalogo
+try:
+    from backend.database import (
+        obtener_catalogo,
+        crear_usuario,
+        verificar_usuario
+    )
+except ImportError:
+    from backend.database import obtener_catalogo
+    crear_usuario = None
+    verificar_usuario = None
 
 @st.cache_data(ttl=300, show_spinner=False)
 def get_cached_catalogo_map():
@@ -55,6 +65,22 @@ if 'selected_perfume' not in st.session_state:
 if 'selected_month' not in st.session_state:
     st.session_state['selected_month'] = 'Este Mes'
 
+# ESTADOS DE AUTENTICACIÓN Y CONTROL DE MODAL
+if 'logged_in' not in st.session_state:
+    st.session_state['logged_in'] = False
+if 'user_info' not in st.session_state:
+    st.session_state['user_info'] = None
+if 'show_login_modal' not in st.session_state:
+    st.session_state['show_login_modal'] = False
+
+# ESTADOS PARA INICIO POR CÓDIGO (OTP)
+if 'otp_code_sent' not in st.session_state:
+    st.session_state['otp_code_sent'] = False
+if 'otp_contact' not in st.session_state:
+    st.session_state['otp_contact'] = ""
+if 'otp_secret' not in st.session_state:
+    st.session_state['otp_secret'] = ""
+
 def toggle_theme():
     st.session_state['theme'] = 'dark' if st.session_state['theme'] == 'light' else 'light'
 
@@ -62,6 +88,111 @@ def navigate_to(page, perfume_data=None):
     st.session_state['current_page'] = page
     if perfume_data:
         st.session_state['selected_perfume'] = perfume_data
+
+# MODAL FLOTANTE DE INICIO DE SESIÓN Y REGISTRO
+@st.dialog("Acceso a PerfumeTrending")
+def modal_autenticacion():
+    tab_codigo, tab_login, tab_registro = st.tabs(["Inicio por Código", "Iniciar Sesión", "Registrarse"])
+    
+    # OPCIÓN PREDETERMINADA: INICIO POR CÓDIGO
+    with tab_codigo:
+        st.markdown("#### Ingresa con tu Correo o Teléfono")
+        
+        if not st.session_state['otp_code_sent']:
+            with st.form("form_send_otp", clear_on_submit=False):
+                contact_input = st.text_input("Correo electrónico o número de teléfono", key="otp_contact_input", placeholder="ejemplo@correo.cl o +56912345678")
+                btn_send = st.form_submit_button("Enviar código de verificación", use_container_width=True)
+                
+                if btn_send:
+                    if not contact_input.strip():
+                        st.error("Por favor ingresa un correo electrónico o teléfono válido.")
+                    else:
+                        code = str(random.randint(100000, 999999))
+                        st.session_state['otp_code_sent'] = True
+                        st.session_state['otp_contact'] = contact_input.strip()
+                        st.session_state['otp_secret'] = code
+                        st.rerun()
+        else:
+            st.info(f"Un código de verificación ha sido enviado a **{st.session_state['otp_contact']}**")
+            st.caption(f"*(Código de prueba rápido: **{st.session_state['otp_secret']}**)*")
+            
+            with st.form("form_verify_otp", clear_on_submit=False):
+                input_code = st.text_input("Ingresa el código de 6 dígitos", key="otp_code_input", placeholder="123456", max_chars=6)
+                btn_verify = st.form_submit_button("Verificar e Ingresar", use_container_width=True)
+                
+                if btn_verify:
+                    if input_code.strip() == st.session_state['otp_secret']:
+                        contact_str = st.session_state['otp_contact']
+                        
+                        st.session_state['logged_in'] = True
+                        st.session_state['user_info'] = {
+                            'nombre': contact_str,
+                            'email': contact_str
+                        }
+                        
+                        # Resetear estados de login y cerrar modal
+                        st.session_state['otp_code_sent'] = False
+                        st.session_state['otp_contact'] = ""
+                        st.session_state['otp_secret'] = ""
+                        st.session_state['show_login_modal'] = False
+                        st.rerun()
+                    else:
+                        st.error("Código incorrecto. Revisa e intenta nuevamente.")
+                        
+            if st.button("Cambiar correo/teléfono", key="btn_reset_otp", use_container_width=True):
+                st.session_state['otp_code_sent'] = False
+                st.session_state['otp_contact'] = ""
+                st.session_state['otp_secret'] = ""
+                st.rerun()
+
+    # OPCIÓN 2: CON TRADICIONAL CORREO / CONTRASEÑA
+    with tab_login:
+        st.markdown("#### Ingresa a tu cuenta")
+        with st.form("form_login_pass", clear_on_submit=False):
+            login_email = st.text_input("Correo Electrónico", key="login_email_input", placeholder="usuario@correo.cl")
+            login_pass = st.text_input("Contraseña", type="password", key="login_pass_input", placeholder="••••••••")
+            btn_login = st.form_submit_button("Ingresar a la plataforma", use_container_width=True)
+            
+            if btn_login:
+                if not login_email or not login_pass:
+                    st.error("Por favor ingresa tu correo y contraseña.")
+                elif verificar_usuario:
+                    exito, usuario_data = verificar_usuario(login_email, login_pass)
+                    if exito:
+                        st.session_state['logged_in'] = True
+                        st.session_state['user_info'] = usuario_data
+                        st.session_state['show_login_modal'] = False
+                        st.rerun()
+                    else:
+                        st.error("Correo o contraseña incorrectos.")
+                else:
+                    st.info("Función de backend en proceso de actualización.")
+
+    # OPCIÓN 3: REGISTRO NUEVO USUARIO
+    with tab_registro:
+        st.markdown("#### Crea una cuenta nueva")
+        with st.form("form_reg_user", clear_on_submit=False):
+            reg_nombre = st.text_input("Nombre completo", key="reg_nombre_input", placeholder="Juan Pérez")
+            reg_email = st.text_input("Correo Electrónico", key="reg_email_input", placeholder="usuario@correo.cl")
+            reg_pass1 = st.text_input("Contraseña", type="password", key="reg_pass1_input", placeholder="••••••••")
+            reg_pass2 = st.text_input("Confirmar Contraseña", type="password", key="reg_pass2_input", placeholder="••••••••")
+            btn_reg = st.form_submit_button("Crear mi cuenta", use_container_width=True)
+            
+            if btn_reg:
+                if not reg_nombre or not reg_email or not reg_pass1:
+                    st.error("Todos los campos son obligatorios.")
+                elif reg_pass1 != reg_pass2:
+                    st.error("Las contraseñas no coinciden.")
+                elif len(reg_pass1) < 6:
+                    st.warning("La contraseña debe tener al menos 6 caracteres.")
+                elif crear_usuario:
+                    exito, msg = crear_usuario(reg_nombre, reg_email, reg_pass1)
+                    if exito:
+                        st.success("¡Cuenta creada con éxito! Ya puedes iniciar sesión.")
+                    else:
+                        st.error(msg)
+                else:
+                    st.info("Función de backend en proceso de actualización.")
 
 is_dark = st.session_state['theme'] == 'dark'
 
@@ -73,7 +204,7 @@ text_color = "#f0f0f0" if is_dark else "#18181b"
 subtext_color = "#888890" if is_dark else "#666670"
 accent_color = "#d4c2a5" if is_dark else "#8c7b6d"
 
-btn_bg = "#161920" if is_dark else "#ffffff"
+btn_bg = "#181c24" if is_dark else "#ffffff"
 btn_text = "#ffffff" if is_dark else "#18181b"
 btn_border = "#2a2e39" if is_dark else "#d1d5db"
 
@@ -88,7 +219,7 @@ static_icon_pos = "12px center" if is_dark else "calc(100% - 12px) center"
 static_icon_svg = (
     "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='4'/><line x1='12' y1='1' x2='12' y2='3'/><line x1='12' y1='21' x2='12' y2='23'/><line x1='4.22' y1='4.22' x2='5.64' y2='5.64'/><line x1='18.36' y1='18.36' x2='19.78' y2='19.78'/><line x1='1' y1='12' x2='3' y2='12'/><line x1='21' y1='12' x2='23' y2='12'/><line x1='4.22' y1='19.78' x2='5.64' y2='18.36'/><line x1='18.36' y1='5.64' x2='19.78' y2='4.22'/></svg>"
     if is_dark else
-    "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z'/></svg>"
+    "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M21 12.79A9 9 0 0 1 11.21 3 7 7 0 0 0 21 12.79z'/></svg>"
 )
 
 bottle_svg = (
@@ -198,7 +329,6 @@ st.markdown(f"""
     .st-key-login_btn, .st-key-theme_toggle {{
         display: flex !important;
         align-items: center !important;
-        justify-content: flex-end !important;
         height: 100% !important;
     }}
 
@@ -206,40 +336,59 @@ st.markdown(f"""
         background-color: {btn_bg} !important;
         color: {btn_text} !important;
         border: 1px solid {btn_border} !important;
-        border-radius: 10px !important;
-        padding: 8px 18px !important;
-        font-weight: 600 !important;
-        font-size: 14px !important;
-        display: flex !important;
+        border-radius: 8px !important;
+        height: 44px !important;
+        min-height: 44px !important;
+        padding: 0 0.8rem 0 2.2rem !important;
+        display: inline-flex !important;
         align-items: center !important;
         justify-content: center !important;
-        gap: 8px !important;
-        transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.15s ease, border-color 0.15s ease !important;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.1) !important;
-        width: auto !important;
+        background-image: url("{user_icon_svg}") !important;
+        background-repeat: no-repeat !important;
+        background-position: 10px center !important;
+        background-size: 18px 18px !important;
+        font-size: 0.95rem !important;
+        margin: 0 !important;
+        white-space: nowrap !important;
     }}
 
     .st-key-login_btn button p {{
-        color: {btn_text} !important;
+        font-size: 0.95rem !important;
+        line-height: 1 !important;
         margin: 0 !important;
-        font-weight: 700 !important;
+        color: {btn_text} !important;
+        font-weight: 600 !important;
+        white-space: nowrap !important;
     }}
 
-    .st-key-login_btn button::before {{
-        content: '' !important;
-        display: inline-block !important;
-        width: 18px !important;
-        height: 18px !important;
-        background-image: url("{user_icon_svg}") !important;
-        background-repeat: no-repeat !important;
-        background-size: contain !important;
-        background-position: center !important;
+    /* ESTILO PARA BOTÓN POPOVER DE PERFIL Y ESENCIAS */
+    div[data-testid="stPopover"],
+    div[data-testid="stPopover"] > button,
+    button[data-testid="stPopoverButton"],
+    div[data-testid="stPopover"] button {{
+        background-color: {btn_bg} !important;
+        color: {btn_text} !important;
+        border: 1px solid {btn_border} !important;
+        border-radius: 8px !important;
+        min-height: 44px !important;
+        transition: transform 0.22s ease, background-color 0.15s ease !important;
     }}
 
-    .st-key-login_btn button:hover {{
-        transform: scale(1.04) !important;
-        border-color: #d83737 !important;
-        cursor: pointer !important;
+    div[data-testid="stPopover"] button p,
+    div[data-testid="stPopover"] button span,
+    button[data-testid="stPopoverButton"] p,
+    button[data-testid="stPopoverButton"] span {{
+        color: {btn_text} !important;
+        font-weight: 600 !important;
+        white-space: nowrap !important;
+    }}
+
+    div[data-testid="stPopoverBody"],
+    div[data-testid="stPopoverContent"] {{
+        background-color: {input_bg} !important;
+        border: 1px solid {btn_border} !important;
+        border-radius: 8px !important;
+        color: {text_color} !important;
     }}
 
     /* SWITCH PERSONALIZADO DE TEMA DE BOTELLA */
@@ -386,7 +535,7 @@ st.markdown(f"""
         pointer-events: auto;
     }}
 
-    /* FILTROS Y POPOVER */
+    /* FILTROS DE FECHA EN PÁGINA */
     .filter-label-text {{
         color: {text_color} !important;
         font-weight: 700 !important;
@@ -396,90 +545,6 @@ st.markdown(f"""
         align-items: center !important;
         justify-content: flex-start;
         height: 32px;
-    }}
-
-    div[data-testid="stPopover"] {{
-        display: flex !important;
-        align-items: center !important;
-        height: 32px !important;
-    }}
-
-    div[data-testid="stPopover"] > button,
-    div[data-testid="stPopover"] button {{
-        background-color: {card_bg} !important;
-        background: {card_bg} !important;
-        border: 1px solid {border_color} !important;
-        border-radius: 8px !important;
-        padding: 0 10px !important;
-        height: 32px !important;
-        min-height: 32px !important;
-        max-height: 32px !important;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.05) !important;
-        transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
-        outline: none !important;
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        gap: 5px !important;
-        margin: 0 !important;
-        box-sizing: border-box !important;
-    }}
-
-    div[data-testid="stPopover"] button *,
-    div[data-testid="stPopover"] button p,
-    div[data-testid="stPopover"] button span,
-    div[data-testid="stPopover"] button div {{
-        color: {text_color} !important;
-        font-weight: 700 !important;
-        font-size: 12px !important;
-        line-height: 1 !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-    }}
-
-    div[data-testid="stPopover"] button:hover {{
-        background-color: {app_bg} !important;
-        border-color: #d83737 !important;
-        transform: translateY(-1px) !important;
-        box-shadow: 0 3px 8px rgba(0,0,0,0.08) !important;
-    }}
-
-    div[data-testid="stPopoverBody"] {{
-        padding: 6px !important;
-        min-width: 160px !important;
-        border-radius: 10px !important;
-        background-color: {card_bg} !important;
-        border: 1px solid {border_color} !important;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.2) !important;
-    }}
-
-    div[data-testid="stPopoverBody"] div.stButton > button {{
-        background-color: transparent !important;
-        color: {text_color} !important;
-        border: none !important;
-        border-radius: 6px !important;
-        font-weight: 600 !important;
-        font-size: 13px !important;
-        padding: 6px 12px !important;
-        height: 32px !important;
-        min-height: 32px !important;
-        max-height: 32px !important;
-        box-shadow: none !important;
-        width: 100% !important;
-        justify-content: flex-start !important;
-        text-align: left !important;
-        margin: 2px 0 !important;
-        transition: background-color 0.15s ease, color 0.15s ease !important;
-    }}
-
-    div[data-testid="stPopoverBody"] div.stButton > button:hover {{
-        background-color: {app_bg} !important;
-        color: #d83737 !important;
-        transform: none !important;
-        box-shadow: none !important;
     }}
 
     /* CHIP YOUTUBE */
@@ -779,8 +844,13 @@ st.markdown(f"""
     </style>
 """, unsafe_allow_html=True)
 
-# 4. ENCABEZADO SUPERIOR: LOGO, BOTÓN "INGRESAR" Y SWITCH DE TEMA
-col_logo, col_login, col_theme = st.columns([5, 1.2, 0.8], vertical_alignment="center")
+# 4. ENCABEZADO SUPERIOR: LOGO, BOTÓN "INGRESAR" / PERFIL Y SWITCH DE TEMA
+if st.session_state['logged_in']:
+    col_logo, col_espacio, col_actions = st.columns([4.0, 0.5, 4.5], vertical_alignment="center")
+    btn_col1, btn_col2 = col_actions.columns([3.5, 1.0], vertical_alignment="center")
+else:
+    col_logo, col_espacio, col_actions = st.columns([5.5, 0.8, 2.7], vertical_alignment="center")
+    btn_col1, btn_col2 = col_actions.columns([1.8, 1.0], vertical_alignment="center")
 
 with col_logo:
     logo_color = "#8c7b6d"
@@ -802,12 +872,26 @@ with col_logo:
     """
     st.markdown(logo_html, unsafe_allow_html=True)
 
-with col_login:
-    if st.button("Ingresar", key="login_btn"):
-        st.toast("Próximamente: Podrás crear tu cuenta, guardar alertas de precio y armar tu lista de deseos.")
+with btn_col1:
+    if st.session_state['logged_in']:
+        user_display = st.session_state['user_info'].get('nombre') or st.session_state['user_info'].get('email', 'Usuario')
+        with st.popover(f"👤 {user_display}", use_container_width=True):
+            st.write(f"**Conectado como:**")
+            st.write(st.session_state['user_info'].get('email', ''))
+            if st.button("Cerrar Sesión", key="btn_logout", use_container_width=True):
+                st.session_state['logged_in'] = False
+                st.session_state['user_info'] = None
+                st.rerun()
+    else:
+        if st.button("Ingresar", key="login_btn", use_container_width=True):
+            st.session_state['show_login_modal'] = True
 
-with col_theme:
+with btn_col2:
     st.button(" ", key="theme_toggle", on_click=toggle_theme)
+
+# MONITOREO Y RENDERIZADO PERSISTENTE DEL MODAL
+if st.session_state.get('show_login_modal', False):
+    modal_autenticacion()
 
 st.markdown("<div style='margin-top: 14px;'></div>", unsafe_allow_html=True)
 
