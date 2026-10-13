@@ -611,9 +611,8 @@ st.markdown(f"""
         z-index: 2 !important;
     }}
 
-    /* NAVEGACIÓN SUPERIOR */
+    /* NAVEGACIÓN SUPERIOR Principal */
     .st-key-n_perfumes button, 
-    .st-key-n_remates button,
     .st-key-n_esencias button {{
         background-color: transparent !important;
         border: none !important;
@@ -630,7 +629,6 @@ st.markdown(f"""
     }}
 
     .st-key-n_perfumes button p, 
-    .st-key-n_remates button p,
     .st-key-n_esencias button p {{
         color: {text_color} !important;
         font-weight: 600 !important;
@@ -639,7 +637,6 @@ st.markdown(f"""
     }}
 
     .st-key-n_perfumes button:hover, 
-    .st-key-n_remates button:hover,
     .st-key-n_esencias button:hover {{
         transform: scale(1.08) !important;
     }}
@@ -1000,15 +997,13 @@ with btn_col2:
 if st.session_state.get('show_login_modal', False):
     modal_autenticacion()
 
-# 5. NAVEGACIÓN PRINCIPAL
+# 5. NAVEGACIÓN PRINCIPAL (ORGANIZADA EN 2 COLUMNAS SIN BOTÓN GRANDE DE REMATES)
 st.markdown("<div style='margin-top: 14px;'></div>", unsafe_allow_html=True)
-nav_cols = st.columns([1, 1, 1], vertical_alignment="center")
+nav_cols = st.columns([1, 1], vertical_alignment="center")
 
 with nav_cols[0]: 
     st.button("PERFUMES", key="n_perfumes", on_click=navigate_to, args=('home',), use_container_width=True)
 with nav_cols[1]: 
-    st.button("REMATES", key="n_remates", on_click=lambda: st.switch_page("pages/remates.py"), use_container_width=True)
-with nav_cols[2]: 
     st.button("ESENCIAS", key="n_esencias", on_click=navigate_to, args=('esencias_page',), use_container_width=True)
 
 st.markdown(f"<hr style='margin: 10px 0 24px 0; border: none; border-bottom: 1px solid {btn_border}; opacity: 0.3;'>", unsafe_allow_html=True)
@@ -1186,7 +1181,7 @@ elif st.session_state['current_page'] == 'esencias_page':
         "Geranio": "Verde, floral y rosado con matices aromáticos.",
         "Heliotropo": "Polvoso, avainillado y meloso con ecos de almendra dulce.",
         "Iris (Orris)": "Polvoso, elegante y aristocrático; evoca la finura del maquillaje.",
-        "Lavanda": "Aromática, limpia y relajante; pilar clásico que aporta serenidad.",
+        "Lavanda": "Aromática, limpia y relaxing; pilar clásico que aporta serenidad.",
         "Lilium (Lirio)": "Floral noble, verde y radiante con presencia pulcra.",
         "Mimosa": "Cálida, dulce, polvosa y mielada; evoca la primavera.",
         "Peonía": "Floral delicado, fresco y acuático similar a la rosa joven.",
