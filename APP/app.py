@@ -13,13 +13,26 @@ if BASE_DIR not in sys.path:
 if APP_DIR not in sys.path:
     sys.path.append(APP_DIR)
 
-from backend.database import (
-    obtener_catalogo,
-    obtener_detalle_perfume,
-    obtener_precios_actuales,
-    obtener_tiendas,
-    init_db
-)
+try:
+    from backend.database import (
+        obtener_catalogo,
+        obtener_detalle_perfume,
+        obtener_precios_actuales,
+        obtener_tiendas,
+        init_db,
+        crear_usuario,
+        verificar_usuario
+    )
+except ImportError:
+    from backend.database import (
+        obtener_catalogo,
+        obtener_detalle_perfume,
+        obtener_precios_actuales,
+        obtener_tiendas,
+        init_db
+    )
+    crear_usuario = None
+    verificar_usuario = None
 
 @st.cache_data(ttl=300, show_spinner=False)
 def get_cached_catalogo(busqueda=None, esencias_tuple=None):
@@ -72,6 +85,12 @@ if 'theme' not in st.session_state:
 if 'selected_perfume' not in st.session_state:
     st.session_state['selected_perfume'] = None
 
+# ESTADOS DE AUTENTICACIÓN
+if 'logged_in' not in st.session_state:
+    st.session_state['logged_in'] = False
+if 'user_info' not in st.session_state:
+    st.session_state['user_info'] = None
+
 def toggle_theme():
     st.session_state['theme'] = 'dark' if st.session_state['theme'] == 'light' else 'light'
 
@@ -79,6 +98,54 @@ def navigate_to(page, perfume_data=None):
     st.session_state['current_page'] = page
     if perfume_data:
         st.session_state['selected_perfume'] = perfume_data
+
+# MODAL FLOTANTE DE INICIO DE SESIÓN Y REGISTRO
+@st.dialog("Acceso a PerfumeTrending")
+def modal_autenticacion():
+    tab_login, tab_registro = st.tabs(["Iniciar Sesión", "Registrarse"])
+    
+    with tab_login:
+        st.markdown("#### Ingresa a tu cuenta")
+        login_email = st.text_input("Correo Electrónico", key="login_email_input", placeholder="usuario@correo.cl")
+        login_pass = st.text_input("Contraseña", type="password", key="login_pass_input", placeholder="••••••••")
+        
+        if st.button("Ingresar a la plataforma", key="btn_submit_login", use_container_width=True):
+            if not login_email or not login_pass:
+                st.error("Por favor ingresa tu correo y contraseña.")
+            elif verificar_usuario:
+                exito, usuario_data = verificar_usuario(login_email, login_pass)
+                if exito:
+                    st.session_state['logged_in'] = True
+                    st.session_state['user_info'] = usuario_data
+                    st.success(f"Bienvenido/a, {usuario_data['nombre']}!")
+                    st.rerun()
+                else:
+                    st.error("Correo o contraseña incorrectos.")
+            else:
+                st.info("Función de backend en proceso de actualización.")
+
+    with tab_registro:
+        st.markdown("#### Crea una cuenta nueva")
+        reg_nombre = st.text_input("Nombre completo", key="reg_nombre_input", placeholder="Juan Pérez")
+        reg_email = st.text_input("Correo Electrónico", key="reg_email_input", placeholder="usuario@correo.cl")
+        reg_pass1 = st.text_input("Contraseña", type="password", key="reg_pass1_input", placeholder="••••••••")
+        reg_pass2 = st.text_input("Confirmar Contraseña", type="password", key="reg_pass2_input", placeholder="••••••••")
+        
+        if st.button("Crear mi cuenta", key="btn_submit_registro", use_container_width=True):
+            if not reg_nombre or not reg_email or not reg_pass1:
+                st.error("Todos los campos son obligatorios.")
+            elif reg_pass1 != reg_pass2:
+                st.error("Las contraseñas no coinciden.")
+            elif len(reg_pass1) < 6:
+                st.warning("La contraseña debe tener al menos 6 caracteres.")
+            elif crear_usuario:
+                exito, msg = crear_usuario(reg_nombre, reg_email, reg_pass1)
+                if exito:
+                    st.success("¡Cuenta creada con éxito! Ya puedes iniciar sesión.")
+                else:
+                    st.error(msg)
+            else:
+                st.info("Función de backend en proceso de actualización.")
 
 is_dark = st.session_state['theme'] == 'dark'
 
@@ -106,7 +173,7 @@ static_icon_pos = "12px center" if is_dark else "calc(100% - 12px) center"
 static_icon_svg = (
     "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='4'/><line x1='12' y1='1' x2='12' y2='3'/><line x1='12' y1='21' x2='12' y2='23'/><line x1='4.22' y1='4.22' x2='5.64' y2='5.64'/><line x1='18.36' y1='18.36' x2='19.78' y2='19.78'/><line x1='1' y1='12' x2='3' y2='12'/><line x1='21' y1='12' x2='23' y2='12'/><line x1='4.22' y1='19.78' x2='5.64' y2='18.36'/><line x1='18.36' y1='5.64' x2='19.78' y2='4.22'/></svg>"
     if is_dark else
-    "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z'/></svg>"
+    "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M21 12.79A9 9 0 0 1 11.21 3 7 7 0 0 0 21 12.79z'/></svg>"
 )
 
 bottle_svg = (
@@ -785,8 +852,19 @@ with col_logo:
 with col_actions:
     btn_col1, btn_col2 = st.columns([1.4, 1], vertical_alignment="center")
     with btn_col1:
-        if st.button("Ingresar", key="login_btn", use_container_width=True):
-            st.toast("Próximamente: Podrás crear tu cuenta, guardar alertas de precio y armar tu lista de deseos.")
+        if st.session_state['logged_in']:
+            user_nombre = st.session_state['user_info'].get('nombre', 'Usuario').split()[0]
+            with st.popover(f"👤 {user_nombre}", use_container_width=True):
+                st.write(f"**Conectado como:**")
+                st.write(st.session_state['user_info'].get('email', ''))
+                if st.button("Cerrar Sesión", key="btn_logout", use_container_width=True):
+                    st.session_state['logged_in'] = False
+                    st.session_state['user_info'] = None
+                    st.rerun()
+        else:
+            if st.button("Ingresar", key="login_btn", use_container_width=True):
+                modal_autenticacion()
+                
     with btn_col2:
         st.button(" ", key="theme_toggle", on_click=toggle_theme)
 
