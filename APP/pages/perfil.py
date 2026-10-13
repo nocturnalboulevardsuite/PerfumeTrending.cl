@@ -247,11 +247,18 @@ bottle_svg = (
 
 user_icon_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23{btn_text[1:]}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2'/><circle cx='12' cy='7' r='4'/></svg>"
 
-# ICONOS VECTORIALES DE ALTA PRECISIÓN
+# ICONOS VECTORIALES DE ALTA PRECISIÓN (ILUSTRATIVOS SVG)
 trend_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d83737' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='23 6 13.5 15.5 8.5 10.5 1 18'/><polyline points='17 6 23 6 23 12'/></svg>"
 shield_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d83737' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/><polyline points='9 12 11 14 15 10'/></svg>"
 tag_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d83737' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z'/><circle cx='7' cy='7' r='1.5' fill='%23d83737'/></svg>"
 home_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d83737' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z'/><polyline points='9 22 9 12 15 12 15 22'/></svg>"
+
+# COMPONENTES VECTORIALES INLINE SVG PARA REEMPLAZO DE EMOJIS
+svg_mail = f'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="{subtext_color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px; margin-right: 4px;"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>'
+svg_phone = f'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="{subtext_color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px; margin-right: 4px; margin-left: 12px;"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>'
+svg_bell_active = f'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px; margin-right: 5px;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>'
+svg_bell_off = f'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px; margin-right: 5px;"><path d="M13.73 21a2 2 0 0 1-3.46 0"/><line x1="1" y1="1" x2="23" y2="23"/></svg>'
+svg_trend_down = f'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px; margin-right: 5px;"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>'
 
 # 2. CSS ADAPTABLE Y ESTILOS PRINCIPALES
 st.markdown(f"""
@@ -539,7 +546,7 @@ with col_logo:
 with btn_col1:
     if st.session_state['logged_in']:
         user_display = st.session_state['user_info'].get('nombre') or st.session_state['user_info'].get('email', 'Usuario')
-        with st.popover(f"👤 {user_display}", use_container_width=True):
+        with st.popover(f"{user_display}", use_container_width=True):
             st.write(f"**Conectado como:**")
             st.write(st.session_state['user_info'].get('email', ''))
             if st.button("Cerrar Sesión", key="btn_logout", use_container_width=True):
@@ -598,8 +605,8 @@ u_bio = u_info.get('bio', 'Apasionado por los perfumes y cazador de las mejores 
 u_foto = u_info.get('foto_perfil', 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&q=80')
 u_alerta = u_info.get('alerta_email', True)
 
-# TARJETA RESUMEN DEL PERFIL
-badge_alerta = f"<span style='background: {'rgba(34, 197, 94, 0.15)' if is_dark else '#e8f5e9'}; color: {'#4ade80' if is_dark else '#2e7d32'}; border: 1px solid {'rgba(74, 222, 128, 0.35)' if is_dark else 'rgba(46, 125, 50, 0.3)'}; font-size: 0.78rem; font-weight: 700; padding: 4px 10px; border-radius: 6px;'>📧 ALERTAS GMAIL ACTIVADAS</span>" if u_alerta else f"<span style='background: {btn_border}; color: {subtext_color}; font-size: 0.78rem; font-weight: 600; padding: 4px 10px; border-radius: 6px;'>🔕 ALERTAS DESACTIVADAS</span>"
+# TARJETA RESUMEN DEL PERFIL (USANDO ICONOS VECTORIALES)
+badge_alerta = f"<span style='background: {'rgba(34, 197, 94, 0.15)' if is_dark else '#e8f5e9'}; color: {'#4ade80' if is_dark else '#2e7d32'}; border: 1px solid {'rgba(74, 222, 128, 0.35)' if is_dark else 'rgba(46, 125, 50, 0.3)'}; font-size: 0.78rem; font-weight: 700; padding: 5px 12px; border-radius: 6px;'>{svg_bell_active} ALERTAS GMAIL ACTIVADAS</span>" if u_alerta else f"<span style='background: {btn_border}; color: {subtext_color}; font-size: 0.78rem; font-weight: 600; padding: 5px 12px; border-radius: 6px;'>{svg_bell_off} ALERTAS DESACTIVADAS</span>"
 
 profile_card_html = f"""
 <div class="profile-summary-card">
@@ -608,8 +615,8 @@ profile_card_html = f"""
         <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px;">
             <div>
                 <h2 style="margin: 0 0 4px 0; color: {text_color}; font-size: 1.5rem; font-weight: 700;">{u_nombre}</h2>
-                <div style="color: {subtext_color}; font-size: 0.9rem; margin-bottom: 8px;">
-                    ✉️ {u_email} &nbsp;&bull;&nbsp; 📞 {u_telefono}
+                <div style="color: {subtext_color}; font-size: 0.9rem; margin-bottom: 8px; display: flex; align-items: center; flex-wrap: wrap;">
+                    {svg_mail} <span>{u_email}</span> &nbsp;&bull;&nbsp; {svg_phone} <span>{u_telefono}</span>
                 </div>
             </div>
             <div>{badge_alerta}</div>
@@ -622,17 +629,18 @@ profile_card_html = f"""
 """
 st.markdown(clean_html(profile_card_html), unsafe_allow_html=True)
 
-# PESTAÑAS DE EDICIÓN Y MONITOREO
+# PESTAÑAS DE EDICIÓN Y MONITOREO CON NOMBRES ELEGANTES
 tab_favs, tab_edit, tab_notif = st.tabs([
-    "❤️ Fragancias Favoritas & Monitoreo", 
-    "✏️ Editar Datos Personales", 
-    "🔔 Notificaciones por Correo"
+    "Fragancias Monitoreadas", 
+    "Editar Datos Personales", 
+    "Configuración de Alertas"
 ])
 
 # --- TAB 1: FRAGANCIAS FAVORITAS ---
 with tab_favs:
-    st.markdown("### Mis Fragancias Favoritas")
-    st.caption("Cuando le das me gusta a una fragancia, se guarda en esta sección. Si activas las alertas por correo, te avisaremos automáticamente cuando bajen de precio.")
+    svg_heart_header = f'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d83737" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -3px; margin-right: 8px;"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>'
+    st.markdown(f"<h3 style='display: flex; align-items: center;'>{svg_heart_header} Mis Fragancias Favoritas</h3>", unsafe_allow_html=True)
+    st.caption("Cuando agregas una fragancia a tus favoritos, la monitoreamos en tiempo real. Si activas las alertas, te avisaremos automáticamente por correo cuando baje de precio.")
     
     catalogo = get_cached_catalogo() or []
     fav_ids = st.session_state.get('favoritos', [])
@@ -657,7 +665,7 @@ with tab_favs:
             p_ref = item.get('precio_referencia', p_min)
             
             baja_detectada = (p_min < p_ref) and p_min > 0
-            badge_precio = f"<span style='color: {'#4ade80' if is_dark else '#2e7d32'}; font-weight: 700;'>📉 ¡Baja de precio! ${p_min:,.0f} CLP</span>".replace(",", ".") if baja_detectada else f"<span style='color: {text_color}; font-weight: 600;'>Mejor precio: ${p_min:,.0f} CLP</span>".replace(",", ".")
+            badge_precio = f"<span style='color: {'#4ade80' if is_dark else '#2e7d32'}; font-weight: 700;'>{svg_trend_down} ¡Baja de precio! ${p_min:,.0f} CLP</span>".replace(",", ".") if baja_detectada else f"<span style='color: {text_color}; font-weight: 600;'>Mejor precio: ${p_min:,.0f} CLP</span>".replace(",", ".")
             
             col_f1, col_f2, col_f3, col_f4 = st.columns([3, 2.5, 2, 1.5], vertical_alignment="center")
             with col_f1:
@@ -669,14 +677,15 @@ with tab_favs:
                     st.session_state['selected_perfume'] = p_id
                     st.switch_page("pages/compararprecios.py")
             with col_f4:
-                if st.button("Quitar ❤️", key=f"btn_rem_fav_{p_id}", use_container_width=True):
+                if st.button("Quitar de Favoritos", key=f"btn_rem_fav_{p_id}", use_container_width=True):
                     st.session_state['favoritos'].remove(p_id)
                     st.toast(f"Se quitó {p_nombre} de tus favoritos.")
                     st.rerun()
 
 # --- TAB 2: EDITAR PERFIL ---
 with tab_edit:
-    st.markdown("### Modificar Datos del Perfil")
+    svg_edit_header = f'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="{text_color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -3px; margin-right: 8px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>'
+    st.markdown(f"<h3 style='display: flex; align-items: center;'>{svg_edit_header} Modificar Datos del Perfil</h3>", unsafe_allow_html=True)
     
     with st.form("form_edit_user_profile"):
         col_e1, col_e2 = st.columns(2, gap="medium")
@@ -704,7 +713,8 @@ with tab_edit:
 
 # --- TAB 3: CONFIGURACIÓN DE NOTIFICACIONES Y ALERTAS ---
 with tab_notif:
-    st.markdown("### Alertas por Correo Electrónico (Gmail)")
+    svg_notif_header = f'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="{text_color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -3px; margin-right: 8px;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>'
+    st.markdown(f"<h3 style='display: flex; align-items: center;'>{svg_notif_header} Alertas por Correo Electrónico (Gmail)</h3>", unsafe_allow_html=True)
     st.write("Recibe avisos en tiempo real cuando tus fragancias favoritas tengan una baja de precio o entren en oferta especial en tiendas auditadas de Chile.")
     
     with st.form("form_notif_settings"):
