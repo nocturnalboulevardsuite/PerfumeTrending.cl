@@ -73,10 +73,13 @@ def get_image_src(img_path_or_url):
 
     return img_path_or_url
 
+# DIBUJO VECTORIAL SVG PARA EL ÍCONO DE PESTAÑA (FAVICON)
+perfume_svg_favicon = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%238c7b6d'><path d='M9 2h6v2H9zM10 4h4v3h-4zM6 8h12a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V10a2 2 0 0 1 2-2zm6 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8z'/></svg>"
+
 # 1. CONFIGURACIÓN DE LA PÁGINA Y ESTADO
 st.set_page_config(
     page_title="PerfumeTrending",
-    page_icon="🧴",
+    page_icon=perfume_svg_favicon,
     layout="wide",
     initial_sidebar_state="collapsed"
 )
@@ -270,15 +273,38 @@ tag_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' v
 home_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d83737' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z'/><polyline points='9 22 9 12 15 12 15 22'/></svg>"
 flame_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d83737' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 3.5z'/></svg>"
 
-# 2. SISTEMA DE SONIDO, EVENTOS DE TARJETAS Y SOBREESCRITURA DE TÍTULO
+# 2. SISTEMA DE SONIDO, EVENTOS DE TARJETAS Y BLOQUEO AUTOMÁTICO DE TÍTULO / FAVICON
 js_color_script = f"""
 <script>
 (function() {{
     const topWin = window.parent || window;
+    const topDoc = topWin.document;
+    const iconDataUri = "{perfume_svg_favicon}";
     
-    // Sobreescribir el título de la pestaña eliminando la palabra Streamlit
+    function lockTitleAndFavicon() {{
+        try {{
+            if (topDoc.title !== "PerfumeTrending") {{
+                topDoc.title = "PerfumeTrending";
+            }}
+            let iconLink = topDoc.querySelector("link[rel*='icon']");
+            if (!iconLink) {{
+                iconLink = topDoc.createElement('link');
+                iconLink.rel = 'shortcut icon';
+                topDoc.getElementsByTagName('head')[0].appendChild(iconLink);
+            }}
+            if (iconLink.href !== iconDataUri) {{
+                iconLink.href = iconDataUri;
+            }}
+        }} catch(e) {{}}
+    }}
+
     try {{
-        topWin.document.title = "PerfumeTrending";
+        lockTitleAndFavicon();
+        const titleEl = topDoc.querySelector('title');
+        if (titleEl) {{
+            const titleObserver = new MutationObserver(lockTitleAndFavicon);
+            titleObserver.observe(titleEl, {{ childList: true, characterData: true, subtree: true }});
+        }}
     }} catch(e) {{}}
 
     if (typeof topWin.soundMuted === 'undefined') {{
@@ -323,7 +349,7 @@ js_color_script = f"""
     }};
 
     topWin.updateSoundButtonUI = function() {{
-        const btn = topWin.document.getElementById('sound-toggle-btn');
+        const btn = topDoc.getElementById('sound-toggle-btn');
         if (btn) {{
             const speakerSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>';
             const muteSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>';
@@ -334,11 +360,8 @@ js_color_script = f"""
     }};
 
     function attachCardEvents() {{
-        try {{
-            topWin.document.title = "PerfumeTrending";
-        }} catch(e) {{}}
-        
-        const essenceCards = topWin.document.querySelectorAll('.essence-card');
+        lockTitleAndFavicon();
+        const essenceCards = topDoc.querySelectorAll('.essence-card');
         essenceCards.forEach(card => {{
             if (!card.dataset.soundAttached) {{
                 card.dataset.soundAttached = 'true';
@@ -355,10 +378,9 @@ js_color_script = f"""
         debounceTimer = setTimeout(attachCardEvents, 100);
     }});
     
-    observer.observe(topWin.document.body, {{ childList: true, subtree: true }});
+    observer.observe(topDoc.body, {{ childList: true, subtree: true }});
     attachCardEvents();
 
-    // Heartbeat periódico para evitar desconexiones de sesión
     setInterval(function() {{
         try {{
             if (topWin && topWin.document) {{
