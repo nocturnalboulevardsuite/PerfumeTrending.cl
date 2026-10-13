@@ -432,35 +432,30 @@ st.markdown(f"""
         font-weight: 600 !important;
     }}
 
-    /* BOTONES DE COMPARAR PRECIOS UNIDOS A LA TARJETA (ROJO VIBRANTE) */
-    div[class*="st-key-btn_comp_"] button {{
+    /* BOTONES DE COMPARAR PRECIOS EN CATÁLOGO - ALTO IMPACTO Y LEGIBILIDAD DÍA/NOCHE */
+    div[data-testid="stElementContainer"] div.stButton button[key*="btn_comp_"],
+    div.stButton > button[key*="btn_comp_"] {{
         background-color: #d83737 !important;
         color: #ffffff !important;
         border: 1px solid #d83737 !important;
-        border-top: none !important;
-        border-top-left-radius: 0px !important;
-        border-top-right-radius: 0px !important;
-        border-bottom-left-radius: 12px !important;
-        border-bottom-right-radius: 12px !important;
+        border-radius: 8px !important;
         font-weight: 700 !important;
-        margin-top: 0px !important;
-        margin-bottom: 16px !important;
-        box-shadow: 0 4px 12px rgba(216, 55, 55, 0.3) !important;
-        width: 100% !important;
-        min-height: 40px !important;
+        box-shadow: 0 3px 10px rgba(216, 55, 55, 0.25) !important;
     }}
 
-    div[class*="st-key-btn_comp_"] button p {{
+    div[data-testid="stElementContainer"] div.stButton button[key*="btn_comp_"] p,
+    div.stButton > button[key*="btn_comp_"] p {{
         color: #ffffff !important;
         font-weight: 700 !important;
-        font-size: 0.9rem !important;
     }}
 
-    div[class*="st-key-btn_comp_"] button:hover {{
+    div[data-testid="stElementContainer"] div.stButton button[key*="btn_comp_"]:hover,
+    div.stButton > button[key*="btn_comp_"]:hover {{
         background-color: #be2e2e !important;
         border-color: #be2e2e !important;
         color: #ffffff !important;
-        transform: none !important;
+        transform: scale(1.03) !important;
+        box-shadow: 0 5px 14px rgba(216, 55, 55, 0.35) !important;
     }}
 
     div.stButton > button:hover,
@@ -468,7 +463,7 @@ st.markdown(f"""
     .st-key-login_btn button:hover,
     div.stButton > button:focus,
     a[data-testid="stPageLink-NavLink"]:hover {{
-        transform: scale(1.03) !important;
+        transform: scale(1.04) !important;
         cursor: pointer !important;
         box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
         filter: none !important;
@@ -495,7 +490,7 @@ st.markdown(f"""
 
     div[data-testid="stPopover"] > button:hover,
     button[data-testid="stPopoverButton"]:hover {{
-        transform: scale(1.03) !important;
+        transform: scale(1.04) !important;
         box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
     }}
 
@@ -851,19 +846,17 @@ st.markdown(f"""
     .catalog-card {{
         background-color: {card_bg};
         border: 1px solid {border_color};
-        border-top-left-radius: 12px;
-        border-top-right-radius: 12px;
-        border-bottom-left-radius: 0px;
-        border-bottom-right-radius: 0px;
-        border-bottom: none;
+        border-radius: 10px;
         overflow: hidden;
         position: relative;
-        margin-bottom: 0px !important;
+        margin-bottom: 12px;
         box-shadow: { "0 4px 14px rgba(0,0,0,0.25)" if is_dark else "0 2px 10px rgba(0,0,0,0.04)" };
-        transition: border-color 0.2s ease, transform 0.22s ease;
+        transition: border-color 0.2s ease, transform 0.22s ease, box-shadow 0.22s ease;
     }}
     .catalog-card:hover {{
         border-color: { "#7a6a5d" if is_dark else "#b5a494" };
+        transform: translateY(-3px);
+        box-shadow: { "0 8px 22px rgba(0,0,0,0.35)" if is_dark else "0 6px 18px rgba(0,0,0,0.08)" };
     }}
     .square-img-box {{
         position: relative;
@@ -981,47 +974,43 @@ st.markdown(f"""
     }}
 
     /* ==========================================
-       OPTIMIZACIÓN MÓVIL EXACTA
+       OPTIMIZACIÓN RESPONSIVA PROFESIONAL MÓVIL
        ========================================== */
     @media (max-width: 768px) {{
         .block-container {{ 
             padding-top: 0.4rem !important; 
             padding-bottom: 1.5rem !important; 
-            padding-left: 0.4rem !important;
-            padding-right: 0.4rem !important;
+            padding-left: 0.6rem !important;
+            padding-right: 0.6rem !important;
         }}
 
+        /* Permitir que los bloques horizontales adapten sus filas libremente */
+        div[data-testid="stHorizontalBlock"] {{
+            flex-wrap: wrap !important;
+            gap: 6px !important;
+        }}
+
+        div[data-testid="column"], div[data-testid="stColumn"] {{
+            width: 100% !important;
+            flex: 1 1 100% !important;
+            min-width: 0 !important;
+        }}
+
+        /* Ocultar la línea divisoria vertical */
         div[style*="border-left: 1px solid"] {{
             display: none !important;
         }}
 
-        /* 1. CABECERA LIMPIA Y ALINEADA EN MÓVIL */
-        div[data-testid="stHorizontalBlock"]:has(.st-key-login_btn),
-        div[data-testid="stHorizontalBlock"]:has(.user-popover-container) {{
-            display: flex !important;
-            flex-direction: row !important;
+        /* CABECERA: Mantiene Logo, Ingresar y Switch en 1 fila superior */
+        div[data-testid="stHorizontalBlock"]:has(.st-key-login_btn, .st-key-theme_toggle) {{
             flex-wrap: nowrap !important;
             align-items: center !important;
             justify-content: space-between !important;
-            gap: 4px !important;
         }}
 
-        div[data-testid="stHorizontalBlock"]:has(.st-key-login_btn) > div[data-testid="column"]:nth-child(1),
-        div[data-testid="stHorizontalBlock"]:has(.user-popover-container) > div[data-testid="column"]:nth-child(1) {{
+        div[data-testid="column"]:has(a[href="/"]) {{
             flex: 1 1 auto !important;
-            min-width: 0 !important;
-        }}
-
-        div[data-testid="stHorizontalBlock"]:has(.st-key-login_btn) > div[data-testid="column"]:nth-child(2),
-        div[data-testid="stHorizontalBlock"]:has(.user-popover-container) > div[data-testid="column"]:nth-child(2) {{
-            flex: 0 0 auto !important;
             width: auto !important;
-        }}
-
-        div[data-testid="stHorizontalBlock"]:has(.st-key-login_btn) > div[data-testid="column"]:nth-child(3),
-        div[data-testid="stHorizontalBlock"]:has(.user-popover-container) > div[data-testid="column"]:nth-child(3) {{
-            flex: 0 0 auto !important;
-            width: 48px !important;
         }}
 
         a[href="/"] span {{
@@ -1033,14 +1022,18 @@ st.markdown(f"""
             height: 24px !important;
         }}
 
+        .st-key-login_btn {{
+            flex: 0 0 auto !important;
+            width: auto !important;
+        }}
+
         .st-key-login_btn button {{
             height: 38px !important;
             min-height: 38px !important;
-            padding: 0 10px 0 28px !important;
+            padding: 0 0.6rem 0 2rem !important;
             font-size: 0.82rem !important;
             background-position: 8px center !important;
             background-size: 15px 15px !important;
-            margin: 0 !important;
         }}
 
         .st-key-login_btn button p {{
@@ -1048,60 +1041,60 @@ st.markdown(f"""
             white-space: nowrap !important;
         }}
 
+        .st-key-theme_toggle {{
+            flex: 0 0 auto !important;
+            width: auto !important;
+        }}
+
         .st-key-theme_toggle button {{
-            transform: scale(0.7) !important;
+            transform: scale(0.72) !important;
             transform-origin: right center !important;
-            width: 48px !important;
+            width: 60px !important;
+            margin: 0 !important;
         }}
 
-        /* 2. NAVEGACIÓN EN 2 COLUMNAS PARES */
+        /* NAVEGACIÓN SUPERIOR: "PERFUMES" Y "ESENCIAS" en 2 columnas parejas */
         div[data-testid="stHorizontalBlock"]:has(.st-key-n_perfumes) {{
-            display: flex !important;
-            flex-direction: row !important;
             flex-wrap: nowrap !important;
-            gap: 8px !important;
         }}
 
-        div[data-testid="stHorizontalBlock"]:has(.st-key-n_perfumes) > div[data-testid="column"] {{
+        div[data-testid="column"]:has(.st-key-n_perfumes),
+        div[data-testid="column"]:has(.st-key-n_esencias) {{
             flex: 1 1 50% !important;
             width: 50% !important;
-            min-width: 0 !important;
         }}
 
-        /* 3. BÚSQUEDA Y FILTROS */
-        div[data-testid="stHorizontalBlock"]:has(input[placeholder*="Buscar"]) {{
-            display: flex !important;
-            flex-direction: row !important;
-            flex-wrap: wrap !important;
-            gap: 6px !important;
+        .st-key-n_perfumes button p,
+        .st-key-n_esencias button p {{
+            font-size: 0.85rem !important;
         }}
 
-        div[data-testid="stHorizontalBlock"]:has(input[placeholder*="Buscar"]) > div[data-testid="column"]:nth-child(1) {{
+        /* BÚSQUEDA Y FILTROS: Campo arriba (100%), Esencias y Foto abajo (50% / 50%) */
+        div[data-testid="column"]:has(input[placeholder*="Buscar"]) {{
             flex: 1 1 100% !important;
             width: 100% !important;
+            margin-bottom: 2px !important;
         }}
 
-        div[data-testid="stHorizontalBlock"]:has(input[placeholder*="Buscar"]) > div[data-testid="column"]:nth-child(2),
-        div[data-testid="stHorizontalBlock"]:has(input[placeholder*="Buscar"]) > div[data-testid="column"]:nth-child(4) {{
-            flex: 1 1 calc(50% - 3px) !important;
-            width: calc(50% - 3px) !important;
+        div[data-testid="column"]:has(div[data-testid="stPopover"]),
+        div[data-testid="column"]:has(.st-key-btn_photo_search) {{
+            flex: 1 1 calc(50% - 4px) !important;
+            width: calc(50% - 4px) !important;
         }}
 
-        div[data-testid="stHorizontalBlock"]:has(input[placeholder*="Buscar"]) > div[data-testid="column"]:nth-child(3) {{
-            display: none !important;
-        }}
-
-        div[data-testid="stPopover"] > button,
-        .st-key-btn_photo_search button {{
+        div[data-testid="stPopover"] > button {{
             min-height: 40px !important;
             font-size: 0.82rem !important;
             width: 100% !important;
         }}
 
         .st-key-btn_photo_search button {{
-            padding: 0.3rem 0.3rem 0.3rem 2.0rem !important;
-            background-position: 8px center !important;
-            background-size: 15px 15px !important;
+            min-height: 40px !important;
+            font-size: 0.82rem !important;
+            padding: 0.3rem 0.4rem 0.3rem 2.1rem !important;
+            background-position: 10px center !important;
+            background-size: 16px 16px !important;
+            width: 100% !important;
         }}
 
         .st-key-btn_photo_search button p {{
@@ -1109,131 +1102,112 @@ st.markdown(f"""
             white-space: nowrap !important;
         }}
 
-        /* 4. CHIPS DE ACCESO RÁPIDO: MATRIZ 2X2 */
+        /* CHIPS DE ACCESO RÁPIDO: Matriz limpia 2x2 sin textos cortados */
         div[data-testid="stHorizontalBlock"]:has(a[data-testid="stPageLink-NavLink"]) {{
-            display: flex !important;
-            flex-direction: row !important;
             flex-wrap: wrap !important;
             gap: 6px !important;
         }}
 
-        div[data-testid="stHorizontalBlock"]:has(a[data-testid="stPageLink-NavLink"]) > div[data-testid="column"] {{
-            flex: 0 0 calc(50% - 3px) !important;
-            width: calc(50% - 3px) !important;
-            max-width: calc(50% - 3px) !important;
-            min-width: 0 !important;
+        div[data-testid="column"]:has(a[data-testid="stPageLink-NavLink"]) {{
+            flex: 1 1 calc(50% - 4px) !important;
+            width: calc(50% - 4px) !important;
         }}
 
         a[data-testid="stPageLink-NavLink"] {{
-            padding: 0.45rem 0.2rem 0.45rem 1.9rem !important;
-            border-radius: 10px !important;
+            padding: 0.5rem 0.4rem 0.5rem 2.2rem !important;
+            border-radius: 12px !important;
             min-height: 38px !important;
+            justify-content: flex-start !important;
             width: 100% !important;
         }}
 
         a[data-testid="stPageLink-NavLink"] p,
         a[data-testid="stPageLink-NavLink"] span {{
-            font-size: 0.72rem !important;
-            white-space: nowrap !important;
-            overflow: hidden !important;
-            text-overflow: ellipsis !important;
+            font-size: 0.78rem !important;
+            white-space: normal !important;
+            line-height: 1.1 !important;
+            text-align: left !important;
         }}
 
         a[data-testid="stPageLink-NavLink"]::before {{
-            left: 6px !important;
-            width: 14px !important;
-            height: 14px !important;
+            left: 8px !important;
+            width: 15px !important;
+            height: 15px !important;
         }}
 
-        /* 5. TARJETAS DE CATÁLOGO Y BOTÓN UNIDO EN MÓVIL */
+        /* CATÁLOGO DE PERFUMES: 1 tarjeta completa por fila */
         div[data-testid="stHorizontalBlock"]:has(.catalog-card) {{
-            display: flex !important;
-            flex-direction: row !important;
-            flex-wrap: wrap !important;
-            gap: 8px !important;
+            flex-direction: column !important;
         }}
 
-        div[data-testid="stHorizontalBlock"]:has(.catalog-card) > div[data-testid="column"] {{
-            flex: 0 0 calc(50% - 4px) !important;
-            width: calc(50% - 4px) !important;
-            max-width: calc(50% - 4px) !important;
-            min-width: 0 !important;
-        }}
-
-        .square-img-box {{
-            padding: 8px !important;
-        }}
-
-        .card-footer-info {{
-            padding: 8px 4px !important;
-        }}
-
-        .card-perfume-name {{
-            font-size: 0.82rem !important;
-            line-height: 1.2 !important;
-            margin-bottom: 2px !important;
-            white-space: nowrap !important;
-            overflow: hidden !important;
-            text-overflow: ellipsis !important;
-        }}
-
-        .card-perfume-brand {{
-            font-size: 0.68rem !important;
-        }}
-
-        div[class*="st-key-btn_comp_"] button {{
-            min-height: 34px !important;
-            padding: 4px 6px !important;
+        div[data-testid="column"]:has(.catalog-card) {{
+            flex: 1 1 100% !important;
+            width: 100% !important;
             margin-bottom: 12px !important;
         }}
 
-        div[class*="st-key-btn_comp_"] button p {{
-            font-size: 0.76rem !important;
+        .catalog-card {{
+            margin-bottom: 8px !important;
+            border-radius: 12px !important;
         }}
 
-        /* DICCIONARIO DE ESENCIAS EN MÓVIL */
+        .square-img-box {{
+            max-height: 280px !important;
+            padding: 16px !important;
+        }}
+
+        .card-perfume-name {{
+            font-size: 1.05rem !important;
+        }}
+
+        .card-perfume-brand {{
+            font-size: 0.82rem !important;
+        }}
+
+        div[data-testid="stElementContainer"] div.stButton button[key*="btn_comp_"] {{
+            font-size: 0.9rem !important;
+            padding: 8px 12px !important;
+            height: 42px !important;
+        }}
+
+        /* DICCIONARIO DE ESENCIAS: 1 columna ordenada */
         div[data-testid="stHorizontalBlock"]:has(.essence-card) {{
-            display: flex !important;
-            flex-direction: row !important;
-            flex-wrap: wrap !important;
-            gap: 6px !important;
+            flex-direction: column !important;
         }}
 
-        div[data-testid="stHorizontalBlock"]:has(.essence-card) > div[data-testid="column"] {{
-            flex: 0 0 calc(50% - 3px) !important;
-            width: calc(50% - 3px) !important;
-            max-width: calc(50% - 3px) !important;
-            min-width: 0 !important;
+        div[data-testid="column"]:has(.essence-card) {{
+            flex: 1 1 100% !important;
+            width: 100% !important;
         }}
 
         .essence-card {{
-            padding: 8px 10px !important;
-            margin-bottom: 6px !important;
+            padding: 12px 14px !important;
+            margin-bottom: 8px !important;
         }}
 
         .essence-title {{
-            font-size: 0.82rem !important;
-            margin-bottom: 2px !important;
+            font-size: 0.95rem !important;
         }}
 
         .essence-desc {{
-            font-size: 0.72rem !important;
-            line-height: 1.25 !important;
+            font-size: 0.85rem !important;
         }}
     }}
     </style>
 """, unsafe_allow_html=True)
 
-# 4. CABECERA FLAT (PLANA)
+# 4. CABECERA CON LOGO COMPACTO Y ESPACIO DINÁMICO SEGÚN ESTADO DE SESIÓN
 if st.session_state['logged_in']:
-    col_logo, col_login, col_theme = st.columns([5.0, 3.5, 1.2], vertical_alignment="center")
+    col_logo, col_espacio, col_actions = st.columns([4.0, 0.5, 4.5], vertical_alignment="center")
+    btn_col1, btn_col2 = col_actions.columns([3.5, 1.0], vertical_alignment="center")
 else:
-    col_logo, col_login, col_theme = st.columns([5.0, 2.8, 1.2], vertical_alignment="center")
+    col_logo, col_espacio, col_actions = st.columns([5.5, 0.8, 2.7], vertical_alignment="center")
+    btn_col1, btn_col2 = col_actions.columns([1.8, 1.0], vertical_alignment="center")
 
 with col_logo:
     logo_color = "#8c7b6d"
     logo_html = f"""
-    <a href="/" target="_top" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; width: fit-content;">
+    <a href="/" target="_top" style="text-decoration: none; display: inline-flex; align-items: center; gap: 10px; cursor: pointer; width: fit-content;">
         <svg width="32" height="32" viewBox="0 0 36 36" fill="none" stroke-linecap="round" stroke-linejoin="round">
             <path d="M 6.8 21 L 29.2 21 C 30 25 27 32 18 32 C 9 32 6 25 6.8 21 Z" fill="{logo_color}" />
             <line x1="6.8" y1="21" x2="29.2" y2="21" stroke="{text_color}" stroke-width="1.5" />
@@ -1243,14 +1217,14 @@ with col_logo:
             <rect x="13" y="3" width="10" height="4" rx="1" stroke="{text_color}" stroke-width="1.5" />
             <rect x="16" y="0" width="4" height="3" rx="1" fill="{logo_color}" stroke="{text_color}" stroke-width="1" />
         </svg>
-        <span style="font-size: 1.4rem; color: {text_color}; letter-spacing: 0.2px; line-height: 1;">
+        <span style="font-size: 1.5rem; color: {text_color}; letter-spacing: 0.3px; line-height: 1;">
             <span style="font-weight: 300;">Perfume</span><span style="font-weight: 700;">Trending</span>
         </span>
     </a>
     """
     st.markdown(logo_html, unsafe_allow_html=True)
 
-with col_login:
+with btn_col1:
     if st.session_state['logged_in']:
         user_display = st.session_state['user_info'].get('nombre') or st.session_state['user_info'].get('email', 'Usuario')
         st.markdown('<div class="user-popover-container">', unsafe_allow_html=True)
@@ -1259,6 +1233,7 @@ with col_login:
             st.write(st.session_state['user_info'].get('email', ''))
             st.markdown("<div style='margin-top: 8px;'></div>", unsafe_allow_html=True)
             
+            # ACOPLE DIRECTO A LA PÁGINA DE PERFIL CON ICONO DIBUJADO HTML/SVG
             if st.button("Mi Perfil y Alertas", key="btn_go_profile", use_container_width=True):
                 st.switch_page("pages/perfil.py")
                 
@@ -1271,14 +1246,14 @@ with col_login:
         if st.button("Ingresar", key="login_btn", use_container_width=True):
             st.session_state['show_login_modal'] = True
             
-with col_theme:
+with btn_col2:
     st.button(" ", key="theme_toggle", on_click=toggle_theme)
 
 # MONITOREO Y RENDERIZADO PERSISTENTE DEL MODAL
 if st.session_state.get('show_login_modal', False):
     modal_autenticacion()
 
-# 5. NAVEGACIÓN PRINCIPAL
+# 5. NAVEGACIÓN PRINCIPAL (ORGANIZADA EN 2 COLUMNAS SIN BOTÓN GRANDE DE REMATES)
 st.markdown("<div style='margin-top: 14px;'></div>", unsafe_allow_html=True)
 nav_cols = st.columns([1, 1], vertical_alignment="center")
 
@@ -1328,9 +1303,9 @@ with col_separator:
 with col_photo:
     st.button("Búsqueda visual", key="btn_photo_search", help="Buscar por imagen", use_container_width=True)
 
-# 7. CHIPS DE ENLACE RÁPIDO (4 COLUMNAS PARES)
+# 7. CHIPS DE ENLACE RÁPIDO A PÁGINAS INDEPENDIENTES
 st.markdown("<div style='margin-top: 14px;'></div>", unsafe_allow_html=True)
-col_chip1, col_chip2, col_chip3, col_chip4 = st.columns(4, vertical_alignment="center")
+col_chip1, col_chip2, col_chip3, col_chip4, col_chip_space = st.columns([1.5, 2.0, 1.7, 1.6, 2.2], vertical_alignment="center")
 
 with col_chip1:
     st.page_link("pages/trendhype.py", label="Trend Del Hype", use_container_width=True)
@@ -1343,13 +1318,14 @@ with col_chip4:
 
 st.markdown("<div style='margin-top: 24px;'></div>", unsafe_allow_html=True)
 
-# 8. SECCIONES Y CONTENIDOS (MÚLTIPLES PERFUMES PARES EN 2 COLUMNAS)
+# 8. SECCIONES Y CONTENIDOS
 if st.session_state['current_page'] == 'home':
     st.markdown(f"<div style='text-align: center; margin-bottom: 24px; color: {text_color}; letter-spacing: 1.5px; font-weight: 300; font-size: 1.1rem; text-transform: uppercase;'>CATÁLOGO Y TENDENCIAS EN CHILE</div>", unsafe_allow_html=True)
     
     if selected_essences:
         st.write(f"**Filtro activo por notas:** {', '.join(selected_essences)}")
 
+    # Obtener catálogo desde base de datos con filtros y caché optimizado
     catalog_perfumes = get_cached_catalogo(
         busqueda=search_query, 
         esencias_tuple=tuple(selected_essences) if selected_essences else None
@@ -1358,13 +1334,14 @@ if st.session_state['current_page'] == 'home':
     if not catalog_perfumes:
         st.info("No se encontraron perfumes que coincidan con la búsqueda o notas seleccionadas.")
     else:
-        cols_per_row = 2
+        cols_per_row = 3
         for i in range(0, len(catalog_perfumes), cols_per_row):
-            cols = st.columns(cols_per_row, gap="small")
+            cols = st.columns(cols_per_row, gap="medium")
             for j in range(cols_per_row):
                 if i + j < len(catalog_perfumes):
                     p = catalog_perfumes[i + j]
                     
+                    # Determinar país y notas para el hover overlay
                     pais_origen = "Emiratos Árabes" if p.get('es_arabe') else "Francia" if p.get('marca') in ['Chanel', 'Dior', 'Yves Saint Laurent', 'Jean Paul Gaultier', 'Kilian', 'Maison Francis Kurkdjian'] else "Italia" if p.get('marca') in ['Giorgio Armani', 'Versace'] else "Estados Unidos" if p.get('marca') in ['Tom Ford'] else "Internacional"
                     notas_txt = p.get('notas', 'Notas aromáticas selectas')
                     tipo_txt = p.get('tipo', 'Eau de Parfum')
@@ -1541,7 +1518,7 @@ elif st.session_state['current_page'] == 'esencias_page':
         "Sangre (Metálica)": "Nota vanguardista nicho; evoca hierro y un matiz salado."
     }
 
-    col_es_1, col_es_2 = st.columns(2, gap="small")
+    col_es_1, col_es_2 = st.columns(2, gap="medium")
     html_col1 = []
     html_col2 = []
     
