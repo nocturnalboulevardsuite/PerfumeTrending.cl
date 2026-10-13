@@ -2,16 +2,17 @@
 PerfumeTrending.cl — Capa de Persistencia y Motor de Base de Datos
 ==================================================================
 Módulo desacoplado de acceso a datos de alto rendimiento basado en SQLite con:
-- Esquema relacional DDL puro externalizado en database/schema.sql.
+- Esquema relacional DDL puro y migraciones automáticas.
+- Gestión de usuarios, edición de perfil y preferencias de notificación.
+- Sistema de fragancias favoritas (me gusta) y monitoreo de bajas de precio.
 - Catálogo maestro y tiendas auditadas desacopladas en database/seed_catalogo.json.
 - Modo WAL (Write-Ahead Logging) para concurrencia multi-hilo (Streamlit + Scraper).
 - Context managers para gestión determinista de transacciones y conexiones.
-- Índices B-Tree optimizados para series de tiempo y búsquedas de catálogo.
-- Tipado estricto (PEP 484) y control defensivo de excepciones.
 """
 
 from contextlib import contextmanager
 from datetime import datetime, timedelta
+import hashlib
 import json
 import logging
 import os
@@ -49,6 +50,11 @@ SEED_PATH = resolver_ruta("database/seed_catalogo.json")
 _SEED_CACHE: Optional[Dict[str, Any]] = None
 
 
+def hash_password(password: str) -> str:
+    """Genera un hash SHA-256 seguro utilizando únicamente la librería estándar."""
+    return hashlib.sha256(password.encode('utf-8')).hexdigest()
+
+
 def cargar_datos_semilla_json() -> Dict[str, Any]:
     """Carga y cachea el archivo JSON con el catálogo canónico y directrices de tiendas."""
     global _SEED_CACHE
@@ -67,12 +73,6 @@ def cargar_datos_semilla_json() -> Dict[str, Any]:
 def get_connection() -> sqlite3.Connection:
     """
     Crea y configura una conexión de producción a SQLite.
-    
-    Ajustes de rendimiento y concurrencia:
-    - WAL Mode: Permite lecturas y escrituras simultáneas sin bloqueos de tabla.
-    - Busy timeout (15s): Previene bloqueos por concurrencia entre Streamlit y el Scraper.
-    - Synchronous NORMAL: Optimiza I/O en disco garantizando durabilidad ACID.
-    - Foreign Keys: Integridad referencial habilitada a nivel de motor.
     """
     os.makedirs(DB_DIR, exist_ok=True)
     conn = sqlite3.connect(DB_PATH, timeout=15.0)
@@ -87,8 +87,6 @@ def get_connection() -> sqlite3.Connection:
 def get_db_cursor(commit: bool = False) -> Generator[sqlite3.Cursor, None, None]:
     """
     Context manager transaccional determinista.
-    
-    Garantiza commit automático en éxito, rollback ante excepciones y cierre seguro de conexión.
     """
     conn = get_connection()
     cursor = conn.cursor()
@@ -104,20 +102,25 @@ def get_db_cursor(commit: bool = False) -> Generator[sqlite3.Cursor, None, None]
 
 
 # -----------------------------------------------------------------------------
-# INICIALIZACIÓN DE ESQUEMA (DDL) Y CARGA DE SEMILLA
+# INICIALIZACIÓN DE ESQUEMA (DDL) Y MIGRACIONES DE USUARIOS / FAVORITOS
 # -----------------------------------------------------------------------------
 def init_db(force_reseed: bool = False) -> None:
     """
-    Inicializa la base de datos aplicando el esquema DDL y cargando datos semilla si está vacía.
+    Inicializa la base de datos aplicando el esquema DDL y asegurando las tablas
+    de usuarios y favoritos.
     """
-    if not os.path.exists(SCHEMA_PATH):
-        raise FileNotFoundError(f"No se encontró el archivo de esquema SQL en: {SCHEMA_PATH}")
-
-    with open(SCHEMA_PATH, "r", encoding="utf-8") as f:
-        schema_sql = f.read()
+    if os.path.exists(SCHEMA_PATH):
+        with open(SCHEMA_PATH, "r", encoding="utf-8") as f:
+            schema_sql = f.read()
+    else:
+        schema_sql = ""
 
     with get_db_cursor(commit=True) as cursor:
-        # 1. Migración previa defensiva si la tabla precios_registro ya existía sin volumen_ml
+        # 1. Aplicar esquema DDL base si existe
+        if schema_sql:
+            cursor.executescript(schema_sql)
+
+        # 2. Migraciones defensivas para tabla precios_registro
         cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='precios_registro';")
         if cursor.fetchone():
             cursor.execute("PRAGMA table_info(precios_registro);")
@@ -125,10 +128,51 @@ def init_db(force_reseed: bool = False) -> None:
             if "volumen_ml" not in cols:
                 cursor.execute("ALTER TABLE precios_registro ADD COLUMN volumen_ml INTEGER DEFAULT 100;")
 
-        # 2. Aplicar esquema DDL e índices
-        cursor.executescript(schema_sql)
+        # 3. Creación de la tabla USUARIOS
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS usuarios (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            nombre TEXT NOT NULL,
+            email TEXT UNIQUE NOT NULL,
+            password_hash TEXT,
+            telefono TEXT DEFAULT '',
+            bio TEXT DEFAULT '',
+            foto_perfil TEXT DEFAULT '',
+            alerta_email INTEGER DEFAULT 1,
+            umbral_descuento INTEGER DEFAULT 10,
+            fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP
+        );
+        """)
 
-        # 3. Verificar si la base de datos requiere población inicial
+        # Asegurar columnas nuevas en usuarios si la tabla ya existía
+        cursor.execute("PRAGMA table_info(usuarios);")
+        u_cols = {c["name"] for c in cursor.fetchall()}
+        if "telefono" not in u_cols:
+            cursor.execute("ALTER TABLE usuarios ADD COLUMN telefono TEXT DEFAULT '';")
+        if "bio" not in u_cols:
+            cursor.execute("ALTER TABLE usuarios ADD COLUMN bio TEXT DEFAULT '';")
+        if "foto_perfil" not in u_cols:
+            cursor.execute("ALTER TABLE usuarios ADD COLUMN foto_perfil TEXT DEFAULT '';")
+        if "alerta_email" not in u_cols:
+            cursor.execute("ALTER TABLE usuarios ADD COLUMN alerta_email INTEGER DEFAULT 1;")
+        if "umbral_descuento" not in u_cols:
+            cursor.execute("ALTER TABLE usuarios ADD COLUMN umbral_descuento INTEGER DEFAULT 10;")
+
+        # 4. Creación de la tabla FAVORITOS (Monitoreo de fragancias por usuario)
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS favoritos (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            usuario_id INTEGER NOT NULL,
+            perfume_id INTEGER NOT NULL,
+            precio_guardado INTEGER DEFAULT 0,
+            fecha_agregado DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (usuario_id) REFERENCES usuarios (id) ON DELETE CASCADE,
+            FOREIGN KEY (perfume_id) REFERENCES perfumes (id) ON DELETE CASCADE,
+            UNIQUE(usuario_id, perfume_id)
+        );
+        """)
+
+        # 5. Población inicial si está vacía
         cursor.execute("SELECT COUNT(*) FROM perfumes;")
         row_count = cursor.fetchone()[0]
         if row_count == 0 or force_reseed:
@@ -136,16 +180,14 @@ def init_db(force_reseed: bool = False) -> None:
 
 
 def poblar_datos_semilla(cursor: sqlite3.Cursor) -> None:
-    """
-    Puebla la base de datos a partir del archivo canónico seed_catalogo.json.
-    """
+    """Puebla la base de datos a partir del archivo canónico seed_catalogo.json."""
     catalogo = cargar_datos_semilla_json()
 
     cursor.execute("DELETE FROM precios_registro;")
     cursor.execute("DELETE FROM perfumes;")
     cursor.execute("DELETE FROM tiendas;")
 
-    # 1. Inserción de Tiendas Auditadas
+    # Inserción de Tiendas Auditadas
     tiendas_data = catalogo.get("tiendas", [])
     tiendas_tuples = [
         (
@@ -169,7 +211,7 @@ def poblar_datos_semilla(cursor: sqlite3.Cursor) -> None:
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
     """, tiendas_tuples)
 
-    # 2. Inserción de Perfumes
+    # Inserción de Perfumes
     perfumes_data = catalogo.get("perfumes", [])
     perfumes_tuples = [
         (
@@ -188,11 +230,10 @@ def poblar_datos_semilla(cursor: sqlite3.Cursor) -> None:
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
     """, perfumes_tuples)
 
-    # Mapeo de tiendas nombre -> id
     cursor.execute("SELECT id, nombre FROM tiendas;")
     tiendas_map = {r["nombre"]: r["id"] for r in cursor.fetchall()}
 
-    # 3. Inserción de Serie Temporal Histórica de Precios por Tienda
+    # Inserción de Serie Temporal Histórica de Precios por Tienda
     hoy = datetime.now()
     dias_atras = [21, 14, 7, 3, 1, 0]
     registros_precios = []
@@ -214,14 +255,12 @@ def poblar_datos_semilla(cursor: sqlite3.Cursor) -> None:
                 fecha = hoy - timedelta(days=dia, hours=dia, minutes=dia * 4)
                 if dia == 0:
                     p_actual_hist = precio_act
-                    p_norm_hist = precio_norm
                 else:
                     fluc = 1.0 + (dia * 0.004)
                     p_actual_hist = int(round((precio_act * fluc) / 1000) * 1000)
-                    p_norm_hist = precio_norm if precio_norm > precio_act else p_actual_hist
 
                 registros_precios.append((
-                    p_id, t_id, p_actual_hist, p_norm_hist, 1, vol_ml, url_prod, fecha.strftime("%Y-%m-%d %H:%M:%S")
+                    p_id, t_id, p_actual_hist, precio_norm, 1, vol_ml, url_prod, fecha.strftime("%Y-%m-%d %H:%M:%S")
                 ))
 
     cursor.executemany("""
@@ -229,16 +268,255 @@ def poblar_datos_semilla(cursor: sqlite3.Cursor) -> None:
     VALUES (?, ?, ?, ?, ?, ?, ?, ?);
     """, registros_precios)
 
-    logger.info(f"Base de datos poblada exitosamente: {len(perfumes_tuples)} perfumes, {len(tiendas_tuples)} tiendas, {len(registros_precios)} registros históricos.")
+    # Usuario demo inicial
+    cursor.execute("""
+    INSERT OR IGNORE INTO usuarios (nombre, email, password_hash, telefono, bio, foto_perfil, alerta_email, umbral_descuento)
+    VALUES ('Carlos Mendoza', 'carlos.mendoza@ejemplo.cl', ?, '+56 9 8765 4321', 
+            'Coleccionista de perfumes de nicho y de diseñador.', 
+            'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&q=80', 1, 10);
+    """, (hash_password("123456"),))
 
 
 # -----------------------------------------------------------------------------
-# REGLAS DE NEGOCIO Y RESOLUCIÓN DE CATÁLOGO
+# AUTENTICACIÓN, USUARIOS Y PERFIL
+# -----------------------------------------------------------------------------
+def crear_usuario(
+    nombre: str,
+    email: str,
+    password: str,
+    telefono: str = "",
+    bio: str = "",
+    foto_perfil: str = ""
+) -> Tuple[bool, str]:
+    """Registra un nuevo usuario en la plataforma."""
+    init_db()
+    email_clean = email.strip().lower()
+    
+    with get_db_cursor(commit=True) as cursor:
+        cursor.execute("SELECT id FROM usuarios WHERE LOWER(email) = ?;", (email_clean,))
+        if cursor.fetchone():
+            return False, "El correo electrónico ya se encuentra registrado."
+
+        pwd_hash = hash_password(password)
+        foto = foto_perfil or "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&q=80"
+        
+        cursor.execute("""
+        INSERT INTO usuarios (nombre, email, password_hash, telefono, bio, foto_perfil, alerta_email, umbral_descuento)
+        VALUES (?, ?, ?, ?, ?, ?, 1, 10);
+        """, (nombre.strip(), email_clean, pwd_hash, telefono.strip(), bio.strip(), foto))
+
+        return True, "Cuenta creada exitosamente."
+
+
+def verificar_usuario(email: str, password: str) -> Tuple[bool, Optional[Dict[str, Any]]]:
+    """Valida credenciales de acceso y retorna la información completa del usuario."""
+    init_db()
+    email_clean = email.strip().lower()
+    pwd_hash = hash_password(password)
+
+    with get_db_cursor() as cursor:
+        cursor.execute("SELECT * FROM usuarios WHERE LOWER(email) = ? AND password_hash = ?;", (email_clean, pwd_hash))
+        row = cursor.fetchone()
+        if row:
+            u_data = dict(row)
+            del u_data['password_hash']
+            u_data['alerta_email'] = bool(u_data['alerta_email'])
+            return True, u_data
+        return False, None
+
+
+def obtener_perfil_usuario(usuario_id_o_email: Any) -> Optional[Dict[str, Any]]:
+    """Consulta el perfil completo de un usuario por su ID o Correo."""
+    init_db()
+    with get_db_cursor() as cursor:
+        if isinstance(usuario_id_o_email, int) or str(usuario_id_o_email).isdigit():
+            cursor.execute("SELECT * FROM usuarios WHERE id = ?;", (int(usuario_id_o_email),))
+        else:
+            cursor.execute("SELECT * FROM usuarios WHERE LOWER(email) = ?;", (str(usuario_id_o_email).strip().lower(),))
+        
+        row = cursor.fetchone()
+        if row:
+            u_data = dict(row)
+            u_data.pop('password_hash', None)
+            u_data['alerta_email'] = bool(u_data['alerta_email'])
+            return u_data
+        return None
+
+
+def actualizar_perfil_usuario(
+    usuario_id_o_email: Any,
+    nombre: str,
+    email: str,
+    telefono: str,
+    bio: str,
+    foto_perfil: str
+) -> Tuple[bool, str]:
+    """Actualiza la información personal, foto de perfil y contacto en la base de datos."""
+    init_db()
+    email_clean = email.strip().lower()
+
+    with get_db_cursor(commit=True) as cursor:
+        # Resolver usuario
+        if isinstance(usuario_id_o_email, int) or str(usuario_id_o_email).isdigit():
+            cursor.execute("SELECT id, email FROM usuarios WHERE id = ?;", (int(usuario_id_o_email),))
+        else:
+            cursor.execute("SELECT id, email FROM usuarios WHERE LOWER(email) = ?;", (str(usuario_id_o_email).strip().lower(),))
+        
+        row = cursor.fetchone()
+        if not row:
+            # Si no existe, creamos dinámicamente para prevenir inconsistencias de sesión
+            cursor.execute("""
+            INSERT INTO usuarios (nombre, email, telefono, bio, foto_perfil)
+            VALUES (?, ?, ?, ?, ?);
+            """, (nombre.strip(), email_clean, telefono.strip(), bio.strip(), foto_perfil.strip()))
+            return True, "Perfil creado y actualizado."
+
+        u_id = row['id']
+
+        # Verificar si cambió el email y si este ya pertenece a otro usuario
+        cursor.execute("SELECT id FROM usuarios WHERE LOWER(email) = ? AND id != ?;", (email_clean, u_id))
+        if cursor.fetchone():
+            return False, "El correo ingresado ya está siendo utilizado por otra cuenta."
+
+        cursor.execute("""
+        UPDATE usuarios 
+        SET nombre = ?, email = ?, telefono = ?, bio = ?, foto_perfil = ?
+        WHERE id = ?;
+        """, (nombre.strip(), email_clean, telefono.strip(), bio.strip(), foto_perfil.strip(), u_id))
+
+        return True, "Perfil actualizado con éxito."
+
+
+def actualizar_preferencias_notificacion(
+    usuario_id_o_email: Any,
+    alerta_email: bool,
+    umbral_descuento: int = 10
+) -> Tuple[bool, str]:
+    """Guarda si el usuario quiere recibir alertas al Gmail y el % mínimo de descuento."""
+    init_db()
+    with get_db_cursor(commit=True) as cursor:
+        if isinstance(usuario_id_o_email, int) or str(usuario_id_o_email).isdigit():
+            query_find = "WHERE id = ?"
+            val_find = int(usuario_id_o_email)
+        else:
+            query_find = "WHERE LOWER(email) = ?"
+            val_find = str(usuario_id_o_email).strip().lower()
+
+        cursor.execute(f"UPDATE usuarios SET alerta_email = ?, umbral_descuento = ? {query_find};",
+                       (int(alerta_email), umbral_descuento, val_find))
+        return True, "Preferencias de notificación guardadas."
+
+
+# -----------------------------------------------------------------------------
+# FRAGANCIAS FAVORITAS Y MONITOREO DE PRECIOS
+# -----------------------------------------------------------------------------
+def agregar_favorito(usuario_id_o_email: Any, perfume_id: int) -> bool:
+    """Añade una fragancia a la lista de favoritos del usuario guardando el mejor precio actual."""
+    init_db()
+    u_perfil = obtener_perfil_usuario(usuario_id_o_email)
+    if not u_perfil:
+        return False
+
+    u_id = u_perfil['id']
+    
+    # Obtener el mejor precio actual del perfume
+    precios = obtener_precios_actuales(perfume_id)
+    p_min = min([p['precio_actual'] for p in precios if p.get('precio_actual', 0) > 0]) if precios else 0
+
+    with get_db_cursor(commit=True) as cursor:
+        cursor.execute("""
+        INSERT OR REPLACE INTO favoritos (usuario_id, perfume_id, precio_guardado, fecha_agregado)
+        VALUES (?, ?, ?, CURRENT_TIMESTAMP);
+        """, (u_id, perfume_id, p_min))
+        return True
+
+
+def eliminar_favorito(usuario_id_o_email: Any, perfume_id: int) -> bool:
+    """Elimina una fragancia de la lista de monitoreo del usuario."""
+    init_db()
+    u_perfil = obtener_perfil_usuario(usuario_id_o_email)
+    if not u_perfil:
+        return False
+
+    with get_db_cursor(commit=True) as cursor:
+        cursor.execute("DELETE FROM favoritos WHERE usuario_id = ? AND perfume_id = ?;", (u_perfil['id'], perfume_id))
+        return True
+
+
+def obtener_favoritos_usuario(usuario_id_o_email: Any) -> List[Dict[str, Any]]:
+    """Retorna los perfumes favoritos monitoreados por el usuario con detección de bajas de precio."""
+    init_db()
+    u_perfil = obtener_perfil_usuario(usuario_id_o_email)
+    if not u_perfil:
+        return []
+
+    query = """
+    SELECT p.*, f.precio_guardado, f.fecha_agregado,
+           MIN(CASE WHEN pr.en_stock = 1 AND pr.precio_actual > 0 THEN pr.precio_actual END) as mejor_precio_actual
+    FROM favoritos f
+    JOIN perfumes p ON f.perfume_id = p.id
+    LEFT JOIN precios_registro pr ON p.id = pr.perfume_id
+    WHERE f.usuario_id = ?
+    GROUP BY p.id
+    ORDER BY f.fecha_agregado DESC;
+    """
+    with get_db_cursor() as cursor:
+        cursor.execute(query, (u_perfil['id'],))
+        favoritos = []
+        for row in cursor.fetchall():
+            d = dict(row)
+            p_act = d['mejor_precio_actual'] or d['precio_referencia']
+            p_init = d['precio_guardado'] or d['precio_referencia']
+            d['baja_detectada'] = (p_act < p_init) and p_act > 0
+            if d['precio_guardado'] and d['precio_guardado'] > 0:
+                d['porcentaje_descuento'] = round(((d['precio_guardado'] - p_act) / d['precio_guardado']) * 100, 1)
+            else:
+                d['porcentaje_descuento'] = 0.0
+            favoritos.append(d)
+        return favoritos
+
+
+def es_favorito(usuario_id_o_email: Any, perfume_id: int) -> bool:
+    """Verifica si una fragancia específica está marcada como favorita por el usuario."""
+    init_db()
+    u_perfil = obtener_perfil_usuario(usuario_id_o_email)
+    if not u_perfil:
+        return False
+
+    with get_db_cursor() as cursor:
+        cursor.execute("SELECT id FROM favoritos WHERE usuario_id = ? AND perfume_id = ?;", (u_perfil['id'], perfume_id))
+        return cursor.fetchone() is not None
+
+
+def obtener_alertas_pendientes() -> List[Dict[str, Any]]:
+    """
+    Función utilizada por el backend / scraper / cronjob para determinar qué usuarios
+    deben recibir un correo electrónico al haberse detectado una baja de precio.
+    """
+    init_db()
+    query = """
+    SELECT u.email, u.nombre as usuario_nombre, u.umbral_descuento,
+           p.nombre as perfume_nombre, p.marca, f.precio_guardado,
+           MIN(pr.precio_actual) as precio_nuevo
+    FROM favoritos f
+    JOIN usuarios u ON f.usuario_id = u.id
+    JOIN perfumes p ON f.perfume_id = p.id
+    JOIN precios_registro pr ON p.id = pr.perfume_id
+    WHERE u.alerta_email = 1
+      AND pr.en_stock = 1
+      AND pr.precio_actual > 0
+    GROUP BY u.id, p.id
+    HAVING (f.precio_guardado - MIN(pr.precio_actual)) * 100.0 / NULLIF(f.precio_guardado, 0) >= u.umbral_descuento;
+    """
+    with get_db_cursor() as cursor:
+        cursor.execute(query)
+        return [dict(r) for r in cursor.fetchall()]
+
+
+# -----------------------------------------------------------------------------
+# CONSULTAS DE DOMINIO Y ACCESO A DATOS ORIGINALES (MANTENIDOS)
 # -----------------------------------------------------------------------------
 def obtener_url_directa_tienda(perfume_id: int, tienda_nombre: str) -> Optional[Tuple[str, int, int, int]]:
-    """
-    Retorna la tupla (url_producto, precio_actual, precio_normal, volumen_ml) configurada en el catálogo semilla.
-    """
     catalogo = cargar_datos_semilla_json()
     for p in catalogo.get("perfumes", []):
         if p["id"] == perfume_id:
@@ -247,17 +525,11 @@ def obtener_url_directa_tienda(perfume_id: int, tienda_nombre: str) -> Optional[
                     p_act = enlace.get("precio_actual", p["precio_referencia"])
                     p_norm = enlace.get("precio_normal", p_act)
                     vol = enlace.get("volumen_ml", p.get("volumen_ml", 100))
-                    return (
-                        enlace.get("url_producto", ""),
-                        p_act,
-                        p_norm,
-                        vol
-                    )
+                    return (enlace.get("url_producto", ""), p_act, p_norm, vol)
     return None
 
 
 def generar_url_tienda(tienda_nombre: str, perfume_nombre: str, url_directa: Optional[str] = None) -> Optional[str]:
-    """Retorna la URL directa verificada o genera la búsqueda directa en la tienda."""
     if url_directa and url_directa.startswith("http") and url_directa != "#":
         return url_directa
     
@@ -281,18 +553,13 @@ def generar_url_tienda(tienda_nombre: str, perfume_nombre: str, url_directa: Opt
 
 
 def tienda_comercializa_marca(tienda_nombre: str, marca: str) -> bool:
-    """Valida reglas de distribución oficial y comercialización legal en Chile."""
     t_nom = tienda_nombre.lower()
     m = marca.lower()
-    # Marcas con distribución exclusiva de retail de lujo oficial
     if "chanel" in m or "maison francis" in m or "tom ford" in m:
         return any(retail in t_nom for retail in ["falabella", "paris", "ripley"])
     return True
 
 
-# -----------------------------------------------------------------------------
-# CONSULTAS DE DOMINIO Y ACCESO A DATOS (DAO / REPOSITORY)
-# -----------------------------------------------------------------------------
 def registrar_precio(
     perfume_id: int,
     tienda_id: int,
@@ -303,7 +570,6 @@ def registrar_precio(
     fecha: Optional[str] = None,
     volumen_ml: int = 100
 ) -> None:
-    """Inserta una captura periódica de precio para un perfume en una tienda específica y tamaño en ml."""
     if fecha is None:
         fecha = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -320,15 +586,6 @@ def obtener_catalogo(
     categoria: Optional[str] = None,
     orden: str = "id_asc"
 ) -> List[Dict[str, Any]]:
-    """
-    Obtiene el listado de perfumes calculando el mejor precio real disponible en stock.
-    
-    Args:
-        busqueda: Filtro de texto por nombre o marca.
-        esencias: Lista de notas olfativas requeridas.
-        categoria: 'arabes', 'remates' o None.
-        orden: Criterio de ordenamiento ('precio_asc', 'precio_desc', 'nombre_asc', 'id_asc').
-    """
     init_db()
     query = """
     SELECT p.*,
@@ -378,7 +635,6 @@ def obtener_catalogo(
 
 
 def obtener_detalle_perfume(perfume_id: int) -> Optional[Dict[str, Any]]:
-    """Retorna información completa del perfume por su ID."""
     init_db()
     with get_db_cursor() as cursor:
         cursor.execute("SELECT * FROM perfumes WHERE id = ?;", (perfume_id,))
@@ -387,10 +643,6 @@ def obtener_detalle_perfume(perfume_id: int) -> Optional[Dict[str, Any]]:
 
 
 def obtener_precios_actuales(perfume_id: int) -> List[Dict[str, Any]]:
-    """
-    Retorna el precio más reciente registrado en cada tienda para el perfume dado.
-    Garantiza enlaces directos, stock verificado y cálculo de precio por ml ($/ml).
-    """
     init_db()
     query = """
     SELECT t.id as tienda_id, t.nombre as tienda_nombre, t.url_base, t.trust_score, t.badge, t.logo_emoji,
@@ -416,7 +668,6 @@ def obtener_precios_actuales(perfume_id: int) -> List[Dict[str, Any]]:
 
 
 def obtener_historico_precios(perfume_id: int) -> List[Dict[str, Any]]:
-    """Retorna la serie temporal histórica de precios válidos para gráficos de evolución."""
     init_db()
     query = """
     SELECT t.nombre as tienda, pr.precio_actual, pr.fecha_registro
@@ -444,7 +695,6 @@ def guardar_o_actualizar_perfume_scraped(
     es_arabe: int = 0,
     genero: str = "Unisex"
 ) -> Dict[str, Any]:
-    """Inserta o actualiza un perfume descubierto con enlace funcional y nuevo snapshot de precio."""
     init_db()
     with get_db_cursor(commit=True) as cursor:
         cursor.execute("SELECT id FROM tiendas WHERE LOWER(nombre) = LOWER(?);", (tienda_nombre,))
@@ -488,7 +738,6 @@ def guardar_o_actualizar_perfume_scraped(
 
 
 def obtener_tiendas() -> List[Dict[str, Any]]:
-    """Retorna la lista de tiendas registradas ordenadas por índice de confianza."""
     init_db()
     with get_db_cursor() as cursor:
         cursor.execute("SELECT * FROM tiendas ORDER BY trust_score DESC;")
@@ -500,7 +749,6 @@ def obtener_tiendas_trust(
     score_minimo: int = 0,
     busqueda: str = ""
 ) -> List[Dict[str, Any]]:
-    """Retorna tiendas auditadas con métricas detalladas para la página de confianza."""
     init_db()
     query = """
     SELECT 
@@ -535,7 +783,6 @@ def obtener_tiendas_trust(
 
 
 def auditar_tienda_por_url(url_ingresada: str) -> Optional[Dict[str, Any]]:
-    """Audita en vivo cualquier URL con detección de comercios oficiales y análisis heurístico."""
     if not url_ingresada or not url_ingresada.strip():
         return None
 
