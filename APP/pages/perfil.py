@@ -278,7 +278,7 @@ static_icon_pos = "12px center" if is_dark else "calc(100% - 12px) center"
 static_icon_svg = (
     "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='4'/><line x1='12' y1='1' x2='12' y2='3'/><line x1='12' y1='21' x2='12' y2='23'/><line x1='4.22' y1='4.22' x2='5.64' y2='5.64'/><line x1='18.36' y1='18.36' x2='19.78' y2='19.78'/><line x1='1' y1='12' x2='3' y2='12'/><line x1='21' y1='12' x2='23' y2='12'/><line x1='4.22' y1='19.78' x2='5.64' y2='18.36'/><line x1='18.36' y1='5.64' x2='19.78' y2='4.22'/></svg>"
     if is_dark else
-    "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z'/></svg>"
+    "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M21 12.79A9 9 0 0 1 11.21 3 7 7 0 0 0 21 12.79z'/></svg>"
 )
 
 bottle_svg = (
@@ -538,19 +538,26 @@ st.markdown(f"""
         z-index: 1 !important;
     }}
 
-    /* TARJETA DE RESUMEN DE PERFIL */
-    .profile-summary-card {{
+    /* TARJETA CONTENEDORA DE PERFIL */
+    .profile-card-container {{
         background-color: {btn_bg};
         border: 1px solid {btn_border};
         border-radius: 12px;
         padding: 24px;
         margin-bottom: 24px;
-        display: flex;
-        gap: 24px;
-        align-items: center;
     }}
 
-    .profile-avatar-img {{
+    /* FOTO DE PERFIL CLIQUEABLE CON OVERLAY */
+    .avatar-click-zone {{
+        position: relative;
+        width: 110px;
+        height: 110px;
+        border-radius: 50%;
+        margin: 0 auto;
+        cursor: pointer;
+    }}
+
+    .avatar-click-zone .profile-avatar-img {{
         width: 110px;
         height: 110px;
         border-radius: 50%;
@@ -558,6 +565,48 @@ st.markdown(f"""
         border: 3px solid #8c7b6d;
         background-color: {input_bg};
         padding: 2px;
+        display: block;
+    }}
+
+    .avatar-click-zone .avatar-overlay-badge {{
+        position: absolute;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        border-radius: 50%;
+        background: rgba(0, 0, 0, 0.55);
+        color: #ffffff;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.22s ease-in-out;
+        pointer-events: none;
+    }}
+
+    .avatar-click-zone:hover .avatar-overlay-badge {{
+        opacity: 1;
+    }}
+
+    /* OVERLAY TRANSPARENTE DEL FILE UPLOADER SOBRE EL AVATAR */
+    .st-key-avatar_quick_uploader {{
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 110px !important;
+        height: 110px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        opacity: 0 !important;
+        z-index: 25 !important;
+        cursor: pointer !important;
+    }}
+
+    .st-key-avatar_quick_uploader * {{
+        cursor: pointer !important;
+        height: 110px !important;
+        width: 110px !important;
+        min-height: 110px !important;
     }}
 
     /* TARJETAS DE FAVORITOS Y MONITOREO */
@@ -668,26 +717,54 @@ elif u_email and not u_alerta:
 else:
     badge_alerta = f"<span style='background: {btn_border}; color: {subtext_color}; font-size: 0.78rem; font-weight: 600; padding: 5px 12px; border-radius: 6px;'>{svg_bell_off} AGREGA UN CORREO PARA ALERTAS</span>"
 
-profile_card_html = f"""
-<div class="profile-summary-card">
-    <img src="{avatar_src}" class="profile-avatar-img" alt="{u_nombre_display}">
-    <div style="flex-grow: 1;">
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px;">
-            <div>
-                <h2 style="margin: 0 0 4px 0; color: {text_color}; font-size: 1.5rem; font-weight: 700;">{u_nombre_display}</h2>
-                <div style="color: {subtext_color}; font-size: 0.9rem; margin-bottom: 8px; display: flex; align-items: center; flex-wrap: wrap;">
-                    {svg_mail} <span>{u_email_display}</span> &nbsp;&bull;&nbsp; {svg_phone} <span>{u_telefono_display}</span>
-                </div>
-            </div>
-            <div>{badge_alerta}</div>
+# RENDERIZADO DE LA TARJETA CON ICONO DE PERFIL CLIQUEABLE (ABRE SELECTOR DE ARCHIVOS DEL NAVEGADOR)
+st.markdown('<div class="profile-card-container">', unsafe_allow_html=True)
+col_av, col_details = st.columns([1.5, 8.5], vertical_alignment="center")
+
+with col_av:
+    st.markdown(clean_html(f'''
+    <div class="avatar-click-zone" title="Haz clic aquí para seleccionar y cambiar tu foto de perfil o GIF desde tu PC">
+        <img src="{avatar_src}" class="profile-avatar-img" alt="{u_nombre_display}">
+        <div class="avatar-overlay-badge">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            <span style="font-size: 0.7rem; font-weight: 700; margin-top: 2px;">Cambiar</span>
         </div>
-        <p style="margin: 6px 0 0 0; color: {text_color}; font-size: 0.92rem; line-height: 1.5;">
-            {u_bio_display}
-        </p>
     </div>
-</div>
-"""
-st.markdown(clean_html(profile_card_html), unsafe_allow_html=True)
+    '''), unsafe_allow_html=True)
+    
+    # Cargar foto directamente al hacer clic en el avatar
+    quick_file = st.file_uploader(
+        "Subir Foto", 
+        type=["png", "jpg", "jpeg", "gif", "webp"], 
+        key="avatar_quick_uploader", 
+        label_visibility="collapsed"
+    )
+    
+    if quick_file is not None:
+        bytes_data = quick_file.getvalue()
+        b64 = base64.b64encode(bytes_data).decode('utf-8')
+        mime = quick_file.type or "image/png"
+        st.session_state['user_info']['foto_perfil'] = f"data:{mime};base64,{b64}"
+        st.toast("¡Foto de perfil actualizada correctamente!")
+        st.rerun()
+
+with col_details:
+    st.markdown(clean_html(f'''
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px;">
+        <div>
+            <h2 style="margin: 0 0 4px 0; color: {text_color}; font-size: 1.5rem; font-weight: 700;">{u_nombre_display}</h2>
+            <div style="color: {subtext_color}; font-size: 0.9rem; margin-bottom: 8px; display: flex; align-items: center; flex-wrap: wrap;">
+                {svg_mail} <span>{u_email_display}</span> &nbsp;&bull;&nbsp; {svg_phone} <span>{u_telefono_display}</span>
+            </div>
+        </div>
+        <div>{badge_alerta}</div>
+    </div>
+    <p style="margin: 6px 0 0 0; color: {text_color}; font-size: 0.92rem; line-height: 1.5;">
+        {u_bio_display}
+    </p>
+    '''), unsafe_allow_html=True)
+
+st.markdown('</div>', unsafe_allow_html=True)
 
 # PESTAÑAS DE EDICIÓN Y MONITOREO
 tab_favs, tab_edit, tab_notif = st.tabs([
@@ -756,8 +833,8 @@ with tab_edit:
             e_telefono = st.text_input("Número de Teléfono", value=u_telefono, placeholder="+56 9 1234 5678")
             
         with col_e2:
-            uploaded_file = st.file_uploader("Subir foto de perfil o GIF animado", type=["png", "jpg", "jpeg", "gif", "webp"], help="Puedes seleccionar una imagen o GIF animado desde tu computadora o celular")
-            e_foto_url = st.text_input("O ingresar URL de imagen/GIF", value=u_foto if u_foto.startswith("http") else "", placeholder="https://sitio.com/mi-foto.gif", help="Pega un enlace directo si la imagen está en la web")
+            uploaded_file = st.file_uploader("Seleccionar foto o GIF desde PC", type=["png", "jpg", "jpeg", "gif", "webp"], help="Selecciona una imagen o GIF animado desde tu computadora")
+            e_foto_url = st.text_input("O ingresar URL de imagen/GIF", value=u_foto if u_foto.startswith("http") else "", placeholder="https://sitio.com/mi-foto.gif", help="Pega un enlace directo si la imagen está en web")
             e_bio = st.text_area("Biografía / Descripción", value=u_bio, placeholder="Escribe un breve resumen sobre ti o tus gustos olfativos...", max_chars=280, height=100)
             
         btn_save = st.form_submit_button("Guardar Cambios de Perfil", use_container_width=True)
@@ -771,7 +848,7 @@ with tab_edit:
             st.session_state['user_info']['telefono'] = e_telefono.strip()
             st.session_state['user_info']['bio'] = e_bio.strip()
             
-            # Procesar foto o GIF subido desde el archivo local o URL
+            # Procesar foto o GIF subido desde archivo o URL
             if uploaded_file is not None:
                 bytes_data = uploaded_file.getvalue()
                 b64 = base64.b64encode(bytes_data).decode('utf-8')
