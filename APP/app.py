@@ -972,6 +972,94 @@ st.markdown(f"""
         transform: scale(1.15);
         background-color: {btn_bg};
     }}
+
+    /* ==========================================
+       ADAPTACIÓN RESPONSIVA Y DISEÑO MÓVIL (MOBILE)
+       ========================================== */
+    @media (max-width: 768px) {{
+        .block-container {{ 
+            padding-top: 0.6rem !important; 
+            padding-bottom: 1.5rem !important; 
+            padding-left: 0.5rem !important;
+            padding-right: 0.5rem !important;
+        }}
+
+        /* Ocultar divisores verticales que afean la vista vertical */
+        div[style*="border-left: 1px solid"] {{
+            display: none !important;
+        }}
+
+        div[data-testid="column"] {{
+            min-width: 0 !important;
+        }}
+
+        /* Ajustes de fuentes y rellenos para los chips de enlace rápido */
+        a[data-testid="stPageLink-NavLink"] {{
+            padding-top: 0.4rem !important;
+            padding-bottom: 0.4rem !important;
+            padding-left: 2.3rem !important;
+            padding-right: 0.6rem !important;
+            font-size: 0.78rem !important;
+            border-radius: 16px !important;
+        }}
+
+        a[data-testid="stPageLink-NavLink"] p,
+        a[data-testid="stPageLink-NavLink"] span {{
+            font-size: 0.78rem !important;
+        }}
+
+        /* Escalar adecuadamente el interruptor de tema e ingreso en la cabecera móvil */
+        .st-key-theme_toggle button {{
+            transform: scale(0.85) !important;
+            transform-origin: right center !important;
+        }}
+
+        .st-key-login_btn button {{
+            font-size: 0.82rem !important;
+            padding: 0 0.5rem 0 2rem !important;
+        }}
+
+        /* Tarjetas de catálogo optimizadas para pantallas verticales */
+        .catalog-card {{
+            margin-bottom: 16px !important;
+            border-radius: 12px !important;
+        }}
+
+        .square-img-box {{
+            padding: 10px !important;
+        }}
+
+        .card-perfume-name {{
+            font-size: 0.9rem !important;
+        }}
+
+        .card-perfume-brand {{
+            font-size: 0.75rem !important;
+        }}
+
+        /* Diccionario de esencias en celular */
+        .essence-card {{
+            padding: 10px 12px !important;
+            margin-bottom: 10px !important;
+        }}
+
+        .essence-title {{
+            font-size: 0.9rem !important;
+            margin-bottom: 4px !important;
+        }}
+
+        .essence-desc {{
+            font-size: 0.8rem !important;
+            line-height: 1.35 !important;
+        }}
+
+        /* Ajuste de cajas de diálogo flotantes */
+        div[role="dialog"] {{
+            width: 92vw !important;
+            max-width: 92vw !important;
+            padding: 1rem !important;
+        }}
+    }}
     </style>
 """, unsafe_allow_html=True)
 
