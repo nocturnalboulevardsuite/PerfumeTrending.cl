@@ -147,8 +147,9 @@ def modal_autenticacion():
                         
                         st.session_state['logged_in'] = True
                         st.session_state['user_info'] = {
-                            'nombre': contact_str,
-                            'email': contact_str
+                            'nombre': contact_str.split('@')[0] if '@' in contact_str else contact_str,
+                            'email': contact_str if '@' in contact_str else f"{contact_str}@usuario.cl",
+                            'telefono': contact_str if '@' not in contact_str else '+56 9 1234 5678'
                         }
                         
                         # Resetear estados de login y cerrar modal
@@ -241,7 +242,7 @@ static_icon_pos = "12px center" if is_dark else "calc(100% - 12px) center"
 static_icon_svg = (
     "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='4'/><line x1='12' y1='1' x2='12' y2='3'/><line x1='12' y1='21' x2='12' y2='23'/><line x1='4.22' y1='4.22' x2='5.64' y2='5.64'/><line x1='18.36' y1='18.36' x2='19.78' y2='19.78'/><line x1='1' y1='12' x2='3' y2='12'/><line x1='21' y1='12' x2='23' y2='12'/><line x1='4.22' y1='19.78' x2='5.64' y2='18.36'/><line x1='18.36' y1='5.64' x2='19.78' y2='4.22'/></svg>"
     if is_dark else
-    "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M21 12.79A9 9 0 0 1 11.21 3 7 7 0 0 0 21 12.79z'/></svg>"
+    "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z'/></svg>"
 )
 
 bottle_svg = (
@@ -933,6 +934,12 @@ with btn_col1:
         with st.popover(f"👤 {user_display}", use_container_width=True):
             st.write(f"**Conectado como:**")
             st.write(st.session_state['user_info'].get('email', ''))
+            st.markdown("<div style='margin-top: 8px;'></div>", unsafe_allow_html=True)
+            
+            # ACOPLE DIRECTO A LA PÁGINA DE PERFIL
+            if st.button("⚙️ Mi Perfil y Alertas", key="btn_go_profile", use_container_width=True):
+                st.switch_page("pages/perfil.py")
+                
             if st.button("Cerrar Sesión", key="btn_logout", use_container_width=True):
                 st.session_state['logged_in'] = False
                 st.session_state['user_info'] = None
