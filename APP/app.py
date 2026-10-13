@@ -254,8 +254,8 @@ bottle_svg = (
 camera_icon_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23{btn_text[1:]}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z'/><circle cx='12' cy='13' r='4'/></svg>"
 user_icon_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23{btn_text[1:]}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2'/><circle cx='12' cy='7' r='4'/></svg>"
 
-# ICONO DE LUPA PARA EL BUSCADOR
-search_icon_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23{btn_text[1:]}' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'><circle cx='11' cy='11' r='8'/><line x1='21' y1='21' x2='16.65' y2='16.65'/></svg>"
+# ICONO DIBUJO VECTORIAL DE LUPA PARA EL BOTÓN UNIFICADO
+search_icon_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'><circle cx='11' cy='11' r='7'/><line x1='21' y1='21' x2='16.05' y2='16.05'/></svg>"
 
 # DIBUJOS VECTORIALES HTML/SVG PARA ELEMENTOS DE INTERFAZ Y PERFIL
 settings_icon_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23{btn_text[1:]}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z'/><circle cx='12' cy='12' r='3'/></svg>"
@@ -768,7 +768,7 @@ st.markdown(f"""
         z-index: 1 !important;
     }}
 
-    /* INPUTS */
+    /* INPUTS GENERALES */
     div[data-baseweb="input"],
     div[data-baseweb="base-input"],
     div[data-baseweb="select"] > div {{
@@ -790,21 +790,40 @@ st.markdown(f"""
         background-color: {input_bg} !important;
     }}
 
-    /* ESTILOS DEL CONTENEDOR DE BÚSQUEDA Y BOTÓN CON LUPA */
+    /* BUSCADOR UNIFICADO CON BOTÓN DE LUPA VECTORIAL SVG INTEGRADO (COMO EN LA IMAGEN) */
     .search-box-container div[data-testid="stForm"] {{
         padding: 0 !important;
         margin: 0 !important;
         border: none !important;
     }}
 
+    .search-box-container div[data-testid="stHorizontalBlock"] {{
+        gap: 0px !important;
+    }}
+
+    .search-box-container div[data-baseweb="input"],
+    .search-box-container div[data-baseweb="base-input"] {{
+        border-top-right-radius: 0px !important;
+        border-bottom-right-radius: 0px !important;
+        border-right: none !important;
+    }}
+
+    .search-box-container div[data-testid="stFormSubmitButton"] {{
+        margin: 0 !important;
+        padding: 0 !important;
+    }}
+
     .search-box-container div[data-testid="stFormSubmitButton"] > button {{
-        background-color: {input_bg} !important;
-        border: 1px solid {input_border} !important;
-        border-radius: 8px !important;
+        background-color: #8c7b6d !important;
+        border: 1px solid #8c7b6d !important;
+        border-top-left-radius: 0px !important;
+        border-bottom-left-radius: 0px !important;
+        border-top-right-radius: 8px !important;
+        border-bottom-right-radius: 8px !important;
         height: 44px !important;
         min-height: 44px !important;
         padding: 0 !important;
-        display: inline-flex !important;
+        display: flex !important;
         align-items: center !important;
         justify-content: center !important;
         background-image: url("{search_icon_svg}") !important;
@@ -812,16 +831,19 @@ st.markdown(f"""
         background-position: center !important;
         background-size: 20px 20px !important;
         box-shadow: none !important;
-        transition: transform 0.2s ease, border-color 0.2s ease !important;
+        cursor: pointer !important;
+        transition: background-color 0.15s ease !important;
     }}
 
-    .search-box-container div[data-testid="stFormSubmitButton"] > button p {{
+    .search-box-container div[data-testid="stFormSubmitButton"] > button p,
+    .search-box-container div[data-testid="stFormSubmitButton"] > button span {{
         display: none !important;
     }}
 
     .search-box-container div[data-testid="stFormSubmitButton"] > button:hover {{
-        transform: scale(1.05) !important;
-        border-color: { "#7a6a5d" if is_dark else "#b5a494" } !important;
+        background-color: #a08e7f !important;
+        border-color: #a08e7f !important;
+        transform: none !important;
     }}
 
     /* BÚSQUEDA VISUAL */
@@ -1034,7 +1056,7 @@ with btn_col2:
 if st.session_state.get('show_login_modal', False):
     modal_autenticacion()
 
-# 5. NAVEGACIÓN PRINCIPAL (2 COLUMNAS EQUILIBRADAS)
+# 5. NAVEGACIÓN PRINCIPAL (ORGANIZADA EN 2 COLUMNAS EQUILIBRADAS)
 st.markdown("<div style='margin-top: 14px;'></div>", unsafe_allow_html=True)
 nav_cols = st.columns([1, 1], vertical_alignment="center")
 
@@ -1045,17 +1067,17 @@ with nav_cols[1]:
 
 st.markdown(f"<hr style='margin: 10px 0 24px 0; border: none; border-bottom: 1px solid {btn_border}; opacity: 0.3;'>", unsafe_allow_html=True)
 
-# 6. BÚSQUEDA CON BOTÓN DE LUPA Y FILTRO DE ESENCIAS
+# 6. BÚSQUEDA UNIFICADA CON LUPA INTEGRADA Y FILTRO DE ESENCIAS
 col_search, col_filter, col_separator, col_photo = st.columns([5.5, 1.8, 0.1, 2.0], vertical_alignment="center")
 
 with col_search:
     st.markdown('<div class="search-box-container">', unsafe_allow_html=True)
     with st.form(key="search_form", border=False):
-        col_s_input, col_s_btn = st.columns([4.6, 0.9], gap="small", vertical_alignment="center")
+        col_s_input, col_s_btn = st.columns([8.8, 1.2], vertical_alignment="center")
         with col_s_input:
-            search_query = st.text_input("Buscar", placeholder="Buscar perfume, marca o esencias...", label_visibility="collapsed")
+            search_query = st.text_input("Buscar", placeholder="¿Qué está buscando? Perfume, marca o esencias...", label_visibility="collapsed")
         with col_s_btn:
-            submit_search = st.form_submit_button("🔍", use_container_width=True)
+            submit_search = st.form_submit_button(" ", use_container_width=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
 raw_notes = [
