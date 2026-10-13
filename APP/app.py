@@ -244,10 +244,10 @@ def modal_busqueda_visual():
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="{text_color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
                 </svg>
-                <span style="font-weight: 600; font-size: 0.95rem; color: {text_color};">Cargar archivo de foto</span>
+                <span style="font-weight: 600; font-size: 0.95rem; color: {text_color};">Arrastrar una imagen o seleccionar archivo</span>
             </div>
         """), unsafe_allow_html=True)
-        file_up = st.file_uploader("Selecciona una foto", type=["jpg", "jpeg", "png", "webp"], key="vis_file_up", label_visibility="collapsed")
+        file_up = st.file_uploader("Arrastra una imagen o selecciona un archivo", type=["jpg", "jpeg", "png", "webp"], key="vis_file_up", label_visibility="collapsed")
         if file_up:
             uploaded_file = file_up
             
@@ -906,7 +906,7 @@ st.markdown(f"""
         z-index: 1 !important;
     }}
 
-    /* INPUTS */
+    /* INPUTS Y DROPZONE DE ARCHIVOS */
     div[data-baseweb="input"],
     div[data-baseweb="base-input"],
     div[data-baseweb="select"] > div {{
@@ -918,6 +918,14 @@ st.markdown(f"""
         padding-bottom: 6px !important;
         min-height: 44px !important;
         color: {input_text} !important;
+    }}
+
+    div[data-baseweb="file-uploader"],
+    [data-testid="stFileUploader"] section {{
+        background-color: {input_bg} !important;
+        border: 1px dashed {input_border} !important;
+        border-radius: 10px !important;
+        padding: 12px !important;
     }}
 
     div[data-baseweb="input"] input,
