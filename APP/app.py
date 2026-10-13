@@ -144,11 +144,10 @@ def modal_autenticacion():
                 if btn_verify:
                     if input_code.strip() == st.session_state['otp_secret']:
                         contact_str = st.session_state['otp_contact']
-                        nombre_user = contact_str.split('@')[0] if '@' in contact_str else contact_str
                         
                         st.session_state['logged_in'] = True
                         st.session_state['user_info'] = {
-                            'nombre': nombre_user.capitalize(),
+                            'nombre': contact_str,
                             'email': contact_str
                         }
                         
@@ -435,7 +434,7 @@ st.markdown(f"""
         transform: scale(0.98) !important;
     }}
 
-    /* ESTILO ESPECÍFICO Y COMPLETO PARA EL BOTÓN DE POPOVER ("ESENCIAS") */
+    /* ESTILO ESPECÍFICO Y COMPLETO PARA EL BOTÓN DE POPOVER ("ESENCIAS" Y PERFIL DE USUARIO) */
     div[data-testid="stPopover"],
     div[data-testid="stPopover"] > button,
     button[data-testid="stPopoverButton"],
@@ -463,6 +462,9 @@ st.markdown(f"""
     button[data-testid="stPopoverButton"] div {{
         color: {btn_text} !important;
         font-weight: 600 !important;
+        white-space: nowrap !important;
+        text-overflow: clip !important;
+        overflow: visible !important;
     }}
 
     div[data-testid="stPopover"] button svg,
@@ -895,8 +897,8 @@ st.markdown(f"""
     </style>
 """, unsafe_allow_html=True)
 
-# 4. CABECERA CON LOGO COMPACTO
-col_logo, col_espacio, col_actions = st.columns([5.5, 1.3, 2.4], vertical_alignment="center")
+# 4. CABECERA CON LOGO COMPACTO Y ESPACIO AMPLIADO PARA NOMBRE DE USUARIO
+col_logo, col_espacio, col_actions = st.columns([4.2, 0.5, 4.3], vertical_alignment="center")
 
 with col_logo:
     logo_color = "#8c7b6d"
@@ -919,11 +921,11 @@ with col_logo:
     st.markdown(logo_html, unsafe_allow_html=True)
 
 with col_actions:
-    btn_col1, btn_col2 = st.columns([1.4, 1], vertical_alignment="center")
+    btn_col1, btn_col2 = st.columns([3.3, 1.0], vertical_alignment="center")
     with btn_col1:
         if st.session_state['logged_in']:
-            user_nombre = st.session_state['user_info'].get('nombre', 'Usuario').split()[0]
-            with st.popover(f"👤 {user_nombre}", use_container_width=True):
+            user_display = st.session_state['user_info'].get('nombre') or st.session_state['user_info'].get('email', 'Usuario')
+            with st.popover(f"👤 {user_display}", use_container_width=True):
                 st.write(f"**Conectado como:**")
                 st.write(st.session_state['user_info'].get('email', ''))
                 if st.button("Cerrar Sesión", key="btn_logout", use_container_width=True):
@@ -1200,7 +1202,7 @@ elif st.session_state['current_page'] == 'esencias_page':
         "Ambroxan": "Ambarino, leñoso y salino de proyección moderna.",
         "Cachemira (Cashmeran)": "Suave como la lana, leñoso, ambarino y almizclado.",
         "Cuero": "Seco, ahumado y sofisticado; proyecta distinción.",
-        "Iso E Super": "Molécula maderosa, suave y aterciopelada.",
+        "Iso E Super": "Molécula maderosa, suave battered.",
         "Notas Marinas": "Brisa salada y aire ozónico; aportan frescura oceánica.",
         "Notas Solares": "Calidez de la piel bajo el sol y tardes de verano.",
         "Sangre (Metálica)": "Nota vanguardista nicho; evoca hierro y un matiz salado."
