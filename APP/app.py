@@ -121,6 +121,25 @@ def navigate_to(page, perfume_data=None):
     if perfume_data:
         st.session_state['selected_perfume'] = perfume_data
 
+# 2. VARIABLES DE TEMA DINÁMICAS (Definidas tempranamente para modales y CSS)
+is_dark = st.session_state['theme'] == 'dark'
+
+app_bg = "#0c0e12" if is_dark else "#f8f9fa"
+app_bg_css = f"background-color: {app_bg} !important;"
+
+card_bg = "#14171d" if is_dark else "#ffffff"
+border_color = "#2a2e39" if is_dark else "#e4e4e7"
+text_color = "#f0f0f0" if is_dark else "#18181b"
+subtext_color = "#888890" if is_dark else "#666670"
+
+btn_bg = "#181c24" if is_dark else "#ffffff"
+btn_text = "#ffffff" if is_dark else "#18181b"
+btn_border = "#2a2e39" if is_dark else "#d1d5db"
+
+input_bg = "#14171d" if is_dark else "#ffffff"
+input_text = "#f0f0f0" if is_dark else "#18181b"
+input_border = "#2a2e39" if is_dark else "#d1d5db"
+
 # MODAL FLOTANTE DE INICIO DE SESIÓN Y REGISTRO
 @st.dialog("Acceso a PerfumeTrending")
 def modal_autenticacion():
@@ -226,7 +245,7 @@ def modal_autenticacion():
                 else:
                     st.info("Función de backend en proceso de actualización.")
 
-# MODAL FLOTANTE PARA BÚSQUEDA VISUAL CON DIBUJOS HTML VECTORIALES (SIN EMOJIS)
+# MODAL FLOTANTE PARA BÚSQUEDA VISUAL CON DIBUJOS HTML VECTORIALES
 @st.dialog("Búsqueda Visual de Perfumes")
 def modal_busqueda_visual():
     st.markdown(clean_html(f"""
@@ -266,7 +285,7 @@ def modal_busqueda_visual():
             uploaded_file = cam_up
 
     if uploaded_file:
-        col_preview, col_status = st.columns([1, 1], vertical_alignment="center")
+        col_preview, col_status = st.columns([1, 1])
         with col_preview:
             st.image(uploaded_file, caption="Imagen cargada", use_container_width=True)
         with col_status:
@@ -315,7 +334,7 @@ def modal_busqueda_visual():
 
         if coincidencias:
             for p in coincidencias:
-                c_img, c_info = st.columns([1, 2], vertical_alignment="center")
+                c_img, c_info = st.columns([1, 2])
                 with c_img:
                     st.image(get_image_src(p.get('imagen_url')), use_container_width=True)
                 with c_info:
@@ -330,24 +349,12 @@ def modal_busqueda_visual():
                         st.switch_page("pages/compararprecios.py")
                 st.markdown("<div style='margin-bottom: 8px;'></div>", unsafe_allow_html=True)
 
-is_dark = st.session_state['theme'] == 'dark'
+# 3. RENDERIZADO DE MODALES EN EL CONTENEDOR RAIZ (Evita StreamlitInvalidLayoutContextError)
+if st.session_state.get('show_login_modal', False):
+    modal_autenticacion()
 
-# Colores dinámicos adaptables por tema
-app_bg = "#0c0e12" if is_dark else "#f8f9fa"
-app_bg_css = f"background-color: {app_bg} !important;"
-
-card_bg = "#14171d" if is_dark else "#ffffff"
-border_color = "#2a2e39" if is_dark else "#e4e4e7"
-text_color = "#f0f0f0" if is_dark else "#18181b"
-subtext_color = "#888890" if is_dark else "#666670"
-
-btn_bg = "#181c24" if is_dark else "#ffffff"
-btn_text = "#ffffff" if is_dark else "#18181b"
-btn_border = "#2a2e39" if is_dark else "#d1d5db"
-
-input_bg = "#14171d" if is_dark else "#ffffff"
-input_text = "#f0f0f0" if is_dark else "#18181b"
-input_border = "#2a2e39" if is_dark else "#d1d5db"
+if st.session_state.get('show_visual_modal', False):
+    modal_busqueda_visual()
 
 # Posicionamiento del Switch de Tema
 bottle_left_pos = "42px" if is_dark else "-2px"
@@ -379,7 +386,7 @@ tag_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' v
 home_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d83737' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z'/><polyline points='9 22 9 12 15 12 15 22'/></svg>"
 flame_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d83737' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 3.5z'/></svg>"
 
-# 2. SISTEMA DE SONIDO, EVENTOS DE TARJETAS Y BLOQUEO AUTOMÁTICO DE TÍTULO / FAVICON
+# 4. SISTEMA DE SONIDO Y EVENTOS DE TARJETAS
 js_color_script = f"""
 <script>
 (function() {{
@@ -500,7 +507,7 @@ js_color_script = f"""
 
 components.html(js_color_script, height=0, width=0)
 
-# 3. CSS ADAPTABLE Y SWITCH
+# 5. CSS ADAPTABLE Y ESTILOS
 st.markdown(f"""
     <style>
     header[data-testid="stHeader"] {{ display: none !important; }}
@@ -538,7 +545,7 @@ st.markdown(f"""
         font-weight: 600 !important;
     }}
 
-    /* BOTONES DE COMPARAR PRECIOS EN CATÁLOGO - ALTO IMPACTO Y LEGIBILIDAD DÍA/NOCHE */
+    /* BOTONES DE COMPARAR PRECIOS EN CATÁLOGO */
     div[data-testid="stElementContainer"] div.stButton button[key*="btn_comp_"],
     div.stButton > button[key*="btn_comp_"] {{
         background-color: #d83737 !important;
@@ -622,7 +629,7 @@ st.markdown(f"""
         color: {text_color} !important;
     }}
 
-    /* CONTENEDOR Y BOTÓN POPOVER DE USUARIO CON DIBUJO HTML/SVG */
+    /* CONTENEDOR Y BOTÓN POPOVER DE USUARIO */
     .user-popover-container div[data-testid="stPopover"],
     .user-popover-container div[data-testid="stPopover"] > button,
     .user-popover-container button[data-testid="stPopoverButton"] {{
@@ -633,7 +640,7 @@ st.markdown(f"""
         background-size: 18px 18px !important;
     }}
 
-    /* BOTÓN CERRAR SESIÓN Y MI PERFIL CON DIBUJOS VECTORIALES HTML/SVG */
+    /* BOTÓN CERRAR SESIÓN Y MI PERFIL */
     .st-key-btn_go_profile button {{
         padding-left: 2.5rem !important;
         background-image: url("{settings_icon_svg}") !important;
@@ -1087,9 +1094,7 @@ st.markdown(f"""
         background-color: {btn_bg};
     }}
 
-    /* ==========================================
-       OPTIMIZACIÓN RESPONSIVA PROFESIONAL MÓVIL
-       ========================================== */
+    /* OPTIMIZACIÓN RESPONSIVA MÓVIL */
     @media (max-width: 768px) {{
         .block-container {{ 
             padding-top: 0.4rem !important; 
@@ -1302,13 +1307,13 @@ st.markdown(f"""
     </style>
 """, unsafe_allow_html=True)
 
-# 4. CABECERA CON LOGO COMPACTO Y ESPACIO DINÁMICO
+# 6. CABECERA CON LOGO COMPACTO Y ESPACIO DINÁMICO
 if st.session_state['logged_in']:
-    col_logo, col_espacio, col_actions = st.columns([4.0, 0.5, 4.5], vertical_alignment="center")
-    btn_col1, btn_col2 = col_actions.columns([3.5, 1.0], vertical_alignment="center")
+    col_logo, col_espacio, col_actions = st.columns([4.0, 0.5, 4.5])
+    btn_col1, btn_col2 = col_actions.columns([3.5, 1.0])
 else:
-    col_logo, col_espacio, col_actions = st.columns([5.5, 0.8, 2.7], vertical_alignment="center")
-    btn_col1, btn_col2 = col_actions.columns([1.8, 1.0], vertical_alignment="center")
+    col_logo, col_espacio, col_actions = st.columns([5.5, 0.8, 2.7])
+    btn_col1, btn_col2 = col_actions.columns([1.8, 1.0])
 
 with col_logo:
     logo_color = "#8c7b6d"
@@ -1353,16 +1358,9 @@ with btn_col1:
 with btn_col2:
     st.button(" ", key="theme_toggle", on_click=toggle_theme)
 
-# MONITOREO Y RENDERIZADO PERSISTENTE DE MODALES
-if st.session_state.get('show_login_modal', False):
-    modal_autenticacion()
-
-if st.session_state.get('show_visual_modal', False):
-    modal_busqueda_visual()
-
-# 5. NAVEGACIÓN PRINCIPAL
+# 7. NAVEGACIÓN PRINCIPAL
 st.markdown("<div style='margin-top: 14px;'></div>", unsafe_allow_html=True)
-nav_cols = st.columns([1, 1], vertical_alignment="center")
+nav_cols = st.columns([1, 1])
 
 with nav_cols[0]: 
     st.button("PERFUMES", key="n_perfumes", on_click=navigate_to, args=('home',), use_container_width=True)
@@ -1371,8 +1369,8 @@ with nav_cols[1]:
 
 st.markdown(f"<hr style='margin: 10px 0 24px 0; border: none; border-bottom: 1px solid {btn_border}; opacity: 0.3;'>", unsafe_allow_html=True)
 
-# 6. BÚSQUEDA Y FILTRO DE ESENCIAS
-col_search, col_filter, col_separator, col_photo = st.columns([5.5, 1.8, 0.1, 2.0], vertical_alignment="center")
+# 8. BÚSQUEDA Y FILTRO DE ESENCIAS
+col_search, col_filter, col_separator, col_photo = st.columns([5.5, 1.8, 0.1, 2.0])
 
 with col_search:
     search_query = st.text_input("Buscar", placeholder="Buscar perfume, marca o esencias...", label_visibility="collapsed")
@@ -1411,9 +1409,9 @@ with col_photo:
     if st.button("Búsqueda visual", key="btn_photo_search", help="Buscar por imagen o cámara", use_container_width=True):
         st.session_state['show_visual_modal'] = True
 
-# 7. CHIPS DE ENLACE RÁPIDO A PÁGINAS INDEPENDIENTES
+# 9. CHIPS DE ENLACE RÁPIDO A PÁGINAS INDEPENDIENTES
 st.markdown("<div style='margin-top: 14px;'></div>", unsafe_allow_html=True)
-col_chip1, col_chip2, col_chip3, col_chip4, col_chip_space = st.columns([1.5, 2.0, 1.7, 1.6, 2.2], vertical_alignment="center")
+col_chip1, col_chip2, col_chip3, col_chip4, col_chip_space = st.columns([1.5, 2.0, 1.7, 1.6, 2.2])
 
 with col_chip1:
     st.page_link("pages/trendhype.py", label="Trend Del Hype", use_container_width=True)
@@ -1426,7 +1424,7 @@ with col_chip4:
 
 st.markdown("<div style='margin-top: 24px;'></div>", unsafe_allow_html=True)
 
-# 8. SECCIONES Y CONTENIDOS
+# 10. SECCIONES Y CONTENIDOS
 if st.session_state['current_page'] == 'home':
     st.markdown(f"<div style='text-align: center; margin-bottom: 24px; color: {text_color}; letter-spacing: 1.5px; font-weight: 300; font-size: 1.1rem; text-transform: uppercase;'>CATÁLOGO Y TENDENCIAS EN CHILE</div>", unsafe_allow_html=True)
     
@@ -1482,7 +1480,7 @@ if st.session_state['current_page'] == 'home':
                             st.switch_page("pages/compararprecios.py")
 
 elif st.session_state['current_page'] == 'esencias_page':
-    col_dict_title, col_dict_mute = st.columns([9, 1], vertical_alignment="center")
+    col_dict_title, col_dict_mute = st.columns([9, 1])
     
     with col_dict_title:
         st.markdown(f"<div style='text-align: center; color: {text_color}; letter-spacing: 1px; font-weight: 300; margin-bottom: 24px; font-size: 1.1rem; text-transform: uppercase;'>DICCIONARIO DE ESENCIAS Y NOTAS</div>", unsafe_allow_html=True)
@@ -1649,7 +1647,7 @@ elif st.session_state['current_page'] == 'esencias_page':
     with col_es_2:
         st.markdown("\n".join(html_col2), unsafe_allow_html=True)
 
-# 9. PIE DE PÁGINA (FOOTER)
+# 11. PIE DE PÁGINA (FOOTER)
 st.markdown(f"<hr style='margin: 40px 0 20px 0; border: none; border-bottom: 1px solid {btn_border}; opacity: 0.3;'>", unsafe_allow_html=True)
 st.markdown(f"""
     <div style="text-align: center; padding: 10px 0 20px 0; color: {subtext_color}; font-size: 0.85rem;">
