@@ -974,128 +974,223 @@ st.markdown(f"""
     }}
 
     /* ==========================================
-       DISAÑO MÓVIL RESPONSIVO (ANULAR COLAPSO NATIVO DE STREAMLIT)
+       OPTIMIZACIÓN RESPONSIVA PROFESIONAL MÓVIL
        ========================================== */
     @media (max-width: 768px) {{
         .block-container {{ 
             padding-top: 0.4rem !important; 
-            padding-bottom: 1.2rem !important; 
-            padding-left: 0.4rem !important;
-            padding-right: 0.4rem !important;
+            padding-bottom: 1.5rem !important; 
+            padding-left: 0.6rem !important;
+            padding-right: 0.6rem !important;
         }}
 
-        /* FORZAR COLUMNAS HORIZONTALES LADO A LADO EN CELULAR */
+        /* Permitir que los bloques horizontales adapten sus filas libremente */
         div[data-testid="stHorizontalBlock"] {{
-            display: flex !important;
-            flex-direction: row !important;
-            flex-wrap: nowrap !important;
-            align-items: center !important;
-            gap: 4px !important;
+            flex-wrap: wrap !important;
+            gap: 6px !important;
         }}
 
-        div[data-testid="stHorizontalBlock"] > div[data-testid="column"],
-        div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"] {{
-            width: auto !important;
+        div[data-testid="column"], div[data-testid="stColumn"] {{
+            width: 100% !important;
+            flex: 1 1 100% !important;
             min-width: 0 !important;
         }}
 
-        /* Ocultar divisor transparente que ocupa espacio en celular */
+        /* Ocultar la línea divisoria vertical */
         div[style*="border-left: 1px solid"] {{
             display: none !important;
         }}
 
-        /* Adaptar tamaño del logo para pantallas estrechas */
-        a[href="/"] span {{
-            font-size: 1.1rem !important;
+        /* CABECERA: Mantiene Logo, Ingresar y Switch en 1 fila superior */
+        div[data-testid="stHorizontalBlock"]:has(.st-key-login_btn, .st-key-theme_toggle) {{
+            flex-wrap: nowrap !important;
+            align-items: center !important;
+            justify-content: space-between !important;
         }}
+
+        div[data-testid="column"]:has(a[href="/"]) {{
+            flex: 1 1 auto !important;
+            width: auto !important;
+        }}
+
+        a[href="/"] span {{
+            font-size: 1.15rem !important;
+        }}
+
         a[href="/"] svg {{
             width: 24px !important;
             height: 24px !important;
         }}
 
-        /* Botón Ingresar y Switch de Tema en Header */
+        .st-key-login_btn {{
+            flex: 0 0 auto !important;
+            width: auto !important;
+        }}
+
         .st-key-login_btn button {{
-            font-size: 0.75rem !important;
-            padding: 0 0.3rem 0 1.6rem !important;
-            height: 36px !important;
-            min-height: 36px !important;
-            background-position: 6px center !important;
-            background-size: 14px 14px !important;
+            height: 38px !important;
+            min-height: 38px !important;
+            padding: 0 0.6rem 0 2rem !important;
+            font-size: 0.82rem !important;
+            background-position: 8px center !important;
+            background-size: 15px 15px !important;
+        }}
+
+        .st-key-login_btn button p {{
+            font-size: 0.82rem !important;
+            white-space: nowrap !important;
+        }}
+
+        .st-key-theme_toggle {{
+            flex: 0 0 auto !important;
+            width: auto !important;
         }}
 
         .st-key-theme_toggle button {{
-            transform: scale(0.7) !important;
+            transform: scale(0.72) !important;
             transform-origin: right center !important;
+            width: 60px !important;
+            margin: 0 !important;
         }}
 
-        /* Botones superiores de Navegación */
-        .st-key-n_perfumes button p, 
+        /* NAVEGACIÓN SUPERIOR: "PERFUMES" Y "ESENCIAS" en 2 columnas parejas */
+        div[data-testid="stHorizontalBlock"]:has(.st-key-n_perfumes) {{
+            flex-wrap: nowrap !important;
+        }}
+
+        div[data-testid="column"]:has(.st-key-n_perfumes),
+        div[data-testid="column"]:has(.st-key-n_esencias) {{
+            flex: 1 1 50% !important;
+            width: 50% !important;
+        }}
+
+        .st-key-n_perfumes button p,
         .st-key-n_esencias button p {{
-            font-size: 0.8rem !important;
+            font-size: 0.85rem !important;
         }}
 
-        /* Barra de Búsqueda y Filtros en 1 sola fila */
-        div[data-baseweb="input"] input {{
-            font-size: 0.8rem !important;
-            padding: 4px 8px !important;
-        }}
-        
-        div[data-baseweb="input"],
-        div[data-baseweb="base-input"] {{
-            min-height: 36px !important;
+        /* BÚSQUEDA Y FILTROS: Campo arriba (100%), Esencias y Foto abajo (50% / 50%) */
+        div[data-testid="column"]:has(input[placeholder*="Buscar"]) {{
+            flex: 1 1 100% !important;
+            width: 100% !important;
+            margin-bottom: 2px !important;
         }}
 
-        .st-key-btn_photo_search button {{
-            min-height: 36px !important;
-            font-size: 0.72rem !important;
-            padding: 0.2rem 0.2rem 0.2rem 1.6rem !important;
-            background-position: 5px center !important;
-            background-size: 14px 14px !important;
-        }}
-
-        .st-key-btn_photo_search button p {{
-            font-size: 0.72rem !important;
+        div[data-testid="column"]:has(div[data-testid="stPopover"]),
+        div[data-testid="column"]:has(.st-key-btn_photo_search) {{
+            flex: 1 1 calc(50% - 4px) !important;
+            width: calc(50% - 4px) !important;
         }}
 
         div[data-testid="stPopover"] > button {{
-            min-height: 36px !important;
-            padding: 0 6px !important;
+            min-height: 40px !important;
+            font-size: 0.82rem !important;
+            width: 100% !important;
         }}
 
-        /* Chips de Enlace Rápido en 1 sola fila horizontal */
-        a[data-testid="stPageLink-NavLink"] {{
-            padding: 0.35rem 0.4rem 0.35rem 1.7rem !important;
-            border-radius: 12px !important;
+        .st-key-btn_photo_search button {{
+            min-height: 40px !important;
+            font-size: 0.82rem !important;
+            padding: 0.3rem 0.4rem 0.3rem 2.1rem !important;
+            background-position: 10px center !important;
+            background-size: 16px 16px !important;
+            width: 100% !important;
+        }}
+
+        .st-key-btn_photo_search button p {{
+            font-size: 0.82rem !important;
             white-space: nowrap !important;
+        }}
+
+        /* CHIPS DE ACCESO RÁPIDO: Matriz limpia 2x2 sin textos cortados */
+        div[data-testid="stHorizontalBlock"]:has(a[data-testid="stPageLink-NavLink"]) {{
+            flex-wrap: wrap !important;
+            gap: 6px !important;
+        }}
+
+        div[data-testid="column"]:has(a[data-testid="stPageLink-NavLink"]) {{
+            flex: 1 1 calc(50% - 4px) !important;
+            width: calc(50% - 4px) !important;
+        }}
+
+        a[data-testid="stPageLink-NavLink"] {{
+            padding: 0.5rem 0.4rem 0.5rem 2.2rem !important;
+            border-radius: 12px !important;
+            min-height: 38px !important;
+            justify-content: flex-start !important;
+            width: 100% !important;
         }}
 
         a[data-testid="stPageLink-NavLink"] p,
         a[data-testid="stPageLink-NavLink"] span {{
-            font-size: 0.7rem !important;
+            font-size: 0.78rem !important;
+            white-space: normal !important;
+            line-height: 1.1 !important;
+            text-align: left !important;
         }}
 
         a[data-testid="stPageLink-NavLink"]::before {{
-            left: 5px !important;
-            width: 13px !important;
-            height: 13px !important;
+            left: 8px !important;
+            width: 15px !important;
+            height: 15px !important;
         }}
 
-        /* Ajustes de Tarjetas de Catálogo */
+        /* CATÁLOGO DE PERFUMES: 1 tarjeta completa por fila */
+        div[data-testid="stHorizontalBlock"]:has(.catalog-card) {{
+            flex-direction: column !important;
+        }}
+
+        div[data-testid="column"]:has(.catalog-card) {{
+            flex: 1 1 100% !important;
+            width: 100% !important;
+            margin-bottom: 12px !important;
+        }}
+
         .catalog-card {{
-            margin-bottom: 10px !important;
+            margin-bottom: 8px !important;
+            border-radius: 12px !important;
+        }}
+
+        .square-img-box {{
+            max-height: 280px !important;
+            padding: 16px !important;
         }}
 
         .card-perfume-name {{
-            font-size: 0.82rem !important;
+            font-size: 1.05rem !important;
         }}
 
         .card-perfume-brand {{
-            font-size: 0.7rem !important;
+            font-size: 0.82rem !important;
         }}
 
         div[data-testid="stElementContainer"] div.stButton button[key*="btn_comp_"] {{
-            font-size: 0.75rem !important;
-            padding: 4px 6px !important;
+            font-size: 0.9rem !important;
+            padding: 8px 12px !important;
+            height: 42px !important;
+        }}
+
+        /* DICCIONARIO DE ESENCIAS: 1 columna ordenada */
+        div[data-testid="stHorizontalBlock"]:has(.essence-card) {{
+            flex-direction: column !important;
+        }}
+
+        div[data-testid="column"]:has(.essence-card) {{
+            flex: 1 1 100% !important;
+            width: 100% !important;
+        }}
+
+        .essence-card {{
+            padding: 12px 14px !important;
+            margin-bottom: 8px !important;
+        }}
+
+        .essence-title {{
+            font-size: 0.95rem !important;
+        }}
+
+        .essence-desc {{
+            font-size: 0.85rem !important;
         }}
     }}
     </style>
