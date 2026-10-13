@@ -974,90 +974,128 @@ st.markdown(f"""
     }}
 
     /* ==========================================
-       ADAPTACIÓN RESPONSIVA Y DISEÑO MÓVIL (MOBILE)
+       DISAÑO MÓVIL RESPONSIVO (ANULAR COLAPSO NATIVO DE STREAMLIT)
        ========================================== */
     @media (max-width: 768px) {{
         .block-container {{ 
-            padding-top: 0.6rem !important; 
-            padding-bottom: 1.5rem !important; 
-            padding-left: 0.5rem !important;
-            padding-right: 0.5rem !important;
+            padding-top: 0.4rem !important; 
+            padding-bottom: 1.2rem !important; 
+            padding-left: 0.4rem !important;
+            padding-right: 0.4rem !important;
         }}
 
-        /* Ocultar divisores verticales que afean la vista vertical */
+        /* FORZAR COLUMNAS HORIZONTALES LADO A LADO EN CELULAR */
+        div[data-testid="stHorizontalBlock"] {{
+            display: flex !important;
+            flex-direction: row !important;
+            flex-wrap: nowrap !important;
+            align-items: center !important;
+            gap: 4px !important;
+        }}
+
+        div[data-testid="stHorizontalBlock"] > div[data-testid="column"],
+        div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"] {{
+            width: auto !important;
+            min-width: 0 !important;
+        }}
+
+        /* Ocultar divisor transparente que ocupa espacio en celular */
         div[style*="border-left: 1px solid"] {{
             display: none !important;
         }}
 
-        div[data-testid="column"] {{
-            min-width: 0 !important;
+        /* Adaptar tamaño del logo para pantallas estrechas */
+        a[href="/"] span {{
+            font-size: 1.1rem !important;
+        }}
+        a[href="/"] svg {{
+            width: 24px !important;
+            height: 24px !important;
         }}
 
-        /* Ajustes de fuentes y rellenos para los chips de enlace rápido */
+        /* Botón Ingresar y Switch de Tema en Header */
+        .st-key-login_btn button {{
+            font-size: 0.75rem !important;
+            padding: 0 0.3rem 0 1.6rem !important;
+            height: 36px !important;
+            min-height: 36px !important;
+            background-position: 6px center !important;
+            background-size: 14px 14px !important;
+        }}
+
+        .st-key-theme_toggle button {{
+            transform: scale(0.7) !important;
+            transform-origin: right center !important;
+        }}
+
+        /* Botones superiores de Navegación */
+        .st-key-n_perfumes button p, 
+        .st-key-n_esencias button p {{
+            font-size: 0.8rem !important;
+        }}
+
+        /* Barra de Búsqueda y Filtros en 1 sola fila */
+        div[data-baseweb="input"] input {{
+            font-size: 0.8rem !important;
+            padding: 4px 8px !important;
+        }}
+        
+        div[data-baseweb="input"],
+        div[data-baseweb="base-input"] {{
+            min-height: 36px !important;
+        }}
+
+        .st-key-btn_photo_search button {{
+            min-height: 36px !important;
+            font-size: 0.72rem !important;
+            padding: 0.2rem 0.2rem 0.2rem 1.6rem !important;
+            background-position: 5px center !important;
+            background-size: 14px 14px !important;
+        }}
+
+        .st-key-btn_photo_search button p {{
+            font-size: 0.72rem !important;
+        }}
+
+        div[data-testid="stPopover"] > button {{
+            min-height: 36px !important;
+            padding: 0 6px !important;
+        }}
+
+        /* Chips de Enlace Rápido en 1 sola fila horizontal */
         a[data-testid="stPageLink-NavLink"] {{
-            padding-top: 0.4rem !important;
-            padding-bottom: 0.4rem !important;
-            padding-left: 2.3rem !important;
-            padding-right: 0.6rem !important;
-            font-size: 0.78rem !important;
-            border-radius: 16px !important;
+            padding: 0.35rem 0.4rem 0.35rem 1.7rem !important;
+            border-radius: 12px !important;
+            white-space: nowrap !important;
         }}
 
         a[data-testid="stPageLink-NavLink"] p,
         a[data-testid="stPageLink-NavLink"] span {{
-            font-size: 0.78rem !important;
+            font-size: 0.7rem !important;
         }}
 
-        /* Escalar adecuadamente el interruptor de tema e ingreso en la cabecera móvil */
-        .st-key-theme_toggle button {{
-            transform: scale(0.85) !important;
-            transform-origin: right center !important;
+        a[data-testid="stPageLink-NavLink"]::before {{
+            left: 5px !important;
+            width: 13px !important;
+            height: 13px !important;
         }}
 
-        .st-key-login_btn button {{
-            font-size: 0.82rem !important;
-            padding: 0 0.5rem 0 2rem !important;
-        }}
-
-        /* Tarjetas de catálogo optimizadas para pantallas verticales */
+        /* Ajustes de Tarjetas de Catálogo */
         .catalog-card {{
-            margin-bottom: 16px !important;
-            border-radius: 12px !important;
-        }}
-
-        .square-img-box {{
-            padding: 10px !important;
-        }}
-
-        .card-perfume-name {{
-            font-size: 0.9rem !important;
-        }}
-
-        .card-perfume-brand {{
-            font-size: 0.75rem !important;
-        }}
-
-        /* Diccionario de esencias en celular */
-        .essence-card {{
-            padding: 10px 12px !important;
             margin-bottom: 10px !important;
         }}
 
-        .essence-title {{
-            font-size: 0.9rem !important;
-            margin-bottom: 4px !important;
+        .card-perfume-name {{
+            font-size: 0.82rem !important;
         }}
 
-        .essence-desc {{
-            font-size: 0.8rem !important;
-            line-height: 1.35 !important;
+        .card-perfume-brand {{
+            font-size: 0.7rem !important;
         }}
 
-        /* Ajuste de cajas de diálogo flotantes */
-        div[role="dialog"] {{
-            width: 92vw !important;
-            max-width: 92vw !important;
-            padding: 1rem !important;
+        div[data-testid="stElementContainer"] div.stButton button[key*="btn_comp_"] {{
+            font-size: 0.75rem !important;
+            padding: 4px 6px !important;
         }}
     }}
     </style>
