@@ -45,7 +45,7 @@ def clean_html(html_str: str) -> str:
     return " ".join(line.strip() for line in html_str.splitlines() if line.strip())
 
 def get_image_src(img_path_or_url):
-    """Retorna URL remota o data URI en base64 para imágenes locales."""
+    """Retorna URL remota o data URI en base64 para imágenes y GIFs locales."""
     if not img_path_or_url:
         return ""
     
@@ -63,7 +63,7 @@ def get_image_src(img_path_or_url):
 
     if os.path.exists(local_path):
         ext = os.path.splitext(local_path)[1].lower().replace(".", "")
-        mime = "image/png" if ext == "png" else "image/jpeg"
+        mime = f"image/{ext}" if ext in ["png", "jpg", "jpeg", "gif", "webp"] else "image/png"
         try:
             with open(local_path, "rb") as f:
                 b64 = base64.b64encode(f.read()).decode("utf-8")
@@ -278,7 +278,7 @@ static_icon_pos = "12px center" if is_dark else "calc(100% - 12px) center"
 static_icon_svg = (
     "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='4'/><line x1='12' y1='1' x2='12' y2='3'/><line x1='12' y1='21' x2='12' y2='23'/><line x1='4.22' y1='4.22' x2='5.64' y2='5.64'/><line x1='18.36' y1='18.36' x2='19.78' y2='19.78'/><line x1='1' y1='12' x2='3' y2='12'/><line x1='21' y1='12' x2='23' y2='12'/><line x1='4.22' y1='19.78' x2='5.64' y2='18.36'/><line x1='18.36' y1='5.64' x2='19.78' y2='4.22'/></svg>"
     if is_dark else
-    "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M21 12.79A9 9 0 0 1 11.21 3 7 7 0 0 0 21 12.79z'/></svg>"
+    "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z'/></svg>"
 )
 
 bottle_svg = (
@@ -557,7 +557,7 @@ st.markdown(f"""
         object-fit: cover;
         border: 3px solid #8c7b6d;
         background-color: {input_bg};
-        padding: 4px;
+        padding: 2px;
     }}
 
     /* TARJETAS DE FAVORITOS Y MONITOREO */
@@ -650,7 +650,7 @@ u_bio = u_info.get('bio', '').strip()
 u_foto = u_info.get('foto_perfil', '').strip()
 u_alerta = u_info.get('alerta_email', False)
 
-# SILUETA VECTORIAL O FOTO PERSONALIZADA
+# SILUETA VECTORIAL O FOTO/GIF PERSONALIZADO
 default_avatar_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238c7b6d' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'><path d='M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2'/><circle cx='12' cy='7' r='4'/></svg>"
 avatar_src = get_image_src(u_foto) if u_foto else default_avatar_svg
 
@@ -742,7 +742,7 @@ with tab_favs:
                     st.toast(f"Se quitó {p_nombre} de tus favoritos.")
                     st.rerun()
 
-# --- TAB 2: EDITAR PERFIL ---
+# --- TAB 2: EDITAR PERFIL Y SUBIR FOTO/GIF ---
 with tab_edit:
     svg_edit_header = f'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="{text_color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -3px; margin-right: 8px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>'
     st.markdown(f"<h3 style='display: flex; align-items: center;'>{svg_edit_header} Completar y Modificar Datos Personales</h3>", unsafe_allow_html=True)
@@ -756,8 +756,9 @@ with tab_edit:
             e_telefono = st.text_input("Número de Teléfono", value=u_telefono, placeholder="+56 9 1234 5678")
             
         with col_e2:
-            e_foto = st.text_input("URL de Foto de Perfil", value=u_foto, placeholder="https://sitio.com/mi-foto.jpg", help="Ingresa un enlace directo a una imagen JPG/PNG")
-            e_bio = st.text_area("Biografía / Descripción", value=u_bio, placeholder="Escribe un breve resumen sobre ti o tus gustos olfativos...", max_chars=280, height=110)
+            uploaded_file = st.file_uploader("Subir foto de perfil o GIF animado", type=["png", "jpg", "jpeg", "gif", "webp"], help="Puedes seleccionar una imagen o GIF animado desde tu computadora o celular")
+            e_foto_url = st.text_input("O ingresar URL de imagen/GIF", value=u_foto if u_foto.startswith("http") else "", placeholder="https://sitio.com/mi-foto.gif", help="Pega un enlace directo si la imagen está en la web")
+            e_bio = st.text_area("Biografía / Descripción", value=u_bio, placeholder="Escribe un breve resumen sobre ti o tus gustos olfativos...", max_chars=280, height=100)
             
         btn_save = st.form_submit_button("Guardar Cambios de Perfil", use_container_width=True)
         
@@ -768,13 +769,21 @@ with tab_edit:
             st.session_state['user_info']['nombre'] = e_nombre.strip()
             st.session_state['user_info']['email'] = e_email.strip()
             st.session_state['user_info']['telefono'] = e_telefono.strip()
-            st.session_state['user_info']['foto_perfil'] = e_foto.strip()
             st.session_state['user_info']['bio'] = e_bio.strip()
+            
+            # Procesar foto o GIF subido desde el archivo local o URL
+            if uploaded_file is not None:
+                bytes_data = uploaded_file.getvalue()
+                b64 = base64.b64encode(bytes_data).decode('utf-8')
+                mime = uploaded_file.type or "image/png"
+                st.session_state['user_info']['foto_perfil'] = f"data:{mime};base64,{b64}"
+            elif e_foto_url.strip():
+                st.session_state['user_info']['foto_perfil'] = e_foto_url.strip()
             
             if e_email.strip() and 'alerta_email' not in st.session_state['user_info']:
                 st.session_state['user_info']['alerta_email'] = True
                 
-            st.success("¡Tu perfil ha sido actualizado correctamente!")
+            st.success("¡Tu perfil y avatar han sido actualizados correctamente!")
             st.rerun()
 
 # --- TAB 3: CONFIGURACIÓN DE NOTIFICACIONES Y ALERTAS ---
