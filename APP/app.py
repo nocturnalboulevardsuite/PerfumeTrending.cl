@@ -74,7 +74,12 @@ def get_image_src(img_path_or_url):
     return img_path_or_url
 
 # 1. CONFIGURACIÓN DE LA PÁGINA Y ESTADO
-st.set_page_config(page_title="PerfumeTrending", layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(
+    page_title="PerfumeTrending",
+    page_icon="🧴",
+    layout="wide",
+    initial_sidebar_state="collapsed"
+)
 
 # Inicializar esquema de base de datos relacional
 init_db()
@@ -265,13 +270,17 @@ tag_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' v
 home_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d83737' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z'/><polyline points='9 22 9 12 15 12 15 22'/></svg>"
 flame_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d83737' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 3.5z'/></svg>"
 
-# 2. SISTEMA DE SONIDO Y EVENTOS DE TARJETAS
+# 2. SISTEMA DE SONIDO, EVENTOS DE TARJETAS Y SOBREESCRITURA DE TÍTULO
 js_color_script = f"""
 <script>
 (function() {{
     const topWin = window.parent || window;
-    const doc = topWin.document;
     
+    // Sobreescribir el título de la pestaña eliminando la palabra Streamlit
+    try {{
+        topWin.document.title = "PerfumeTrending";
+    }} catch(e) {{}}
+
     if (typeof topWin.soundMuted === 'undefined') {{
         topWin.soundMuted = false;
     }}
@@ -314,7 +323,7 @@ js_color_script = f"""
     }};
 
     topWin.updateSoundButtonUI = function() {{
-        const btn = doc.getElementById('sound-toggle-btn');
+        const btn = topWin.document.getElementById('sound-toggle-btn');
         if (btn) {{
             const speakerSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>';
             const muteSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>';
@@ -325,7 +334,11 @@ js_color_script = f"""
     }};
 
     function attachCardEvents() {{
-        const essenceCards = doc.querySelectorAll('.essence-card');
+        try {{
+            topWin.document.title = "PerfumeTrending";
+        }} catch(e) {{}}
+        
+        const essenceCards = topWin.document.querySelectorAll('.essence-card');
         essenceCards.forEach(card => {{
             if (!card.dataset.soundAttached) {{
                 card.dataset.soundAttached = 'true';
@@ -342,10 +355,10 @@ js_color_script = f"""
         debounceTimer = setTimeout(attachCardEvents, 100);
     }});
     
-    observer.observe(doc.body, {{ childList: true, subtree: true }});
+    observer.observe(topWin.document.body, {{ childList: true, subtree: true }});
     attachCardEvents();
 
-    // Heartbeat periódico para evitar desconexiones de sesión en Streamlit Cloud
+    // Heartbeat periódico para evitar desconexiones de sesión
     setInterval(function() {{
         try {{
             if (topWin && topWin.document) {{
