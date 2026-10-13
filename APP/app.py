@@ -897,8 +897,13 @@ st.markdown(f"""
     </style>
 """, unsafe_allow_html=True)
 
-# 4. CABECERA CON LOGO COMPACTO Y ESPACIO AMPLIADO PARA NOMBRE DE USUARIO
-col_logo, col_espacio, col_actions = st.columns([4.2, 0.5, 4.3], vertical_alignment="center")
+# 4. CABECERA CON LOGO COMPACTO Y ESPACIO DINÁMICO SEGÚN ESTADO DE SESIÓN
+if st.session_state['logged_in']:
+    col_logo, col_espacio, col_actions = st.columns([4.0, 0.5, 4.5], vertical_alignment="center")
+    btn_col1, btn_col2 = col_actions.columns([3.5, 1.0], vertical_alignment="center")
+else:
+    col_logo, col_espacio, col_actions = st.columns([6.8, 0.7, 1.5], vertical_alignment="center")
+    btn_col1, btn_col2 = col_actions.columns([1.1, 1.0], vertical_alignment="center")
 
 with col_logo:
     logo_color = "#8c7b6d"
@@ -920,24 +925,22 @@ with col_logo:
     """
     st.markdown(logo_html, unsafe_allow_html=True)
 
-with col_actions:
-    btn_col1, btn_col2 = st.columns([3.3, 1.0], vertical_alignment="center")
-    with btn_col1:
-        if st.session_state['logged_in']:
-            user_display = st.session_state['user_info'].get('nombre') or st.session_state['user_info'].get('email', 'Usuario')
-            with st.popover(f"👤 {user_display}", use_container_width=True):
-                st.write(f"**Conectado como:**")
-                st.write(st.session_state['user_info'].get('email', ''))
-                if st.button("Cerrar Sesión", key="btn_logout", use_container_width=True):
-                    st.session_state['logged_in'] = False
-                    st.session_state['user_info'] = None
-                    st.rerun()
-        else:
-            if st.button("Ingresar", key="login_btn", use_container_width=True):
-                st.session_state['show_login_modal'] = True
-                
-    with btn_col2:
-        st.button(" ", key="theme_toggle", on_click=toggle_theme)
+with btn_col1:
+    if st.session_state['logged_in']:
+        user_display = st.session_state['user_info'].get('nombre') or st.session_state['user_info'].get('email', 'Usuario')
+        with st.popover(f"👤 {user_display}", use_container_width=True):
+            st.write(f"**Conectado como:**")
+            st.write(st.session_state['user_info'].get('email', ''))
+            if st.button("Cerrar Sesión", key="btn_logout", use_container_width=True):
+                st.session_state['logged_in'] = False
+                st.session_state['user_info'] = None
+                st.rerun()
+    else:
+        if st.button("Ingresar", key="login_btn", use_container_width=True):
+            st.session_state['show_login_modal'] = True
+            
+with btn_col2:
+    st.button(" ", key="theme_toggle", on_click=toggle_theme)
 
 # MONITOREO Y RENDERIZADO PERSISTENTE DEL MODAL
 if st.session_state.get('show_login_modal', False):
