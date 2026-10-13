@@ -242,7 +242,7 @@ static_icon_pos = "12px center" if is_dark else "calc(100% - 12px) center"
 static_icon_svg = (
     "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='4'/><line x1='12' y1='1' x2='12' y2='3'/><line x1='12' y1='21' x2='12' y2='23'/><line x1='4.22' y1='4.22' x2='5.64' y2='5.64'/><line x1='18.36' y1='18.36' x2='19.78' y2='19.78'/><line x1='1' y1='12' x2='3' y2='12'/><line x1='21' y1='12' x2='23' y2='12'/><line x1='4.22' y1='19.78' x2='5.64' y2='18.36'/><line x1='18.36' y1='5.64' x2='19.78' y2='4.22'/></svg>"
     if is_dark else
-    "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z'/></svg>"
+    "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M21 12.79A9 9 0 0 1 11.21 3 7 7 0 0 0 21 12.79z'/></svg>"
 )
 
 bottle_svg = (
@@ -254,7 +254,11 @@ bottle_svg = (
 camera_icon_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23{btn_text[1:]}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z'/><circle cx='12' cy='13' r='4'/></svg>"
 user_icon_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23{btn_text[1:]}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2'/><circle cx='12' cy='7' r='4'/></svg>"
 
-# ICONOS VECTORIALES DE ALTA PRECISIÓN (ESTILO LINEAR / STRIPE / LUCIDE)
+# DIBUJOS VECTORIALES HTML/SVG PARA ELEMENTOS DE INTERFAZ Y PERFIL
+settings_icon_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23{btn_text[1:]}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z'/><circle cx='12' cy='12' r='3'/></svg>"
+logout_icon_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23{btn_text[1:]}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4'/><polyline points='16 17 21 12 16 7'/><line x1='21' y1='12' x2='9' y2='12'/></svg>"
+
+# ICONOS VECTORIALES DE ALTA PRECISIÓN
 trend_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d83737' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='23 6 13.5 15.5 8.5 10.5 1 18'/><polyline points='17 6 23 6 23 12'/></svg>"
 shield_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d83737' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/><polyline points='9 12 11 14 15 10'/></svg>"
 tag_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d83737' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z'/><circle cx='7' cy='7' r='1.5' fill='%23d83737'/></svg>"
@@ -435,7 +439,7 @@ st.markdown(f"""
         transform: scale(0.98) !important;
     }}
 
-    /* ESTILO ESPECÍFICO Y COMPLETO PARA EL BOTÓN DE POPOVER ("ESENCIAS" Y PERFIL DE USUARIO) */
+    /* ESTILO ESPECÍFICO PARA BOTONES POPOVER */
     div[data-testid="stPopover"],
     div[data-testid="stPopover"] > button,
     button[data-testid="stPopoverButton"],
@@ -468,19 +472,40 @@ st.markdown(f"""
         overflow: visible !important;
     }}
 
-    div[data-testid="stPopover"] button svg,
-    button[data-testid="stPopoverButton"] svg {{
-        fill: {btn_text} !important;
-        stroke: {btn_text} !important;
-        color: {btn_text} !important;
-    }}
-
     div[data-testid="stPopoverBody"],
     div[data-testid="stPopoverContent"] {{
         background-color: {input_bg} !important;
         border: 1px solid {btn_border} !important;
         border-radius: 8px !important;
         color: {text_color} !important;
+    }}
+
+    /* CONTENEDOR Y BOTÓN POPOVER DE USUARIO CON DIBUJO HTML/SVG */
+    .user-popover-container div[data-testid="stPopover"],
+    .user-popover-container div[data-testid="stPopover"] > button,
+    .user-popover-container button[data-testid="stPopoverButton"] {{
+        padding-left: 2.3rem !important;
+        background-image: url("{user_icon_svg}") !important;
+        background-repeat: no-repeat !important;
+        background-position: 12px center !important;
+        background-size: 18px 18px !important;
+    }}
+
+    /* BOTÓN CERRAR SESIÓN Y MI PERFIL CON DIBUJOS VECTORIALES HTML/SVG */
+    .st-key-btn_go_profile button {{
+        padding-left: 2.5rem !important;
+        background-image: url("{settings_icon_svg}") !important;
+        background-repeat: no-repeat !important;
+        background-position: 14px center !important;
+        background-size: 18px 18px !important;
+    }}
+
+    .st-key-btn_logout button {{
+        padding-left: 2.5rem !important;
+        background-image: url("{logout_icon_svg}") !important;
+        background-repeat: no-repeat !important;
+        background-position: 14px center !important;
+        background-size: 18px 18px !important;
     }}
 
     .st-key-login_btn, .st-key-theme_toggle {{
@@ -931,19 +956,21 @@ with col_logo:
 with btn_col1:
     if st.session_state['logged_in']:
         user_display = st.session_state['user_info'].get('nombre') or st.session_state['user_info'].get('email', 'Usuario')
-        with st.popover(f"👤 {user_display}", use_container_width=True):
+        st.markdown('<div class="user-popover-container">', unsafe_allow_html=True)
+        with st.popover(f"{user_display}", use_container_width=True):
             st.write(f"**Conectado como:**")
             st.write(st.session_state['user_info'].get('email', ''))
             st.markdown("<div style='margin-top: 8px;'></div>", unsafe_allow_html=True)
             
-            # ACOPLE DIRECTO A LA PÁGINA DE PERFIL
-            if st.button("⚙️ Mi Perfil y Alertas", key="btn_go_profile", use_container_width=True):
+            # ACOPLE DIRECTO A LA PÁGINA DE PERFIL CON ICONO DIBUJADO HTML/SVG
+            if st.button("Mi Perfil y Alertas", key="btn_go_profile", use_container_width=True):
                 st.switch_page("pages/perfil.py")
                 
             if st.button("Cerrar Sesión", key="btn_logout", use_container_width=True):
                 st.session_state['logged_in'] = False
                 st.session_state['user_info'] = None
                 st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
     else:
         if st.button("Ingresar", key="login_btn", use_container_width=True):
             st.session_state['show_login_modal'] = True
