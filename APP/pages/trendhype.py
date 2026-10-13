@@ -203,7 +203,6 @@ card_bg = "#14171d" if is_dark else "#ffffff"
 border_color = "#2a2e39" if is_dark else "#e4e4e7"
 text_color = "#f0f0f0" if is_dark else "#18181b"
 subtext_color = "#888890" if is_dark else "#666670"
-accent_color = "#d4c2a5" if is_dark else "#8c7b6d"
 
 btn_bg = "#181c24" if is_dark else "#ffffff"
 btn_text = "#ffffff" if is_dark else "#18181b"
@@ -229,12 +228,11 @@ bottle_svg = (
     "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 58'><rect x='18' y='2' width='14' height='7' rx='2' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><rect x='21' y='9' width='8' height='5' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='19' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='5' fill='none' stroke='%23111111' stroke-width='2'/><line x1='25' y1='23' x2='25' y2='26' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='25' y1='42' x2='25' y2='45' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='14' y1='34' x2='17' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='33' y1='34' x2='36' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='17' y1='26' x2='19' y2='28' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='31' y1='40' x2='33' y2='42' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='17' y1='42' x2='19' y2='40' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='31' y1='28' x2='33' y2='26' stroke='%23111111' stroke-width='2' stroke-linecap='round'/></svg>"
 )
 
-camera_icon_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23{btn_text[1:]}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z'/><circle cx='12' cy='13' r='4'/></svg>"
 user_icon_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23{btn_text[1:]}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2'/><circle cx='12' cy='7' r='4'/></svg>"
 settings_icon_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23{btn_text[1:]}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z'/><circle cx='12' cy='12' r='3'/></svg>"
 logout_icon_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23{btn_text[1:]}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4'/><polyline points='16 17 21 12 16 7'/><line x1='21' y1='12' x2='9' y2='12'/></svg>"
 
-# ICONOS VECTORIALES DE ALTA PRECISIÓN (ESTILO LINEAR / STRIPE / LUCIDE)
+# ICONOS VECTORIALES DE ALTA PRECISIÓN
 trend_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d83737' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='23 6 13.5 15.5 8.5 10.5 1 18'/><polyline points='17 6 23 6 23 12'/></svg>"
 shield_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d83737' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/><polyline points='9 12 11 14 15 10'/></svg>"
 tag_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d83737' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z'/><circle cx='7' cy='7' r='1.5' fill='%23d83737'/></svg>"
@@ -305,7 +303,7 @@ js_color_script = f"""
 
 components.html(js_color_script, height=0, width=0)
 
-# 3. CSS ADAPTABLE, BOTONES Y SWITCH DE TEMA
+# 3. CSS ADAPTABLE, BOTONES Y SWITCH DE TEMA (SIN AFECTAR LOS BOTONES DE POPOVER)
 st.markdown(f"""
     <style>
     header[data-testid="stHeader"] {{ display: none !important; }}
@@ -326,6 +324,21 @@ st.markdown(f"""
     .stApp p, .stApp span, .stApp label, .stMarkdown p {{
         color: {text_color} !important;
         text-shadow: none !important;
+    }}
+
+    /* BOTONES GENERALES DE ESTILO SOBRIO (IGUAL A APP.PY) */
+    div.stButton > button {{
+        background-color: {btn_bg} !important;
+        border: 1px solid {btn_border} !important;
+        color: {btn_text} !important;
+        border-radius: 8px !important;
+        transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.15s ease, border-color 0.15s ease !important;
+        outline: none !important;
+    }}
+
+    div.stButton > button p {{
+        color: {btn_text} !important;
+        font-weight: 600 !important;
     }}
 
     /* BOTÓN INGRESAR (LOGIN) Y CONTENEDORES DE LA CABECERA */
@@ -364,7 +377,7 @@ st.markdown(f"""
         white-space: nowrap !important;
     }}
 
-    /* ESTILO PARA BOTÓN POPOVER DE PERFIL Y ESENCIAS */
+    /* ESTILO PARA BOTÓN POPOVER Y DESPLEGABLE DE PERFIL */
     div[data-testid="stPopover"],
     div[data-testid="stPopover"] > button,
     button[data-testid="stPopoverButton"],
@@ -405,8 +418,11 @@ st.markdown(f"""
         background-size: 18px 18px !important;
     }}
 
-    /* BOTÓN CERRAR SESIÓN Y MI PERFIL CON DIBUJOS VECTORIALES HTML/SVG */
+    /* BOTÓN CERRAR SESIÓN Y MI PERFIL CON DIBUJOS VECTORIALES HTML/SVG (SIN FONDO ROJO) */
     .st-key-btn_go_profile button {{
+        background-color: {btn_bg} !important;
+        border: 1px solid {btn_border} !important;
+        color: {btn_text} !important;
         padding-left: 2.5rem !important;
         background-image: url("{settings_icon_svg}") !important;
         background-repeat: no-repeat !important;
@@ -414,12 +430,23 @@ st.markdown(f"""
         background-size: 18px 18px !important;
     }}
 
+    .st-key-btn_go_profile button p {{
+        color: {btn_text} !important;
+    }}
+
     .st-key-btn_logout button {{
+        background-color: {btn_bg} !important;
+        border: 1px solid {btn_border} !important;
+        color: {btn_text} !important;
         padding-left: 2.5rem !important;
         background-image: url("{logout_icon_svg}") !important;
         background-repeat: no-repeat !important;
         background-position: 14px center !important;
         background-size: 18px 18px !important;
+    }}
+
+    .st-key-btn_logout button p {{
+        color: {btn_text} !important;
     }}
 
     /* SWITCH PERSONALIZADO DE TEMA DE BOTELLA */
@@ -632,20 +659,6 @@ st.markdown(f"""
         line-height: 1.2;
     }}
 
-    .nav-back-link {{
-        text-align: right;
-        display: block;
-        color: {subtext_color} !important;
-        text-decoration: none !important;
-        font-size: 0.88rem;
-        font-weight: 600;
-        transition: color 0.2s ease;
-        white-space: nowrap;
-    }}
-    .nav-back-link:hover {{
-        color: {text_color} !important;
-    }}
-
     /* CHIPS DE ACCESO RÁPIDO Y PAGE LINKS */
     a[data-testid="stPageLink-NavLink"] {{
         background-color: {btn_bg} !important;
@@ -676,7 +689,7 @@ st.markdown(f"""
         margin: 0 !important;
     }}
 
-    /* DIBUJOS ILUSTRADOS VECTORIALES EN ROJO PARA LOS BOTONES */
+    /* DIBUJOS ILUSTRADOS VECTORIALES EN ROJO PARA LOS BOTONES DE NAVEGACIÓN */
     a[data-testid="stPageLink-NavLink"][href*="trendhype"],
     a[data-testid="stPageLink-NavLink"][href*="trustpage"],
     a[data-testid="stPageLink-NavLink"][href*="compararprecios"],
@@ -688,7 +701,6 @@ st.markdown(f"""
         overflow: hidden !important;
     }}
 
-    /* 1. Trend Del Hype */
     a[data-testid="stPageLink-NavLink"][href*="trendhype"]::before {{
         content: '' !important;
         position: absolute !important;
@@ -704,7 +716,6 @@ st.markdown(f"""
         z-index: 1 !important;
     }}
 
-    /* 2. Páginas de Confianza */
     a[data-testid="stPageLink-NavLink"][href*="trustpage"]::before {{
         content: '' !important;
         position: absolute !important;
@@ -720,7 +731,6 @@ st.markdown(f"""
         z-index: 1 !important;
     }}
 
-    /* 3. Comparar Precios */
     a[data-testid="stPageLink-NavLink"][href*="compararprecios"]::before {{
         content: '' !important;
         position: absolute !important;
@@ -736,7 +746,6 @@ st.markdown(f"""
         z-index: 1 !important;
     }}
 
-    /* 4. Inicio / Catálogo */
     a[data-testid="stPageLink-NavLink"][href$="app.py"]::before,
     a[data-testid="stPageLink-NavLink"][href="/"]::before {{
         content: '' !important;
@@ -753,7 +762,7 @@ st.markdown(f"""
         z-index: 1 !important;
     }}
 
-    /* TARJETAS DE PERFUME */
+    /* TARJETAS DE PERFUME DE TENDENCIA */
     .hype-card {{
         background-color: {card_bg};
         border: 2px solid {border_color};
@@ -848,11 +857,12 @@ st.markdown(f"""
     }}
     .price-text {{ text-align: center; font-size: 11px; color: {text_color}; margin-bottom: 6px; }}
 
-    /* BOTONES DE COMPARAR PRECIOS */
-    div[data-testid="stElementContainer"]:not(.st-key-theme_toggle):not(.st-key-login_btn) > div.stButton > button {{
+    /* BOTONES DE COMPARAR PRECIOS (EXCLUSIVO PARA BOTONES DENTRO DE TARJETAS DE PERFUME) */
+    div[data-testid="stElementContainer"] div.stButton button[key*="btn_compare_"],
+    div.stButton > button[key*="btn_compare_"] {{
         background-color: #d83737 !important;
         color: #ffffff !important;
-        border: none !important;
+        border: 1px solid #d83737 !important;
         border-radius: 10px !important;
         font-weight: 700 !important;
         font-size: 13px !important;
@@ -862,14 +872,23 @@ st.markdown(f"""
         width: 100% !important;
     }}
 
-    div[data-testid="stElementContainer"]:not(.st-key-theme_toggle):not(.st-key-login_btn) > div.stButton > button:hover {{
-        background-color: #be2e2e !important;
-        transform: scale(1.03) translateY(-2px) !important;
-        box-shadow: 0 6px 18px rgba(216, 55, 55, 0.38) !important;
+    div[data-testid="stElementContainer"] div.stButton button[key*="btn_compare_"] p,
+    div.stButton > button[key*="btn_compare_"] p {{
         color: #ffffff !important;
+        font-weight: 700 !important;
     }}
 
-    div[data-testid="stElementContainer"]:not(.st-key-theme_toggle):not(.st-key-login_btn) > div.stButton > button:active {{
+    div[data-testid="stElementContainer"] div.stButton button[key*="btn_compare_"]:hover,
+    div.stButton > button[key*="btn_compare_"]:hover {{
+        background-color: #be2e2e !important;
+        border-color: #be2e2e !important;
+        color: #ffffff !important;
+        transform: scale(1.03) translateY(-2px) !important;
+        box-shadow: 0 6px 18px rgba(216, 55, 55, 0.38) !important;
+    }}
+
+    div[data-testid="stElementContainer"] div.stButton button[key*="btn_compare_"]:active,
+    div.stButton > button[key*="btn_compare_"]:active {{
         transform: scale(0.98) translateY(0px) !important;
     }}
     </style>
@@ -912,7 +931,7 @@ with btn_col1:
             st.write(st.session_state['user_info'].get('email', ''))
             st.markdown("<div style='margin-top: 8px;'></div>", unsafe_allow_html=True)
             
-            # ACOPLE DIRECTO A LA PÁGINA DE PERFIL CON DIBUJO VECTORIAL SVG
+            # ACOPLE DIRECTO A LA PÁGINA DE PERFIL CON DIBUJO VECTORIAL SVG Y ESTILO LIMPIO (SIN ROJO)
             if st.button("Mi Perfil y Alertas", key="btn_go_profile", use_container_width=True):
                 st.switch_page("pages/perfil.py")
                 
