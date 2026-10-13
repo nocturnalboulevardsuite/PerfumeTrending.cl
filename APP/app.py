@@ -86,11 +86,13 @@ if 'theme' not in st.session_state:
 if 'selected_perfume' not in st.session_state:
     st.session_state['selected_perfume'] = None
 
-# ESTADOS DE AUTENTICACIÓN
+# ESTADOS DE AUTENTICACIÓN Y CONTROL DE MODAL
 if 'logged_in' not in st.session_state:
     st.session_state['logged_in'] = False
 if 'user_info' not in st.session_state:
     st.session_state['user_info'] = None
+if 'show_login_modal' not in st.session_state:
+    st.session_state['show_login_modal'] = False
 
 # ESTADOS PARA INICIO POR CÓDIGO (OTP)
 if 'otp_code_sent' not in st.session_state:
@@ -118,26 +120,28 @@ def modal_autenticacion():
         st.markdown("#### Ingresa con tu Correo o Teléfono")
         
         if not st.session_state['otp_code_sent']:
-            contact_input = st.text_input("Correo electrónico o número de teléfono", key="otp_contact_input", placeholder="ejemplo@correo.cl o +56912345678")
-            
-            if st.button("Enviar código de verificación", key="btn_send_otp", use_container_width=True):
-                if not contact_input.strip():
-                    st.error("Por favor ingresa un correo electrónico o teléfono válido.")
-                else:
-                    code = str(random.randint(100000, 999999))
-                    st.session_state['otp_code_sent'] = True
-                    st.session_state['otp_contact'] = contact_input.strip()
-                    st.session_state['otp_secret'] = code
-                    st.rerun()
+            with st.form("form_send_otp", clear_on_submit=False):
+                contact_input = st.text_input("Correo electrónico o número de teléfono", key="otp_contact_input", placeholder="ejemplo@correo.cl o +56912345678")
+                btn_send = st.form_submit_button("Enviar código de verificación", use_container_width=True)
+                
+                if btn_send:
+                    if not contact_input.strip():
+                        st.error("Por favor ingresa un correo electrónico o teléfono válido.")
+                    else:
+                        code = str(random.randint(100000, 999999))
+                        st.session_state['otp_code_sent'] = True
+                        st.session_state['otp_contact'] = contact_input.strip()
+                        st.session_state['otp_secret'] = code
+                        st.rerun()
         else:
             st.info(f"Un código de verificación ha sido enviado a **{st.session_state['otp_contact']}**")
             st.caption(f"*(Código de prueba rápido: **{st.session_state['otp_secret']}**)*")
             
-            input_code = st.text_input("Ingresa el código de 6 dígitos", key="otp_code_input", placeholder="123456", max_chars=6)
-            
-            col_c1, col_c2 = st.columns(2)
-            with col_c1:
-                if st.button("Verificar e Ingresar", key="btn_verify_otp", use_container_width=True):
+            with st.form("form_verify_otp", clear_on_submit=False):
+                input_code = st.text_input("Ingresa el código de 6 dígitos", key="otp_code_input", placeholder="123456", max_chars=6)
+                btn_verify = st.form_submit_button("Verificar e Ingresar", use_container_width=True)
+                
+                if btn_verify:
                     if input_code.strip() == st.session_state['otp_secret']:
                         contact_str = st.session_state['otp_contact']
                         nombre_user = contact_str.split('@')[0] if '@' in contact_str else contact_str
@@ -148,66 +152,69 @@ def modal_autenticacion():
                             'email': contact_str
                         }
                         
-                        # Limpiar estado del código
+                        # Resetear estados de login y cerrar modal
                         st.session_state['otp_code_sent'] = False
                         st.session_state['otp_contact'] = ""
                         st.session_state['otp_secret'] = ""
-                        st.success("¡Inicio de sesión exitoso!")
+                        st.session_state['show_login_modal'] = False
                         st.rerun()
                     else:
                         st.error("Código incorrecto. Revisa e intenta nuevamente.")
                         
-            with col_c2:
-                if st.button("Cambiar correo/teléfono", key="btn_reset_otp", use_container_width=True):
-                    st.session_state['otp_code_sent'] = False
-                    st.session_state['otp_contact'] = ""
-                    st.session_state['otp_secret'] = ""
-                    st.rerun()
+            if st.button("Cambiar correo/teléfono", key="btn_reset_otp", use_container_width=True):
+                st.session_state['otp_code_sent'] = False
+                st.session_state['otp_contact'] = ""
+                st.session_state['otp_secret'] = ""
+                st.rerun()
 
     # OPCIÓN 2: CON TRADICIONAL CORREO / CONTRASEÑA
     with tab_login:
         st.markdown("#### Ingresa a tu cuenta")
-        login_email = st.text_input("Correo Electrónico", key="login_email_input", placeholder="usuario@correo.cl")
-        login_pass = st.text_input("Contraseña", type="password", key="login_pass_input", placeholder="••••••••")
-        
-        if st.button("Ingresar a la plataforma", key="btn_submit_login", use_container_width=True):
-            if not login_email or not login_pass:
-                st.error("Por favor ingresa tu correo y contraseña.")
-            elif verificar_usuario:
-                exito, usuario_data = verificar_usuario(login_email, login_pass)
-                if exito:
-                    st.session_state['logged_in'] = True
-                    st.session_state['user_info'] = usuario_data
-                    st.success(f"Bienvenido/a, {usuario_data['nombre']}!")
-                    st.rerun()
+        with st.form("form_login_pass", clear_on_submit=False):
+            login_email = st.text_input("Correo Electrónico", key="login_email_input", placeholder="usuario@correo.cl")
+            login_pass = st.text_input("Contraseña", type="password", key="login_pass_input", placeholder="••••••••")
+            btn_login = st.form_submit_button("Ingresar a la plataforma", use_container_width=True)
+            
+            if btn_login:
+                if not login_email or not login_pass:
+                    st.error("Por favor ingresa tu correo y contraseña.")
+                elif verificar_usuario:
+                    exito, usuario_data = verificar_usuario(login_email, login_pass)
+                    if exito:
+                        st.session_state['logged_in'] = True
+                        st.session_state['user_info'] = usuario_data
+                        st.session_state['show_login_modal'] = False
+                        st.rerun()
+                    else:
+                        st.error("Correo o contraseña incorrectos.")
                 else:
-                    st.error("Correo o contraseña incorrectos.")
-            else:
-                st.info("Función de backend en proceso de actualización.")
+                    st.info("Función de backend en proceso de actualización.")
 
     # OPCIÓN 3: REGISTRO NUEVO USUARIO
     with tab_registro:
         st.markdown("#### Crea una cuenta nueva")
-        reg_nombre = st.text_input("Nombre completo", key="reg_nombre_input", placeholder="Juan Pérez")
-        reg_email = st.text_input("Correo Electrónico", key="reg_email_input", placeholder="usuario@correo.cl")
-        reg_pass1 = st.text_input("Contraseña", type="password", key="reg_pass1_input", placeholder="••••••••")
-        reg_pass2 = st.text_input("Confirmar Contraseña", type="password", key="reg_pass2_input", placeholder="••••••••")
-        
-        if st.button("Crear mi cuenta", key="btn_submit_registro", use_container_width=True):
-            if not reg_nombre or not reg_email or not reg_pass1:
-                st.error("Todos los campos son obligatorios.")
-            elif reg_pass1 != reg_pass2:
-                st.error("Las contraseñas no coinciden.")
-            elif len(reg_pass1) < 6:
-                st.warning("La contraseña debe tener al menos 6 caracteres.")
-            elif crear_usuario:
-                exito, msg = crear_usuario(reg_nombre, reg_email, reg_pass1)
-                if exito:
-                    st.success("¡Cuenta creada con éxito! Ya puedes iniciar sesión.")
+        with st.form("form_reg_user", clear_on_submit=False):
+            reg_nombre = st.text_input("Nombre completo", key="reg_nombre_input", placeholder="Juan Pérez")
+            reg_email = st.text_input("Correo Electrónico", key="reg_email_input", placeholder="usuario@correo.cl")
+            reg_pass1 = st.text_input("Contraseña", type="password", key="reg_pass1_input", placeholder="••••••••")
+            reg_pass2 = st.text_input("Confirmar Contraseña", type="password", key="reg_pass2_input", placeholder="••••••••")
+            btn_reg = st.form_submit_button("Crear mi cuenta", use_container_width=True)
+            
+            if btn_reg:
+                if not reg_nombre or not reg_email or not reg_pass1:
+                    st.error("Todos los campos son obligatorios.")
+                elif reg_pass1 != reg_pass2:
+                    st.error("Las contraseñas no coinciden.")
+                elif len(reg_pass1) < 6:
+                    st.warning("La contraseña debe tener al menos 6 caracteres.")
+                elif crear_usuario:
+                    exito, msg = crear_usuario(reg_nombre, reg_email, reg_pass1)
+                    if exito:
+                        st.success("¡Cuenta creada con éxito! Ya puedes iniciar sesión.")
+                    else:
+                        st.error(msg)
                 else:
-                    st.error(msg)
-            else:
-                st.info("Función de backend en proceso de actualización.")
+                    st.info("Función de backend en proceso de actualización.")
 
 is_dark = st.session_state['theme'] == 'dark'
 
@@ -925,10 +932,14 @@ with col_actions:
                     st.rerun()
         else:
             if st.button("Ingresar", key="login_btn", use_container_width=True):
-                modal_autenticacion()
+                st.session_state['show_login_modal'] = True
                 
     with btn_col2:
         st.button(" ", key="theme_toggle", on_click=toggle_theme)
+
+# MONITOREO Y RENDERIZADO PERSISTENTE DEL MODAL
+if st.session_state.get('show_login_modal', False):
+    modal_autenticacion()
 
 # 5. NAVEGACIÓN PRINCIPAL
 st.markdown("<div style='margin-top: 14px;'></div>", unsafe_allow_html=True)
