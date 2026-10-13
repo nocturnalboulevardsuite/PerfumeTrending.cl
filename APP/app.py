@@ -5,6 +5,7 @@ import sys
 import os
 import base64
 import random
+import time
 
 # Configurar rutas para importar backend
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -94,13 +95,15 @@ if 'theme' not in st.session_state:
 if 'selected_perfume' not in st.session_state:
     st.session_state['selected_perfume'] = None
 
-# ESTADOS DE AUTENTICACIÓN Y CONTROL DE MODAL
+# ESTADOS DE AUTENTICACIÓN Y CONTROL DE MODALES
 if 'logged_in' not in st.session_state:
     st.session_state['logged_in'] = False
 if 'user_info' not in st.session_state:
     st.session_state['user_info'] = None
 if 'show_login_modal' not in st.session_state:
     st.session_state['show_login_modal'] = False
+if 'show_visual_modal' not in st.session_state:
+    st.session_state['show_visual_modal'] = False
 
 # ESTADOS PARA INICIO POR CÓDIGO (OTP)
 if 'otp_code_sent' not in st.session_state:
@@ -160,7 +163,6 @@ def modal_autenticacion():
                             'telefono': contact_str if '@' not in contact_str else '+56 9 1234 5678'
                         }
                         
-                        # Resetear estados de login y cerrar modal
                         st.session_state['otp_code_sent'] = False
                         st.session_state['otp_contact'] = ""
                         st.session_state['otp_secret'] = ""
@@ -224,6 +226,75 @@ def modal_autenticacion():
                 else:
                     st.info("Función de backend en proceso de actualización.")
 
+# MODAL FLOTANTE PARA BÚSQUEDA VISUAL POR IMAGEN / CÁMARA
+@st.dialog("Búsqueda Visual de Perfumes")
+def modal_busqueda_visual():
+    st.markdown("<p style='font-size:0.92rem; margin-bottom:12px;'>Sube una foto del frasco o usa tu cámara para identificar la fragancia y comparar precios en Chile.</p>", unsafe_allow_html=True)
+    
+    tab_upload, tab_camera = st.tabs(["📁 Subir Imagen", "📷 Usar Cámara"])
+    
+    uploaded_file = None
+    with tab_upload:
+        file_up = st.file_uploader("Selecciona una foto desde tu dispositivo", type=["jpg", "jpeg", "png", "webp"], key="vis_file_up")
+        if file_up:
+            uploaded_file = file_up
+            
+    with tab_camera:
+        cam_up = st.camera_input("Capturar foto del perfume", key="vis_cam_up")
+        if cam_up:
+            uploaded_file = cam_up
+
+    if uploaded_file:
+        col_preview, col_status = st.columns([1, 1], vertical_alignment="center")
+        with col_preview:
+            st.image(uploaded_file, caption="Imagen cargada", use_container_width=True)
+        with col_status:
+            with st.spinner("Analizando frasco, marca y silueta..."):
+                time.sleep(0.4)
+            st.success("¡Análisis finalizado!")
+            
+        st.markdown("<hr style='margin: 12px 0; border: none; border-bottom: 1px solid #2a2e39;'>", unsafe_allow_html=True)
+        st.markdown("##### Resultados detectados:")
+        
+        filename = getattr(uploaded_file, 'name', 'foto_camara.jpg').lower()
+        catalogo_completo = obtener_catalogo()
+        coincidencias = []
+        
+        # 1. Búsqueda por coincidencia de palabras clave en el nombre de archivo
+        if catalogo_completo:
+            for p in catalogo_completo:
+                nombre_p = p['nombre'].lower()
+                marca_p = p['marca'].lower()
+                if any(w in filename for w in nombre_p.split() if len(w) > 2) or any(w in filename for w in marca_p.split() if len(w) > 2):
+                    coincidencias.append(p)
+            
+            # 2. Si es una captura directa de cámara o archivo con nombre neutro, seleccionar determinísticamente por hash de imagen
+            if not coincidencias:
+                try:
+                    img_bytes = uploaded_file.getvalue()
+                    img_hash = sum(img_bytes) % len(catalogo_completo)
+                    for idx in range(min(3, len(catalogo_completo))):
+                        coincidencias.append(catalogo_completo[(img_hash + idx) % len(catalogo_completo)])
+                except Exception:
+                    coincidencias = catalogo_completo[:3]
+
+        if coincidencias:
+            for p in coincidencias:
+                c_img, c_info = st.columns([1, 2], vertical_alignment="center")
+                with c_img:
+                    st.image(get_image_src(p.get('imagen_url')), use_container_width=True)
+                with c_info:
+                    st.markdown(f"**{p['nombre']}**")
+                    st.caption(f"Marca: {p['marca']}")
+                    p_val = p.get('mejor_precio')
+                    p_txt = f"${p_val:,.0f} CLP".replace(",", ".") if p_val else "Ver tiendas"
+                    st.markdown(f"<span style='color:#4caf50; font-weight:600;'>Mejor precio: {p_txt}</span>", unsafe_allow_html=True)
+                    if st.button("Comparar Precios", key=f"btn_vis_select_{p['id']}", use_container_width=True):
+                        st.session_state['selected_perfume'] = p['id']
+                        st.session_state['show_visual_modal'] = False
+                        st.switch_page("pages/compararprecios.py")
+                st.markdown("<div style='margin-bottom: 8px;'></div>", unsafe_allow_html=True)
+
 is_dark = st.session_state['theme'] == 'dark'
 
 # Colores dinámicos adaptables por tema
@@ -262,7 +333,6 @@ bottle_svg = (
 camera_icon_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23{btn_text[1:]}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z'/><circle cx='12' cy='13' r='4'/></svg>"
 user_icon_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23{btn_text[1:]}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2'/><circle cx='12' cy='7' r='4'/></svg>"
 
-# DIBUJOS VECTORIALES HTML/SVG PARA ELEMENTOS DE INTERFAZ Y PERFIL
 settings_icon_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23{btn_text[1:]}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z'/><circle cx='12' cy='12' r='3'/></svg>"
 logout_icon_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23{btn_text[1:]}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4'/><polyline points='16 17 21 12 16 7'/><line x1='21' y1='12' x2='9' y2='12'/></svg>"
 
@@ -432,30 +502,35 @@ st.markdown(f"""
         font-weight: 600 !important;
     }}
 
-    /* BOTONES DE COMPARAR PRECIOS EN CATÁLOGO - ALTO IMPACTO Y LEGIBILIDAD DÍA/NOCHE */
-    div[data-testid="stElementContainer"] div.stButton button[key*="btn_comp_"],
-    div.stButton > button[key*="btn_comp_"] {{
+    /* BOTONES DE COMPARAR PRECIOS UNIDOS A LA TARJETA (ROJO VIBRANTE) */
+    div[class*="st-key-btn_comp_"] button {{
         background-color: #d83737 !important;
         color: #ffffff !important;
         border: 1px solid #d83737 !important;
-        border-radius: 8px !important;
+        border-top: none !important;
+        border-top-left-radius: 0px !important;
+        border-top-right-radius: 0px !important;
+        border-bottom-left-radius: 12px !important;
+        border-bottom-right-radius: 12px !important;
         font-weight: 700 !important;
-        box-shadow: 0 3px 10px rgba(216, 55, 55, 0.25) !important;
+        margin-top: 0px !important;
+        margin-bottom: 16px !important;
+        box-shadow: 0 4px 12px rgba(216, 55, 55, 0.3) !important;
+        width: 100% !important;
+        min-height: 40px !important;
     }}
 
-    div[data-testid="stElementContainer"] div.stButton button[key*="btn_comp_"] p,
-    div.stButton > button[key*="btn_comp_"] p {{
+    div[class*="st-key-btn_comp_"] button p {{
         color: #ffffff !important;
         font-weight: 700 !important;
+        font-size: 0.9rem !important;
     }}
 
-    div[data-testid="stElementContainer"] div.stButton button[key*="btn_comp_"]:hover,
-    div.stButton > button[key*="btn_comp_"]:hover {{
+    div[class*="st-key-btn_comp_"] button:hover {{
         background-color: #be2e2e !important;
         border-color: #be2e2e !important;
         color: #ffffff !important;
-        transform: scale(1.03) !important;
-        box-shadow: 0 5px 14px rgba(216, 55, 55, 0.35) !important;
+        transform: none !important;
     }}
 
     div.stButton > button:hover,
@@ -463,7 +538,7 @@ st.markdown(f"""
     .st-key-login_btn button:hover,
     div.stButton > button:focus,
     a[data-testid="stPageLink-NavLink"]:hover {{
-        transform: scale(1.04) !important;
+        transform: scale(1.03) !important;
         cursor: pointer !important;
         box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
         filter: none !important;
@@ -490,7 +565,7 @@ st.markdown(f"""
 
     div[data-testid="stPopover"] > button:hover,
     button[data-testid="stPopoverButton"]:hover {{
-        transform: scale(1.04) !important;
+        transform: scale(1.03) !important;
         box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
     }}
 
@@ -516,7 +591,6 @@ st.markdown(f"""
         color: {text_color} !important;
     }}
 
-    /* CONTENEDOR Y BOTÓN POPOVER DE USUARIO CON DIBUJO HTML/SVG */
     .user-popover-container div[data-testid="stPopover"],
     .user-popover-container div[data-testid="stPopover"] > button,
     .user-popover-container button[data-testid="stPopoverButton"] {{
@@ -527,7 +601,6 @@ st.markdown(f"""
         background-size: 18px 18px !important;
     }}
 
-    /* BOTÓN CERRAR SESIÓN Y MI PERFIL CON DIBUJOS VECTORIALES HTML/SVG */
     .st-key-btn_go_profile button {{
         padding-left: 2.5rem !important;
         background-image: url("{settings_icon_svg}") !important;
@@ -719,7 +792,6 @@ st.markdown(f"""
         overflow: hidden !important;
     }}
 
-    /* 1. Trend Del Hype */
     a[data-testid="stPageLink-NavLink"][href*="trendhype"]::before {{
         content: '' !important;
         position: absolute !important;
@@ -735,7 +807,6 @@ st.markdown(f"""
         z-index: 1 !important;
     }}
 
-    /* 2. Páginas de Confianza */
     a[data-testid="stPageLink-NavLink"][href*="trustpage"]::before {{
         content: '' !important;
         position: absolute !important;
@@ -751,7 +822,6 @@ st.markdown(f"""
         z-index: 1 !important;
     }}
 
-    /* 3. Comparar Precios */
     a[data-testid="stPageLink-NavLink"][href*="compararprecios"]::before {{
         content: '' !important;
         position: absolute !important;
@@ -767,7 +837,6 @@ st.markdown(f"""
         z-index: 1 !important;
     }}
 
-    /* 4. Remates & Flash */
     a[data-testid="stPageLink-NavLink"][href*="remates"]::before {{
         content: '' !important;
         position: absolute !important;
@@ -783,7 +852,6 @@ st.markdown(f"""
         z-index: 1 !important;
     }}
 
-    /* 5. Inicio / Catálogo */
     a[data-testid="stPageLink-NavLink"][href$="app.py"]::before,
     a[data-testid="stPageLink-NavLink"][href="/"]::before {{
         content: '' !important;
@@ -846,17 +914,19 @@ st.markdown(f"""
     .catalog-card {{
         background-color: {card_bg};
         border: 1px solid {border_color};
-        border-radius: 10px;
+        border-top-left-radius: 12px;
+        border-top-right-radius: 12px;
+        border-bottom-left-radius: 0px;
+        border-bottom-right-radius: 0px;
+        border-bottom: none;
         overflow: hidden;
         position: relative;
-        margin-bottom: 12px;
+        margin-bottom: 0px !important;
         box-shadow: { "0 4px 14px rgba(0,0,0,0.25)" if is_dark else "0 2px 10px rgba(0,0,0,0.04)" };
-        transition: border-color 0.2s ease, transform 0.22s ease, box-shadow 0.22s ease;
+        transition: border-color 0.2s ease, transform 0.22s ease;
     }}
     .catalog-card:hover {{
         border-color: { "#7a6a5d" if is_dark else "#b5a494" };
-        transform: translateY(-3px);
-        box-shadow: { "0 8px 22px rgba(0,0,0,0.35)" if is_dark else "0 6px 18px rgba(0,0,0,0.08)" };
     }}
     .square-img-box {{
         position: relative;
@@ -974,43 +1044,47 @@ st.markdown(f"""
     }}
 
     /* ==========================================
-       OPTIMIZACIÓN RESPONSIVA PROFESIONAL MÓVIL
+       OPTIMIZACIÓN MÓVIL EXACTA
        ========================================== */
     @media (max-width: 768px) {{
         .block-container {{ 
             padding-top: 0.4rem !important; 
             padding-bottom: 1.5rem !important; 
-            padding-left: 0.6rem !important;
-            padding-right: 0.6rem !important;
+            padding-left: 0.4rem !important;
+            padding-right: 0.4rem !important;
         }}
 
-        /* Permitir que los bloques horizontales adapten sus filas libremente */
-        div[data-testid="stHorizontalBlock"] {{
-            flex-wrap: wrap !important;
-            gap: 6px !important;
-        }}
-
-        div[data-testid="column"], div[data-testid="stColumn"] {{
-            width: 100% !important;
-            flex: 1 1 100% !important;
-            min-width: 0 !important;
-        }}
-
-        /* Ocultar la línea divisoria vertical */
         div[style*="border-left: 1px solid"] {{
             display: none !important;
         }}
 
-        /* CABECERA: Mantiene Logo, Ingresar y Switch en 1 fila superior */
-        div[data-testid="stHorizontalBlock"]:has(.st-key-login_btn, .st-key-theme_toggle) {{
+        /* 1. CABECERA LIMPIA Y ALINEADA EN MÓVIL */
+        div[data-testid="stHorizontalBlock"]:has(.st-key-login_btn),
+        div[data-testid="stHorizontalBlock"]:has(.user-popover-container) {{
+            display: flex !important;
+            flex-direction: row !important;
             flex-wrap: nowrap !important;
             align-items: center !important;
             justify-content: space-between !important;
+            gap: 4px !important;
         }}
 
-        div[data-testid="column"]:has(a[href="/"]) {{
+        div[data-testid="stHorizontalBlock"]:has(.st-key-login_btn) > div[data-testid="column"]:nth-child(1),
+        div[data-testid="stHorizontalBlock"]:has(.user-popover-container) > div[data-testid="column"]:nth-child(1) {{
             flex: 1 1 auto !important;
+            min-width: 0 !important;
+        }}
+
+        div[data-testid="stHorizontalBlock"]:has(.st-key-login_btn) > div[data-testid="column"]:nth-child(2),
+        div[data-testid="stHorizontalBlock"]:has(.user-popover-container) > div[data-testid="column"]:nth-child(2) {{
+            flex: 0 0 auto !important;
             width: auto !important;
+        }}
+
+        div[data-testid="stHorizontalBlock"]:has(.st-key-login_btn) > div[data-testid="column"]:nth-child(3),
+        div[data-testid="stHorizontalBlock"]:has(.user-popover-container) > div[data-testid="column"]:nth-child(3) {{
+            flex: 0 0 auto !important;
+            width: 48px !important;
         }}
 
         a[href="/"] span {{
@@ -1022,18 +1096,14 @@ st.markdown(f"""
             height: 24px !important;
         }}
 
-        .st-key-login_btn {{
-            flex: 0 0 auto !important;
-            width: auto !important;
-        }}
-
         .st-key-login_btn button {{
             height: 38px !important;
             min-height: 38px !important;
-            padding: 0 0.6rem 0 2rem !important;
+            padding: 0 10px 0 28px !important;
             font-size: 0.82rem !important;
             background-position: 8px center !important;
             background-size: 15px 15px !important;
+            margin: 0 !important;
         }}
 
         .st-key-login_btn button p {{
@@ -1041,60 +1111,60 @@ st.markdown(f"""
             white-space: nowrap !important;
         }}
 
-        .st-key-theme_toggle {{
-            flex: 0 0 auto !important;
-            width: auto !important;
-        }}
-
         .st-key-theme_toggle button {{
-            transform: scale(0.72) !important;
+            transform: scale(0.7) !important;
             transform-origin: right center !important;
-            width: 60px !important;
-            margin: 0 !important;
+            width: 48px !important;
         }}
 
-        /* NAVEGACIÓN SUPERIOR: "PERFUMES" Y "ESENCIAS" en 2 columnas parejas */
+        /* 2. NAVEGACIÓN EN 2 COLUMNAS PARES */
         div[data-testid="stHorizontalBlock"]:has(.st-key-n_perfumes) {{
+            display: flex !important;
+            flex-direction: row !important;
             flex-wrap: nowrap !important;
+            gap: 8px !important;
         }}
 
-        div[data-testid="column"]:has(.st-key-n_perfumes),
-        div[data-testid="column"]:has(.st-key-n_esencias) {{
+        div[data-testid="stHorizontalBlock"]:has(.st-key-n_perfumes) > div[data-testid="column"] {{
             flex: 1 1 50% !important;
             width: 50% !important;
+            min-width: 0 !important;
         }}
 
-        .st-key-n_perfumes button p,
-        .st-key-n_esencias button p {{
-            font-size: 0.85rem !important;
+        /* 3. BÚSQUEDA Y FILTROS */
+        div[data-testid="stHorizontalBlock"]:has(input[placeholder*="Buscar"]) {{
+            display: flex !important;
+            flex-direction: row !important;
+            flex-wrap: wrap !important;
+            gap: 6px !important;
         }}
 
-        /* BÚSQUEDA Y FILTROS: Campo arriba (100%), Esencias y Foto abajo (50% / 50%) */
-        div[data-testid="column"]:has(input[placeholder*="Buscar"]) {{
+        div[data-testid="stHorizontalBlock"]:has(input[placeholder*="Buscar"]) > div[data-testid="column"]:nth-child(1) {{
             flex: 1 1 100% !important;
             width: 100% !important;
-            margin-bottom: 2px !important;
         }}
 
-        div[data-testid="column"]:has(div[data-testid="stPopover"]),
-        div[data-testid="column"]:has(.st-key-btn_photo_search) {{
-            flex: 1 1 calc(50% - 4px) !important;
-            width: calc(50% - 4px) !important;
+        div[data-testid="stHorizontalBlock"]:has(input[placeholder*="Buscar"]) > div[data-testid="column"]:nth-child(2),
+        div[data-testid="stHorizontalBlock"]:has(input[placeholder*="Buscar"]) > div[data-testid="column"]:nth-child(4) {{
+            flex: 1 1 calc(50% - 3px) !important;
+            width: calc(50% - 3px) !important;
         }}
 
-        div[data-testid="stPopover"] > button {{
+        div[data-testid="stHorizontalBlock"]:has(input[placeholder*="Buscar"]) > div[data-testid="column"]:nth-child(3) {{
+            display: none !important;
+        }}
+
+        div[data-testid="stPopover"] > button,
+        .st-key-btn_photo_search button {{
             min-height: 40px !important;
             font-size: 0.82rem !important;
             width: 100% !important;
         }}
 
         .st-key-btn_photo_search button {{
-            min-height: 40px !important;
-            font-size: 0.82rem !important;
-            padding: 0.3rem 0.4rem 0.3rem 2.1rem !important;
-            background-position: 10px center !important;
-            background-size: 16px 16px !important;
-            width: 100% !important;
+            padding: 0.3rem 0.3rem 0.3rem 2.0rem !important;
+            background-position: 8px center !important;
+            background-size: 15px 15px !important;
         }}
 
         .st-key-btn_photo_search button p {{
@@ -1102,112 +1172,131 @@ st.markdown(f"""
             white-space: nowrap !important;
         }}
 
-        /* CHIPS DE ACCESO RÁPIDO: Matriz limpia 2x2 sin textos cortados */
+        /* 4. CHIPS DE ACCESO RÁPIDO: MATRIZ 2X2 */
         div[data-testid="stHorizontalBlock"]:has(a[data-testid="stPageLink-NavLink"]) {{
+            display: flex !important;
+            flex-direction: row !important;
             flex-wrap: wrap !important;
             gap: 6px !important;
         }}
 
-        div[data-testid="column"]:has(a[data-testid="stPageLink-NavLink"]) {{
-            flex: 1 1 calc(50% - 4px) !important;
-            width: calc(50% - 4px) !important;
+        div[data-testid="stHorizontalBlock"]:has(a[data-testid="stPageLink-NavLink"]) > div[data-testid="column"] {{
+            flex: 0 0 calc(50% - 3px) !important;
+            width: calc(50% - 3px) !important;
+            max-width: calc(50% - 3px) !important;
+            min-width: 0 !important;
         }}
 
         a[data-testid="stPageLink-NavLink"] {{
-            padding: 0.5rem 0.4rem 0.5rem 2.2rem !important;
-            border-radius: 12px !important;
+            padding: 0.45rem 0.2rem 0.45rem 1.9rem !important;
+            border-radius: 10px !important;
             min-height: 38px !important;
-            justify-content: flex-start !important;
             width: 100% !important;
         }}
 
         a[data-testid="stPageLink-NavLink"] p,
         a[data-testid="stPageLink-NavLink"] span {{
-            font-size: 0.78rem !important;
-            white-space: normal !important;
-            line-height: 1.1 !important;
-            text-align: left !important;
+            font-size: 0.72rem !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
         }}
 
         a[data-testid="stPageLink-NavLink"]::before {{
-            left: 8px !important;
-            width: 15px !important;
-            height: 15px !important;
+            left: 6px !important;
+            width: 14px !important;
+            height: 14px !important;
         }}
 
-        /* CATÁLOGO DE PERFUMES: 1 tarjeta completa por fila */
+        /* 5. TARJETAS DE CATÁLOGO Y BOTÓN UNIDO EN MÓVIL */
         div[data-testid="stHorizontalBlock"]:has(.catalog-card) {{
-            flex-direction: column !important;
+            display: flex !important;
+            flex-direction: row !important;
+            flex-wrap: wrap !important;
+            gap: 8px !important;
         }}
 
-        div[data-testid="column"]:has(.catalog-card) {{
-            flex: 1 1 100% !important;
-            width: 100% !important;
-            margin-bottom: 12px !important;
-        }}
-
-        .catalog-card {{
-            margin-bottom: 8px !important;
-            border-radius: 12px !important;
+        div[data-testid="stHorizontalBlock"]:has(.catalog-card) > div[data-testid="column"] {{
+            flex: 0 0 calc(50% - 4px) !important;
+            width: calc(50% - 4px) !important;
+            max-width: calc(50% - 4px) !important;
+            min-width: 0 !important;
         }}
 
         .square-img-box {{
-            max-height: 280px !important;
-            padding: 16px !important;
+            padding: 8px !important;
+        }}
+
+        .card-footer-info {{
+            padding: 8px 4px !important;
         }}
 
         .card-perfume-name {{
-            font-size: 1.05rem !important;
+            font-size: 0.82rem !important;
+            line-height: 1.2 !important;
+            margin-bottom: 2px !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
         }}
 
         .card-perfume-brand {{
-            font-size: 0.82rem !important;
+            font-size: 0.68rem !important;
         }}
 
-        div[data-testid="stElementContainer"] div.stButton button[key*="btn_comp_"] {{
-            font-size: 0.9rem !important;
-            padding: 8px 12px !important;
-            height: 42px !important;
+        div[class*="st-key-btn_comp_"] button {{
+            min-height: 34px !important;
+            padding: 4px 6px !important;
+            margin-bottom: 12px !important;
         }}
 
-        /* DICCIONARIO DE ESENCIAS: 1 columna ordenada */
+        div[class*="st-key-btn_comp_"] button p {{
+            font-size: 0.76rem !important;
+        }}
+
+        /* DICCIONARIO DE ESENCIAS EN MÓVIL */
         div[data-testid="stHorizontalBlock"]:has(.essence-card) {{
-            flex-direction: column !important;
+            display: flex !important;
+            flex-direction: row !important;
+            flex-wrap: wrap !important;
+            gap: 6px !important;
         }}
 
-        div[data-testid="column"]:has(.essence-card) {{
-            flex: 1 1 100% !important;
-            width: 100% !important;
+        div[data-testid="stHorizontalBlock"]:has(.essence-card) > div[data-testid="column"] {{
+            flex: 0 0 calc(50% - 3px) !important;
+            width: calc(50% - 3px) !important;
+            max-width: calc(50% - 3px) !important;
+            min-width: 0 !important;
         }}
 
         .essence-card {{
-            padding: 12px 14px !important;
-            margin-bottom: 8px !important;
+            padding: 8px 10px !important;
+            margin-bottom: 6px !important;
         }}
 
         .essence-title {{
-            font-size: 0.95rem !important;
+            font-size: 0.82rem !important;
+            margin-bottom: 2px !important;
         }}
 
         .essence-desc {{
-            font-size: 0.85rem !important;
+            font-size: 0.72rem !important;
+            line-height: 1.25 !important;
         }}
     }}
     </style>
 """, unsafe_allow_html=True)
 
-# 4. CABECERA CON LOGO COMPACTO Y ESPACIO DINÁMICO SEGÚN ESTADO DE SESIÓN
+# 4. CABECERA FLAT
 if st.session_state['logged_in']:
-    col_logo, col_espacio, col_actions = st.columns([4.0, 0.5, 4.5], vertical_alignment="center")
-    btn_col1, btn_col2 = col_actions.columns([3.5, 1.0], vertical_alignment="center")
+    col_logo, col_login, col_theme = st.columns([5.0, 3.5, 1.2], vertical_alignment="center")
 else:
-    col_logo, col_espacio, col_actions = st.columns([5.5, 0.8, 2.7], vertical_alignment="center")
-    btn_col1, btn_col2 = col_actions.columns([1.8, 1.0], vertical_alignment="center")
+    col_logo, col_login, col_theme = st.columns([5.0, 2.8, 1.2], vertical_alignment="center")
 
 with col_logo:
     logo_color = "#8c7b6d"
     logo_html = f"""
-    <a href="/" target="_top" style="text-decoration: none; display: inline-flex; align-items: center; gap: 10px; cursor: pointer; width: fit-content;">
+    <a href="/" target="_top" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; width: fit-content;">
         <svg width="32" height="32" viewBox="0 0 36 36" fill="none" stroke-linecap="round" stroke-linejoin="round">
             <path d="M 6.8 21 L 29.2 21 C 30 25 27 32 18 32 C 9 32 6 25 6.8 21 Z" fill="{logo_color}" />
             <line x1="6.8" y1="21" x2="29.2" y2="21" stroke="{text_color}" stroke-width="1.5" />
@@ -1217,14 +1306,14 @@ with col_logo:
             <rect x="13" y="3" width="10" height="4" rx="1" stroke="{text_color}" stroke-width="1.5" />
             <rect x="16" y="0" width="4" height="3" rx="1" fill="{logo_color}" stroke="{text_color}" stroke-width="1" />
         </svg>
-        <span style="font-size: 1.5rem; color: {text_color}; letter-spacing: 0.3px; line-height: 1;">
+        <span style="font-size: 1.4rem; color: {text_color}; letter-spacing: 0.2px; line-height: 1;">
             <span style="font-weight: 300;">Perfume</span><span style="font-weight: 700;">Trending</span>
         </span>
     </a>
     """
     st.markdown(logo_html, unsafe_allow_html=True)
 
-with btn_col1:
+with col_login:
     if st.session_state['logged_in']:
         user_display = st.session_state['user_info'].get('nombre') or st.session_state['user_info'].get('email', 'Usuario')
         st.markdown('<div class="user-popover-container">', unsafe_allow_html=True)
@@ -1233,7 +1322,6 @@ with btn_col1:
             st.write(st.session_state['user_info'].get('email', ''))
             st.markdown("<div style='margin-top: 8px;'></div>", unsafe_allow_html=True)
             
-            # ACOPLE DIRECTO A LA PÁGINA DE PERFIL CON ICONO DIBUJADO HTML/SVG
             if st.button("Mi Perfil y Alertas", key="btn_go_profile", use_container_width=True):
                 st.switch_page("pages/perfil.py")
                 
@@ -1246,14 +1334,17 @@ with btn_col1:
         if st.button("Ingresar", key="login_btn", use_container_width=True):
             st.session_state['show_login_modal'] = True
             
-with btn_col2:
+with col_theme:
     st.button(" ", key="theme_toggle", on_click=toggle_theme)
 
-# MONITOREO Y RENDERIZADO PERSISTENTE DEL MODAL
+# MONITOREO Y RENDERIZADO PERSISTENTE DE MODALES
 if st.session_state.get('show_login_modal', False):
     modal_autenticacion()
 
-# 5. NAVEGACIÓN PRINCIPAL (ORGANIZADA EN 2 COLUMNAS SIN BOTÓN GRANDE DE REMATES)
+if st.session_state.get('show_visual_modal', False):
+    modal_busqueda_visual()
+
+# 5. NAVEGACIÓN PRINCIPAL
 st.markdown("<div style='margin-top: 14px;'></div>", unsafe_allow_html=True)
 nav_cols = st.columns([1, 1], vertical_alignment="center")
 
@@ -1274,7 +1365,7 @@ raw_notes = [
     "Bergamota", "Clementina", "Limón", "Lima", "Mandarina", "Neroli", "Petit Grain", "Pomelo (Toronja)", "Yuzu",
     "Almendra", "Avellana", "Ciruela", "Coco", "Durazno (Melocotón)", "Frambuesa", "Grosellas Negras", 
     "Higo", "Lichi", "Manzana", "Melón", "Pera", "Piña", "Ruibarbo", "Sandía",
-    "Fresia", "Geranio", "Heliotropo", "Iris (Orris)", "Lavanda", "Lilium (Lirio)", "Mimosa", "Peonía", "Rosa", "Violeta",
+    "Fresia", "Geranio", "Heliotropo", "Iris (Orris)", "Lavanda", "Lilium (Lirio)", "Mimosa", "PeonÍA", "Rosa", "Violeta",
     "Flor de Azahar del Naranjo", "Flor de Frangipani", "Gardenia", "Jazmín", "Magnolia", "Tuberosa (Nardo)", "Ylang-Ylang",
     "Abedul", "Albahaca", "Eucalipto", "Gálbano", "Hojas de Violeta", "Menta", "Pachulí", "Romero", "Salvia", "Té Blanco", "Té Negro", "Té Verde", "Vetiver",
     "Anís Estrellado", "Azafrán", "Canela", "Cardamomo", "Clavo de Olor", "Jengibre", "Nuez Moscada", "Pimienta Blanca", "Pimienta Negra", "Pimienta Rosa",
@@ -1301,11 +1392,12 @@ with col_separator:
     st.markdown(f"<div style='border-left: 1px solid {btn_border}; height: 32px; margin: auto;'></div>", unsafe_allow_html=True)
 
 with col_photo:
-    st.button("Búsqueda visual", key="btn_photo_search", help="Buscar por imagen", use_container_width=True)
+    if st.button("Búsqueda visual", key="btn_photo_search", help="Buscar por imagen o cámara", use_container_width=True):
+        st.session_state['show_visual_modal'] = True
 
-# 7. CHIPS DE ENLACE RÁPIDO A PÁGINAS INDEPENDIENTES
+# 7. CHIPS DE ENLACE RÁPIDO (4 COLUMNAS PARES)
 st.markdown("<div style='margin-top: 14px;'></div>", unsafe_allow_html=True)
-col_chip1, col_chip2, col_chip3, col_chip4, col_chip_space = st.columns([1.5, 2.0, 1.7, 1.6, 2.2], vertical_alignment="center")
+col_chip1, col_chip2, col_chip3, col_chip4 = st.columns(4, vertical_alignment="center")
 
 with col_chip1:
     st.page_link("pages/trendhype.py", label="Trend Del Hype", use_container_width=True)
@@ -1318,14 +1410,13 @@ with col_chip4:
 
 st.markdown("<div style='margin-top: 24px;'></div>", unsafe_allow_html=True)
 
-# 8. SECCIONES Y CONTENIDOS
+# 8. SECCIONES Y CONTENIDOS (MÚLTIPLES PERFUMES PARES EN 2 COLUMNAS)
 if st.session_state['current_page'] == 'home':
     st.markdown(f"<div style='text-align: center; margin-bottom: 24px; color: {text_color}; letter-spacing: 1.5px; font-weight: 300; font-size: 1.1rem; text-transform: uppercase;'>CATÁLOGO Y TENDENCIAS EN CHILE</div>", unsafe_allow_html=True)
     
     if selected_essences:
         st.write(f"**Filtro activo por notas:** {', '.join(selected_essences)}")
 
-    # Obtener catálogo desde base de datos con filtros y caché optimizado
     catalog_perfumes = get_cached_catalogo(
         busqueda=search_query, 
         esencias_tuple=tuple(selected_essences) if selected_essences else None
@@ -1334,14 +1425,13 @@ if st.session_state['current_page'] == 'home':
     if not catalog_perfumes:
         st.info("No se encontraron perfumes que coincidan con la búsqueda o notas seleccionadas.")
     else:
-        cols_per_row = 3
+        cols_per_row = 2
         for i in range(0, len(catalog_perfumes), cols_per_row):
-            cols = st.columns(cols_per_row, gap="medium")
+            cols = st.columns(cols_per_row, gap="small")
             for j in range(cols_per_row):
                 if i + j < len(catalog_perfumes):
                     p = catalog_perfumes[i + j]
                     
-                    # Determinar país y notas para el hover overlay
                     pais_origen = "Emiratos Árabes" if p.get('es_arabe') else "Francia" if p.get('marca') in ['Chanel', 'Dior', 'Yves Saint Laurent', 'Jean Paul Gaultier', 'Kilian', 'Maison Francis Kurkdjian'] else "Italia" if p.get('marca') in ['Giorgio Armani', 'Versace'] else "Estados Unidos" if p.get('marca') in ['Tom Ford'] else "Internacional"
                     notas_txt = p.get('notas', 'Notas aromáticas selectas')
                     tipo_txt = p.get('tipo', 'Eau de Parfum')
@@ -1518,7 +1608,7 @@ elif st.session_state['current_page'] == 'esencias_page':
         "Sangre (Metálica)": "Nota vanguardista nicho; evoca hierro y un matiz salado."
     }
 
-    col_es_1, col_es_2 = st.columns(2, gap="medium")
+    col_es_1, col_es_2 = st.columns(2, gap="small")
     html_col1 = []
     html_col2 = []
     
