@@ -263,6 +263,7 @@ trend_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg'
 shield_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d83737' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/><polyline points='9 12 11 14 15 10'/></svg>"
 tag_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d83737' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z'/><circle cx='7' cy='7' r='1.5' fill='%23d83737'/></svg>"
 home_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d83737' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z'/><polyline points='9 22 9 12 15 12 15 22'/></svg>"
+flame_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d83737' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 3.5z'/></svg>"
 
 # 2. SISTEMA DE SONIDO Y EVENTOS DE TARJETAS
 js_color_script = f"""
@@ -677,6 +678,7 @@ st.markdown(f"""
     a[data-testid="stPageLink-NavLink"][href*="trendhype"],
     a[data-testid="stPageLink-NavLink"][href*="trustpage"],
     a[data-testid="stPageLink-NavLink"][href*="compararprecios"],
+    a[data-testid="stPageLink-NavLink"][href*="remates"],
     a[data-testid="stPageLink-NavLink"][href$="app.py"],
     a[data-testid="stPageLink-NavLink"][href="/"] {{
         position: relative !important;
@@ -733,7 +735,23 @@ st.markdown(f"""
         z-index: 1 !important;
     }}
 
-    /* 4. Inicio / Catálogo */
+    /* 4. Remates & Flash */
+    a[data-testid="stPageLink-NavLink"][href*="remates"]::before {{
+        content: '' !important;
+        position: absolute !important;
+        left: 14px !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        width: 17px !important;
+        height: 17px !important;
+        background-image: url("{flame_red_svg}") !important;
+        background-repeat: no-repeat !important;
+        background-size: contain !important;
+        background-position: center !important;
+        z-index: 1 !important;
+    }}
+
+    /* 5. Inicio / Catálogo */
     a[data-testid="stPageLink-NavLink"][href$="app.py"]::before,
     a[data-testid="stPageLink-NavLink"][href="/"]::before {{
         content: '' !important;
@@ -989,7 +1007,7 @@ nav_cols = st.columns([1, 1, 1], vertical_alignment="center")
 with nav_cols[0]: 
     st.button("PERFUMES", key="n_perfumes", on_click=navigate_to, args=('home',), use_container_width=True)
 with nav_cols[1]: 
-    st.button("REMATES", key="n_remates", on_click=lambda: st.switch_page("pages/trendhype.py"), use_container_width=True)
+    st.button("REMATES", key="n_remates", on_click=lambda: st.switch_page("pages/remates.py"), use_container_width=True)
 with nav_cols[2]: 
     st.button("ESENCIAS", key="n_esencias", on_click=navigate_to, args=('esencias_page',), use_container_width=True)
 
@@ -1036,7 +1054,7 @@ with col_photo:
 
 # 7. CHIPS DE ENLACE RÁPIDO A PÁGINAS INDEPENDIENTES
 st.markdown("<div style='margin-top: 14px;'></div>", unsafe_allow_html=True)
-col_chip1, col_chip2, col_chip3, col_chip_space = st.columns([1.5, 2.0, 1.7, 3.8], vertical_alignment="center")
+col_chip1, col_chip2, col_chip3, col_chip4, col_chip_space = st.columns([1.5, 2.0, 1.7, 1.6, 2.2], vertical_alignment="center")
 
 with col_chip1:
     st.page_link("pages/trendhype.py", label="Trend Del Hype", use_container_width=True)
@@ -1044,6 +1062,8 @@ with col_chip2:
     st.page_link("pages/trustpage.py", label="Páginas de Confianza", use_container_width=True)
 with col_chip3:
     st.page_link("pages/compararprecios.py", label="Comparar Precios", use_container_width=True)
+with col_chip4:
+    st.page_link("pages/remates.py", label="Remates & Flash", use_container_width=True)
 
 st.markdown("<div style='margin-top: 24px;'></div>", unsafe_allow_html=True)
 
