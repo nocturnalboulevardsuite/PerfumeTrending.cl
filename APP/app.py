@@ -101,9 +101,9 @@ if 'show_login_modal' not in st.session_state:
 if 'show_visual_modal' not in st.session_state:
     st.session_state['show_visual_modal'] = False
 
-# Resetear modales automáticamente al cargar o cambiar vistas
-if 'last_loaded_page' not in st.session_state:
-    st.session_state['last_loaded_page'] = 'home'
+# Resetear modales automáticamente al cargar la aplicación por primera vez
+if 'app_init_done' not in st.session_state:
+    st.session_state['app_init_done'] = True
     st.session_state['show_login_modal'] = False
     st.session_state['show_visual_modal'] = False
 
@@ -121,13 +121,14 @@ if 'otp_contact' not in st.session_state:
 if 'otp_secret' not in st.session_state:
     st.session_state['otp_secret'] = ""
 
-def toggle_theme():
-    st.session_state['theme'] = 'dark' if st.session_state['theme'] == 'light' else 'light'
-
 def reset_modals():
     """Función para garantizar que ningún modal emergente quede abierto por error."""
     st.session_state['show_login_modal'] = False
     st.session_state['show_visual_modal'] = False
+
+def toggle_theme():
+    st.session_state['theme'] = 'dark' if st.session_state['theme'] == 'light' else 'light'
+    reset_modals()
 
 def navigate_to(page, perfume_data=None):
     st.session_state['current_page'] = page
@@ -171,11 +172,13 @@ def modal_autenticacion():
                 if btn_send:
                     if not contact_input.strip():
                         st.error("Por favor ingresa un correo electrónico o teléfono válido.")
+                        st.session_state['show_login_modal'] = True
                     else:
                         code = str(random.randint(100000, 999999))
                         st.session_state['otp_code_sent'] = True
                         st.session_state['otp_contact'] = contact_input.strip()
                         st.session_state['otp_secret'] = code
+                        st.session_state['show_login_modal'] = True
                         st.rerun()
         else:
             st.info(f"Un código de verificación ha sido enviado a **{st.session_state['otp_contact']}**")
@@ -203,11 +206,13 @@ def modal_autenticacion():
                         st.rerun()
                     else:
                         st.error("Código incorrecto. Revisa e intenta nuevamente.")
+                        st.session_state['show_login_modal'] = True
                         
             if st.button("Cambiar correo/teléfono", key="btn_reset_otp", use_container_width=True):
                 st.session_state['otp_code_sent'] = False
                 st.session_state['otp_contact'] = ""
                 st.session_state['otp_secret'] = ""
+                st.session_state['show_login_modal'] = True
                 st.rerun()
 
     # OPCIÓN 2: CON TRADICIONAL CORREO / CONTRASEÑA
@@ -221,6 +226,7 @@ def modal_autenticacion():
             if btn_login:
                 if not login_email or not login_pass:
                     st.error("Por favor ingresa tu correo y contraseña.")
+                    st.session_state['show_login_modal'] = True
                 elif verificar_usuario:
                     exito, usuario_data = verificar_usuario(login_email, login_pass)
                     if exito:
@@ -230,8 +236,10 @@ def modal_autenticacion():
                         st.rerun()
                     else:
                         st.error("Correo o contraseña incorrectos.")
+                        st.session_state['show_login_modal'] = True
                 else:
                     st.info("Función de backend en proceso de actualización.")
+                    st.session_state['show_login_modal'] = True
 
     # OPCIÓN 3: REGISTRO NUEVO USUARIO
     with tab_registro:
@@ -246,22 +254,29 @@ def modal_autenticacion():
             if btn_reg:
                 if not reg_nombre or not reg_email or not reg_pass1:
                     st.error("Todos los campos son obligatorios.")
+                    st.session_state['show_login_modal'] = True
                 elif reg_pass1 != reg_pass2:
                     st.error("Las contraseñas no coinciden.")
+                    st.session_state['show_login_modal'] = True
                 elif len(reg_pass1) < 6:
                     st.warning("La contraseña debe tener al menos 6 caracteres.")
+                    st.session_state['show_login_modal'] = True
                 elif crear_usuario:
                     exito, msg = crear_usuario(reg_nombre, reg_email, reg_pass1)
                     if exito:
                         st.success("¡Cuenta creada con éxito! Ya puedes iniciar sesión.")
+                        st.session_state['show_login_modal'] = True
                     else:
                         st.error(msg)
+                        st.session_state['show_login_modal'] = True
                 else:
                     st.info("Función de backend en proceso de actualización.")
+                    st.session_state['show_login_modal'] = True
 
     st.markdown(f"<hr style='margin: 14px 0; border: none; border-bottom: 1px solid {btn_border};'>", unsafe_allow_html=True)
     if st.button("Cerrar Ventana", key="btn_close_auth_modal", use_container_width=True):
         st.session_state['show_login_modal'] = False
+        st.session_state['show_visual_modal'] = False
         st.rerun()
 
 # MODAL FLOTANTE PARA BÚSQUEDA VISUAL CON DIBUJOS HTML VECTORIALES
@@ -365,7 +380,6 @@ def modal_busqueda_visual():
                     if st.button("Comparar Precios", key=f"btn_vis_select_{p['id']}", use_container_width=True):
                         st.session_state['selected_perfume'] = p['id']
                         reset_modals()
-                        st.session_state['last_loaded_page'] = 'compararprecios'
                         st.switch_page("pages/compararprecios.py")
                 st.markdown("<div style='margin-bottom: 8px;'></div>", unsafe_allow_html=True)
 
@@ -376,10 +390,12 @@ def modal_busqueda_visual():
 
 # 3. RENDERIZADO EXCLUSIVO DE MODALES
 if st.session_state.get('show_login_modal', False):
+    st.session_state['show_login_modal'] = False
     st.session_state['show_visual_modal'] = False
     modal_autenticacion()
 elif st.session_state.get('show_visual_modal', False):
     st.session_state['show_login_modal'] = False
+    st.session_state['show_visual_modal'] = False
     modal_busqueda_visual()
 
 # Posicionamiento del Switch de Tema
@@ -1501,7 +1517,6 @@ if st.session_state['current_page'] == 'home':
                         if st.button("Comparar Precios", key=f"btn_comp_{p['id']}", use_container_width=True):
                             st.session_state['selected_perfume'] = p['id']
                             reset_modals()
-                            st.session_state['last_loaded_page'] = 'compararprecios'
                             st.switch_page("pages/compararprecios.py")
 
 elif st.session_state['current_page'] == 'esencias_page':
