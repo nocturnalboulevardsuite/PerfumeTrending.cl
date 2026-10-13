@@ -4,6 +4,7 @@ import pandas as pd
 import sys
 import os
 import base64
+import random
 
 # Configurar rutas para importar backend
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -91,6 +92,14 @@ if 'logged_in' not in st.session_state:
 if 'user_info' not in st.session_state:
     st.session_state['user_info'] = None
 
+# ESTADOS PARA INICIO POR CÓDIGO (OTP)
+if 'otp_code_sent' not in st.session_state:
+    st.session_state['otp_code_sent'] = False
+if 'otp_contact' not in st.session_state:
+    st.session_state['otp_contact'] = ""
+if 'otp_secret' not in st.session_state:
+    st.session_state['otp_secret'] = ""
+
 def toggle_theme():
     st.session_state['theme'] = 'dark' if st.session_state['theme'] == 'light' else 'light'
 
@@ -102,8 +111,60 @@ def navigate_to(page, perfume_data=None):
 # MODAL FLOTANTE DE INICIO DE SESIÓN Y REGISTRO
 @st.dialog("Acceso a PerfumeTrending")
 def modal_autenticacion():
-    tab_login, tab_registro = st.tabs(["Iniciar Sesión", "Registrarse"])
+    tab_codigo, tab_login, tab_registro = st.tabs(["Inicio por Código", "Iniciar Sesión", "Registrarse"])
     
+    # OPCIÓN PREDETERMINADA: INICIO POR CÓDIGO
+    with tab_codigo:
+        st.markdown("#### Ingresa con tu Correo o Teléfono")
+        
+        if not st.session_state['otp_code_sent']:
+            contact_input = st.text_input("Correo electrónico o número de teléfono", key="otp_contact_input", placeholder="ejemplo@correo.cl o +56912345678")
+            
+            if st.button("Enviar código de verificación", key="btn_send_otp", use_container_width=True):
+                if not contact_input.strip():
+                    st.error("Por favor ingresa un correo electrónico o teléfono válido.")
+                else:
+                    code = str(random.randint(100000, 999999))
+                    st.session_state['otp_code_sent'] = True
+                    st.session_state['otp_contact'] = contact_input.strip()
+                    st.session_state['otp_secret'] = code
+                    st.rerun()
+        else:
+            st.info(f"Un código de verificación ha sido enviado a **{st.session_state['otp_contact']}**")
+            st.caption(f"*(Código de prueba rápido: **{st.session_state['otp_secret']}**)*")
+            
+            input_code = st.text_input("Ingresa el código de 6 dígitos", key="otp_code_input", placeholder="123456", max_chars=6)
+            
+            col_c1, col_c2 = st.columns(2)
+            with col_c1:
+                if st.button("Verificar e Ingresar", key="btn_verify_otp", use_container_width=True):
+                    if input_code.strip() == st.session_state['otp_secret']:
+                        contact_str = st.session_state['otp_contact']
+                        nombre_user = contact_str.split('@')[0] if '@' in contact_str else contact_str
+                        
+                        st.session_state['logged_in'] = True
+                        st.session_state['user_info'] = {
+                            'nombre': nombre_user.capitalize(),
+                            'email': contact_str
+                        }
+                        
+                        # Limpiar estado del código
+                        st.session_state['otp_code_sent'] = False
+                        st.session_state['otp_contact'] = ""
+                        st.session_state['otp_secret'] = ""
+                        st.success("¡Inicio de sesión exitoso!")
+                        st.rerun()
+                    else:
+                        st.error("Código incorrecto. Revisa e intenta nuevamente.")
+                        
+            with col_c2:
+                if st.button("Cambiar correo/teléfono", key="btn_reset_otp", use_container_width=True):
+                    st.session_state['otp_code_sent'] = False
+                    st.session_state['otp_contact'] = ""
+                    st.session_state['otp_secret'] = ""
+                    st.rerun()
+
+    # OPCIÓN 2: CON TRADICIONAL CORREO / CONTRASEÑA
     with tab_login:
         st.markdown("#### Ingresa a tu cuenta")
         login_email = st.text_input("Correo Electrónico", key="login_email_input", placeholder="usuario@correo.cl")
@@ -124,6 +185,7 @@ def modal_autenticacion():
             else:
                 st.info("Función de backend en proceso de actualización.")
 
+    # OPCIÓN 3: REGISTRO NUEVO USUARIO
     with tab_registro:
         st.markdown("#### Crea una cuenta nueva")
         reg_nombre = st.text_input("Nombre completo", key="reg_nombre_input", placeholder="Juan Pérez")
