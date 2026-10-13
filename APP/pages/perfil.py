@@ -47,7 +47,7 @@ def clean_html(html_str: str) -> str:
 def get_image_src(img_path_or_url):
     """Retorna URL remota o data URI en base64 para imágenes locales."""
     if not img_path_or_url:
-        return "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=500&q=80"
+        return ""
     
     if img_path_or_url.startswith("http://") or img_path_or_url.startswith("https://") or img_path_or_url.startswith("data:"):
         return img_path_or_url
@@ -81,18 +81,10 @@ if 'theme' not in st.session_state:
 
 # ESTADOS DE AUTENTICACIÓN Y CONTROL DE MODAL
 if 'logged_in' not in st.session_state:
-    st.session_state['logged_in'] = True  # Para vista directa de perfil
+    st.session_state['logged_in'] = False
 
-if 'user_info' not in st.session_state or st.session_state['user_info'] is None:
-    st.session_state['user_info'] = {
-        'nombre': 'Carlos Mendoza',
-        'email': 'carlos.mendoza@ejemplo.cl',
-        'telefono': '+56 9 8765 4321',
-        'bio': 'Coleccionista de perfumes de nicho y de diseñador. Buscando siempre el mejor precio en tiendas chilenas.',
-        'foto_perfil': 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&q=80',
-        'alerta_email': True,
-        'umbral_descuento': 10
-    }
+if 'user_info' not in st.session_state:
+    st.session_state['user_info'] = None
 
 if 'show_login_modal' not in st.session_state:
     st.session_state['show_login_modal'] = False
@@ -144,10 +136,20 @@ def modal_autenticacion():
                 
                 if btn_verify:
                     if input_code.strip() == st.session_state['otp_secret']:
-                        contact_str = st.session_state['otp_contact']
+                        contact_str = st.session_state['otp_contact'].strip()
                         st.session_state['logged_in'] = True
-                        st.session_state['user_info']['email'] = contact_str if "@" in contact_str else st.session_state['user_info']['email']
-                        st.session_state['user_info']['telefono'] = contact_str if "@" not in contact_str else st.session_state['user_info']['telefono']
+                        
+                        is_email = "@" in contact_str
+                        st.session_state['user_info'] = {
+                            'nombre': '',
+                            'email': contact_str if is_email else '',
+                            'telefono': contact_str if not is_email else '',
+                            'bio': '',
+                            'foto_perfil': '',
+                            'alerta_email': is_email,
+                            'umbral_descuento': 10
+                        }
+                        
                         st.session_state['otp_code_sent'] = False
                         st.session_state['otp_contact'] = ""
                         st.session_state['otp_secret'] = ""
@@ -176,14 +178,30 @@ def modal_autenticacion():
                     exito, usuario_data = verificar_usuario(login_email, login_pass)
                     if exito:
                         st.session_state['logged_in'] = True
-                        st.session_state['user_info'].update(usuario_data)
+                        st.session_state['user_info'] = {
+                            'nombre': usuario_data.get('nombre', ''),
+                            'email': usuario_data.get('email', login_email),
+                            'telefono': usuario_data.get('telefono', ''),
+                            'bio': usuario_data.get('bio', ''),
+                            'foto_perfil': usuario_data.get('foto_perfil', ''),
+                            'alerta_email': True,
+                            'umbral_descuento': 10
+                        }
                         st.session_state['show_login_modal'] = False
                         st.rerun()
                     else:
                         st.error("Correo o contraseña incorrectos.")
                 else:
                     st.session_state['logged_in'] = True
-                    st.session_state['user_info']['email'] = login_email
+                    st.session_state['user_info'] = {
+                        'nombre': '',
+                        'email': login_email,
+                        'telefono': '',
+                        'bio': '',
+                        'foto_perfil': '',
+                        'alerta_email': True,
+                        'umbral_descuento': 10
+                    }
                     st.session_state['show_login_modal'] = False
                     st.rerun()
 
@@ -206,11 +224,35 @@ def modal_autenticacion():
                 elif crear_usuario:
                     exito, msg = crear_usuario(reg_nombre, reg_email, reg_pass1)
                     if exito:
-                        st.success("¡Cuenta creada con éxito! Ya puedes iniciar sesión.")
+                        st.session_state['logged_in'] = True
+                        st.session_state['user_info'] = {
+                            'nombre': reg_nombre,
+                            'email': reg_email,
+                            'telefono': '',
+                            'bio': '',
+                            'foto_perfil': '',
+                            'alerta_email': True,
+                            'umbral_descuento': 10
+                        }
+                        st.session_state['show_login_modal'] = False
+                        st.success("¡Cuenta creada con éxito!")
+                        st.rerun()
                     else:
                         st.error(msg)
                 else:
-                    st.success("¡Cuenta creada con éxito! Ya puedes iniciar sesión.")
+                    st.session_state['logged_in'] = True
+                    st.session_state['user_info'] = {
+                        'nombre': reg_nombre,
+                        'email': reg_email,
+                        'telefono': '',
+                        'bio': '',
+                        'foto_perfil': '',
+                        'alerta_email': True,
+                        'umbral_descuento': 10
+                    }
+                    st.session_state['show_login_modal'] = False
+                    st.success("¡Cuenta creada con éxito!")
+                    st.rerun()
 
 is_dark = st.session_state['theme'] == 'dark'
 
@@ -236,7 +278,7 @@ static_icon_pos = "12px center" if is_dark else "calc(100% - 12px) center"
 static_icon_svg = (
     "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='4'/><line x1='12' y1='1' x2='12' y2='3'/><line x1='12' y1='21' x2='12' y2='23'/><line x1='4.22' y1='4.22' x2='5.64' y2='5.64'/><line x1='18.36' y1='18.36' x2='19.78' y2='19.78'/><line x1='1' y1='12' x2='3' y2='12'/><line x1='21' y1='12' x2='23' y2='12'/><line x1='4.22' y1='19.78' x2='5.64' y2='18.36'/><line x1='18.36' y1='5.64' x2='19.78' y2='4.22'/></svg>"
     if is_dark else
-    "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z'/></svg>"
+    "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M21 12.79A9 9 0 0 1 11.21 3 7 7 0 0 0 21 12.79z'/></svg>"
 )
 
 bottle_svg = (
@@ -247,7 +289,7 @@ bottle_svg = (
 
 user_icon_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23{btn_text[1:]}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2'/><circle cx='12' cy='7' r='4'/></svg>"
 
-# ICONOS VECTORIALES DE ALTA PRECISIÓN (ILUSTRATIVOS SVG)
+# ICONOS VECTORIALES DE ALTA PRECISIÓN
 trend_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d83737' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='23 6 13.5 15.5 8.5 10.5 1 18'/><polyline points='17 6 23 6 23 12'/></svg>"
 shield_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d83737' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/><polyline points='9 12 11 14 15 10'/></svg>"
 tag_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d83737' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z'/><circle cx='7' cy='7' r='1.5' fill='%23d83737'/></svg>"
@@ -514,6 +556,8 @@ st.markdown(f"""
         border-radius: 50%;
         object-fit: cover;
         border: 3px solid #8c7b6d;
+        background-color: {input_bg};
+        padding: 4px;
     }}
 
     /* TARJETAS DE FAVORITOS Y MONITOREO */
@@ -544,13 +588,14 @@ with col_logo:
     st.markdown(logo_html, unsafe_allow_html=True)
 
 with btn_col1:
-    if st.session_state['logged_in']:
-        user_display = st.session_state['user_info'].get('nombre') or st.session_state['user_info'].get('email', 'Usuario')
-        with st.popover(f"{user_display}", use_container_width=True):
+    if st.session_state['logged_in'] and st.session_state['user_info']:
+        u_header_display = st.session_state['user_info'].get('nombre') or st.session_state['user_info'].get('email') or st.session_state['user_info'].get('telefono') or 'Mi Cuenta'
+        with st.popover(f"{u_header_display}", use_container_width=True):
             st.write(f"**Conectado como:**")
-            st.write(st.session_state['user_info'].get('email', ''))
+            st.write(st.session_state['user_info'].get('email') or st.session_state['user_info'].get('telefono') or 'Usuario')
             if st.button("Cerrar Sesión", key="btn_logout", use_container_width=True):
                 st.session_state['logged_in'] = False
+                st.session_state['user_info'] = None
                 st.rerun()
     else:
         if st.button("Ingresar", key="login_btn", use_container_width=True):
@@ -588,48 +633,63 @@ with col_title_back:
 
 st.markdown("<div style='margin-top: 16px;'></div>", unsafe_allow_html=True)
 
-# VERIFICACIÓN DE INICIO DE SESIÓN
-if not st.session_state['logged_in']:
-    st.warning("Debes iniciar sesión para personalizar tu perfil y administrar tus fragancias monitoreadas.")
+# VERIFICACIÓN DE INICIO DE SESIÓN REAL
+if not st.session_state['logged_in'] or not st.session_state.get('user_info'):
+    st.info("Debes iniciar sesión para personalizar tu perfil y administrar tus fragancias monitoreadas.")
     if st.button("Ingresar a mi cuenta", key="btn_must_login"):
         st.session_state['show_login_modal'] = True
         st.rerun()
     st.stop()
 
-# DATOS DEL USUARIO
+# EXTRAER DATOS REALES REGISTRADOS EN LA SESIÓN (SIN DUMMIES)
 u_info = st.session_state['user_info']
-u_nombre = u_info.get('nombre', 'Usuario PerfumeTrending')
-u_email = u_info.get('email', 'correo@ejemplo.cl')
-u_telefono = u_info.get('telefono', '+56 9 1234 5678')
-u_bio = u_info.get('bio', 'Apasionado por los perfumes y cazador de las mejores ofertas en tiendas de Chile.')
-u_foto = u_info.get('foto_perfil', 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&q=80')
-u_alerta = u_info.get('alerta_email', True)
+u_nombre = u_info.get('nombre', '').strip()
+u_email = u_info.get('email', '').strip()
+u_telefono = u_info.get('telefono', '').strip()
+u_bio = u_info.get('bio', '').strip()
+u_foto = u_info.get('foto_perfil', '').strip()
+u_alerta = u_info.get('alerta_email', False)
 
-# TARJETA RESUMEN DEL PERFIL (USANDO ICONOS VECTORIALES)
-badge_alerta = f"<span style='background: {'rgba(34, 197, 94, 0.15)' if is_dark else '#e8f5e9'}; color: {'#4ade80' if is_dark else '#2e7d32'}; border: 1px solid {'rgba(74, 222, 128, 0.35)' if is_dark else 'rgba(46, 125, 50, 0.3)'}; font-size: 0.78rem; font-weight: 700; padding: 5px 12px; border-radius: 6px;'>{svg_bell_active} ALERTAS GMAIL ACTIVADAS</span>" if u_alerta else f"<span style='background: {btn_border}; color: {subtext_color}; font-size: 0.78rem; font-weight: 600; padding: 5px 12px; border-radius: 6px;'>{svg_bell_off} ALERTAS DESACTIVADAS</span>"
+# SILUETA VECTORIAL O FOTO PERSONALIZADA
+default_avatar_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238c7b6d' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'><path d='M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2'/><circle cx='12' cy='7' r='4'/></svg>"
+avatar_src = get_image_src(u_foto) if u_foto else default_avatar_svg
+
+# FORMATEO DINÁMICO DE TEXTOS SEGÚN DATOS DISPONIBLES
+u_nombre_display = u_nombre if u_nombre else "Usuario Registrado"
+u_email_display = u_email if u_email else "<i style='opacity:0.6;'>Sin correo registrado</i>"
+u_telefono_display = u_telefono if u_telefono else "<i style='opacity:0.6;'>Sin teléfono registrado</i>"
+u_bio_display = u_bio if u_bio else "<i style='opacity:0.7;'>Aún no has agregado una biografía. Completa tus datos personales más abajo en la pestaña 'Editar Datos Personales'.</i>"
+
+# BADGE DE ALERTA DINÁMICO
+if u_email and u_alerta:
+    badge_alerta = f"<span style='background: {'rgba(34, 197, 94, 0.15)' if is_dark else '#e8f5e9'}; color: {'#4ade80' if is_dark else '#2e7d32'}; border: 1px solid {'rgba(74, 222, 128, 0.35)' if is_dark else 'rgba(46, 125, 50, 0.3)'}; font-size: 0.78rem; font-weight: 700; padding: 5px 12px; border-radius: 6px;'>{svg_bell_active} ALERTAS GMAIL ACTIVADAS</span>"
+elif u_email and not u_alerta:
+    badge_alerta = f"<span style='background: {btn_border}; color: {subtext_color}; font-size: 0.78rem; font-weight: 600; padding: 5px 12px; border-radius: 6px;'>{svg_bell_off} ALERTAS DESACTIVADAS</span>"
+else:
+    badge_alerta = f"<span style='background: {btn_border}; color: {subtext_color}; font-size: 0.78rem; font-weight: 600; padding: 5px 12px; border-radius: 6px;'>{svg_bell_off} AGREGA UN CORREO PARA ALERTAS</span>"
 
 profile_card_html = f"""
 <div class="profile-summary-card">
-    <img src="{u_foto}" class="profile-avatar-img" alt="{u_nombre}">
+    <img src="{avatar_src}" class="profile-avatar-img" alt="{u_nombre_display}">
     <div style="flex-grow: 1;">
         <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px;">
             <div>
-                <h2 style="margin: 0 0 4px 0; color: {text_color}; font-size: 1.5rem; font-weight: 700;">{u_nombre}</h2>
+                <h2 style="margin: 0 0 4px 0; color: {text_color}; font-size: 1.5rem; font-weight: 700;">{u_nombre_display}</h2>
                 <div style="color: {subtext_color}; font-size: 0.9rem; margin-bottom: 8px; display: flex; align-items: center; flex-wrap: wrap;">
-                    {svg_mail} <span>{u_email}</span> &nbsp;&bull;&nbsp; {svg_phone} <span>{u_telefono}</span>
+                    {svg_mail} <span>{u_email_display}</span> &nbsp;&bull;&nbsp; {svg_phone} <span>{u_telefono_display}</span>
                 </div>
             </div>
             <div>{badge_alerta}</div>
         </div>
         <p style="margin: 6px 0 0 0; color: {text_color}; font-size: 0.92rem; line-height: 1.5;">
-            {u_bio}
+            {u_bio_display}
         </p>
     </div>
 </div>
 """
 st.markdown(clean_html(profile_card_html), unsafe_allow_html=True)
 
-# PESTAÑAS DE EDICIÓN Y MONITOREO CON NOMBRES ELEGANTES
+# PESTAÑAS DE EDICIÓN Y MONITOREO
 tab_favs, tab_edit, tab_notif = st.tabs([
     "Fragancias Monitoreadas", 
     "Editar Datos Personales", 
@@ -640,7 +700,7 @@ tab_favs, tab_edit, tab_notif = st.tabs([
 with tab_favs:
     svg_heart_header = f'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d83737" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -3px; margin-right: 8px;"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>'
     st.markdown(f"<h3 style='display: flex; align-items: center;'>{svg_heart_header} Mis Fragancias Favoritas</h3>", unsafe_allow_html=True)
-    st.caption("Cuando agregas una fragancia a tus favoritos, la monitoreamos en tiempo real. Si activas las alertas, te avisaremos automáticamente por correo cuando baje de precio.")
+    st.caption("Las fragancias agregadas a tus favoritos se monitorean en tiempo real. Si activas las alertas por correo, te avisaremos automáticamente cuando detectemos una baja de precio.")
     
     catalogo = get_cached_catalogo() or []
     fav_ids = st.session_state.get('favoritos', [])
@@ -685,29 +745,35 @@ with tab_favs:
 # --- TAB 2: EDITAR PERFIL ---
 with tab_edit:
     svg_edit_header = f'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="{text_color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -3px; margin-right: 8px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>'
-    st.markdown(f"<h3 style='display: flex; align-items: center;'>{svg_edit_header} Modificar Datos del Perfil</h3>", unsafe_allow_html=True)
+    st.markdown(f"<h3 style='display: flex; align-items: center;'>{svg_edit_header} Completar y Modificar Datos Personales</h3>", unsafe_allow_html=True)
     
     with st.form("form_edit_user_profile"):
         col_e1, col_e2 = st.columns(2, gap="medium")
         
         with col_e1:
-            e_nombre = st.text_input("Nombre completo / Nickname", value=u_nombre)
-            e_email = st.text_input("Correo Electrónico", value=u_email)
-            e_telefono = st.text_input("Número de Teléfono", value=u_telefono)
+            e_nombre = st.text_input("Nombre completo / Nickname", value=u_nombre, placeholder="Ej: Carlos Mendoza")
+            e_email = st.text_input("Correo Electrónico", value=u_email, placeholder="ejemplo@correo.cl")
+            e_telefono = st.text_input("Número de Teléfono", value=u_telefono, placeholder="+56 9 1234 5678")
             
         with col_e2:
-            e_foto = st.text_input("URL de Foto de Perfil", value=u_foto, help="Ingresa un enlace directo a una imagen (JPG/PNG)")
-            e_bio = st.text_area("Biografía / Descripción", value=u_bio, max_chars=280, height=110)
+            e_foto = st.text_input("URL de Foto de Perfil", value=u_foto, placeholder="https://sitio.com/mi-foto.jpg", help="Ingresa un enlace directo a una imagen JPG/PNG")
+            e_bio = st.text_area("Biografía / Descripción", value=u_bio, placeholder="Escribe un breve resumen sobre ti o tus gustos olfativos...", max_chars=280, height=110)
             
         btn_save = st.form_submit_button("Guardar Cambios de Perfil", use_container_width=True)
         
         if btn_save:
+            if not st.session_state.get('user_info'):
+                st.session_state['user_info'] = {}
+                
             st.session_state['user_info']['nombre'] = e_nombre.strip()
             st.session_state['user_info']['email'] = e_email.strip()
             st.session_state['user_info']['telefono'] = e_telefono.strip()
             st.session_state['user_info']['foto_perfil'] = e_foto.strip()
             st.session_state['user_info']['bio'] = e_bio.strip()
             
+            if e_email.strip() and 'alerta_email' not in st.session_state['user_info']:
+                st.session_state['user_info']['alerta_email'] = True
+                
             st.success("¡Tu perfil ha sido actualizado correctamente!")
             st.rerun()
 
@@ -717,10 +783,14 @@ with tab_notif:
     st.markdown(f"<h3 style='display: flex; align-items: center;'>{svg_notif_header} Alertas por Correo Electrónico (Gmail)</h3>", unsafe_allow_html=True)
     st.write("Recibe avisos en tiempo real cuando tus fragancias favoritas tengan una baja de precio o entren en oferta especial en tiendas auditadas de Chile.")
     
+    if not u_email:
+        st.warning("Para activar y recibir notificaciones por correo electrónico, primero debes ingresar tu dirección de correo en la pestaña 'Editar Datos Personales'.")
+    
     with st.form("form_notif_settings"):
         alerta_check = st.checkbox(
             "Deseo recibir correos electrónicos cuando una fragancia de mis favoritos baje de precio.",
-            value=u_alerta
+            value=u_alerta,
+            disabled=not bool(u_email)
         )
         
         umbral_val = st.slider(
@@ -738,8 +808,8 @@ with tab_notif:
             st.session_state['user_info']['alerta_email'] = alerta_check
             st.session_state['user_info']['umbral_descuento'] = umbral_val
             
-            if alerta_check:
-                st.success(f"¡Alertas activadas! Te enviaremos un correo a {st.session_state['user_info']['email']} cuando detectemos ofertas con más de {umbral_val}% de descuento.")
+            if alerta_check and u_email:
+                st.success(f"¡Alertas activadas! Te enviaremos un correo a {u_email} cuando detectemos ofertas con más de {umbral_val}% de descuento.")
             else:
                 st.info("Has desactivado las notificaciones por correo electrónico.")
             st.rerun()
