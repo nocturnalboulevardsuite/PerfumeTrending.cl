@@ -974,26 +974,14 @@ st.markdown(f"""
     }}
 
     /* ==========================================
-       OPTIMIZACIÓN RESPONSIVA PROFESIONAL MÓVIL
+       OPTIMIZACIÓN MÓVIL EXACTA (PERFUMES MÚLTIPLES 2 COLUMNAS Y BOTÓN COMPLETO)
        ========================================== */
     @media (max-width: 768px) {{
         .block-container {{ 
             padding-top: 0.4rem !important; 
             padding-bottom: 1.5rem !important; 
-            padding-left: 0.6rem !important;
-            padding-right: 0.6rem !important;
-        }}
-
-        /* Permitir que los bloques horizontales adapten sus filas libremente */
-        div[data-testid="stHorizontalBlock"] {{
-            flex-wrap: wrap !important;
-            gap: 6px !important;
-        }}
-
-        div[data-testid="column"], div[data-testid="stColumn"] {{
-            width: 100% !important;
-            flex: 1 1 100% !important;
-            min-width: 0 !important;
+            padding-left: 0.5rem !important;
+            padding-right: 0.5rem !important;
         }}
 
         /* Ocultar la línea divisoria vertical */
@@ -1001,8 +989,10 @@ st.markdown(f"""
             display: none !important;
         }}
 
-        /* CABECERA: Mantiene Logo, Ingresar y Switch en 1 fila superior */
-        div[data-testid="stHorizontalBlock"]:has(.st-key-login_btn, .st-key-theme_toggle) {{
+        /* CORRECCIÓN CABECERA: Permitir ancho suficiente al botón Ingresar */
+        div[data-testid="stHorizontalBlock"]:has(.st-key-login_btn) {{
+            display: flex !important;
+            flex-direction: row !important;
             flex-wrap: nowrap !important;
             align-items: center !important;
             justify-content: space-between !important;
@@ -1010,7 +1000,17 @@ st.markdown(f"""
 
         div[data-testid="column"]:has(a[href="/"]) {{
             flex: 1 1 auto !important;
-            width: auto !important;
+            min-width: 0 !important;
+        }}
+
+        div[data-testid="column"]:has(.st-key-login_btn) {{
+            flex: 0 0 auto !important;
+            min-width: 110px !important;
+        }}
+
+        div[data-testid="column"]:has(.st-key-theme_toggle) {{
+            flex: 0 0 auto !important;
+            width: 50px !important;
         }}
 
         a[href="/"] span {{
@@ -1022,39 +1022,34 @@ st.markdown(f"""
             height: 24px !important;
         }}
 
-        .st-key-login_btn {{
-            flex: 0 0 auto !important;
-            width: auto !important;
-        }}
-
         .st-key-login_btn button {{
             height: 38px !important;
             min-height: 38px !important;
-            padding: 0 0.6rem 0 2rem !important;
-            font-size: 0.82rem !important;
+            padding: 0 10px 0 30px !important;
+            font-size: 0.85rem !important;
             background-position: 8px center !important;
-            background-size: 15px 15px !important;
+            background-size: 16px 16px !important;
+            width: auto !important;
+            overflow: visible !important;
         }}
 
         .st-key-login_btn button p {{
-            font-size: 0.82rem !important;
+            font-size: 0.85rem !important;
             white-space: nowrap !important;
-        }}
-
-        .st-key-theme_toggle {{
-            flex: 0 0 auto !important;
-            width: auto !important;
+            overflow: visible !important;
+            text-overflow: clip !important;
         }}
 
         .st-key-theme_toggle button {{
-            transform: scale(0.72) !important;
+            transform: scale(0.7) !important;
             transform-origin: right center !important;
-            width: 60px !important;
-            margin: 0 !important;
+            width: 50px !important;
         }}
 
-        /* NAVEGACIÓN SUPERIOR: "PERFUMES" Y "ESENCIAS" en 2 columnas parejas */
+        /* NAVEGACIÓN PERFUMES / ESENCIAS: 2 columnas iguales en 1 fila */
         div[data-testid="stHorizontalBlock"]:has(.st-key-n_perfumes) {{
+            display: flex !important;
+            flex-direction: row !important;
             flex-wrap: nowrap !important;
         }}
 
@@ -1064,37 +1059,36 @@ st.markdown(f"""
             width: 50% !important;
         }}
 
-        .st-key-n_perfumes button p,
-        .st-key-n_esencias button p {{
-            font-size: 0.85rem !important;
+        /* BÚSQUEDA Y FILTROS */
+        div[data-testid="stHorizontalBlock"]:has(input[placeholder*="Buscar"]) {{
+            display: flex !important;
+            flex-direction: row !important;
+            flex-wrap: wrap !important;
+            gap: 6px !important;
         }}
 
-        /* BÚSQUEDA Y FILTROS: Campo arriba (100%), Esencias y Foto abajo (50% / 50%) */
         div[data-testid="column"]:has(input[placeholder*="Buscar"]) {{
             flex: 1 1 100% !important;
             width: 100% !important;
-            margin-bottom: 2px !important;
         }}
 
         div[data-testid="column"]:has(div[data-testid="stPopover"]),
         div[data-testid="column"]:has(.st-key-btn_photo_search) {{
-            flex: 1 1 calc(50% - 4px) !important;
-            width: calc(50% - 4px) !important;
+            flex: 1 1 calc(50% - 3px) !important;
+            width: calc(50% - 3px) !important;
         }}
 
-        div[data-testid="stPopover"] > button {{
+        div[data-testid="stPopover"] > button,
+        .st-key-btn_photo_search button {{
             min-height: 40px !important;
             font-size: 0.82rem !important;
             width: 100% !important;
         }}
 
         .st-key-btn_photo_search button {{
-            min-height: 40px !important;
-            font-size: 0.82rem !important;
-            padding: 0.3rem 0.4rem 0.3rem 2.1rem !important;
-            background-position: 10px center !important;
-            background-size: 16px 16px !important;
-            width: 100% !important;
+            padding: 0.3rem 0.3rem 0.3rem 2.0rem !important;
+            background-position: 8px center !important;
+            background-size: 15px 15px !important;
         }}
 
         .st-key-btn_photo_search button p {{
@@ -1102,95 +1096,121 @@ st.markdown(f"""
             white-space: nowrap !important;
         }}
 
-        /* CHIPS DE ACCESO RÁPIDO: Matriz limpia 2x2 sin textos cortados */
+        /* CHIPS ENLACE RÁPIDO: Matriz 2 columnas por fila */
         div[data-testid="stHorizontalBlock"]:has(a[data-testid="stPageLink-NavLink"]) {{
+            display: flex !important;
+            flex-direction: row !important;
             flex-wrap: wrap !important;
             gap: 6px !important;
         }}
 
-        div[data-testid="column"]:has(a[data-testid="stPageLink-NavLink"]) {{
-            flex: 1 1 calc(50% - 4px) !important;
-            width: calc(50% - 4px) !important;
+        div[data-testid="stHorizontalBlock"]:has(a[data-testid="stPageLink-NavLink"]) > div[data-testid="column"] {{
+            flex: 0 0 calc(50% - 3px) !important;
+            width: calc(50% - 3px) !important;
+            max-width: calc(50% - 3px) !important;
+            min-width: 0 !important;
         }}
 
         a[data-testid="stPageLink-NavLink"] {{
-            padding: 0.5rem 0.4rem 0.5rem 2.2rem !important;
+            padding: 0.45rem 0.3rem 0.45rem 2.0rem !important;
             border-radius: 12px !important;
             min-height: 38px !important;
-            justify-content: flex-start !important;
             width: 100% !important;
         }}
 
         a[data-testid="stPageLink-NavLink"] p,
         a[data-testid="stPageLink-NavLink"] span {{
-            font-size: 0.78rem !important;
-            white-space: normal !important;
-            line-height: 1.1 !important;
-            text-align: left !important;
+            font-size: 0.75rem !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
         }}
 
         a[data-testid="stPageLink-NavLink"]::before {{
-            left: 8px !important;
-            width: 15px !important;
-            height: 15px !important;
+            left: 7px !important;
+            width: 14px !important;
+            height: 14px !important;
         }}
 
-        /* CATÁLOGO DE PERFUMES: 1 tarjeta completa por fila */
+        /* CORRECCIÓN CATÁLOGO PERFUMES: MOSTRAR EN 2 COLUMNAS SIDE-BY-SIDE EN MÓVIL */
         div[data-testid="stHorizontalBlock"]:has(.catalog-card) {{
-            flex-direction: column !important;
+            display: flex !important;
+            flex-direction: row !important;
+            flex-wrap: wrap !important;
+            gap: 8px !important;
         }}
 
-        div[data-testid="column"]:has(.catalog-card) {{
-            flex: 1 1 100% !important;
-            width: 100% !important;
-            margin-bottom: 12px !important;
+        div[data-testid="stHorizontalBlock"]:has(.catalog-card) > div[data-testid="column"],
+        div[data-testid="stHorizontalBlock"]:has(.catalog-card) > div[data-testid="stColumn"] {{
+            flex: 0 0 calc(50% - 4px) !important;
+            width: calc(50% - 4px) !important;
+            max-width: calc(50% - 4px) !important;
+            min-width: 0 !important;
+            margin-bottom: 4px !important;
         }}
 
         .catalog-card {{
-            margin-bottom: 8px !important;
-            border-radius: 12px !important;
+            margin-bottom: 6px !important;
+            border-radius: 10px !important;
         }}
 
         .square-img-box {{
-            max-height: 280px !important;
-            padding: 16px !important;
+            padding: 8px !important;
+        }}
+
+        .card-footer-info {{
+            padding: 8px 4px !important;
         }}
 
         .card-perfume-name {{
-            font-size: 1.05rem !important;
+            font-size: 0.82rem !important;
+            line-height: 1.2 !important;
+            margin-bottom: 2px !important;
         }}
 
         .card-perfume-brand {{
-            font-size: 0.82rem !important;
+            font-size: 0.68rem !important;
         }}
 
         div[data-testid="stElementContainer"] div.stButton button[key*="btn_comp_"] {{
-            font-size: 0.9rem !important;
-            padding: 8px 12px !important;
-            height: 42px !important;
+            font-size: 0.75rem !important;
+            padding: 6px 4px !important;
+            min-height: 34px !important;
+            height: auto !important;
         }}
 
-        /* DICCIONARIO DE ESENCIAS: 1 columna ordenada */
+        div[data-testid="stElementContainer"] div.stButton button[key*="btn_comp_"] p {{
+            font-size: 0.75rem !important;
+        }}
+
+        /* DICCIONARIO ESENCIAS: 2 COLUMNAS EN MÓVIL */
         div[data-testid="stHorizontalBlock"]:has(.essence-card) {{
-            flex-direction: column !important;
+            display: flex !important;
+            flex-direction: row !important;
+            flex-wrap: wrap !important;
+            gap: 6px !important;
         }}
 
-        div[data-testid="column"]:has(.essence-card) {{
-            flex: 1 1 100% !important;
-            width: 100% !important;
+        div[data-testid="stHorizontalBlock"]:has(.essence-card) > div[data-testid="column"] {{
+            flex: 0 0 calc(50% - 3px) !important;
+            width: calc(50% - 3px) !important;
+            max-width: calc(50% - 3px) !important;
+            min-width: 0 !important;
         }}
 
         .essence-card {{
-            padding: 12px 14px !important;
-            margin-bottom: 8px !important;
+            padding: 8px 10px !important;
+            margin-bottom: 6px !important;
         }}
 
         .essence-title {{
-            font-size: 0.95rem !important;
+            font-size: 0.82rem !important;
+            margin-bottom: 2px !important;
         }}
 
         .essence-desc {{
-            font-size: 0.85rem !important;
+            font-size: 0.72rem !important;
+            line-height: 1.25 !important;
         }}
     }}
     </style>
@@ -1198,16 +1218,16 @@ st.markdown(f"""
 
 # 4. CABECERA CON LOGO COMPACTO Y ESPACIO DINÁMICO SEGÚN ESTADO DE SESIÓN
 if st.session_state['logged_in']:
-    col_logo, col_espacio, col_actions = st.columns([4.0, 0.5, 4.5], vertical_alignment="center")
-    btn_col1, btn_col2 = col_actions.columns([3.5, 1.0], vertical_alignment="center")
+    col_logo, col_actions = st.columns([1.8, 2.2], vertical_alignment="center")
+    btn_col1, btn_col2 = col_actions.columns([2.5, 1.0], vertical_alignment="center")
 else:
-    col_logo, col_espacio, col_actions = st.columns([5.5, 0.8, 2.7], vertical_alignment="center")
-    btn_col1, btn_col2 = col_actions.columns([1.8, 1.0], vertical_alignment="center")
+    col_logo, col_actions = st.columns([2.0, 2.0], vertical_alignment="center")
+    btn_col1, btn_col2 = col_actions.columns([2.5, 1.0], vertical_alignment="center")
 
 with col_logo:
     logo_color = "#8c7b6d"
     logo_html = f"""
-    <a href="/" target="_top" style="text-decoration: none; display: inline-flex; align-items: center; gap: 10px; cursor: pointer; width: fit-content;">
+    <a href="/" target="_top" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; width: fit-content;">
         <svg width="32" height="32" viewBox="0 0 36 36" fill="none" stroke-linecap="round" stroke-linejoin="round">
             <path d="M 6.8 21 L 29.2 21 C 30 25 27 32 18 32 C 9 32 6 25 6.8 21 Z" fill="{logo_color}" />
             <line x1="6.8" y1="21" x2="29.2" y2="21" stroke="{text_color}" stroke-width="1.5" />
@@ -1217,7 +1237,7 @@ with col_logo:
             <rect x="13" y="3" width="10" height="4" rx="1" stroke="{text_color}" stroke-width="1.5" />
             <rect x="16" y="0" width="4" height="3" rx="1" fill="{logo_color}" stroke="{text_color}" stroke-width="1" />
         </svg>
-        <span style="font-size: 1.5rem; color: {text_color}; letter-spacing: 0.3px; line-height: 1;">
+        <span style="font-size: 1.4rem; color: {text_color}; letter-spacing: 0.2px; line-height: 1;">
             <span style="font-weight: 300;">Perfume</span><span style="font-weight: 700;">Trending</span>
         </span>
     </a>
