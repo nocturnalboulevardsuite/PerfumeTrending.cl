@@ -1,12 +1,12 @@
 {
   "actualizaciones": 41,
-  "fecha": "2026-10-12 16:25:20",
-  "duracion_segundos": 62.41,
+  "fecha": "2026-10-14 12:36:59",
+  "duracion_segundos": 61.83,
   "metadata": {
     "version_etl": "3.0.0",
     "sistema": "PerfumeTrending Professional Anti-Bot ETL",
-    "fecha_ejecucion": "2026-10-12 16:25:20",
-    "duracion_segundos": 62.41,
+    "fecha_ejecucion": "2026-10-14 12:36:59",
+    "duracion_segundos": 61.83,
     "estado": "EXITOSO"
   },
   "metricas": {
@@ -19,8 +19,8 @@
   "estadisticas_tiendas": {
     "Falabella": {
       "consultas": 12,
-      "exitos_en_vivo": 10,
-      "fallbacks_seguridad": 2,
+      "exitos_en_vivo": 11,
+      "fallbacks_seguridad": 1,
       "trust_score": 96
     },
     "Paris": {
@@ -91,8 +91,8 @@
     {
       "perfume": "YSL Libre",
       "tienda": "Falabella",
-      "precio_actual": 86990,
-      "precio_normal": 86990,
+      "precio_actual": 125990,
+      "precio_normal": 125990,
       "tiene_descuento": false,
       "origen": "Falabella Next Direct",
       "volumen_ml": 90
