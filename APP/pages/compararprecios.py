@@ -45,22 +45,47 @@ except ImportError:
     crear_usuario = None
     verificar_usuario = None
 
+# =============================================================================
+# BLOQUE 1: CACHÉ EN MEMORIA DE ALTO RENDIMIENTO (STREAMLIT CACHE DATA)
+# -----------------------------------------------------------------------------
+# ¿QUÉ HACE ESTE BLOQUE?
+# Utiliza el decorador `@st.cache_data(ttl=300)` (Time-To-Live de 5 minutos):
+# - Almacena en memoria RAM el catálogo, las ofertas vivas y el historial de precios.
+# - Evita saturar la base de datos (Supabase / SQLite) con peticiones repetitivas
+#   cada vez que el usuario interactúa con la interfaz o cambia de pestaña.
+# - Se invalida automáticamente cada 5 minutos para refrescar nuevos precios.
+# =============================================================================
 @st.cache_data(ttl=300, show_spinner=False)
 def get_cached_catalogo():
+    """Retorna el catálogo consolidado desde la capa de datos con caché de 5 minutos."""
     return obtener_catalogo()
 
 @st.cache_data(ttl=300, show_spinner=False)
 def get_cached_precios(perfume_id):
+    """Consulta los precios vigentes en cada tienda para el perfume seleccionado."""
     return obtener_precios_actuales(perfume_id)
 
 @st.cache_data(ttl=300, show_spinner=False)
 def get_cached_historico(perfume_id):
+    """Consulta la serie de tiempo de precios históricos para generar el gráfico."""
     return obtener_historico_precios(perfume_id)
 
 @st.cache_data(ttl=300, show_spinner=False)
 def get_cached_detalle(perfume_id):
+    """Retorna la ficha técnica completa del perfume (notas, género, concentración)."""
     return obtener_detalle_perfume(perfume_id)
 
+
+# =============================================================================
+# BLOQUE 2: SANITIZACIÓN HTML Y RESOLUCIÓN INTELIGENTE DE ENLACES EXTERNOS
+# -----------------------------------------------------------------------------
+# ¿QUÉ HACE ESTE BLOQUE?
+# 1. `clean_html()`: Remueve saltos de línea e identaciones en bloques HTML para que
+#    el parser Markdown de Streamlit no los confunda con bloques de código preformateado.
+# 2. `resolver_url_oferta()`: Garantiza que el botón "Ir a la oferta" nunca lleve a un
+#    enlace roto. Si el scraper capturó la URL directa a la ficha, la usa; si no,
+#    construye automáticamente la consulta al motor de búsqueda oficial de la tienda.
+# =============================================================================
 def clean_html(html_str: str) -> str:
     """Limpia espacios iniciales y elimina saltos de línea para evitar que Streamlit interprete HTML como código."""
     return " ".join(line.strip() for line in html_str.splitlines() if line.strip())
@@ -94,7 +119,10 @@ def resolver_url_oferta(tienda_nombre: str, perfume_nombre: str, url_prod: str, 
     return url_base or "#"
 
 def get_image_src(img_path_or_url):
-    """Retorna URL remota o data URI en base64 para imágenes locales."""
+    """
+    Retorna la URL remota o codifica la imagen local a base64 (Data URI)
+    para que se renderice directamente en el navegador sin requerir un servidor estático.
+    """
     if not img_path_or_url:
         return "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=500&q=80"
     
@@ -122,7 +150,17 @@ def get_image_src(img_path_or_url):
 
     return img_path_or_url
 
-# 1. CONFIGURACIÓN DE LA PÁGINA Y ESTADO
+# =============================================================================
+# BLOQUE 3: CONFIGURACIÓN DE LA PÁGINA Y GESTIÓN DE SESIÓN (STREAMLIT STATE)
+# -----------------------------------------------------------------------------
+# ¿QUÉ HACE ESTE BLOQUE?
+# 1. Configura el título y layout ancho (`wide`) de la página.
+# 2. Inicializa las variables reactivas en `st.session_state`:
+#    - `theme`: 'dark' o 'light' para alternar temas visuales.
+#    - `logged_in`: booleano de autenticación.
+#    - `user_info`: diccionario con nombre, email y teléfono del usuario.
+#    - `show_login_modal`: controla la apertura del modal emergente de inicio de sesión.
+# =============================================================================
 st.set_page_config(page_title="Comparador de Precios - PerfumeTrending", layout="wide", initial_sidebar_state="collapsed")
 
 if 'theme' not in st.session_state:
@@ -795,24 +833,35 @@ with col_chip3:
 st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
 
 # 5. SECCIÓN PRINCIPAL: COMPARADOR DE PRECIOS
+# =============================================================================
+# BLOQUE 4: SELECCIÓN DEL PERFUME Y FICHA TÉCNICA OLFATIVA
+# -----------------------------------------------------------------------------
+# ¿QUÉ HACE ESTE BLOQUE?
+# 1. Carga el catálogo mediante la función cacheada `get_cached_catalogo()`.
+# 2. Revisa si en `st.session_state['selected_perfume']` viene un perfume preseleccionado
+#    desde la página principal o desde el banner de tendencias, marcándolo por defecto.
+# 3. Presenta un desplegable `st.selectbox` con búsqueda difusa en vivo.
+# 4. Muestra la cabecera del perfume con su imagen oficial, concentración (EDP/EDT),
+#    género (Hombre/Mujer/Unisex), notas de salida/corazón/fondo y precio de referencia.
+# =============================================================================
 col_title_text, col_title_back = st.columns([7, 3], vertical_alignment="center")
 with col_title_text:
     st.markdown(f"""<div style='color: {text_color}; letter-spacing: 1.5px; font-weight: 300; font-size: 1.1rem; text-transform: uppercase;'>COMPARADOR DE PRECIOS EN TIENDAS CHILENAS</div>""", unsafe_allow_html=True)
 with col_title_back:
     st.page_link("app.py", label="← Volver al Catálogo")
 
-# Cargar catálogo dinámico con caché
+# Cargar catálogo dinámico con caché en memoria
 catalogo = get_cached_catalogo()
 
 if not catalogo:
     st.warning("No hay perfumes disponibles en el catálogo en este momento.")
     st.stop()
 
-# Diccionario de selección: Nombre Completo -> Objeto Perfume
+# Diccionario de mapeo rápido: Etiqueta Legible -> Objeto Perfume
 opciones_perfumes = {f"{p['nombre']} — {p['marca']}": p for p in catalogo}
 lista_nombres = list(opciones_perfumes.keys())
 
-# Determinar perfume pre-seleccionado
+# Determinar perfume pre-seleccionado si el usuario vino redirigido desde otra vista
 default_index = 0
 selected_session = st.session_state.get('selected_perfume')
 if selected_session is not None:
@@ -865,7 +914,22 @@ with col_info:
 st.markdown("<div style='margin-top: 24px;'></div>", unsafe_allow_html=True)
 st.markdown(f"<h3 style='font-size: 1.15rem; color: {text_color}; font-weight: 600; margin-bottom: 16px;'>Ofertas en tiendas chilenas verificadas</h3>", unsafe_allow_html=True)
 
-# Obtener ofertas y precios actuales desde la base de datos (con caché)
+
+# =============================================================================
+# BLOQUE 5: COMPARATIVA EN VIVO, CÁLCULO $/ML Y BADGE "MEJOR PRECIO"
+# -----------------------------------------------------------------------------
+# ¿QUÉ HACE ESTE BLOQUE?
+# 1. Consulta las ofertas en stock en comercios chilenos (Falabella, Paris, Ripley, Silk, etc.).
+# 2. Algoritmo de detección del mejor precio:
+#    - Filtra los precios válidos mayores a 0.
+#    - Encuentra el valor mínimo (`min_precio`).
+#    - A la tienda ganadora le asigna la clase CSS `.best-deal` con borde verde brillante
+#      y el distintivo "MEJOR PRECIO".
+# 3. Métricas de valor real:
+#    - Calcula el precio por mililitro: `precio_por_ml = precio_actual / volumen_ml`.
+#      Esto permite que el usuario compare ofertas de 50ml vs 100ml de forma transparente.
+# 4. Enlace de compra verificado con `resolver_url_oferta()`.
+# =============================================================================
 tiendas_db = get_cached_precios(selected_id)
 
 if not tiendas_db:
@@ -888,7 +952,7 @@ else:
         precio_ant_str = f"${p_norm:,.0f}".replace(",", ".") if p_norm and p_norm > p_act else ""
         old_price_html = f"<span class='old-price'>{precio_ant_str}</span>" if precio_ant_str else ""
         
-        # Precio por mililitro
+        # Cálculo de valor por mililitro ($/ml)
         ml_txt = ""
         if p_act > 0 and vol_ml > 0:
             p_ml = int(round(p_act / vol_ml))
@@ -924,7 +988,17 @@ else:
         """
         st.markdown(clean_html(html_card), unsafe_allow_html=True)
 
-# 6. HISTORIAL Y EVOLUCIÓN DE PRECIOS
+
+# =============================================================================
+# BLOQUE 6: GRÁFICO INTERACTIVO DE EVOLUCIÓN HISTÓRICA DE PRECIOS
+# -----------------------------------------------------------------------------
+# ¿QUÉ HACE ESTE BLOQUE?
+# 1. Consulta la serie cronológica de snapshots en `precios_registro`.
+# 2. Convierte los datos a un DataFrame de Pandas (`pd.DataFrame`).
+# 3. Transforma la tabla mediante `pivot_table(index='fecha', columns='tienda', values='precio')`.
+# 4. Renderiza un gráfico de líneas nativo con `st.line_chart(df_pivot)` para que el
+#    usuario observe si el perfume está en su punto más bajo histórico o si conviene esperar.
+# =============================================================================
 st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
 with st.expander("Ver Evolución Histórica de Precios en Tiendas Chilenas"):
     historico = get_cached_historico(selected_id)

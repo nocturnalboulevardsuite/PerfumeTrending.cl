@@ -1042,7 +1042,15 @@ with col_back_btn:
 
 st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
 
-# 6. FILTROS Y BARRAS SUPERIORES
+# =============================================================================
+# BLOQUE 4: FILTRADO TEMPORAL Y FUENTE DE INTELIGENCIA DE TENDENCIAS
+# -----------------------------------------------------------------------------
+# ¿QUÉ HACE ESTE BLOQUE?
+# 1. Permite filtrar el radar de tendencias por períodos temporales:
+#    - "Este Mes", "Hoy / Día", "Esta Semana", "Este Año", "Año Pasado".
+# 2. Especifica la fuente de analítica social (YouTube / TikTok / Instagram):
+#    - Monitorea volumen de reseñas, menciones y reproducciones totales de videos.
+# =============================================================================
 col_title, col_fecha, col_red = st.columns([0.28, 0.42, 3.3], gap="small", vertical_alignment="center")
 
 with col_title:
@@ -1074,7 +1082,16 @@ with col_red:
 
 st.write("")
 
-# 7. ESTRELLAS DE RANKING SVG
+
+# =============================================================================
+# BLOQUE 5: INSIGNIAS VISUALES DE RANKING (ANIMACIONES SVG RUBÍ, ORO Y PLATA)
+# -----------------------------------------------------------------------------
+# ¿QUÉ HACE ESTE BLOQUE?
+# Genera estrellas vectoriales con animaciones sutiles de resplandor (CSS Keyframes):
+# - Estrella Rubí (#1): Para el perfume líder absoluto de la temporada (Bleu de Chanel).
+# - Estrella Dorada (#2): Segundo lugar de alto impacto (YSL Libre).
+# - Estrella Plateada (#3): Tercer lugar destacado (Dior Sauvage).
+# =============================================================================
 star_ruby_svg = """
 <div class="star-minimal-ruby">
     <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
@@ -1121,6 +1138,19 @@ star_silver_svg = """
 </div>
 """
 
+
+# =============================================================================
+# BLOQUE 6: MODELO DE DATOS DE HYPE Y RESÚMENES SEMÁNTICOS CON IA
+# -----------------------------------------------------------------------------
+# ¿CÓMO SE CALCULA EL HYPE SCORE?
+# Pondera:
+# 1. Volumen de contenido (videos y reseñas creadas en el mes).
+# 2. Impresiones e interacciones totales (vistas estimadas).
+# 3. Interés de búsqueda en Chile y tasa de conversación en redes.
+# Incluye un extracto analítico generado mediante procesamiento de lenguaje natural
+# (`ai_text`) que explica al usuario por qué la fragancia es viral (ej. aroma versátil,
+# dupe accesible de nicho, o tendencia gourmand de temporada).
+# =============================================================================
 hype_data = [
     {
         "perfume_id": 1, "rank": "#1", "star": star_ruby_svg, "name": "Bleu de Chanel", "score": "95%", "year": "2010", "price": "$145.990 CLP",

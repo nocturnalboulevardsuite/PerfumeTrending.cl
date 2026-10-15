@@ -859,10 +859,24 @@ with col_sub_back:
 
 st.markdown(f"<hr style='border: none; border-top: 1px solid {border_color}; margin: 16px 0 24px 0;' />", unsafe_allow_html=True)
 
-# 6. ESTRUCTURA PRINCIPAL
+# =============================================================================
+# BLOQUE 4: ESTRUCTURA DE AUDITORÍA (FICHA ILUSTRADA + TABLA DE CONFIANZA)
+# -----------------------------------------------------------------------------
+# ¿QUÉ HACE ESTE BLOQUE?
+# Divide la pantalla en 2 columnas estratégicas:
+# 1. Columna Izquierda: Ficha técnica minimalista con vector SVG interactivo del frasco
+#    y desglose de pirámide olfativa (Salida, Corazón y Fondo).
+# 2. Columna Derecha: Tabla de verificación de comercios chilenos:
+#    - Consulta las tiendas auditadas desde `obtener_tiendas()`.
+#    - Muestra la puntuación de confianza (ej. 98/100, 92/100).
+#    - Clasifica el estado: "VERIFICADO" (verde) si el score >= 85, o "AUDITORÍA" (rojo).
+#    - Añade una fila comparativa de "VENDEDOR NO AUDITADO" (38/100, ALTO RIESGO)
+#      para educar al consumidor chileno sobre los peligros de comprar en sitios sin RUT
+#      tributario legal ni boleta electrónica del SII.
+# =============================================================================
 left_col, right_col = st.columns([1, 1.4], gap="large")
 
-# --- COLUMNA IZQUIERDA: TARJETA DE PRODUCTO MINIMALISTA ---
+# --- COLUMNA IZQUIERDA: TARJETA DE PRODUCTO MINIMALISTA ILUSTRADA ---
 with left_col:
     bottle_sketch_svg = f"""
     <svg viewBox="0 0 200 240" fill="none" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: auto; max-width: 160px;">
@@ -928,7 +942,7 @@ with right_col:
         """
         filas_html.append(fila)
 
-    # Fila de ejemplo de comercio de alto riesgo no verificado para alertar a compradores
+    # Fila preventiva de comercio de alto riesgo no verificado para alertar al usuario
     num_alerta = f"{len(tiendas_auditadas) + 1:02d}"
     fila_riesgo = f"""
     <tr>

@@ -47,8 +47,18 @@ except ImportError:
     crear_usuario = None
     verificar_usuario = None
 
+# =============================================================================
+# BLOQUE 1: CACHÉ EN MEMORIA DE ALTO RENDIMIENTO (STREAMLIT CACHE DATA)
+# -----------------------------------------------------------------------------
+# ¿QUÉ HACE ESTE BLOQUE?
+# Utiliza `@st.cache_data(ttl=60)` para memorizar las consultas al catálogo:
+# - Recibe parámetros de búsqueda textual, tupla inmutable de esencias, categoría y orden.
+# - Cachea en RAM los resultados por 60 segundos para que escribir en la barra de búsqueda
+#   o cambiar de página responda de manera instantánea (sub-segundo) sin recargar la base de datos.
+# =============================================================================
 @st.cache_data(ttl=60, show_spinner=False)
 def get_cached_catalogo(busqueda=None, esencias_tuple=None, categoria=None, orden="id_asc"):
+    """Consulta el catálogo consolidado calculando el mejor precio en vivo con invalidación TTL."""
     esencias = list(esencias_tuple) if esencias_tuple else None
     return obtener_catalogo(busqueda=busqueda, esencias=esencias, categoria=categoria, orden=orden)
 
@@ -57,7 +67,10 @@ def clean_html(html_str: str) -> str:
     return "\n".join(line.strip() for line in html_str.splitlines())
 
 def get_image_src(img_path_or_url):
-    """Retorna URL remota o data URI en base64 para imágenes locales."""
+    """
+    Retorna la URL remota o codifica la imagen local a base64 (Data URI)
+    para que se renderice directamente en el navegador sin requerir un servidor estático.
+    """
     if not img_path_or_url:
         return "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=500&q=80"
     
@@ -88,7 +101,20 @@ def get_image_src(img_path_or_url):
 # DIBUJO VECTORIAL SVG BASADO EXACTAMENTE EN LA IMAGEN ADJUNTA (ÍCONO FRASCO)
 perfume_svg_favicon = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 36' fill='none'><path d='M 7 21 A 11 11 0 0 0 29 21 Z' fill='%238c7b6d'/><circle cx='18' cy='21' r='11' stroke='%23ffffff' stroke-width='2.2'/><line x1='18' y1='10' x2='18' y2='32' stroke='%23ffffff' stroke-width='2'/><line x1='7' y1='21' x2='29' y2='21' stroke='%23ffffff' stroke-width='2'/><rect x='15' y='7' width='6' height='3' fill='%2314171d' stroke='%23ffffff' stroke-width='2'/><rect x='13' y='2' width='10' height='5' rx='1.5' fill='%238c7b6d' stroke='%23ffffff' stroke-width='2'/></svg>"
 
-# 1. CONFIGURACIÓN DE LA PÁGINA Y ESTADO
+
+# =============================================================================
+# BLOQUE 2: CONFIGURACIÓN DE PÁGINA Y ESTADO GLOBAL REACTIVO (SESSION STATE)
+# -----------------------------------------------------------------------------
+# ¿QUÉ HACE ESTE BLOQUE?
+# 1. Configura el favicon oficial, el título y layout ancho (`wide`) de la SPA.
+# 2. Ejecuta `init_db()` para garantizar que la base de datos esté lista antes de renderizar.
+# 3. Administra las variables de sesión del usuario en `st.session_state`:
+#    - `theme`: 'dark' o 'light' para alternar temas visuales.
+#    - `catalog_page`: número de página actual del catálogo (paginación de 12 items).
+#    - `selected_category`: 'todos', 'arabes' o 'remates'.
+#    - `selected_order`: criterio de ordenamiento (id_asc, precio_asc, precio_desc, nombre_asc).
+#    - `logged_in` y `user_info`: estado de inicio de sesión del usuario.
+# =============================================================================
 st.set_page_config(
     page_title="PerfumeTrending",
     page_icon=perfume_svg_favicon,
@@ -1735,7 +1761,19 @@ st.markdown("<div style='margin-top: 24px;'></div>", unsafe_allow_html=True)
 if st.session_state['current_page'] == 'home':
     st.markdown(f"<div style='text-align: center; margin-bottom: 20px; color: {text_color}; letter-spacing: 1.5px; font-weight: 300; font-size: 1.1rem; text-transform: uppercase;'>CATÁLOGO Y TENDENCIAS EN CHILE</div>", unsafe_allow_html=True)
     
-    # 8.1 Barra de filtros por categoría y ordenamiento
+    # =========================================================================
+    # BLOQUE 5: FILTRADO MULTI-FACÉTICO (CATEGORÍAS Y ORDENAMIENTO EN VIVO)
+    # -------------------------------------------------------------------------
+    # ¿QUÉ HACE ESTE BLOQUE?
+    # 1. Filtros por categoría comercial:
+    #    - "Todos": Muestra el catálogo unificado de más de 130 fragancias.
+    #    - "Árabes & Nicho": Filtra fragancias orientales (Lattafa, Armaf, Afnan).
+    #    - "Remates & Ofertas": Filtra solo perfumes con rebajas demostrables.
+    # 2. Selector de ordenamiento:
+    #    - Destacados (id_asc), Precio Ascendente/Descendente, Nombre A-Z.
+    # 3. Al cambiar cualquier filtro, resetea la página a 1 (`catalog_page = 1`)
+    #    y re-ejecuta reactivamente la vista con `st.rerun()`.
+    # =========================================================================
     col_filter_chips, col_sort_select = st.columns([7, 3], vertical_alignment="center")
     
     cur_cat = st.session_state.get('selected_category', 'todos')
@@ -1793,7 +1831,17 @@ if st.session_state['current_page'] == 'home':
     if selected_essences:
         st.markdown(f"<div style='margin: 8px 0 16px 0; font-size: 0.9rem; color: {subtext_color};'><b>Filtro de notas activo:</b> {', '.join(selected_essences)}</div>", unsafe_allow_html=True)
 
-    # 8.2 Consulta dinámica a base de datos
+    # =========================================================================
+    # BLOQUE 6: CONSULTA REACTIVA A BD Y PAGINACIÓN DINÁMICA (12 ITEMS/PÁG)
+    # -------------------------------------------------------------------------
+    # ¿QUÉ HACE ESTE BLOQUE?
+    # 1. Invoca `get_cached_catalogo()` combinando texto, esencias y categoría.
+    # 2. Divide el conjunto en páginas de 12 elementos (`items_per_page = 12`).
+    # 3. Calcula `start_idx` y `end_idx` para extraer la porción visible (slice `[start:end]`).
+    # 4. Renderiza los perfumes en una grilla de 3 columnas (`cols_per_row = 3`).
+    # 5. Tarjeta interactiva con hover overlay: revela país de origen, concentración
+    #    y notas completas al posar el cursor, con botón para ir directo a la comparativa.
+    # =========================================================================
     categoria_arg = None if st.session_state['selected_category'] == 'todos' else st.session_state['selected_category']
     catalog_perfumes = get_cached_catalogo(
         busqueda=search_query, 
@@ -1812,7 +1860,7 @@ if st.session_state['current_page'] == 'home':
         items_per_page = st.session_state.get('items_per_page', 12)
         total_pages = max(1, (total_perfumes + items_per_page - 1) // items_per_page)
         
-        # Validar página activa
+        # Validar límites de página activa
         if st.session_state['catalog_page'] > total_pages:
             st.session_state['catalog_page'] = total_pages
         elif st.session_state['catalog_page'] < 1:

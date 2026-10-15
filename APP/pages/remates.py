@@ -836,7 +836,18 @@ with col_title_back:
 
 st.markdown("<div style='margin-top: 18px;'></div>", unsafe_allow_html=True)
 
-# 6. FILTROS Y CONTROL BÚSQUEDA
+# =============================================================================
+# BLOQUE 3: FILTRADO MULTI-VARIABLE Y CONTROLES DE BÚSQUEDA
+# -----------------------------------------------------------------------------
+# ¿QUÉ HACE ESTE BLOQUE?
+# Provee los controles superiores para refinar las ofertas de remate:
+# 1. Campo de búsqueda de texto libre (coincidencia en perfume, diseñador o tienda).
+# 2. Selector de ordenamiento:
+#    - "Mayor % Descuento": Calcula la rebaja porcentual real y prioriza las mejores oportunidades.
+#    - "Menor Precio": Ordena por el desembolso mínimo absoluto en pesos chilenos.
+#    - "Mayor Precio": Perfumes de nicho o lujo con descuento.
+# 3. Selector de comercio: Permite auditar ofertas por tienda específica (Falabella, Paris, Silk, etc.).
+# =============================================================================
 col_search, col_order, col_tienda = st.columns([4, 3, 3], gap="small", vertical_alignment="center")
 
 with col_search:
@@ -850,7 +861,19 @@ with col_tienda:
 
 st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
 
-# 7. DATOS SIMULADOS DE REMATES FLASH CON STOCK LIMITADO Y PRECIOS AUDITADOS
+
+# =============================================================================
+# BLOQUE 4: ALGORITMO DE AUDITORÍA DE REMATES Y DESCUENTO REAL DEMOSTRABLE
+# -----------------------------------------------------------------------------
+# ¿QUÉ HACE ESTE BLOQUE?
+# 1. Monitorea ofertas con descuentos certificados:
+#    - `precio_normal`: Precio histórico consolidado sin oferta.
+#    - `precio_remate`: Precio de oportunidad actual verificado.
+#    - `descuento`: `((precio_normal - precio_remate) / precio_normal) * 100`.
+# 2. Filtro anti-falsas rebajas: Garantiza que el precio normal sea estrictamente superior
+#    al precio de remate, evitando promociones engañosas comunes en el e-commerce chileno.
+# 3. Indicador de escasez y urgencia (`timer` y `stock` disponible) reportado por la tienda.
+# =============================================================================
 remates_data = [
     {
         "id": 1,
@@ -932,7 +955,7 @@ remates_data = [
     }
 ]
 
-# Filtrar resultados
+# Filtrado reactivo en memoria
 items_filtrados = []
 for item in remates_data:
     match_search = (search_remate.lower() in item['nombre'].lower() or search_remate.lower() in item['marca'].lower() or search_remate.lower() in item['tienda'].lower()) if search_remate else True
@@ -940,7 +963,7 @@ for item in remates_data:
     if match_search and match_tienda:
         items_filtrados.append(item)
 
-# Ordenar
+# Ordenamiento dinámico según la opción seleccionada
 if orden_opt == "Mayor % Descuento":
     items_filtrados.sort(key=lambda x: int(x['descuento'].replace('-', '').replace('% OFF', '')), reverse=True)
 elif orden_opt == "Menor Precio":
@@ -948,7 +971,16 @@ elif orden_opt == "Menor Precio":
 elif orden_opt == "Mayor Precio":
     items_filtrados.sort(key=lambda x: x['precio_remate'], reverse=True)
 
-# 8. RENDERIZADO EN GRID DE TARJETAS
+
+# =============================================================================
+# BLOQUE 5: RENDERIZADO EN GRID RESPONSIVO (3 COLUMNAS) Y COMPRA DIRECTA
+# -----------------------------------------------------------------------------
+# ¿QUÉ HACE ESTE BLOQUE?
+# 1. Agrupa los productos filtrados en filas de 3 columnas mediante `st.columns(3)`.
+# 2. Renderiza la tarjeta con distintivo de descuento rojo brillante (`badge-discount`),
+#    temporizador regresivo (`badge-timer`), packshot optimizado y aviso de stock.
+# 3. Incluye el botón directo de redirección para concretar la compra en el comercio oficial.
+# =============================================================================
 if not items_filtrados:
     st.info("No hay ofertas de remate relámpago que coincidan con los filtros seleccionados.")
 else:

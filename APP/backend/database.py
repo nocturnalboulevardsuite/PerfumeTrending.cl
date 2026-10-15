@@ -25,12 +25,27 @@ import uuid
 
 logger = logging.getLogger("PerfumeDatabase")
 
-# Configuración de rutas canónicas del sistema
+# =============================================================================
+# BLOQUE 1: RESOLUCIÓN DE RUTAS DEL SISTEMA Y ARCHIVOS CANÓNICOS
+# -----------------------------------------------------------------------------
+# ¿QUÉ HACE ESTE BLOQUE?
+# Permite que la aplicación funcione sin importar desde qué directorio se ejecute:
+# ya sea desde la raíz del repositorio (`python run.py`), desde la subcarpeta `APP/`,
+# o desde tests automatizados en `tests/`. Busca dinámicamente los archivos críticos:
+# 1. `data/perfumes.db`: Base de datos SQLite local de contingencia (fallback).
+# 2. `database/schema.sql`: Script DDL para construir las tablas relacionales.
+# 3. `database/seed_catalogo.json`: Catálogo maestro canónico con las tiendas y perfumes.
+# =============================================================================
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 def resolver_ruta(subpath: str) -> str:
-    """Busca un recurso en la raíz del proyecto o dentro de APP/"""
+    """
+    ¿QUÉ HACE ESTA FUNCIÓN?
+    Evalúa una lista de posibles ubicaciones relativas en el sistema de archivos
+    hasta encontrar dónde reside el recurso solicitado, devolviendo su ruta absoluta.
+    Evita los clásicos errores de 'FileNotFoundError' al mover o desplegar el proyecto.
+    """
     curr = os.path.dirname(os.path.abspath(__file__))
     candidatos = [
         os.path.join(BASE_DIR, subpath),
@@ -50,16 +65,35 @@ DB_DIR = os.path.dirname(DB_PATH)
 SCHEMA_PATH = resolver_ruta("database/schema.sql")
 SEED_PATH = resolver_ruta("database/seed_catalogo.json")
 
-# Cache en memoria para catálogo semilla desacoplado
+# Variable global para cachear en memoria RAM el catálogo JSON una sola vez y no releer el disco
 _SEED_CACHE: Optional[Dict[str, Any]] = None
 
 
-
+# =============================================================================
+# BLOQUE 2: SEGURIDAD Y HASHING CRIPTOGRÁFICO DE CONTRASEÑAS
+# -----------------------------------------------------------------------------
+# ¿QUÉ HACE ESTE BLOQUE?
+# Proporciona una función de cifrado unidireccional SHA-256 para proteger las
+# contraseñas de los usuarios.
+# ¿POR QUÉ SE HACE ASÍ?
+# En buenas prácticas de desarrollo web, NUNCA se guardan contraseñas en texto plano.
+# Si la base de datos sufriera una filtración, el atacante solo obtendría hashes
+# hexadecimales irreversibles. Usamos la biblioteca estándar `hashlib` para no depender
+# de librerías binarias complejas como bcrypt en entornos ligeros de Streamlit.
+# =============================================================================
 def hash_password(password: str) -> str:
-    """Genera un hash SHA-256 seguro utilizando únicamente la librería estándar."""
+    """Genera un hash SHA-256 seguro utilizando únicamente la librería estándar hashlib."""
     return hashlib.sha256(password.encode('utf-8')).hexdigest()
 
 
+# =============================================================================
+# BLOQUE 3: CARGA Y CACHÉ DEL CATÁLOGO MAESTRO (JSON SEED)
+# -----------------------------------------------------------------------------
+# ¿QUÉ HACE ESTE BLOQUE?
+# Lee `database/seed_catalogo.json` con la definición de perfumes iniciales,
+# tiendas autorizadas, sellos de confianza y enlaces de scraping.
+# Lo guarda en la variable `_SEED_CACHE` para acceso instantáneo O(1).
+# =============================================================================
 def cargar_datos_semilla_json() -> Dict[str, Any]:
     """Carga y cachea el archivo JSON con el catálogo canónico y directrices de tiendas."""
     global _SEED_CACHE
@@ -75,23 +109,37 @@ def cargar_datos_semilla_json() -> Dict[str, Any]:
     return _SEED_CACHE
 
 
+# Variables globales de control para la conexión con Supabase (Patrón Singleton)
 _SUPABASE_CLIENT = None
 _SUPABASE_SERVICE_CLIENT = None
 _SUPABASE_VERIFICADO = False
 
 
+# =============================================================================
+# BLOQUE 4: GESTIÓN MULTI-ORIGEN DE CREDENCIALES DE SUPABASE
+# -----------------------------------------------------------------------------
+# ¿QUÉ HACE ESTE BLOQUE?
+# Busca las credenciales `SUPABASE_URL` y `SUPABASE_KEY` (o Service Role) en 3 niveles:
+# 1. Variables de entorno del Sistema Operativo (`os.environ`).
+# 2. Archivos locales de configuración `.streamlit/secrets.toml`.
+# 3. Diccionario interno de Streamlit Cloud (`st.secrets`).
+# ¿POR QUÉ SE HACE ASÍ?
+# Permite que el código funcione idénticamente en:
+# - Tu computadora local (leyendo el archivo secrets.toml).
+# - En despliegues en la nube de Streamlit Cloud / Docker (usando st.secrets o variables de entorno).
+# =============================================================================
 def get_supabase_credentials(prefer_service_role: bool = False) -> Tuple[Optional[str], Optional[str]]:
     """Obtiene las credenciales de Supabase desde variables de entorno, secrets de Streamlit o secrets.toml."""
     url = os.environ.get("SUPABASE_URL")
     key = None
     
-    # 1. Variables de entorno
+    # 1. Variables de entorno del sistema
     if prefer_service_role:
         key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
     if not key:
         key = os.environ.get("SUPABASE_KEY")
 
-    # 2. Cargar directamente desde archivos secrets.toml
+    # 2. Búsqueda en archivos secrets.toml en las carpetas del proyecto
     candidatos = [
         os.path.join(BASE_DIR, ".streamlit", "secrets.toml"),
         os.path.join(BASE_DIR, "APP", ".streamlit", "secrets.toml"),
@@ -139,6 +187,18 @@ def get_supabase_credentials(prefer_service_role: bool = False) -> Tuple[Optiona
     return url, key
 
 
+# =============================================================================
+# BLOQUE 5: CLIENTE SUPABASE (PATRÓN SINGLETON) Y DIAGNÓSTICO DE CONEXIÓN
+# -----------------------------------------------------------------------------
+# ¿QUÉ HACE ESTE BLOQUE?
+# 1. `get_supabase()`: Crea una única instancia reutilizable del cliente Supabase
+#    (evitando abrir múltiples conexiones HTTP innecesarias). Si se le solicita
+#    `use_service_role=True`, usa la clave con permisos administrativos para el scraper.
+# 2. `is_supabase_disponible()`: Ejecuta una consulta ultraligera (`LIMIT 1`) a la tabla
+#    `tiendas`. Si la nube responde en milisegundos, activa el modo Supabase. Si no hay
+#    internet o Supabase está caído, conmuta automáticamente a la base SQLite local
+#    (Arquitectura Zero-Downtime Fallback).
+# =============================================================================
 def get_supabase(use_service_role: bool = False):
     """
     Retorna una instancia singleton del cliente Supabase.
@@ -189,9 +249,21 @@ def is_supabase_disponible() -> bool:
         return False
 
 
+# =============================================================================
+# BLOQUE 6: MOTOR DE RESILIENCIA LOCAL (SQLITE CON MODO WAL Y CONCURRENCIA)
 # -----------------------------------------------------------------------------
-# CONEXIÓN Y CONTROL TRANSACCIONAL LOCAL (SQLITE WAL FALLBACK)
-# -----------------------------------------------------------------------------
+# ¿QUÉ HACE ESTE BLOQUE?
+# Provee la conexión local a `perfumes.db` configurada con estándares de producción:
+# - `PRAGMA journal_mode=WAL;` (Write-Ahead Logging): Permite que múltiples lectores
+#   lean la base de datos simultáneamente mientras el scraper escribe en segundo plano,
+#   evitando bloqueos de base de datos ("database is locked").
+# - `PRAGMA synchronous=NORMAL;`: Reduce la sobrecarga de I/O en disco sin perder integridad.
+# - `PRAGMA foreign_keys=ON;`: Obliga a SQLite a respetar la integridad referencial
+#   de claves foráneas (que un precio no pueda existir sin su perfume y tienda).
+# - `get_db_cursor()`: Un Administrador de Contexto (Context Manager `with`) que hace
+#   commit automático si todo sale bien, o rollback automático si ocurre cualquier error,
+#   cerrando siempre la conexión para no dejar handles abiertos.
+# =============================================================================
 def get_connection() -> sqlite3.Connection:
     """Crea y configura una conexión local de respaldo a SQLite en modo WAL."""
     os.makedirs(DB_DIR, exist_ok=True)
@@ -205,7 +277,7 @@ def get_connection() -> sqlite3.Connection:
 
 @contextmanager
 def get_db_cursor(commit: bool = False) -> Generator[sqlite3.Cursor, None, None]:
-    """Context manager transaccional determinista para SQLite."""
+    """Context manager transaccional determinista para SQLite con auto-commit y rollback defensivo."""
     conn = get_connection()
     cursor = conn.cursor()
     try:
@@ -219,9 +291,17 @@ def get_db_cursor(commit: bool = False) -> Generator[sqlite3.Cursor, None, None]
         conn.close()
 
 
+# =============================================================================
+# BLOQUE 7: INICIALIZACIÓN DE ESQUEMA (DDL) Y POBLADO AUTOMÁTICO DE DATOS
 # -----------------------------------------------------------------------------
-# INICIALIZACIÓN DE ESQUEMA (DDL) Y MIGRACIONES DE USUARIOS / FAVORITOS
-# -----------------------------------------------------------------------------
+# ¿QUÉ HACE ESTE BLOQUE?
+# 1. `init_db()`: Ejecuta `schema.sql` en SQLite para crear las tablas relacionales
+#    si aún no existen, y asegura que las columnas de perfil y favoritos estén presentes.
+# 2. `poblar_datos_semilla()`: Si la base está vacía, inserta los 134 perfumes canónicos,
+#    las 8 tiendas chilenas y sus registros de precios iniciales.
+# 3. `poblar_datos_semilla_supabase()`: Realiza el mismo proceso sobre Supabase en la nube
+#    utilizando operaciones masivas `upsert` para evitar duplicidad de llaves primarias.
+# =============================================================================
 def init_db(force_reseed: bool = False) -> None:
     """
     Inicializa la persistencia:
@@ -472,9 +552,19 @@ def poblar_datos_semilla_supabase() -> bool:
         return False
 
 
+# =============================================================================
+# BLOQUE 8: GESTIÓN DE USUARIOS, AUTENTICACIÓN Y PERFIL DE CLIENTE
 # -----------------------------------------------------------------------------
-# AUTENTICACIÓN, USUARIOS Y PERFIL
-# -----------------------------------------------------------------------------
+# ¿QUÉ HACE ESTE BLOQUE?
+# Maneja todo el ciclo de vida de las cuentas de usuario:
+# 1. `crear_usuario()`: Valida que el correo no esté duplicado, hashea la contraseña
+#    con SHA-256 y crea el registro con valores predeterminados (alertas activadas).
+# 2. `verificar_usuario()`: Busca el correo y compara el hash SHA-256 para iniciar sesión.
+#    Por seguridad, elimina el campo `password_hash` antes de retornar el diccionario.
+# 3. `obtener_perfil_usuario()`: Permite consultar los datos por ID o por correo electrónico.
+# 4. `actualizar_perfil_usuario()`: Actualiza nombre, teléfono, biografía y foto (URL).
+# 5. `actualizar_preferencias_notificacion()`: Configura si desea emails y el % de descuento mínimo.
+# =============================================================================
 def crear_usuario(
     nombre: str,
     email: str,
@@ -483,7 +573,7 @@ def crear_usuario(
     bio: str = "",
     foto_perfil: str = ""
 ) -> Tuple[bool, str]:
-    """Registra un nuevo usuario en la plataforma."""
+    """Registra un nuevo usuario en la base de datos con contraseña cifrada en SHA-256."""
     init_db()
     email_clean = email.strip().lower()
     
@@ -504,7 +594,11 @@ def crear_usuario(
 
 
 def verificar_usuario(email: str, password: str) -> Tuple[bool, Optional[Dict[str, Any]]]:
-    """Valida credenciales de acceso y retorna la información completa del usuario."""
+    """
+    ¿CÓMO VALIDA EL LOGIN?
+    Hashea la clave provista y la compara contra el `password_hash` almacenado en la BD.
+    Retorna (True, datos_usuario) si coincide, o (False, None) si es errónea.
+    """
     init_db()
     email_clean = email.strip().lower()
     pwd_hash = hash_password(password)
@@ -521,7 +615,7 @@ def verificar_usuario(email: str, password: str) -> Tuple[bool, Optional[Dict[st
 
 
 def obtener_perfil_usuario(usuario_id_o_email: Any) -> Optional[Dict[str, Any]]:
-    """Consulta el perfil completo de un usuario por su ID o Correo."""
+    """Consulta el perfil completo de un usuario por su ID entero o por su Correo electrónico."""
     init_db()
     with get_db_cursor() as cursor:
         if isinstance(usuario_id_o_email, int) or str(usuario_id_o_email).isdigit():
@@ -587,7 +681,7 @@ def actualizar_preferencias_notificacion(
     alerta_email: bool,
     umbral_descuento: int = 10
 ) -> Tuple[bool, str]:
-    """Guarda si el usuario quiere recibir alertas al Gmail y el % mínimo de descuento."""
+    """Guarda si el usuario quiere recibir alertas al Gmail y el % mínimo de descuento para gatillarlas."""
     init_db()
     with get_db_cursor(commit=True) as cursor:
         if isinstance(usuario_id_o_email, int) or str(usuario_id_o_email).isdigit():
@@ -602,9 +696,18 @@ def actualizar_preferencias_notificacion(
         return True, "Preferencias de notificación guardadas."
 
 
+# =============================================================================
+# BLOQUE 9: FAVORITOS Y SISTEMA INTELIGENTE DE MONITOREO DE PRECIOS
 # -----------------------------------------------------------------------------
-# FRAGANCIAS FAVORITAS Y MONITOREO DE PRECIOS
-# -----------------------------------------------------------------------------
+# ¿QUÉ HACE ESTE BLOQUE?
+# Permite que el usuario guarde perfumes en seguimiento:
+# 1. Guarda el perfume junto al `precio_guardado` (el precio que tenía al momento del clic).
+# 2. Al listar los favoritos en `obtener_favoritos_usuario()`, calcula en tiempo real
+#    si el precio actual bajó respecto al guardado (`baja_detectada = True`) y calcula
+#    el porcentaje exacto de rebaja.
+# 3. `obtener_alertas_pendientes()`: Consulta con cláusula `HAVING` que detecta qué
+#    usuarios superaron su umbral de descuento configurado para enviarles alerta.
+# =============================================================================
 def agregar_favorito(usuario_id_o_email: Any, perfume_id: int) -> bool:
     """Añade una fragancia a la lista de favoritos del usuario guardando el mejor precio actual."""
     init_db()
@@ -685,8 +788,9 @@ def es_favorito(usuario_id_o_email: Any, perfume_id: int) -> bool:
 
 def obtener_alertas_pendientes() -> List[Dict[str, Any]]:
     """
-    Función utilizada por el backend / scraper / cronjob para determinar qué usuarios
-    deben recibir un correo electrónico al haberse detectado una baja de precio.
+    ¿QUÉ HACE ESTA CONSULTA?
+    Calcula qué usuarios tienen activadas las alertas por email y tienen perfumes favoritos
+    cuyo precio actual cayó por debajo del porcentaje configurado en `umbral_descuento`.
     """
     init_db()
     query = """
@@ -708,9 +812,14 @@ def obtener_alertas_pendientes() -> List[Dict[str, Any]]:
         return [dict(r) for r in cursor.fetchall()]
 
 
+# =============================================================================
+# BLOQUE 10: RESOLUCIÓN Y CONSTRUCCIÓN DE ENLACES EXTERNOS A TIENDAS
 # -----------------------------------------------------------------------------
-# CONSULTAS DE DOMINIO Y ACCESO A DATOS ORIGINALES (MANTENIDOS)
-# -----------------------------------------------------------------------------
+# ¿QUÉ HACE ESTE BLOQUE?
+# Provee los enlaces directos o motores de búsqueda interna de cada multitienda chilena:
+# - Si la oferta tiene URL directa en el scraper o catálogo, la entrega inmediatamente.
+# - Si no, construye la URL del motor de búsqueda oficial (Falabella, Paris, Ripley, Silk, etc.).
+# =============================================================================
 def obtener_url_directa_tienda(perfume_id: int, tienda_nombre: str) -> Optional[Tuple[str, int, int, int]]:
     """Retorna la tupla (url_producto, precio_actual, precio_normal, volumen_ml) configurada en el catálogo semilla."""
     catalogo = cargar_datos_semilla_json()
@@ -726,6 +835,7 @@ def obtener_url_directa_tienda(perfume_id: int, tienda_nombre: str) -> Optional[
 
 
 def generar_url_tienda(tienda_nombre: str, perfume_nombre: str, url_directa: Optional[str] = None) -> Optional[str]:
+    """Genera el enlace de navegación para el usuario hacia la tienda correspondiente."""
     if url_directa and url_directa.startswith("http") and url_directa != "#":
         return url_directa
 
@@ -756,9 +866,21 @@ def tienda_comercializa_marca(tienda_nombre: str, marca: str) -> bool:
     return True
 
 
+# =============================================================================
+# BLOQUE 11: PERSISTENCIA TRANSACCIONAL ATÓMICA Y CONTROL DE ERRORES DE SCRAPING
 # -----------------------------------------------------------------------------
-# PERSISTENCIA TRANSACCIONAL ATÓMICA Y CONTROL DE ERRORES DE SCRAPING
-# -----------------------------------------------------------------------------
+# ¿QUÉ HACE ESTE BLOQUE?
+# Es el núcleo transaccional del backend. Recibe las observaciones extraídas por los scrapers:
+# 1. Valida estrictamente las reglas de negocio (precio > 0, stock booleano, URL HTTP/HTTPS válida).
+# 2. Si Supabase está disponible, ejecuta la RPC `registrar_observacion_oferta` en PostgreSQL.
+# 3. Si se ejecuta en SQLite local, abre una transacción atómica `with get_db_cursor(commit=True)`.
+# 4. Diferencia entre:
+#    - Ofertas nuevas: Inserta en `ofertas_actuales` y genera evento `observacion_inicial` en `precios_registro`.
+#    - Ofertas sin cambios: Solo actualiza marcas temporales de verificación (`ultima_verificacion_exitosa`).
+#    - Ofertas con cambios: Registra la variación (`cambio_precio`, `cambio_stock`, etc.) y crea un snapshot inmutable en el historial.
+# 5. `registrar_fallo_scraping()`: Si una tienda bloquea el bot o falla el scraping, incrementa
+#    el contador `fallos_consecutivos` sin destruir el último precio conocido ni crear datos ficticios.
+# =============================================================================
 def registrar_observacion_oferta(observacion: Dict[str, Any]) -> Dict[str, Any]:
     """
     Persistencia transaccional de una observación de precio/stock:
@@ -1095,6 +1217,22 @@ def registrar_precio(
     })
 
 
+# =============================================================================
+# BLOQUE 12: CONSULTAS DE CATÁLOGO Y OFERTAS CONSOLIDADAS
+# -----------------------------------------------------------------------------
+# ¿QUÉ HACE ESTE BLOQUE?
+# Alimenta la vista principal del catálogo, la ficha técnica y los gráficos:
+# 1. `obtener_catalogo()`: Realiza el cálculo del mejor precio disponible en stock.
+#    - Consulta primaria: Vista `vista_catalogo` en Supabase (precalculada en PostgreSQL).
+#    - Fallback: Consulta agregada en SQLite local con `MIN(CASE WHEN en_stock=1 THEN precio_actual END)`.
+#    - Filtros: Búsqueda de texto (nombre, marca), categorías (árabes, remates) y esencias (notas).
+# 2. `obtener_detalle_perfume()`: Recupera la ficha completa de una fragancia específica.
+# 3. `obtener_precios_actuales()`: Retorna la comparativa en vivo entre las tiendas auditadas
+#    junto con el cálculo del precio por mililitro ($/ml).
+# 4. `obtener_historico_precios()`: Genera la serie cronológica temporal para graficar la evolución.
+# 5. `guardar_o_actualizar_perfume_scraped()`: Permite a los scrapers autónomos ingresar nuevos
+#    perfumes o actualizar catálogos dinámicamente tanto en Supabase como en SQLite.
+# =============================================================================
 def obtener_catalogo(
     busqueda: Optional[str] = None,
     esencias: Optional[List[str]] = None,
@@ -1396,6 +1534,23 @@ def guardar_o_actualizar_perfume_scraped(
         return {"perfume_id": perfume_id_sq, "es_nuevo": es_nuevo_sq, "fecha": fecha_actual}
 
 
+# =============================================================================
+# BLOQUE 13: AUDITORÍA DE TIENDAS Y MOTOR DE CONFIANZA (TRUSTSCORE CHILE)
+# -----------------------------------------------------------------------------
+# ¿QUÉ HACE ESTE BLOQUE?
+# Implementa el algoritmo de evaluación de comercios de perfumería en Chile:
+# 1. `obtener_tiendas_trust()`: Retorna el ranking de tiendas ordenadas de mayor a menor confianza.
+#    El TrustScore (0 a 100 puntos) se descompone en 4 pilares auditados de 25 puntos cada uno:
+#    - Seguridad Web (25 pts): Cifrado SSL/TLS activo y certificado válido.
+#    - Legalidad & RUT (25 pts): Razón social constituida y verificable ante el SII.
+#    - Garantía & Devoluciones (25 pts): Cumplimiento de la Ley del Consumidor 19.496 y política de 30 días.
+#    - Reputación & Sellos (25 pts): Adhesión a la Cámara de Comercio de Santiago (CCS) y bajo reclamo SERNAC.
+# 2. `auditar_tienda_por_url()`: Permite al usuario pegar cualquier enlace o URL externa.
+#    - Si la tienda está en la base de datos auditada, entrega el reporte oficial certificado.
+#    - Si es desconocida, analiza el dominio buscando señales de riesgo (falta de HTTPS,
+#      términos engañosos tipo 'outlet-original', 'ganga', o dominios no chilenos) y genera
+#      un semáforo preventivo de advertencia contra estafas o perfumes falsificados.
+# =============================================================================
 def obtener_tiendas() -> List[Dict[str, Any]]:
     """Retorna la lista de tiendas registradas ordenadas por índice de confianza."""
     return obtener_tiendas_trust()
