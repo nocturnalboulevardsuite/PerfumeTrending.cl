@@ -64,18 +64,40 @@ def verificar_despliegue():
     else:
         errores.append(f"Vista 'vista_precios_actuales' falló (HTTP {r_vista.status_code})")
         
-    # 3. Verificar RPC registrar_observacion_oferta
-    # Probamos una llamada idempotente con datos que no rompan nada
+    # 3. Verificar RPCs transaccionales
     print("\n--- Verificando Funciones RPC ---")
-    r_rpc = requests.post(f"{url}/rest/v1/rpc/registrar_fallo_scraping", headers=headers, json={
-        "p_tienda_id": 1,
-        "p_url_producto": "https://test.verificacion.local/check",
-        "p_error_mensaje": "Ping de verificacion post-despliegue"
-    })
-    if r_rpc.status_code == 200:
-        print("[OK] RPC 'registrar_fallo_scraping' responde correctamente.")
+    
+    # Obtenemos una variante y tienda existente para la prueba
+    r_var = requests.get(f"{url}/rest/v1/variantes_perfume?limit=1", headers=headers)
+    if r_var.status_code == 200 and len(r_var.json()) > 0:
+        var_id = r_var.json()[0]['id']
+        
+        # Test RPC registrar_fallo_scraping
+        r_rpc_fallo = requests.post(f"{url}/rest/v1/rpc/registrar_fallo_scraping", headers=headers, json={
+            "p_variante_id": var_id,
+            "p_tienda_id": 1,
+            "p_mensaje": "Ping de verificacion post-despliegue"
+        })
+        if r_rpc_fallo.status_code == 200:
+            print(f"[OK] RPC 'registrar_fallo_scraping' responde correctamente: {r_rpc_fallo.json()}")
+        else:
+            errores.append(f"RPC 'registrar_fallo_scraping' falló (HTTP {r_rpc_fallo.status_code}: {r_rpc_fallo.text[:100]})")
+            
+        # Test RPC registrar_observacion_oferta con datos que generen 'sin_cambios' o 'actualizada'
+        r_rpc_obs = requests.post(f"{url}/rest/v1/rpc/registrar_observacion_oferta", headers=headers, json={
+            "p_variante_id": var_id,
+            "p_tienda_id": 1,
+            "p_precio_actual": 99990,
+            "p_precio_normal": 119990,
+            "p_en_stock": True,
+            "p_url_producto": "https://test.verificacion.local/item-test"
+        })
+        if r_rpc_obs.status_code == 200:
+            print(f"[OK] RPC 'registrar_observacion_oferta' responde correctamente: {r_rpc_obs.json()}")
+        else:
+            errores.append(f"RPC 'registrar_observacion_oferta' falló (HTTP {r_rpc_obs.status_code}: {r_rpc_obs.text[:100]})")
     else:
-        errores.append(f"RPC 'registrar_fallo_scraping' falló (HTTP {r_rpc.status_code}: {r_rpc.text[:100]})")
+        errores.append("No se pudo obtener una variante para probar RPCs")
         
     print("\n" + "=" * 60)
     if not errores:
