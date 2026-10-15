@@ -150,6 +150,9 @@ trend_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg'
 shield_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d83737' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/><polyline points='9 12 11 14 15 10'/></svg>"
 tag_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d83737' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z'/><circle cx='7' cy='7' r='1.5' fill='%23d83737'/></svg>"
 home_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d83737' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z'/><polyline points='9 22 9 12 15 12 15 22'/></svg>"
+logo_color_encoded = "%238c7b6d"
+text_color_encoded = "%23ffffff" if is_dark else "%2318181b"
+logo_svg_data = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 36' fill='none' stroke-linecap='round' stroke-linejoin='round'><path d='M 6.8 21 L 29.2 21 C 30 25 27 32 18 32 C 9 32 6 25 6.8 21 Z' fill='{logo_color_encoded}' /><line x1='6.8' y1='21' x2='29.2' y2='21' stroke='{text_color_encoded}' stroke-width='1.5' /><line x1='18' y1='10' x2='18' y2='30' stroke='{text_color_encoded}' stroke-width='1' /><path d='M 18 32 C 9 32 5 24 7.5 17 C 9 12 13 10 15 10 L 21 10 C 23 10 27 12 28.5 17 C 31 24 27 32 18 32 Z' stroke='{text_color_encoded}' stroke-width='2' /><rect x='15' y='7' width='6' height='3' stroke='{text_color_encoded}' stroke-width='1.5' /><rect x='13' y='3' width='10' height='4' rx='1' stroke='{text_color_encoded}' stroke-width='1.5' /><rect x='16' y='0' width='4' height='3' rx='1' fill='{logo_color_encoded}' stroke='{text_color_encoded}' stroke-width='1' /></svg>"
 
 # 2. CSS ADAPTABLE Y ESTILOS PRINCIPALES
 st.markdown(f"""
@@ -463,6 +466,59 @@ st.markdown(f"""
     .buy-btn:hover {{
         background-color: #726255;
     }}
+
+    /* BRAND LOGO INTERACTIVO NATIVO */
+    .st-key-btn_logo_home,
+    .st-key-btn_logo_home > div {{
+        display: inline-block !important;
+        width: fit-content !important;
+    }}
+    .st-key-btn_logo_home button {{
+        background: transparent !important;
+        background-color: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        outline: none !important;
+        padding: 0 0 0 46px !important;
+        margin: 0 !important;
+        height: 44px !important;
+        min-height: 44px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        cursor: pointer !important;
+        position: relative !important;
+        transform: none !important;
+        background-image: url("{logo_svg_data}") !important;
+        background-repeat: no-repeat !important;
+        background-position: left center !important;
+        background-size: 34px 34px !important;
+        transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+    }}
+    .st-key-btn_logo_home button:hover {{
+        background: transparent !important;
+        background-color: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        outline: none !important;
+        background-image: url("{logo_svg_data}") !important;
+        background-repeat: no-repeat !important;
+        background-position: left center !important;
+        background-size: 34px 34px !important;
+        transform: scale(1.03) !important;
+    }}
+    .st-key-btn_logo_home button p {{
+        font-size: 1.5rem !important;
+        letter-spacing: 0.3px !important;
+        color: {text_color} !important;
+        font-weight: 300 !important;
+        margin: 0 !important;
+        line-height: 1 !important;
+        display: inline !important;
+    }}
+    .st-key-btn_logo_home button p strong {{
+        font-weight: 700 !important;
+        color: {text_color} !important;
+    }}
     </style>
 """, unsafe_allow_html=True)
 
@@ -470,9 +526,7 @@ st.markdown(f"""
 col_logo, col_espacio, col_actions = st.columns([5, 1.8, 2.4], vertical_alignment="center")
 
 with col_logo:
-    logo_color = "#8c7b6d"
-    logo_html = f"""<a href="/" target="_top" style="text-decoration: none; display: inline-flex; align-items: center; gap: 12px; cursor: pointer; width: fit-content;"><svg width="34" height="34" viewBox="0 0 36 36" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M 6.8 21 L 29.2 21 C 30 25 27 32 18 32 C 9 32 6 25 6.8 21 Z" fill="{logo_color}" /><line x1="6.8" y1="21" x2="29.2" y2="21" stroke="{text_color}" stroke-width="1.5" /><line x1="18" y1="10" x2="18" y2="30" stroke="{text_color}" stroke-width="1" /><path d="M 18 32 C 9 32 5 24 7.5 17 C 9 12 13 10 15 10 L 21 10 C 23 10 27 12 28.5 17 C 31 24 27 32 18 32 Z" stroke="{text_color}" stroke-width="2" /><rect x="15" y="7" width="6" height="3" stroke="{text_color}" stroke-width="1.5" /><rect x="13" y="3" width="10" height="4" rx="1" stroke="{text_color}" stroke-width="1.5" /><rect x="16" y="0" width="4" height="3" rx="1" fill="{logo_color}" stroke="{text_color}" stroke-width="1" /></svg><span style="font-size: 1.4rem; color: {text_color}; letter-spacing: 0.5px;"><span style="font-weight: 300;">Perfume</span><span style="font-weight: 600;">Trending</span></span></a>"""
-    st.markdown(logo_html, unsafe_allow_html=True)
+    st.button("Perfume**Trending**", key="btn_logo_home", help="Ir al inicio de PerfumeTrending", on_click=lambda: st.switch_page("app.py"))
 
 with col_actions:
     btn_col1, btn_col2 = st.columns([1.4, 1], vertical_alignment="center")

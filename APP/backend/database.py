@@ -1,13 +1,13 @@
 """
-PerfumeTrending.cl — Capa de Persistencia y Motor de Base de Datos
-==================================================================
-Módulo desacoplado de acceso a datos de alto rendimiento basado en SQLite con:
-- Esquema relacional DDL puro externalizado en database/schema.sql.
-- Catálogo maestro y tiendas auditadas desacopladas en database/seed_catalogo.json.
-- Modo WAL (Write-Ahead Logging) para concurrencia multi-hilo (Streamlit + Scraper).
-- Context managers para gestión determinista de transacciones y conexiones.
-- Índices B-Tree optimizados para series de tiempo y búsquedas de catálogo.
-- Tipado estricto (PEP 484) y control defensivo de excepciones.
+PerfumeTrending.cl — Capa de Persistencia y Motor de Base de Datos (Supabase + SQLite Fallback)
+=============================================================================================
+Módulo desacoplado de acceso a datos de nivel de producción con:
+- Motor primario: Supabase (PostgreSQL 15+ en la nube con PostgREST y RLS).
+- Motor de resiliencia: SQLite local con modo WAL (Zero-Downtime Fallback).
+- Vistas SQL de alto rendimiento para catálogo consolidado y mejores precios en vivo.
+- DDL externalizado en supabase/migrations/ y database/schema.sql.
+- Catálogo maestro y tiendas auditadas en database/seed_catalogo.json.
+- Context managers para transacciones seguras y tipado estricto (PEP 484).
 """
 
 from contextlib import contextmanager
@@ -17,6 +17,7 @@ import logging
 import os
 import random
 import sqlite3
+import sys
 from typing import Any, Dict, Generator, List, Optional, Tuple
 import urllib.parse
 
@@ -24,6 +25,7 @@ logger = logging.getLogger("PerfumeDatabase")
 
 # Configuración de rutas canónicas del sistema
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 
 def resolver_ruta(subpath: str) -> str:
     """Busca un recurso en la raíz del proyecto o dentro de APP/"""
@@ -40,6 +42,7 @@ def resolver_ruta(subpath: str) -> str:
             return os.path.abspath(c)
     return os.path.join(BASE_DIR, subpath)
 
+
 DB_PATH = resolver_ruta("data/perfumes.db")
 DB_DIR = os.path.dirname(DB_PATH)
 SCHEMA_PATH = resolver_ruta("database/schema.sql")
@@ -47,6 +50,10 @@ SEED_PATH = resolver_ruta("database/seed_catalogo.json")
 
 # Cache en memoria para catálogo semilla desacoplado
 _SEED_CACHE: Optional[Dict[str, Any]] = None
+
+# Singleton del cliente Supabase
+_SUPABASE_CLIENT = None
+_SUPABASE_VERIFICADO = False
 
 
 def cargar_datos_semilla_json() -> Dict[str, Any]:
@@ -64,16 +71,125 @@ def cargar_datos_semilla_json() -> Dict[str, Any]:
     return _SEED_CACHE
 
 
-def get_connection() -> sqlite3.Connection:
-    """
-    Crea y configura una conexión de producción a SQLite.
+_SUPABASE_CLIENT = None
+_SUPABASE_SERVICE_CLIENT = None
+_SUPABASE_VERIFICADO = False
+
+
+def get_supabase_credentials(prefer_service_role: bool = False) -> Tuple[Optional[str], Optional[str]]:
+    """Obtiene las credenciales de Supabase desde variables de entorno, secrets de Streamlit o secrets.toml."""
+    url = os.environ.get("SUPABASE_URL")
+    key = None
     
-    Ajustes de rendimiento y concurrencia:
-    - WAL Mode: Permite lecturas y escrituras simultáneas sin bloqueos de tabla.
-    - Busy timeout (15s): Previene bloqueos por concurrencia entre Streamlit y el Scraper.
-    - Synchronous NORMAL: Optimiza I/O en disco garantizando durabilidad ACID.
-    - Foreign Keys: Integridad referencial habilitada a nivel de motor.
+    # 1. Variables de entorno
+    if prefer_service_role:
+        key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
+    if not key:
+        key = os.environ.get("SUPABASE_KEY")
+
+    # 2. Cargar directamente desde archivos secrets.toml
+    candidatos = [
+        os.path.join(BASE_DIR, ".streamlit", "secrets.toml"),
+        os.path.join(BASE_DIR, "APP", ".streamlit", "secrets.toml"),
+        os.path.join(os.path.dirname(BASE_DIR), ".streamlit", "secrets.toml"),
+    ]
+    for ruta in candidatos:
+        if os.path.exists(ruta):
+            try:
+                dict_secrets = {}
+                with open(ruta, "r", encoding="utf-8") as f:
+                    for line in f:
+                        line = line.strip()
+                        if "=" in line and not line.startswith("#"):
+                            k, v = line.split("=", 1)
+                            dict_secrets[k.strip()] = v.strip().strip('"').strip("'")
+                
+                if not url:
+                    url = dict_secrets.get("SUPABASE_URL")
+                
+                if prefer_service_role and "SUPABASE_SERVICE_ROLE_KEY" in dict_secrets:
+                    key = dict_secrets["SUPABASE_SERVICE_ROLE_KEY"]
+                elif not key:
+                    key = dict_secrets.get("SUPABASE_KEY")
+
+                if url and key:
+                    return url, key
+            except Exception:
+                pass
+
+    # 3. Intentar cargar desde st.secrets de Streamlit como fallback
+    try:
+        import streamlit as st
+        if hasattr(st, "secrets"):
+            if not url and "SUPABASE_URL" in st.secrets:
+                url = st.secrets["SUPABASE_URL"]
+            if prefer_service_role and "SUPABASE_SERVICE_ROLE_KEY" in st.secrets:
+                key = st.secrets["SUPABASE_SERVICE_ROLE_KEY"]
+            elif not key and "SUPABASE_KEY" in st.secrets:
+                key = st.secrets["SUPABASE_KEY"]
+            if url and key:
+                return str(url).strip(), str(key).strip()
+    except Exception:
+        pass
+
+    return url, key
+
+
+def get_supabase(use_service_role: bool = False):
     """
+    Retorna una instancia singleton del cliente Supabase.
+    Si use_service_role=True, utiliza la clave de administrador para ignorar políticas RLS.
+    """
+    global _SUPABASE_CLIENT, _SUPABASE_SERVICE_CLIENT
+    if use_service_role:
+        if _SUPABASE_SERVICE_CLIENT is not None:
+            return _SUPABASE_SERVICE_CLIENT
+    else:
+        if _SUPABASE_CLIENT is not None:
+            return _SUPABASE_CLIENT
+
+    url, key = get_supabase_credentials(prefer_service_role=use_service_role)
+    if not url or not key:
+        return None
+
+    try:
+        from supabase import create_client
+        client = create_client(url, key)
+        if use_service_role:
+            _SUPABASE_SERVICE_CLIENT = client
+        else:
+            _SUPABASE_CLIENT = client
+        return client
+    except Exception as e:
+        logger.warning(f"No se pudo inicializar el cliente Supabase (service_role={use_service_role}): {e}")
+        return None
+
+
+def is_supabase_disponible() -> bool:
+    """Verifica si Supabase está alcanzable y tiene las tablas creadas."""
+    global _SUPABASE_VERIFICADO
+    if _SUPABASE_VERIFICADO:
+        return True
+
+    sb = get_supabase()
+    if not sb:
+        return False
+
+    try:
+        # Prueba ligera consultando 1 registro de tiendas o perfumes
+        resp = sb.table("tiendas").select("id").limit(1).execute()
+        _SUPABASE_VERIFICADO = True
+        return True
+    except Exception as e:
+        logger.debug(f"Supabase aún no responde o tablas no creadas: {e}")
+        return False
+
+
+# -----------------------------------------------------------------------------
+# CONEXIÓN Y CONTROL TRANSACCIONAL LOCAL (SQLITE WAL FALLBACK)
+# -----------------------------------------------------------------------------
+def get_connection() -> sqlite3.Connection:
+    """Crea y configura una conexión local de respaldo a SQLite en modo WAL."""
     os.makedirs(DB_DIR, exist_ok=True)
     conn = sqlite3.connect(DB_PATH, timeout=15.0)
     conn.row_factory = sqlite3.Row
@@ -85,11 +201,7 @@ def get_connection() -> sqlite3.Connection:
 
 @contextmanager
 def get_db_cursor(commit: bool = False) -> Generator[sqlite3.Cursor, None, None]:
-    """
-    Context manager transaccional determinista.
-    
-    Garantiza commit automático en éxito, rollback ante excepciones y cierre seguro de conexión.
-    """
+    """Context manager transaccional determinista para SQLite."""
     conn = get_connection()
     cursor = conn.cursor()
     try:
@@ -108,44 +220,49 @@ def get_db_cursor(commit: bool = False) -> Generator[sqlite3.Cursor, None, None]
 # -----------------------------------------------------------------------------
 def init_db(force_reseed: bool = False) -> None:
     """
-    Inicializa la base de datos aplicando el esquema DDL y cargando datos semilla si está vacía.
+    Inicializa la persistencia:
+    - Asegura que SQLite local esté siempre listo como respaldo defensivo.
+    - Si Supabase está disponible y vacío, puebla automáticamente los datos semilla.
     """
-    if not os.path.exists(SCHEMA_PATH):
-        raise FileNotFoundError(f"No se encontró el archivo de esquema SQL en: {SCHEMA_PATH}")
+    # 1. Asegurar base de datos local SQLite (siempre disponible)
+    if os.path.exists(SCHEMA_PATH):
+        with open(SCHEMA_PATH, "r", encoding="utf-8") as f:
+            schema_sql = f.read()
 
-    with open(SCHEMA_PATH, "r", encoding="utf-8") as f:
-        schema_sql = f.read()
+        with get_db_cursor(commit=True) as cursor:
+            cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='precios_registro';")
+            if cursor.fetchone():
+                cursor.execute("PRAGMA table_info(precios_registro);")
+                cols = {c["name"] for c in cursor.fetchall()}
+                if "volumen_ml" not in cols:
+                    cursor.execute("ALTER TABLE precios_registro ADD COLUMN volumen_ml INTEGER DEFAULT 100;")
 
-    with get_db_cursor(commit=True) as cursor:
-        # 1. Migración previa defensiva si la tabla precios_registro ya existía sin volumen_ml
-        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='precios_registro';")
-        if cursor.fetchone():
-            cursor.execute("PRAGMA table_info(precios_registro);")
-            cols = {c["name"] for c in cursor.fetchall()}
-            if "volumen_ml" not in cols:
-                cursor.execute("ALTER TABLE precios_registro ADD COLUMN volumen_ml INTEGER DEFAULT 100;")
+            cursor.executescript(schema_sql)
 
-        # 2. Aplicar esquema DDL e índices
-        cursor.executescript(schema_sql)
+            cursor.execute("SELECT COUNT(*) FROM perfumes;")
+            row_count = cursor.fetchone()[0]
+            if row_count == 0 or force_reseed:
+                poblar_datos_semilla(cursor)
 
-        # 3. Verificar si la base de datos requiere población inicial
-        cursor.execute("SELECT COUNT(*) FROM perfumes;")
-        row_count = cursor.fetchone()[0]
-        if row_count == 0 or force_reseed:
-            poblar_datos_semilla(cursor)
+    # 2. Si Supabase está activo y conectado, verificar si requiere datos semilla
+    sb = get_supabase()
+    if sb and is_supabase_disponible():
+        try:
+            res = sb.table("perfumes").select("id", count="exact").limit(1).execute()
+            if (res.count is not None and res.count == 0) or force_reseed:
+                poblar_datos_semilla_supabase()
+        except Exception as e:
+            logger.debug(f"Aviso al verificar catálogo en Supabase: {e}")
 
 
 def poblar_datos_semilla(cursor: sqlite3.Cursor) -> None:
-    """
-    Puebla la base de datos a partir del archivo canónico seed_catalogo.json.
-    """
+    """Puebla SQLite a partir del archivo canónico seed_catalogo.json."""
     catalogo = cargar_datos_semilla_json()
 
     cursor.execute("DELETE FROM precios_registro;")
     cursor.execute("DELETE FROM perfumes;")
     cursor.execute("DELETE FROM tiendas;")
 
-    # 1. Inserción de Tiendas Auditadas
     tiendas_data = catalogo.get("tiendas", [])
     tiendas_tuples = [
         (
@@ -169,7 +286,6 @@ def poblar_datos_semilla(cursor: sqlite3.Cursor) -> None:
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
     """, tiendas_tuples)
 
-    # 2. Inserción de Perfumes
     perfumes_data = catalogo.get("perfumes", [])
     perfumes_tuples = [
         (
@@ -188,11 +304,9 @@ def poblar_datos_semilla(cursor: sqlite3.Cursor) -> None:
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
     """, perfumes_tuples)
 
-    # Mapeo de tiendas nombre -> id
     cursor.execute("SELECT id, nombre FROM tiendas;")
     tiendas_map = {r["nombre"]: r["id"] for r in cursor.fetchall()}
 
-    # 3. Inserción de Serie Temporal Histórica de Precios por Tienda
     hoy = datetime.now()
     dias_atras = [21, 14, 7, 3, 1, 0]
     registros_precios = []
@@ -229,16 +343,130 @@ def poblar_datos_semilla(cursor: sqlite3.Cursor) -> None:
     VALUES (?, ?, ?, ?, ?, ?, ?, ?);
     """, registros_precios)
 
-    logger.info(f"Base de datos poblada exitosamente: {len(perfumes_tuples)} perfumes, {len(tiendas_tuples)} tiendas, {len(registros_precios)} registros históricos.")
+    logger.info(f"SQLite poblado: {len(perfumes_tuples)} perfumes, {len(tiendas_tuples)} tiendas, {len(registros_precios)} registros.")
+
+
+def poblar_datos_semilla_supabase() -> bool:
+    """Puebla Supabase con las tiendas, perfumes y precios del catálogo semilla."""
+    sb = get_supabase()
+    if not sb:
+        return False
+
+    catalogo = cargar_datos_semilla_json()
+
+    # 1. Tiendas
+    tiendas_data = catalogo.get("tiendas", [])
+    tiendas_inserts = []
+    for t in tiendas_data:
+        tiendas_inserts.append({
+            "nombre": t["nombre"],
+            "url_base": t["url_base"],
+            "trust_score": t.get("trust_score", 85),
+            "badge": t.get("badge", "Verificado"),
+            "logo_emoji": t.get("logo_emoji", ""),
+            "rut": t.get("rut", ""),
+            "tipo_tienda": t.get("tipo_tienda", "Comercio Especializado"),
+            "ssl_seguro": bool(t.get("ssl_seguro", 1)),
+            "anios_antiguedad": t.get("anios_antiguedad", 5),
+            "sello_ccs": bool(t.get("sello_ccs", 0)),
+            "reclamos_sernac": t.get("reclamos_sernac", "Bajo"),
+            "politica_devolucion": t.get("politica_devolucion", "30 días"),
+            "direccion_fiscal": t.get("direccion_fiscal", "Santiago, Chile"),
+            "puntos_seguridad": t.get("puntos_seguridad", 25),
+            "puntos_legalidad": t.get("puntos_legalidad", 25),
+            "puntos_garantia": t.get("puntos_garantia", 20),
+            "puntos_reputacion": t.get("puntos_reputacion", 20)
+        })
+
+    try:
+        sb.table("tiendas").upsert(tiendas_inserts, on_conflict="nombre").execute()
+    except Exception as e:
+        logger.error(f"Error insertando tiendas en Supabase: {e}")
+        return False
+
+    # Mapeo tiendas nombre -> id
+    resp_tiendas = sb.table("tiendas").select("id, nombre").execute()
+    tiendas_map = {r["nombre"]: r["id"] for r in (resp_tiendas.data or [])}
+
+    # 2. Perfumes
+    perfumes_data = catalogo.get("perfumes", [])
+    perfumes_inserts = []
+    for p in perfumes_data:
+        perfumes_inserts.append({
+            "id": p["id"],
+            "nombre": p["nombre"],
+            "marca": p["marca"],
+            "genero": p.get("genero", "Unisex"),
+            "tipo": p.get("tipo", "Eau de Parfum"),
+            "notas": p["notas"],
+            "imagen_url": p["imagen_url"],
+            "es_arabe": bool(p.get("es_arabe", False)),
+            "en_tendencia": bool(p.get("en_tendencia", False)),
+            "en_remate": bool(p.get("en_remate", False)),
+            "precio_referencia": p["precio_referencia"]
+        })
+
+    try:
+        sb.table("perfumes").upsert(perfumes_inserts, on_conflict="id").execute()
+    except Exception as e:
+        logger.error(f"Error insertando perfumes en Supabase: {e}")
+        return False
+
+    # 3. Precios Históricos
+    dias_atras = [21, 14, 7, 3, 1, 0]
+    precios_inserts = []
+    hoy = datetime.now()
+
+    for p in perfumes_data:
+        p_id = p["id"]
+        for enlace in p.get("enlaces_tiendas", []):
+            t_nombre = enlace.get("tienda")
+            if t_nombre not in tiendas_map:
+                continue
+            t_id = tiendas_map[t_nombre]
+            precio_act = enlace.get("precio_actual", p["precio_referencia"])
+            p_normal_val = enlace.get("precio_normal")
+            precio_norm = p_normal_val if (p_normal_val and p_normal_val > precio_act) else precio_act
+            url_prod = enlace.get("url_producto", "")
+            vol_ml = enlace.get("volumen_ml", p.get("volumen_ml", 100))
+
+            for dia in dias_atras:
+                fecha = hoy - timedelta(days=dia, hours=dia, minutes=dia * 4)
+                if dia == 0:
+                    p_act_h = precio_act
+                    p_norm_h = precio_norm
+                else:
+                    fluc = 1.0 + (dia * 0.004)
+                    p_act_h = int(round((precio_act * fluc) / 1000) * 1000)
+                    p_norm_h = precio_norm if precio_norm > precio_act else p_act_h
+
+                precios_inserts.append({
+                    "perfume_id": p_id,
+                    "tienda_id": t_id,
+                    "precio_actual": p_act_h,
+                    "precio_normal": p_norm_h,
+                    "en_stock": True,
+                    "volumen_ml": vol_ml,
+                    "url_producto": url_prod,
+                    "fecha_registro": fecha.strftime("%Y-%m-%d %H:%M:%S")
+                })
+
+    try:
+        for chunk_idx in range(0, len(precios_inserts), 50):
+            chunk = precios_inserts[chunk_idx:chunk_idx + 50]
+            sb.table("precios_registro").insert(chunk).execute()
+        logger.info(f"Supabase poblado exitosamente: {len(perfumes_inserts)} perfumes, {len(tiendas_inserts)} tiendas, {len(precios_inserts)} precios.")
+        return True
+    except Exception as e:
+        logger.error(f"Error insertando precios en Supabase: {e}")
+        return False
 
 
 # -----------------------------------------------------------------------------
 # REGLAS DE NEGOCIO Y RESOLUCIÓN DE CATÁLOGO
 # -----------------------------------------------------------------------------
 def obtener_url_directa_tienda(perfume_id: int, tienda_nombre: str) -> Optional[Tuple[str, int, int, int]]:
-    """
-    Retorna la tupla (url_producto, precio_actual, precio_normal, volumen_ml) configurada en el catálogo semilla.
-    """
+    """Retorna la tupla (url_producto, precio_actual, precio_normal, volumen_ml) configurada en el catálogo semilla."""
     catalogo = cargar_datos_semilla_json()
     for p in catalogo.get("perfumes", []):
         if p["id"] == perfume_id:
@@ -247,12 +475,7 @@ def obtener_url_directa_tienda(perfume_id: int, tienda_nombre: str) -> Optional[
                     p_act = enlace.get("precio_actual", p["precio_referencia"])
                     p_norm = enlace.get("precio_normal", p_act)
                     vol = enlace.get("volumen_ml", p.get("volumen_ml", 100))
-                    return (
-                        enlace.get("url_producto", ""),
-                        p_act,
-                        p_norm,
-                        vol
-                    )
+                    return (enlace.get("url_producto", ""), p_act, p_norm, vol)
     return None
 
 
@@ -260,7 +483,7 @@ def generar_url_tienda(tienda_nombre: str, perfume_nombre: str, url_directa: Opt
     """Retorna la URL directa verificada o genera la búsqueda directa en la tienda."""
     if url_directa and url_directa.startswith("http") and url_directa != "#":
         return url_directa
-    
+
     t = (tienda_nombre or "").lower()
     q = urllib.parse.quote(perfume_nombre.strip())
     if "falabella" in t:
@@ -284,14 +507,13 @@ def tienda_comercializa_marca(tienda_nombre: str, marca: str) -> bool:
     """Valida reglas de distribución oficial y comercialización legal en Chile."""
     t_nom = tienda_nombre.lower()
     m = marca.lower()
-    # Marcas con distribución exclusiva de retail de lujo oficial
     if "chanel" in m or "maison francis" in m or "tom ford" in m:
         return any(retail in t_nom for retail in ["falabella", "paris", "ripley"])
     return True
 
 
 # -----------------------------------------------------------------------------
-# CONSULTAS DE DOMINIO Y ACCESO A DATOS (DAO / REPOSITORY)
+# CONSULTAS DE DOMINIO Y ACCESO A DATOS (DAO HÍBRIDO: SUPABASE + SQLITE)
 # -----------------------------------------------------------------------------
 def registrar_precio(
     perfume_id: int,
@@ -303,15 +525,36 @@ def registrar_precio(
     fecha: Optional[str] = None,
     volumen_ml: int = 100
 ) -> None:
-    """Inserta una captura periódica de precio para un perfume en una tienda específica y tamaño en ml."""
+    """Inserta una captura periódica de precio en Supabase y en SQLite local."""
     if fecha is None:
         fecha = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    with get_db_cursor(commit=True) as cursor:
-        cursor.execute("""
-        INSERT INTO precios_registro (perfume_id, tienda_id, precio_actual, precio_normal, en_stock, volumen_ml, url_producto, fecha_registro)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?);
-        """, (perfume_id, tienda_id, precio_actual, precio_normal, int(en_stock), volumen_ml, url_producto, fecha))
+    # 1. Guardar en Supabase si está disponible
+    sb = get_supabase()
+    if sb and is_supabase_disponible():
+        try:
+            sb.table("precios_registro").insert({
+                "perfume_id": perfume_id,
+                "tienda_id": tienda_id,
+                "precio_actual": precio_actual,
+                "precio_normal": precio_normal,
+                "en_stock": bool(en_stock),
+                "volumen_ml": volumen_ml,
+                "url_producto": url_producto,
+                "fecha_registro": fecha
+            }).execute()
+        except Exception as e:
+            logger.warning(f"No se pudo guardar precio en Supabase: {e}")
+
+    # 2. Respaldo determinista en SQLite
+    try:
+        with get_db_cursor(commit=True) as cursor:
+            cursor.execute("""
+            INSERT INTO precios_registro (perfume_id, tienda_id, precio_actual, precio_normal, en_stock, volumen_ml, url_producto, fecha_registro)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+            """, (perfume_id, tienda_id, precio_actual, precio_normal, int(en_stock), volumen_ml, url_producto, fecha))
+    except Exception as e:
+        logger.error(f"Error registrando precio en SQLite: {e}")
 
 
 def obtener_catalogo(
@@ -322,15 +565,50 @@ def obtener_catalogo(
 ) -> List[Dict[str, Any]]:
     """
     Obtiene el listado de perfumes calculando el mejor precio real disponible en stock.
-    
-    Args:
-        busqueda: Filtro de texto por nombre o marca.
-        esencias: Lista de notas olfativas requeridas.
-        categoria: 'arabes', 'remates' o None.
-        orden: Criterio de ordenamiento ('precio_asc', 'precio_desc', 'nombre_asc', 'id_asc').
+    Intenta consultar Supabase (vista_catalogo); ante cualquier eventualidad, usa SQLite local.
     """
+    sb = get_supabase()
+    if sb and is_supabase_disponible():
+        try:
+            query = sb.table("vista_catalogo").select("*")
+
+            if busqueda:
+                term = busqueda.strip()
+                query = query.or_(f"nombre.ilike.%{term}%,marca.ilike.%{term}%")
+
+            if categoria == "arabes":
+                query = query.eq("es_arabe", True)
+            elif categoria == "remates":
+                query = query.eq("en_remate", True)
+
+            if orden == "precio_asc":
+                query = query.order("mejor_precio", desc=False, nulls_first=False)
+            elif orden == "precio_desc":
+                query = query.order("mejor_precio", desc=True, nulls_first=False)
+            elif orden == "nombre_asc":
+                query = query.order("nombre", desc=False)
+            else:
+                query = query.order("id", desc=False)
+
+            resp = query.execute()
+            perfumes = resp.data or []
+
+            if esencias:
+                perfumes_filtrados = []
+                esencias_lower = [e.lower() for e in esencias]
+                for p in perfumes:
+                    notas_p = [n.strip().lower() for n in p.get("notas", "").split(",")]
+                    if any(any(es in nota for nota in notas_p) for es in esencias_lower):
+                        perfumes_filtrados.append(p)
+                return perfumes_filtrados
+
+            return perfumes
+        except Exception as e:
+            logger.warning(f"Error consultando vista_catalogo en Supabase ({e}), recurriendo a SQLite.")
+
+    # Fallback SQLite
     init_db()
-    query = """
+    query_sql = """
     SELECT p.*,
            MIN(CASE WHEN pr.en_stock = 1 AND pr.precio_actual > 0 THEN pr.precio_actual END) as mejor_precio,
            MAX(pr.fecha_registro) as ultima_actualizacion
@@ -342,27 +620,27 @@ def obtener_catalogo(
 
     if busqueda:
         term = f"%{busqueda.strip()}%"
-        query += " AND (p.nombre LIKE ? OR p.marca LIKE ?)"
+        query_sql += " AND (p.nombre LIKE ? OR p.marca LIKE ?)"
         params.extend([term, term])
 
     if categoria == "arabes":
-        query += " AND p.es_arabe = 1"
+        query_sql += " AND p.es_arabe = 1"
     elif categoria == "remates":
-        query += " AND p.en_remate = 1"
+        query_sql += " AND p.en_remate = 1"
 
-    query += " GROUP BY p.id"
+    query_sql += " GROUP BY p.id"
 
     if orden == "precio_asc":
-        query += " ORDER BY mejor_precio ASC NULLS LAST"
+        query_sql += " ORDER BY mejor_precio ASC NULLS LAST"
     elif orden == "precio_desc":
-        query += " ORDER BY mejor_precio DESC NULLS LAST"
+        query_sql += " ORDER BY mejor_precio DESC NULLS LAST"
     elif orden == "nombre_asc":
-        query += " ORDER BY p.nombre ASC"
+        query_sql += " ORDER BY p.nombre ASC"
     else:
-        query += " ORDER BY p.id ASC"
+        query_sql += " ORDER BY p.id ASC"
 
     with get_db_cursor() as cursor:
-        cursor.execute(query, params)
+        cursor.execute(query_sql, params)
         perfumes = [dict(row) for row in cursor.fetchall()]
 
     if esencias:
@@ -379,6 +657,15 @@ def obtener_catalogo(
 
 def obtener_detalle_perfume(perfume_id: int) -> Optional[Dict[str, Any]]:
     """Retorna información completa del perfume por su ID."""
+    sb = get_supabase()
+    if sb and is_supabase_disponible():
+        try:
+            resp = sb.table("perfumes").select("*").eq("id", perfume_id).limit(1).execute()
+            if resp.data:
+                return resp.data[0]
+        except Exception as e:
+            logger.warning(f"Error en Supabase obtener_detalle_perfume ({e}), usando SQLite.")
+
     init_db()
     with get_db_cursor() as cursor:
         cursor.execute("SELECT * FROM perfumes WHERE id = ?;", (perfume_id,))
@@ -387,10 +674,16 @@ def obtener_detalle_perfume(perfume_id: int) -> Optional[Dict[str, Any]]:
 
 
 def obtener_precios_actuales(perfume_id: int) -> List[Dict[str, Any]]:
-    """
-    Retorna el precio más reciente registrado en cada tienda para el perfume dado.
-    Garantiza enlaces directos, stock verificado y cálculo de precio por ml ($/ml).
-    """
+    """Retorna el precio más reciente registrado en cada tienda para el perfume dado."""
+    sb = get_supabase()
+    if sb and is_supabase_disponible():
+        try:
+            resp = sb.table("vista_precios_actuales").select("*").eq("perfume_id", perfume_id).order("precio_actual", desc=False).execute()
+            if resp.data is not None:
+                return resp.data
+        except Exception as e:
+            logger.warning(f"Error en Supabase vista_precios_actuales ({e}), usando SQLite.")
+
     init_db()
     query = """
     SELECT t.id as tienda_id, t.nombre as tienda_nombre, t.url_base, t.trust_score, t.badge, t.logo_emoji,
@@ -416,7 +709,25 @@ def obtener_precios_actuales(perfume_id: int) -> List[Dict[str, Any]]:
 
 
 def obtener_historico_precios(perfume_id: int) -> List[Dict[str, Any]]:
-    """Retorna la serie temporal histórica de precios válidos para gráficos de evolución."""
+    """Retorna la serie temporal histórica de precios para gráficos de evolución."""
+    sb = get_supabase()
+    if sb and is_supabase_disponible():
+        try:
+            resp = sb.table("precios_registro").select("precio_actual, fecha_registro, tiendas(nombre)").eq("perfume_id", perfume_id).eq("en_stock", True).gt("precio_actual", 0).order("fecha_registro", desc=False).execute()
+            registros = []
+            for r in resp.data or []:
+                tienda_info = r.get("tiendas")
+                t_nombre = tienda_info.get("nombre", "Tienda") if isinstance(tienda_info, dict) else "Tienda"
+                registros.append({
+                    "tienda": t_nombre,
+                    "precio_actual": r.get("precio_actual"),
+                    "fecha_registro": r.get("fecha_registro")
+                })
+            if registros:
+                return registros
+        except Exception as e:
+            logger.warning(f"Error en Supabase obtener_historico_precios ({e}), usando SQLite.")
+
     init_db()
     query = """
     SELECT t.nombre as tienda, pr.precio_actual, pr.fecha_registro
@@ -442,22 +753,83 @@ def guardar_o_actualizar_perfume_scraped(
     imagen_url: Optional[str] = None,
     notas: Optional[str] = None,
     es_arabe: int = 0,
-    genero: str = "Unisex"
+    genero: str = "Unisex",
+    volumen_ml: int = 100
 ) -> Dict[str, Any]:
-    """Inserta o actualiza un perfume descubierto con enlace funcional y nuevo snapshot de precio."""
+    """Inserta o actualiza un perfume descubierto tanto en Supabase como en SQLite local."""
+    fecha_actual = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    # 1. Persistencia en Supabase
+    sb = get_supabase()
+    if sb and is_supabase_disponible():
+        try:
+            # Buscar o crear tienda
+            res_t = sb.table("tiendas").select("id").ilike("nombre", tienda_nombre).execute()
+            if res_t.data:
+                tienda_id = res_t.data[0]["id"]
+            else:
+                base_url = url_producto.split('/')[0] + "//" + url_producto.split('/')[2] if '://' in url_producto else 'https://'
+                ins_t = sb.table("tiendas").insert({
+                    "nombre": tienda_nombre,
+                    "url_base": base_url,
+                    "trust_score": 90,
+                    "badge": "Tienda Verificada",
+                    "logo_emoji": ""
+                }).execute()
+                tienda_id = ins_t.data[0]["id"]
+
+            # Buscar o crear perfume
+            res_p = sb.table("perfumes").select("id").ilike("nombre", nombre.strip()).execute()
+            if res_p.data:
+                perfume_id = res_p.data[0]["id"]
+                es_nuevo = False
+            else:
+                es_nuevo = True
+                img = imagen_url or "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=500&q=80"
+                notas_txt = notas or "Cítricos, Maderas, Almizcle"
+                ins_p = sb.table("perfumes").insert({
+                    "nombre": nombre.strip(),
+                    "marca": marca.strip() or "Diseñador",
+                    "genero": genero,
+                    "tipo": "Eau de Parfum",
+                    "notas": notas_txt,
+                    "imagen_url": img,
+                    "es_arabe": bool(es_arabe),
+                    "en_tendencia": True,
+                    "en_remate": False,
+                    "precio_referencia": precio_actual
+                }).execute()
+                perfume_id = ins_p.data[0]["id"]
+
+            # Registrar snapshot de precio
+            sb.table("precios_registro").insert({
+                "perfume_id": perfume_id,
+                "tienda_id": tienda_id,
+                "precio_actual": precio_actual,
+                "precio_normal": precio_normal,
+                "en_stock": True,
+                "volumen_ml": volumen_ml,
+                "url_producto": url_producto,
+                "fecha_registro": fecha_actual
+            }).execute()
+
+        except Exception as e:
+            logger.warning(f"Error sincronizando descubrimiento con Supabase: {e}")
+
+    # 2. Persistencia en SQLite local
     init_db()
     with get_db_cursor(commit=True) as cursor:
         cursor.execute("SELECT id FROM tiendas WHERE LOWER(nombre) = LOWER(?);", (tienda_nombre,))
         row_tienda = cursor.fetchone()
         if row_tienda:
-            tienda_id = row_tienda["id"]
+            tienda_id_sq = row_tienda["id"]
         else:
             base_url = url_producto.split('/')[0] + "//" + url_producto.split('/')[2] if '://' in url_producto else 'https://'
             cursor.execute("""
             INSERT INTO tiendas (nombre, url_base, trust_score, badge, logo_emoji)
             VALUES (?, ?, 90, 'Tienda Verificada', '');
             """, (tienda_nombre, base_url))
-            tienda_id = cursor.lastrowid
+            tienda_id_sq = cursor.lastrowid
 
         cursor.execute("""
         SELECT id, precio_referencia FROM perfumes 
@@ -465,34 +837,30 @@ def guardar_o_actualizar_perfume_scraped(
         """, (nombre.strip(), f"%{nombre.strip()}%"))
         row_perfume = cursor.fetchone()
 
-        es_nuevo = False
+        es_nuevo_sq = False
         if row_perfume:
-            perfume_id = row_perfume["id"]
+            perfume_id_sq = row_perfume["id"]
         else:
-            es_nuevo = True
+            es_nuevo_sq = True
             img = imagen_url or "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=500&q=80"
             notas_texto = notas or "Cítricos, Maderas, Almizcle"
             cursor.execute("""
             INSERT INTO perfumes (nombre, marca, genero, tipo, notas, imagen_url, es_arabe, en_tendencia, en_remate, precio_referencia)
             VALUES (?, ?, ?, 'Eau de Parfum', ?, ?, ?, 1, 0, ?);
             """, (nombre.strip(), marca.strip() or "Diseñador", genero, notas_texto, img, es_arabe, precio_actual))
-            perfume_id = cursor.lastrowid
+            perfume_id_sq = cursor.lastrowid
 
-        fecha_actual = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         cursor.execute("""
-        INSERT INTO precios_registro (perfume_id, tienda_id, precio_actual, precio_normal, en_stock, url_producto, fecha_registro)
-        VALUES (?, ?, ?, ?, 1, ?, ?);
-        """, (perfume_id, tienda_id, precio_actual, precio_normal, url_producto, fecha_actual))
+        INSERT INTO precios_registro (perfume_id, tienda_id, precio_actual, precio_normal, en_stock, volumen_ml, url_producto, fecha_registro)
+        VALUES (?, ?, ?, ?, 1, ?, ?, ?);
+        """, (perfume_id_sq, tienda_id_sq, precio_actual, precio_normal, volumen_ml, url_producto, fecha_actual))
 
-        return {"perfume_id": perfume_id, "es_nuevo": es_nuevo, "fecha": fecha_actual}
+        return {"perfume_id": perfume_id_sq, "es_nuevo": es_nuevo_sq, "fecha": fecha_actual}
 
 
 def obtener_tiendas() -> List[Dict[str, Any]]:
     """Retorna la lista de tiendas registradas ordenadas por índice de confianza."""
-    init_db()
-    with get_db_cursor() as cursor:
-        cursor.execute("SELECT * FROM tiendas ORDER BY trust_score DESC;")
-        return [dict(row) for row in cursor.fetchall()]
+    return obtener_tiendas_trust()
 
 
 def obtener_tiendas_trust(
@@ -501,6 +869,28 @@ def obtener_tiendas_trust(
     busqueda: str = ""
 ) -> List[Dict[str, Any]]:
     """Retorna tiendas auditadas con métricas detalladas para la página de confianza."""
+    sb = get_supabase()
+    if sb and is_supabase_disponible():
+        try:
+            q = sb.table("tiendas").select("*").gte("trust_score", score_minimo)
+            if filtro_tipo and filtro_tipo != "Todas":
+                q = q.eq("tipo_tienda", filtro_tipo)
+            if busqueda:
+                term = busqueda.strip()
+                q = q.or_(f"nombre.ilike.%{term}%,url_base.ilike.%{term}%,rut.ilike.%{term}%")
+            q = q.order("trust_score", desc=True)
+
+            res = q.execute()
+            tiendas = []
+            for r in res.data or []:
+                d = dict(r)
+                d["estrellas"] = round(d.get("trust_score", 0) / 20.0, 1)
+                tiendas.append(d)
+            if tiendas:
+                return tiendas
+        except Exception as e:
+            logger.warning(f"Error consultando tiendas en Supabase ({e}), usando SQLite.")
+
     init_db()
     query = """
     SELECT 
@@ -625,3 +1015,31 @@ def auditar_tienda_por_url(url_ingresada: str) -> Optional[Dict[str, Any]]:
         "senales_alerta": senales_alerta,
         "recomendacion": recom
     }
+
+
+if __name__ == "__main__":
+    import argparse
+    parser = argparse.ArgumentParser(description="Gestor de Base de Datos PerfumeTrending (Supabase & SQLite)")
+    parser.add_argument("--seed", action="store_true", help="Poblar datos semilla en Supabase y SQLite")
+    parser.add_argument("--status", action="store_true", help="Verificar estado de conexion con Supabase y SQLite")
+    args = parser.parse_args()
+
+    print("=" * 60)
+    print("PerfumeTrending.cl — Estado de Persistencia")
+    print("=" * 60)
+    
+    url, key = get_supabase_credentials()
+    print(f"Supabase URL: {url if url else 'No configurada'}")
+    print(f"Supabase Key: {'Configurada (***)' if key else 'No configurada'}")
+    
+    sb_activo = is_supabase_disponible()
+    print(f"Supabase Estado: {'CONECTADO Y DISPONIBLE' if sb_activo else 'NO DISPONIBLE / TABLAS PENDIENTES'}")
+    print(f"SQLite Local: {DB_PATH} ({'Existe' if os.path.exists(DB_PATH) else 'No inicializada'})")
+    
+    if args.seed:
+        print("\nEjecutando poblado de datos...")
+        init_db(force_reseed=True)
+        if sb_activo:
+            poblar_datos_semilla_supabase()
+        print("Poblado completado.")
+    print("=" * 60)

@@ -1,108 +1,139 @@
 {
   "metadata": {
-    "version": "1.0.0",
+    "version": "2.0.0 (Cloud Supabase)",
     "sistema": "PerfumeTrending Autonomous Discovery Crawler",
-    "fecha_ejecucion": "2026-10-05 17:26:05",
-    "duracion_segundos": 2.39,
-    "estado": "EXITOSO"
+    "fecha_ejecucion": "2026-10-14 20:02:23",
+    "duracion_segundos": 115.4,
+    "estado": "EXITOSO",
+    "destino": "Supabase PostgreSQL + SQLite"
   },
   "metricas": {
-    "total_productos_analizados": 30,
-    "descartados_no_perfume": 1,
-    "nuevos_perfumes_descubiertos": 29,
-    "precios_variantes_registrados": 29,
+    "total_productos_analizados": 120,
+    "descartados_no_perfume": 6,
+    "nuevos_perfumes_descubiertos": 58,
+    "precios_variantes_registrados": 114,
     "errores_totales": 0
   },
   "muestras_nuevas": [
     {
-      "id": 22,
-      "nombre": "Petra",
-      "marca": "Lattafa",
-      "tipo": "Eau de Parfum",
-      "es_arabe": true,
-      "tienda": "Silk Perfumes",
-      "precio": 29990
+      "nombre": "Polo Blue Men",
+      "marca": "RALPH LAUREN",
+      "tipo": "Eau de Toilette",
+      "es_arabe": false,
+      "tienda": "Alisha Perfumes",
+      "precio": 57990
     },
     {
-      "id": 23,
-      "nombre": "Pride Lahdath",
-      "marca": "Lattafa",
+      "nombre": "Munchies Sugar Rush",
+      "marca": "AL WATANIAH",
       "tipo": "Eau de Parfum",
-      "es_arabe": true,
-      "tienda": "Silk Perfumes",
-      "precio": 26990
+      "es_arabe": false,
+      "tienda": "Alisha Perfumes",
+      "precio": 15990
     },
     {
-      "id": 24,
-      "nombre": "Pride Love In Paris",
-      "marca": "Lattafa",
+      "nombre": "Glacier Bella",
+      "marca": "MAISON ALHAMBRA",
       "tipo": "Eau de Parfum",
       "es_arabe": true,
-      "tienda": "Silk Perfumes",
-      "precio": 24990
+      "tienda": "Alisha Perfumes",
+      "precio": 14990
     },
     {
-      "id": 25,
-      "nombre": "Pride King Of Arabia",
-      "marca": "Lattafa",
+      "nombre": "Light Blue Woman",
+      "marca": "DOLCE & GABBANA",
+      "tipo": "Eau de Parfum",
+      "es_arabe": false,
+      "tienda": "Alisha Perfumes",
+      "precio": 92990
+    },
+    {
+      "nombre": "Toy Boy",
+      "marca": "MOSCHINO",
+      "tipo": "Eau de Parfum",
+      "es_arabe": false,
+      "tienda": "Alisha Perfumes",
+      "precio": 48990
+    },
+    {
+      "nombre": "Rebelle",
+      "marca": "RIHANNA",
+      "tipo": "Eau de Parfum",
+      "es_arabe": false,
+      "tienda": "Alisha Perfumes",
+      "precio": 27990
+    },
+    {
+      "nombre": "Ana Abiyedh Passion Woman",
+      "marca": "LATTAFA",
       "tipo": "Eau de Parfum",
       "es_arabe": true,
-      "tienda": "Silk Perfumes",
+      "tienda": "Alisha Perfumes",
+      "precio": 14990
+    },
+    {
+      "nombre": "Purple Mood Woman",
+      "marca": "NIKE",
+      "tipo": "Eau de Toilette",
+      "es_arabe": false,
+      "tienda": "Alisha Perfumes",
+      "precio": 5990
+    },
+    {
+      "nombre": "Light Blue Men",
+      "marca": "DOLCE & GABBANA",
+      "tipo": "Eau de Parfum",
+      "es_arabe": false,
+      "tienda": "Alisha Perfumes",
+      "precio": 62990
+    },
+    {
+      "nombre": "Yar White Woman",
+      "marca": "MAISON AZHAR",
+      "tipo": "Eau de Parfum",
+      "es_arabe": false,
+      "tienda": "Alisha Perfumes",
+      "precio": 8990
+    },
+    {
+      "nombre": "Angel Nova Woman Fruitee Refillable",
+      "marca": "THIERRY MUGLER",
+      "tipo": "Eau de Parfum",
+      "es_arabe": false,
+      "tienda": "Alisha Perfumes",
+      "precio": 87990
+    },
+    {
+      "nombre": "To Be Born To Shine For Women",
+      "marca": "POLICE",
+      "tipo": "Eau de Parfum",
+      "es_arabe": false,
+      "tienda": "Alisha Perfumes",
+      "precio": 16990
+    },
+    {
+      "nombre": "Black Opium Glitter Woman",
+      "marca": "YVES SAINT LAURENT",
+      "tipo": "Eau de Parfum",
+      "es_arabe": false,
+      "tienda": "Alisha Perfumes",
+      "precio": 76990
+    },
+    {
+      "nombre": "Legend Blue Men",
+      "marca": "MONT BLANC",
+      "tipo": "Eau de Parfum",
+      "es_arabe": false,
+      "tienda": "Alisha Perfumes",
       "precio": 39990
     },
     {
-      "id": 26,
-      "nombre": "Hoor Extrait De",
-      "marca": "Riiffs",
-      "tipo": "Extrait de Parfum",
-      "es_arabe": false,
-      "tienda": "Silk Perfumes",
-      "precio": 27990
-    },
-    {
-      "id": 27,
-      "nombre": "Hulm Extrait De",
-      "marca": "Riiffs",
-      "tipo": "Extrait de Parfum",
-      "es_arabe": false,
-      "tienda": "Silk Perfumes",
-      "precio": 27990
-    },
-    {
-      "id": 28,
-      "nombre": "Tahira Extrait De",
-      "marca": "Riiffs",
-      "tipo": "Extrait de Parfum",
-      "es_arabe": false,
-      "tienda": "Silk Perfumes",
-      "precio": 27990
-    },
-    {
-      "id": 29,
-      "nombre": "Pride London The City Of Contrast",
-      "marca": "Lattafa",
+      "nombre": "Club De Nuit Intenso Fuego Men",
+      "marca": "ARMAF",
       "tipo": "Eau de Parfum",
       "es_arabe": true,
-      "tienda": "Silk Perfumes",
-      "precio": 24990
-    },
-    {
-      "id": 30,
-      "nombre": "Momento Extrait De",
-      "marca": "Riiffs",
-      "tipo": "Extrait de Parfum",
-      "es_arabe": false,
-      "tienda": "Silk Perfumes",
-      "precio": 27990
-    },
-    {
-      "id": 31,
-      "nombre": "Virtus Extrait De",
-      "marca": "Riiffs",
-      "tipo": "Extrait de Parfum",
-      "es_arabe": false,
-      "tienda": "Silk Perfumes",
-      "precio": 27990
+      "tienda": "Alisha Perfumes",
+      "precio": 49990
     }
   ],
   "errores": []
