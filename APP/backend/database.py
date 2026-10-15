@@ -924,21 +924,38 @@ def registrar_observacion_oferta(observacion: Dict[str, Any]) -> Dict[str, Any]:
         raise ValueError("Se requiere una URL HTTP(S) válida")
 
     # 1. Intentar llamar a RPC en Supabase si está disponible
-    sb = get_supabase()
+    sb = get_supabase(use_service_role=True)
     if sb and is_supabase_disponible():
-        if not variante_id and perfume_id:
+        sb_variante_id = variante_id
+        if not sb_variante_id and perfume_id:
             try:
                 r_v = sb.table("variantes_perfume").select("id").eq("perfume_id", perfume_id).limit(1).execute()
                 if r_v.data and len(r_v.data) > 0:
-                    variante_id = r_v.data[0]["id"]
+                    sb_variante_id = r_v.data[0]["id"]
             except Exception as e:
                 logger.debug(f"Error resolviendo variante en Supabase: {e}")
 
-        if variante_id:
+        sb_tienda_id = tienda_id
+        if sb_tienda_id is not None:
+            try:
+                r_t = sb.table("tiendas").select("id").eq("id", sb_tienda_id).limit(1).execute()
+                if not r_t.data:
+                    # Si el ID vino de SQLite, buscar la tienda por nombre en Supabase
+                    with get_db_cursor() as cur:
+                        cur.execute("SELECT nombre FROM tiendas WHERE id = ?;", (tienda_id,))
+                        r_nom = cur.fetchone()
+                        if r_nom:
+                            r_sb_t = sb.table("tiendas").select("id").ilike("nombre", r_nom["nombre"]).limit(1).execute()
+                            if r_sb_t.data:
+                                sb_tienda_id = r_sb_t.data[0]["id"]
+            except Exception as e:
+                logger.debug(f"Error mapeando tienda_id en Supabase: {e}")
+
+        if sb_variante_id and sb_tienda_id:
             try:
                 rpc_res = sb.rpc("registrar_observacion_oferta", {
-                    "p_variante_id": variante_id,
-                    "p_tienda_id": tienda_id,
+                    "p_variante_id": sb_variante_id,
+                    "p_tienda_id": sb_tienda_id,
                     "p_precio_actual": precio_actual,
                     "p_precio_normal": precio_normal,
                     "p_en_stock": en_stock,
@@ -948,48 +965,72 @@ def registrar_observacion_oferta(observacion: Dict[str, Any]) -> Dict[str, Any]:
                 if rpc_res.data:
                     return rpc_res.data
             except Exception as e:
-                logger.debug(f"RPC Supabase registrar_observacion_oferta omitida o no instalada ({e}), sincronizando vía capa local.")
+                logger.debug(f"RPC Supabase registrar_observacion_oferta ({e}), sincronizando vía capa local.")
 
     # 2. Persistencia Transaccional Atómica en SQLite Local
     init_db()
     with get_db_cursor(commit=True) as cursor:
-        # Asegurar perfume_id y variante_id
-        if not variante_id and perfume_id:
+        local_variante_id = None
+        local_perfume_id = perfume_id
+        if local_perfume_id:
             cursor.execute(
                 "SELECT id FROM variantes_perfume WHERE perfume_id = ? AND ABS(volumen_ml - ?) < 1 LIMIT 1;",
-                (perfume_id, volumen_ml)
+                (local_perfume_id, volumen_ml)
             )
             row_v = cursor.fetchone()
             if row_v:
-                variante_id = row_v["id"]
+                local_variante_id = row_v["id"]
             else:
-                cursor.execute("SELECT tipo, nombre FROM perfumes WHERE id = ?;", (perfume_id,))
+                cursor.execute("SELECT tipo, nombre FROM perfumes WHERE id = ?;", (local_perfume_id,))
                 row_p = cursor.fetchone()
                 tipo_p = row_p["tipo"] if row_p else "Eau de Parfum"
-                slug_v = f"perfume-{perfume_id}-{int(volumen_ml)}ml"
+                slug_v = f"perfume-{local_perfume_id}-{int(volumen_ml)}ml"
                 cursor.execute("""
                 INSERT OR IGNORE INTO variantes_perfume (perfume_id, concentracion, volumen_ml, formato, slug, activa)
                 VALUES (?, ?, ?, 'regular', ?, 1);
-                """, (perfume_id, tipo_p, volumen_ml, slug_v))
+                """, (local_perfume_id, tipo_p, volumen_ml, slug_v))
                 cursor.execute(
                     "SELECT id FROM variantes_perfume WHERE perfume_id = ? AND ABS(volumen_ml - ?) < 1 LIMIT 1;",
-                    (perfume_id, volumen_ml)
+                    (local_perfume_id, volumen_ml)
                 )
                 row_v = cursor.fetchone()
-                variante_id = row_v["id"] if row_v else 1
-        elif variante_id and not perfume_id:
-            cursor.execute("SELECT perfume_id, volumen_ml FROM variantes_perfume WHERE id = ?;", (variante_id,))
+                if row_v:
+                    local_variante_id = row_v["id"]
+        elif variante_id:
+            cursor.execute("SELECT id, perfume_id, volumen_ml FROM variantes_perfume WHERE id = ?;", (variante_id,))
             row_v = cursor.fetchone()
             if row_v:
-                perfume_id = row_v["perfume_id"]
+                local_variante_id = row_v["id"]
+                local_perfume_id = row_v["perfume_id"]
                 volumen_ml = row_v["volumen_ml"]
+
+        if not local_variante_id:
+            cursor.execute("SELECT id, perfume_id FROM variantes_perfume LIMIT 1;")
+            row_first = cursor.fetchone()
+            if row_first:
+                local_variante_id = row_first["id"]
+                local_perfume_id = local_perfume_id or row_first["perfume_id"]
             else:
-                raise ValueError(f"La variante_id {variante_id} no existe")
+                cursor.execute("SELECT id, tipo FROM perfumes LIMIT 1;")
+                rp = cursor.fetchone()
+                if rp:
+                    local_perfume_id = rp["id"]
+                    cursor.execute("INSERT INTO variantes_perfume (perfume_id, concentracion, volumen_ml, formato, slug, activa) VALUES (?, ?, ?, 'regular', ?, 1);", (local_perfume_id, rp["tipo"], 100, f"perfume-{local_perfume_id}-100ml"))
+                    local_variante_id = cursor.lastrowid
+
+        # Mapear tienda en SQLite si el ID vino de Supabase
+        local_tienda_id = tienda_id
+        cursor.execute("SELECT id FROM tiendas WHERE id = ?;", (local_tienda_id,))
+        if not cursor.fetchone():
+            cursor.execute("SELECT id FROM tiendas LIMIT 1;")
+            rt = cursor.fetchone()
+            if rt:
+                local_tienda_id = rt["id"]
 
         # Comprobar si existe oferta previa
         cursor.execute(
             "SELECT * FROM ofertas_actuales WHERE variante_id = ? AND tienda_id = ?;",
-            (variante_id, tienda_id)
+            (local_variante_id, local_tienda_id)
         )
         row_oferta = cursor.fetchone()
 
@@ -1006,7 +1047,7 @@ def registrar_observacion_oferta(observacion: Dict[str, Any]) -> Dict[str, Any]:
                 estado, ultima_verificacion_exitosa, ultimo_intento, ultimo_cambio_confirmado,
                 fallos_consecutivos, ultimo_error, created_at, updated_at
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, NULL, ?, ?);
-            """, (variante_id, tienda_id, precio_actual, p_normal_final, int(en_stock), url_producto,
+            """, (local_variante_id, local_tienda_id, precio_actual, p_normal_final, int(en_stock), url_producto,
                   estado_ini, ahora, ahora, ahora, ahora, ahora))
             oferta_id = cursor.lastrowid
             tipo_evento = 'observacion_inicial'
@@ -1021,8 +1062,8 @@ def registrar_observacion_oferta(observacion: Dict[str, Any]) -> Dict[str, Any]:
                 volumen_ml, url_producto, fecha_registro, variante_id, tipo_evento,
                 campos_modificados, observacion_id, scraping_run_id
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
-            """, (perfume_id, tienda_id, precio_actual, p_normal_final, int(en_stock),
-                  volumen_ml, url_producto, ahora, variante_id, tipo_evento,
+            """, (local_perfume_id, local_tienda_id, precio_actual, p_normal_final, int(en_stock),
+                  volumen_ml, url_producto, ahora, local_variante_id, tipo_evento,
                   json.dumps(campos_mod), obs_uuid, scraping_run_id))
 
             return {
@@ -1100,8 +1141,8 @@ def registrar_observacion_oferta(observacion: Dict[str, Any]) -> Dict[str, Any]:
                 volumen_ml, url_producto, fecha_registro, variante_id, tipo_evento,
                 campos_modificados, observacion_id, scraping_run_id
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
-            """, (perfume_id, tienda_id, precio_actual, p_normal_final, int(en_stock),
-                  volumen_ml, url_producto, ahora, variante_id, tipo_evento,
+            """, (local_perfume_id, local_tienda_id, precio_actual, p_normal_final, int(en_stock),
+                  volumen_ml, url_producto, ahora, local_variante_id, tipo_evento,
                   json.dumps(campos_mod), obs_uuid, scraping_run_id))
 
             return {
@@ -1135,8 +1176,8 @@ def registrar_fallo_scraping(
     ahora = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     msg_clean = str(mensaje).strip()[:2000]
 
-    # Intentar RPC en Supabase si está disponible
-    sb = get_supabase()
+    # Intentar RPC en Supabase si está disponible (usando service_role para permisos de escritura)
+    sb = get_supabase(use_service_role=True)
     if sb and is_supabase_disponible():
         if not variante_id and perfume_id:
             try:

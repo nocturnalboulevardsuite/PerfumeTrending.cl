@@ -69,7 +69,9 @@ try:
         registrar_fallo_scraping,
         init_db,
         tienda_comercializa_marca,
-        obtener_url_directa_tienda
+        obtener_url_directa_tienda,
+        get_supabase,
+        is_supabase_disponible
     )
     from backend.normalizador import es_producto_perfume_valido, extraer_volumen_ml
 except ImportError:
@@ -81,7 +83,9 @@ except ImportError:
         registrar_fallo_scraping,
         init_db,
         tienda_comercializa_marca,
-        obtener_url_directa_tienda
+        obtener_url_directa_tienda,
+        get_supabase,
+        is_supabase_disponible
     )
     from normalizador import es_producto_perfume_valido, extraer_volumen_ml
 
@@ -575,14 +579,30 @@ def ejecutar_ciclo_scraping_y_descubrimiento() -> Dict[str, Any]:
     # 1. Sesión HTTP reutilizable con reintentos exponenciales
     session = crear_sesion_robusta()
     
-    # 2. Consultamos la lista de perfumes y tiendas desde la base de datos
-    conn = get_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT id, nombre, marca, precio_referencia FROM perfumes;")
-    perfumes_db = [dict(r) for r in cursor.fetchall()]
-    cursor.execute("SELECT id, nombre, url_base, trust_score FROM tiendas;")
-    tiendas_db = [dict(r) for r in cursor.fetchall()]
-    conn.close()
+    # 2. Consultamos la lista de perfumes y tiendas desde la base de datos (Supabase prioritario, SQLite fallback)
+    perfumes_db: List[Dict[str, Any]] = []
+    tiendas_db: List[Dict[str, Any]] = []
+    sb = get_supabase(use_service_role=True)
+    if sb and is_supabase_disponible():
+        try:
+            resp_p = sb.table("perfumes").select("id, nombre, marca, precio_referencia").order("id").execute()
+            perfumes_db = resp_p.data or []
+            resp_t = sb.table("tiendas").select("id, nombre, url_base, trust_score").order("id").execute()
+            tiendas_db = resp_t.data or []
+            logger.info(f"Catálogo cargado desde Supabase Cloud: {len(perfumes_db)} perfumes, {len(tiendas_db)} tiendas.")
+        except Exception as e:
+            logger.warning(f"Aviso consultando catálogo en Supabase ({e}), recurriendo a SQLite local.")
+
+    if not perfumes_db or not tiendas_db:
+        init_db()
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, nombre, marca, precio_referencia FROM perfumes;")
+        perfumes_db = [dict(r) for r in cursor.fetchall()]
+        cursor.execute("SELECT id, nombre, url_base, trust_score FROM tiendas;")
+        tiendas_db = [dict(r) for r in cursor.fetchall()]
+        conn.close()
+        logger.info(f"Catálogo cargado desde SQLite local: {len(perfumes_db)} perfumes, {len(tiendas_db)} tiendas.")
 
     tiendas_shopify = {
         "Silk Perfumes": "silkperfumes.cl",

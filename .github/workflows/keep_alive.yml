@@ -13,7 +13,7 @@ jobs:
       - name: Ping Streamlit Production App
         run: |
           echo "Pinging https://perfumetrending-cl.streamlit.app/ ..."
-          HTTP_RESPONSE=$(curl -s -L -o /dev/null -w "%{http_code}" https://perfumetrending-cl.streamlit.app/)
+          HTTP_RESPONSE=$(curl -s -L -b "" -c "" --max-time 30 -o /dev/null -w "%{http_code}" https://perfumetrending-cl.streamlit.app/ || echo "000")
           echo "HTTP Status Code recibido: $HTTP_RESPONSE"
           if [ "$HTTP_RESPONSE" -ge 200 ] && [ "$HTTP_RESPONSE" -lt 500 ]; then
             echo "[SUCCESS] Aplicacion activa y en ejecucion en produccion."
