@@ -1080,55 +1080,44 @@ st.markdown(f"""
 
 
 
-    /* BRAND LOGO INTERACTIVO NATIVO */
-    .st-key-btn_logo_home,
-    .st-key-btn_logo_home > div {{
-        display: inline-block !important;
-        width: fit-content !important;
-    }}
-    .st-key-btn_logo_home button {{
-        background: transparent !important;
-        background-color: transparent !important;
-        border: none !important;
-        box-shadow: none !important;
-        outline: none !important;
-        padding: 0 0 0 46px !important;
-        margin: 0 !important;
-        height: 44px !important;
-        min-height: 44px !important;
+    /* BRAND LOGO INTERACTIVO NATIVO 100% LIMPIO Y TRANSPARENTE */
+    a.brand-logo-clean,
+    a.brand-logo-clean:visited,
+    a.brand-logo-clean:hover,
+    a.brand-logo-clean:active,
+    a.brand-logo-clean:focus {{
         display: inline-flex !important;
         align-items: center !important;
-        cursor: pointer !important;
-        position: relative !important;
-        transform: none !important;
-        background-image: url("{logo_svg_data}") !important;
-        background-repeat: no-repeat !important;
-        background-position: left center !important;
-        background-size: 34px 34px !important;
-        transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
-    }}
-    .st-key-btn_logo_home button:hover {{
+        gap: 12px !important;
+        text-decoration: none !important;
         background: transparent !important;
         background-color: transparent !important;
         border: none !important;
         box-shadow: none !important;
         outline: none !important;
-        background-image: url("{logo_svg_data}") !important;
-        background-repeat: no-repeat !important;
-        background-position: left center !important;
-        background-size: 34px 34px !important;
-        transform: scale(1.03) !important;
-    }}
-    .st-key-btn_logo_home button p {{
-        font-size: 1.5rem !important;
-        letter-spacing: 0.3px !important;
-        color: {text_color} !important;
-        font-weight: 300 !important;
+        padding: 0 !important;
         margin: 0 !important;
-        line-height: 1 !important;
-        display: inline !important;
+        cursor: pointer !important;
+        user-select: none !important;
+        transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
     }}
-    .st-key-btn_logo_home button p strong {{
+    a.brand-logo-clean:hover {{
+        transform: scale(1.02) !important;
+        background: transparent !important;
+        background-color: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+    }}
+    .brand-logo-text {{
+        font-size: 1.55rem !important;
+        color: {text_color} !important;
+        letter-spacing: 0.3px !important;
+        font-weight: 300 !important;
+        line-height: 1 !important;
+        display: inline-block !important;
+        text-decoration: none !important;
+    }}
+    .brand-logo-text strong {{
         font-weight: 700 !important;
         color: {text_color} !important;
     }}
@@ -1619,7 +1608,22 @@ st.markdown(f"""
 col_logo, col_espacio, col_actions = st.columns([5.5, 1.3, 2.4], vertical_alignment="center")
 
 with col_logo:
-    st.button("Perfume**Trending**", key="btn_logo_home", on_click=reset_to_home)
+    st.markdown(f"""
+    <a href="/" target="_self" class="brand-logo-clean" title="PerfumeTrending">
+        <svg width="34" height="34" viewBox="0 0 36 36" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M 6.8 21 L 29.2 21 C 30 25 27 32 18 32 C 9 32 6 25 6.8 21 Z" fill="#8c7b6d" />
+            <line x1="6.8" y1="21" x2="29.2" y2="21" stroke="{text_color}" stroke-width="1.5" />
+            <line x1="18" y1="10" x2="18" y2="30" stroke="{text_color}" stroke-width="1" />
+            <path d="M 18 32 C 9 32 5 24 7.5 17 C 9 12 13 10 15 10 L 21 10 C 23 10 27 12 28.5 17 C 31 24 27 32 18 32 Z" stroke="{text_color}" stroke-width="2" />
+            <rect x="15" y="7" width="6" height="3" stroke="{text_color}" stroke-width="1.5" />
+            <rect x="13" y="3" width="10" height="4" rx="1" stroke="{text_color}" stroke-width="1.5" />
+            <rect x="16" y="0" width="4" height="3" rx="1" fill="#8c7b6d" stroke="{text_color}" stroke-width="1" />
+        </svg>
+        <span class="brand-logo-text">
+            Perfume<strong>Trending</strong>
+        </span>
+    </a>
+    """, unsafe_allow_html=True)
 
 with col_actions:
     btn_col1, btn_col2 = st.columns([1.8, 1.0], vertical_alignment="center")

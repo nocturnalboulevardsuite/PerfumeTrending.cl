@@ -687,6 +687,48 @@ st.markdown(f"""
         text-align: center;
         margin-bottom: 10px;
     }}
+
+    /* BRAND LOGO INTERACTIVO NATIVO 100% LIMPIO Y TRANSPARENTE */
+    a.brand-logo-clean,
+    a.brand-logo-clean:visited,
+    a.brand-logo-clean:hover,
+    a.brand-logo-clean:active,
+    a.brand-logo-clean:focus {{
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 12px !important;
+        text-decoration: none !important;
+        background: transparent !important;
+        background-color: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        outline: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        cursor: pointer !important;
+        user-select: none !important;
+        transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+    }}
+    a.brand-logo-clean:hover {{
+        transform: scale(1.02) !important;
+        background: transparent !important;
+        background-color: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+    }}
+    .brand-logo-text {{
+        font-size: 1.55rem !important;
+        color: {text_color} !important;
+        letter-spacing: 0.3px !important;
+        font-weight: 300 !important;
+        line-height: 1 !important;
+        display: inline-block !important;
+        text-decoration: none !important;
+    }}
+    .brand-logo-text strong {{
+        font-weight: 700 !important;
+        color: {text_color} !important;
+    }}
     </style>
 """, unsafe_allow_html=True)
 
@@ -699,9 +741,22 @@ else:
     btn_col1, btn_col2 = col_actions.columns([1.8, 1.0], vertical_alignment="center")
 
 with col_logo:
-    logo_color = "#8c7b6d"
-    logo_html = f"""<a href="/" target="_top" style="text-decoration: none; display: inline-flex; align-items: center; gap: 12px; cursor: pointer; width: fit-content;"><svg width="34" height="34" viewBox="0 0 36 36" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M 6.8 21 L 29.2 21 C 30 25 27 32 18 32 C 9 32 6 25 6.8 21 Z" fill="{logo_color}" /><line x1="6.8" y1="21" x2="29.2" y2="21" stroke="{text_color}" stroke-width="1.5" /><line x1="18" y1="10" x2="18" y2="30" stroke="{text_color}" stroke-width="1" /><path d="M 18 32 C 9 32 5 24 7.5 17 C 9 12 13 10 15 10 L 21 10 C 23 10 27 12 28.5 17 C 31 24 27 32 18 32 Z" stroke="{text_color}" stroke-width="2" /><rect x="15" y="7" width="6" height="3" stroke="{text_color}" stroke-width="1.5" /><rect x="13" y="3" width="10" height="4" rx="1" stroke="{text_color}" stroke-width="1.5" /><rect x="16" y="0" width="4" height="3" rx="1" fill="{logo_color}" stroke="{text_color}" stroke-width="1" /></svg><span style="font-size: 1.4rem; color: {text_color}; letter-spacing: 0.5px;"><span style="font-weight: 300;">Perfume</span><span style="font-weight: 600;">Trending</span></span></a>"""
-    st.markdown(logo_html, unsafe_allow_html=True)
+    st.markdown(f"""
+    <a href="/" target="_self" class="brand-logo-clean" title="PerfumeTrending">
+        <svg width="34" height="34" viewBox="0 0 36 36" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M 6.8 21 L 29.2 21 C 30 25 27 32 18 32 C 9 32 6 25 6.8 21 Z" fill="#8c7b6d" />
+            <line x1="6.8" y1="21" x2="29.2" y2="21" stroke="{text_color}" stroke-width="1.5" />
+            <line x1="18" y1="10" x2="18" y2="30" stroke="{text_color}" stroke-width="1" />
+            <path d="M 18 32 C 9 32 5 24 7.5 17 C 9 12 13 10 15 10 L 21 10 C 23 10 27 12 28.5 17 C 31 24 27 32 18 32 Z" stroke="{text_color}" stroke-width="2" />
+            <rect x="15" y="7" width="6" height="3" stroke="{text_color}" stroke-width="1.5" />
+            <rect x="13" y="3" width="10" height="4" rx="1" stroke="{text_color}" stroke-width="1.5" />
+            <rect x="16" y="0" width="4" height="3" rx="1" fill="#8c7b6d" stroke="{text_color}" stroke-width="1" />
+        </svg>
+        <span class="brand-logo-text">
+            Perfume<strong>Trending</strong>
+        </span>
+    </a>
+    """, unsafe_allow_html=True)
 
 with btn_col1:
     if st.session_state['logged_in']:
