@@ -1,26 +1,26 @@
 {
   "actualizaciones": 41,
-  "fecha": "2026-10-14 12:36:59",
-  "duracion_segundos": 61.83,
+  "fecha": "2026-10-15 12:25:05",
+  "duracion_segundos": 66.15,
   "metadata": {
     "version_etl": "3.0.0",
     "sistema": "PerfumeTrending Professional Anti-Bot ETL",
-    "fecha_ejecucion": "2026-10-14 12:36:59",
-    "duracion_segundos": 61.83,
+    "fecha_ejecucion": "2026-10-15 12:25:05",
+    "duracion_segundos": 66.15,
     "estado": "EXITOSO"
   },
   "metricas": {
-    "total_perfumes_catalogo": 12,
-    "total_tiendas_registradas": 7,
+    "total_perfumes_catalogo": 132,
+    "total_tiendas_registradas": 8,
     "precios_actualizados": 41,
-    "exclusiones_marca": 43,
+    "exclusiones_marca": 1015,
     "errores_totales": 0
   },
   "estadisticas_tiendas": {
     "Falabella": {
       "consultas": 12,
-      "exitos_en_vivo": 11,
-      "fallbacks_seguridad": 1,
+      "exitos_en_vivo": 10,
+      "fallbacks_seguridad": 2,
       "trust_score": 96
     },
     "Paris": {
@@ -58,6 +58,12 @@
       "exitos_en_vivo": 0,
       "fallbacks_seguridad": 0,
       "trust_score": 88
+    },
+    "Yauras Perfumes": {
+      "consultas": 0,
+      "exitos_en_vivo": 0,
+      "fallbacks_seguridad": 0,
+      "trust_score": 88
     }
   },
   "muestra_capturas": [
@@ -91,8 +97,8 @@
     {
       "perfume": "YSL Libre",
       "tienda": "Falabella",
-      "precio_actual": 125990,
-      "precio_normal": 125990,
+      "precio_actual": 86990,
+      "precio_normal": 86990,
       "tiene_descuento": false,
       "origen": "Falabella Next Direct",
       "volumen_ml": 90
