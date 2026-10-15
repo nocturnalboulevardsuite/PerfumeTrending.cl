@@ -89,6 +89,14 @@ except ImportError:
         limpiar_nombre_perfume
     )
 
+# =============================================================================
+# BLOQUE 1: CONFIGURACIÓN DE TIENDAS AUDITADAS Y ENDPOINTS SHOPIFY
+# -----------------------------------------------------------------------------
+# ¿QUÉ HACE ESTE BLOQUE?
+# Define las tiendas especializadas chilenas que utilizan el motor Shopify y exponen
+# legalmente su catálogo público mediante el endpoint `/products.json`.
+# Permite descubrir perfumes masivamente con sus variantes de volumen (ml) y precios.
+# =============================================================================
 TIENDAS_CRAWLER_CONFIG = [
     {
         "nombre": "Silk Perfumes",
@@ -116,6 +124,7 @@ TIENDAS_CRAWLER_CONFIG = [
     }
 ]
 
+# Lista rotativa de User-Agents estándar para no ser bloqueados por firewalls perimetrales
 USER_AGENTS = [
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15",
@@ -123,6 +132,14 @@ USER_AGENTS = [
 ]
 
 
+# =============================================================================
+# BLOQUE 2: CONEXIÓN HTTP RESILIENTE CON REINTENTOS EXPONENCIALES
+# -----------------------------------------------------------------------------
+# ¿QUÉ HACE ESTE BLOQUE?
+# Configura un cliente HTTP con connection pooling (10 conexiones activas, max 20)
+# y reintentos automáticos con retroceso exponencial (Backoff) ante errores 429
+# (Too Many Requests) o 5xx (Server Error), previniendo caídas del crawler.
+# =============================================================================
 def crear_sesion_robusta() -> requests.Session:
     """Crea una sesión HTTP con reintentos exponenciales y timeouts defensivos."""
     session = requests.Session()
@@ -139,7 +156,7 @@ def crear_sesion_robusta() -> requests.Session:
 
 
 def obtener_ultimo_reporte_descubrimiento() -> Optional[Dict[str, Any]]:
-    """Carga el último informe de descubrimiento autónomo generado."""
+    """Carga el último informe de descubrimiento autónomo generado en disco."""
     if os.path.exists(REPORTE_DESCUBRIMIENTO_PATH):
         try:
             with open(REPORTE_DESCUBRIMIENTO_PATH, "r", encoding="utf-8") as f:
@@ -149,6 +166,17 @@ def obtener_ultimo_reporte_descubrimiento() -> Optional[Dict[str, Any]]:
     return None
 
 
+# =============================================================================
+# BLOQUE 3: ALMACENAMIENTO DE ASSETS EN LA NUBE (SUPABASE STORAGE CDN)
+# -----------------------------------------------------------------------------
+# ¿QUÉ HACE ESTE BLOQUE?
+# Descarga los bytes de la fotografía del perfume desde la tienda de origen y la
+# sube directamente al bucket `IMG_perfumes` en Supabase Storage, devolviendo una URL
+# pública permanente servida por CDN.
+# ¿POR QUÉ SE HACE ASÍ?
+# Evita que las imágenes se rompan si la tienda externa cambia su URL o la borra.
+# Si la subida falla, mantiene la URL original como respaldo sin interrumpir el proceso.
+# =============================================================================
 def subir_imagen_a_bucket_supabase(
     session: requests.Session,
     img_url: str,
@@ -158,13 +186,12 @@ def subir_imagen_a_bucket_supabase(
     """
     Descarga la imagen del producto desde la tienda y la sube al bucket IMG_perfumes en Supabase.
     Retorna la URL pública CDN en Supabase Storage.
-    Si falla o no hay conexión, retorna la URL original de respaldo sin romper el flujo.
     """
     if not sb_client or not img_url or img_url.startswith("https://miqscdupnknhjemvcjil.supabase.co"):
         return img_url
 
     try:
-        # Generar nombre limpio para el archivo
+        # Generar nombre limpio (slug) para el archivo en el bucket
         slug = re.sub(r'[^a-zA-Z0-9_\-]', '_', nombre_perfume.lower().strip())
         slug = re.sub(r'_+', '_', slug)[:60].strip('_')
         filename = f"{slug}.jpg"
@@ -175,7 +202,7 @@ def subir_imagen_a_bucket_supabase(
             content = resp.content
             content_type = resp.headers.get("Content-Type", "image/jpeg")
 
-            # Subir directamente al bucket de Supabase
+            # Subir directamente al bucket de Supabase con sobrescritura permitida
             sb_client.storage.from_("IMG_perfumes").upload(
                 path=filename,
                 file=content,
@@ -192,25 +219,33 @@ def subir_imagen_a_bucket_supabase(
 
 
 def guardar_reporte_descubrimiento(reporte: Dict[str, Any]) -> str:
-    """Persiste el informe en JSON para auditoría y observabilidad."""
+    """Persiste el informe en JSON para auditoría y observabilidad del sistema."""
     os.makedirs(REPORTES_DIR, exist_ok=True)
     with open(REPORTE_DESCUBRIMIENTO_PATH, "w", encoding="utf-8") as f:
         json.dump(reporte, f, ensure_ascii=False, indent=2)
     return REPORTE_DESCUBRIMIENTO_PATH
 
 
+# =============================================================================
+# BLOQUE 4: MOTOR PRINCIPAL DE CRAWLING Y PIPELINE ETL AUTÓNOMO
+# -----------------------------------------------------------------------------
+# ¿QUÉ HACE ESTE BLOQUE?
+# Orquesta el proceso completo de extracción, transformación y carga (ETL):
+# 1. Extracción (E): Itera por las tiendas consultando su API JSON de productos paginada.
+# 2. Filtrado: Utiliza `es_producto_perfume_valido()` para descartar cremas, shampoos y testers.
+# 3. Transformación (T): Limpia el nombre, normaliza marca, concentración (EDP/EDT),
+#    género (Hombre/Mujer/Unisex) y detecta si es tendencia árabe.
+# 4. Deduplicación: Compara contra los perfumes ya conocidos en Supabase y SQLite.
+#    Si es un perfume nuevo, lo crea e inserta automáticamente.
+# 5. Carga (L): Para cada variante encontrada (ej. 50ml, 100ml, 200ml), invoca la función
+#    transaccional `registrar_observacion_oferta()` para registrar la oferta viva y el historial.
+# =============================================================================
 def ejecutar_descubrimiento_autonomo(
     limite_por_tienda: int = 20,
     paginas: int = 1
 ) -> Dict[str, Any]:
     """
-    Ejecuta el ciclo de rastreo masivo autónomo:
-    1. Descarga colecciones públicas JSON de tiendas de perfumería auditadas.
-    2. Descarta productos que no sean fragancias (cremas, desodorantes).
-    3. Normaliza atributos (marcas, nombres, concentración, género, perfumes árabes).
-    4. Deduplica o inserta perfumes nuevos en Supabase (Cloud) y SQLite (Local).
-    5. Ingesta snapshots con variantes de tamaño (ml) y precios.
-    6. Registra métricas y logs en Supabase y reporte local JSON.
+    Ejecuta el ciclo de rastreo masivo autónomo en comercios especializados.
     """
     init_db()
     inicio = time.time()
@@ -235,7 +270,7 @@ def ejecutar_descubrimiento_autonomo(
     errores: List[str] = []
     muestras_descubiertas: List[Dict[str, Any]] = []
 
-    # Mapas de tiendas y perfumes en Supabase
+    # Mapas de tiendas y perfumes en Supabase para evitar consultas duplicadas
     sb_tiendas_map: Dict[str, int] = {}
     sb_perfumes_conocidos: Dict[str, int] = {}
 
@@ -421,6 +456,9 @@ def ejecutar_descubrimiento_autonomo(
                             v_price = int(float(v.get("price", 0)))
                             if v_price <= 0:
                                 continue
+
+                            v_compare_raw = v.get("compare_at_price")
+                            v_compare = int(float(v_compare_raw)) if (v_compare_raw and float(v_compare_raw) > v_price) else None
 
                             v_avail = v.get("available")
                             v_stock = bool(v_avail) if v_avail is not None else True

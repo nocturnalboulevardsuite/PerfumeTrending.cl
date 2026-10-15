@@ -100,15 +100,28 @@ def clean_digits(val: Any) -> int:
     return int(digits) if digits else 0
 
 
+# =============================================================================
+# BLOQUE: CONFIGURACIÓN DE RED RESILIENTE Y EVASIÓN DE BLOQUEOS (ANTI-BOT)
+# =============================================================================
+
 def crear_sesion_robusta() -> requests.Session:
-    """Crea una sesión HTTP con pool de conexiones y política de reintentos exponenciales."""
+    """
+    ¿Qué hace este bloque?
+    Configura un cliente HTTP con reintentos automáticos (Retries) y reutilización de sockets (Connection Pooling).
+    
+    ¿Por qué está aquí?
+    Si un comercio sufre una caída momentánea (HTTP 500, 502, 503, 504) o limita la velocidad (HTTP 429),
+    la sesión reintenta hasta 3 veces esperando un tiempo exponencialmente mayor (backoff de 0.6s).
+    Esto evita que un micro-corte de red haga fallar el raspado de datos.
+    """
     session = requests.Session()
     retry_strategy = Retry(
-        total=3,
-        backoff_factor=0.6,
-        status_forcelist=[429, 500, 502, 503, 504],
-        allowed_methods=["HEAD", "GET", "OPTIONS"]
+        total=3,                           # Máximo 3 reintentos antes de declarar fallo
+        backoff_factor=0.6,                # Tiempo de espera incremental (0.6s, 1.2s, 2.4s)
+        status_forcelist=[429, 500, 502, 503, 504], # Códigos de error transitorios a reintentar
+        allowed_methods=["HEAD", "GET", "OPTIONS"]   # Solo métodos seguros de solo lectura
     )
+    # Montamos el adaptador de reintentos tanto para HTTP como para HTTPS
     adapter = HTTPAdapter(max_retries=retry_strategy, pool_connections=10, pool_maxsize=20)
     session.mount("https://", adapter)
     session.mount("http://", adapter)
@@ -116,13 +129,20 @@ def crear_sesion_robusta() -> requests.Session:
 
 
 def obtener_headers_navegador(referer: Optional[str] = None) -> Dict[str, str]:
-    """Genera cabeceras HTTP completas simulando navegación humana en Chile."""
+    """
+    ¿Qué hace este bloque?
+    Genera cabeceras HTTP realistas simulando ser un usuario humano navegando desde Santiago de Chile.
+    
+    ¿Por qué está aquí?
+    Los cortafuegos de los grandes retailers (Cloudflare, Akamai, CloudFront) bloquean peticiones que
+    no envían cabeceras modernas como Sec-Ch-Ua, Accept-Language es-CL y User-Agent residencial.
+    """
     headers = {
         "User-Agent": random.choice(USER_AGENTS),
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
-        "Accept-Language": "es-CL,es;q=0.9,en;q=0.8",
+        "Accept-Language": "es-CL,es;q=0.9,en;q=0.8",  # Localización explícita para Chile
         "Sec-Ch-Ua": '"Chromium";v="124", "Google Chrome";v="124", "Not-A.Brand";v="99"',
-        "Sec-Ch-Ua-Mobile": "?0",
+        "Sec-Ch-Ua-Mobile": "?0",                      # Indica que es un computador de escritorio
         "Sec-Ch-Ua-Platform": '"Windows"',
         "Sec-Fetch-Dest": "document",
         "Sec-Fetch-Mode": "navigate",
@@ -131,12 +151,14 @@ def obtener_headers_navegador(referer: Optional[str] = None) -> Dict[str, str]:
         "Upgrade-Insecure-Requests": "1"
     }
     if referer:
-        headers["Referer"] = referer
+        headers["Referer"] = referer  # Simula de dónde vino el usuario (p.ej. la página principal de la tienda)
     return headers
 
 
 def obtener_headers_json(referer: Optional[str] = None) -> Dict[str, str]:
-    """Cabeceras para endpoints JSON y APIs internas."""
+    """
+    Cabeceras específicas para consultar APIs REST y endpoints JSON internos de las tiendas (como Shopify).
+    """
     headers = {
         "User-Agent": random.choice(USER_AGENTS),
         "Accept": "application/json, text/javascript, */*; q=0.01",
@@ -159,8 +181,14 @@ def extraer_precio_shopify(
     volumen_ml: Optional[int] = None
 ) -> Dict[str, Any]:
     """
-    Extrae precio actual y de lista de tiendas Shopify (Silk Perfumes y Elite Perfumes)
-    mediante el endpoint público /search/suggest.json.
+    ¿Qué hace esta función?
+    Extrae precios y stock en vivo de perfumerías que usan la plataforma Shopify (Silk Perfumes y Elite Perfumes).
+    
+    ¿Cómo funciona?
+    1. Consulta el endpoint público `/search/suggest.json` que responde en milisegundos.
+    2. Valida que el producto devuelto sea un perfume legítimo (no desodorante ni crema).
+    3. Comprueba coincidencia por tokens de texto del nombre y la marca.
+    4. Detecta precio actual, precio de lista (compare_at_price) y disponibilidad de stock real.
     """
     q = urllib.parse.quote(perfume_nombre)
     url_api = f"https://www.{dominio}/search/suggest.json?q={q}&resources[type]=product"
@@ -172,6 +200,8 @@ def extraer_precio_shopify(
             productos = res.json().get("resources", {}).get("results", {}).get("products", [])
             for p in productos:
                 raw_title = p.get("title", "")
+                
+                # Paso 1: Descartar si es accesorio o producto derivado (ej. desodorante)
                 if not es_producto_perfume_valido(raw_title):
                     continue
 
@@ -179,20 +209,20 @@ def extraer_precio_shopify(
                 tokens = [t.lower() for t in perfume_nombre.split() if len(t) > 3]
                 coincide = any(tok in titulo_lower for tok in tokens) or (marca.lower() in titulo_lower)
 
+                # Regla de seguridad especial: evitar cruces con fragancias de Chanel
                 if "chanel" in perfume_nombre.lower() and "chanel" not in titulo_lower:
                     continue
 
                 if coincide:
-                    # Validar coincidencia de volumen si fue especificado
+                    # Paso 2: Extraer y validar el volumen en mililitros
                     vol_encontrado = extraer_volumen_ml(raw_title)
-                    if volumen_ml and vol_encontrado and abs(vol_encontrado - volumen_ml) > 20:
-                        # Si hay otro producto que coincide mejor, seguir buscando
-                        pass
 
+                    # Paso 3: Extraer precios (actual y comparativo)
                     precio_act = int(float(p.get("price", 0)))
                     p_comp_raw = p.get("compare_at_price_max") or p.get("compare_at_price_min")
                     precio_norm = int(float(p_comp_raw)) if p_comp_raw else precio_act
 
+                    # Filtro de sanidad: debe ser un precio mayor a $10.000 CLP
                     if precio_act >= 10000:
                         clean_url = f"https://www.{dominio}" + p.get("url", "").split("?")[0]
                         return {
@@ -200,13 +230,14 @@ def extraer_precio_shopify(
                             "precio_actual": precio_act,
                             "precio_normal": precio_norm if precio_norm > precio_act else precio_act,
                             "url": clean_url,
-                            "en_stock": bool(p.get("available", True)),
+                            "en_stock": bool(p.get("available", True)), # Detección nativa de inventario Shopify
                             "volumen_ml": vol_encontrado or volumen_ml or 100,
                             "metodo": "Shopify Live Suggest"
                         }
     except Exception as e:
         logger.warning(f"Error consultando Shopify {dominio} para '{perfume_nombre}': {e}")
 
+    # Si no hubo coincidencia o la tienda falló, retornamos exito=False sin inventar precios
     return {"exito": False}
 
 
@@ -217,20 +248,27 @@ def extraer_precio_falabella(
     volumen_ml: Optional[int] = None
 ) -> Dict[str, Any]:
     """
-    Extrae precio y stock de Falabella Chile mediante la etiqueta oculta __NEXT_DATA__.
-    Si el enlace guardado devuelve 404, se auto-sana buscando la nueva ficha viva.
+    ¿Qué hace esta función?
+    Extrae el precio, precio normal y disponibilidad de stock en Falabella Chile.
+    
+    ¿Cómo funciona?
+    1. Consulta primero la URL directa guardada de la ficha.
+    2. Si devuelve 404 (Falabella rotó el SKU o cambió la URL), activa 'auto-sanación':
+       busca el producto en Falabella y localiza la nueva ficha viva sin intervención manual.
+    3. Lee el script '__NEXT_DATA__' de Next.js, extrayendo el precio de internet y el estado de stock
+       ('isOutOfStock').
     """
     headers = obtener_headers_navegador(referer="https://www.falabella.com/falabella-cl")
     url_a_probar = url_directa
 
-    # Intento 1: Consultar URL directa guardada
+    # Intento 1: Consultar la URL directa que teníamos almacenada
     try:
         res = session.get(url_a_probar, headers=headers, timeout=10)
     except Exception as e:
         logger.warning(f"Fallo conexión Falabella direct: {e}")
         res = None
 
-    # Si dio 404 o falló, activar auto-sanación vía búsqueda
+    # Intento 2: Si la URL dio error (404), activamos auto-sanación (Self-Healing)
     if not res or res.status_code != 200:
         logger.info(f"Falabella: URL previa no disponible ({res.status_code if res else 'Error'}). Buscando ficha viva...")
         q = urllib.parse.quote(perfume_nombre)
@@ -258,7 +296,7 @@ def extraer_precio_falabella(
                                         "precio_actual": p_act,
                                         "precio_normal": p_act,
                                         "url": url_a_probar,
-                                        "en_stock": not is_out,
+                                        "en_stock": not is_out, # Negación: si isOutOfStock es True, en_stock es False
                                         "volumen_ml": volumen_ml or 100,
                                         "metodo": "Falabella Next Search Healed"
                                     }
@@ -321,20 +359,25 @@ def extraer_precio_paris(
     volumen_ml: Optional[int] = None
 ) -> Dict[str, Any]:
     """
-    Extrae precio y stock de Paris Chile mediante el Schema.org JSON-LD oficial.
-    Auto-sana la URL si Paris rotó el identificador del producto.
+    ¿Qué hace esta función?
+    Extrae el precio real y la disponibilidad de stock en Paris.cl utilizando Schema.org JSON-LD.
+    
+    ¿Por qué se usa Schema.org en Paris?
+    Paris inyecta en el HTML etiquetas de datos estructurados para Google (Schema.org 'Product').
+    Al leer directamente el objeto JSON-LD de la oferta, obtenemos el precio verificado y el estado
+    de disponibilidad oficial ('ItemAvailability: InStock' o 'OutOfStock') sin depender del CSS visual.
     """
     headers = obtener_headers_navegador(referer="https://www.paris.cl/")
     url_a_probar = url_directa
 
-    # Intento 1: Consultar URL directa guardada
+    # Intento 1: Consultar la URL directa almacenada
     try:
         res = session.get(url_a_probar, headers=headers, timeout=10)
     except Exception as e:
         logger.warning(f"Fallo conexión Paris direct: {e}")
         res = None
 
-    # Si dio 404, auto-sanar con búsqueda
+    # Intento 2: Si dio 404 o timeout, activar auto-sanación buscando la nueva ficha viva
     if not res or res.status_code != 200:
         logger.info(f"Paris: URL previa no disponible ({res.status_code if res else 'Error'}). Buscando ficha viva...")
         q = urllib.parse.quote(perfume_nombre)
@@ -345,6 +388,7 @@ def extraer_precio_paris(
                 tokens = [t.lower() for t in perfume_nombre.split() if len(t) > 3]
                 for a in soup_s.find_all("a", href=True):
                     h = a.get("href", "")
+                    # En Paris las fichas directas de productos contienen '.html'
                     if ".html" in h and any(tok in h.lower() for tok in tokens):
                         url_a_probar = "https://www.paris.cl" + h.split("?")[0]
                         res = session.get(url_a_probar, headers=headers, timeout=9)
@@ -352,7 +396,7 @@ def extraer_precio_paris(
         except Exception as e:
             logger.warning(f"Fallo auto-sanación Paris: {e}")
 
-    # Parsear JSON-LD
+    # Paso 3: Parsear la etiqueta de datos estructurados JSON-LD de Google
     if res and res.status_code == 200:
         try:
             blocks = re.findall(r'<script[^>]*type="application/ld\+json"[^>]*>(.*?)</script>', res.text, re.DOTALL)
@@ -360,10 +404,14 @@ def extraer_precio_paris(
                 if "Product" in b:
                     d = json.loads(b)
                     offers = d.get("offers", [])
+                    # Las ofertas pueden venir como lista o como diccionario individual
                     offer_obj = offers[0] if isinstance(offers, list) and offers else (offers if isinstance(offers, dict) else {})
                     p_raw = offer_obj.get("price")
+                    
+                    # Detección estricta de stock: si dice 'outofstock' o 'agotado', en_stock es False
                     avail = str(offer_obj.get("availability", "")).lower()
                     en_stock_val = False if ("outofstock" in avail or "agotado" in avail) else True
+                    
                     if p_raw:
                         p_act = int(float(p_raw))
                         if p_act >= 10000:
@@ -379,6 +427,7 @@ def extraer_precio_paris(
         except Exception as e:
             logger.warning(f"Error parseando JSON-LD en Paris: {e}")
 
+    # Si no se pudo obtener un precio verificado, retornamos fallo limpio sin inventar datos
     return {"exito": False}
 
 
@@ -389,8 +438,13 @@ def extraer_precio_ripley(
     volumen_ml: Optional[int] = None
 ) -> Dict[str, Any]:
     """
-    Extrae precio y stock de Ripley Chile mediante Schema.org y selectores DOM optimizados.
-    Auto-sana la URL si Ripley actualizó el código de producto.
+    ¿Qué hace esta función?
+    Extrae precio y stock de Ripley Chile combinando Schema.org y selectores DOM optimizados.
+    
+    ¿Cómo garantiza la detección de stock?
+    Comprueba dos vías independientes:
+    1. El bloque JSON-LD 'availability'.
+    2. Si en el DOM visual aparece la etiqueta 'Agotado' o 'Sin stock', fuerza en_stock = False.
     """
     headers = obtener_headers_navegador(referer="https://simple.ripley.cl/")
     url_a_probar = url_directa
@@ -402,7 +456,7 @@ def extraer_precio_ripley(
         logger.warning(f"Fallo conexión Ripley direct: {e}")
         res = None
 
-    # Si dio 404, auto-sanar con búsqueda
+    # Intento 2: Si dio 404, auto-sanar buscando la ficha viva en Ripley
     if not res or res.status_code != 200:
         logger.info(f"Ripley: URL previa no disponible ({res.status_code if res else 'Error'}). Buscando ficha viva...")
         q = urllib.parse.quote(perfume_nombre)
@@ -413,6 +467,7 @@ def extraer_precio_ripley(
                 tokens = [t.lower() for t in perfume_nombre.split() if len(t) > 3]
                 for a in soup_s.find_all("a", href=True):
                     h = a.get("href", "")
+                    # En Ripley los productos terminan con el sufijo 'p'
                     if h.endswith("p") and any(tok in h.lower() for tok in tokens):
                         url_a_probar = "https://simple.ripley.cl" + h.split("?")[0]
                         res = session.get(url_a_probar, headers=headers, timeout=9)
@@ -420,11 +475,12 @@ def extraer_precio_ripley(
         except Exception as e:
             logger.warning(f"Fallo auto-sanación Ripley: {e}")
 
-    # Parsear ficha
+    # Paso 3: Parsear ficha del producto
     if res and res.status_code == 200:
         try:
             soup = BeautifulSoup(res.text, "html.parser")
-            # 1. Intentar Schema.org
+            
+            # Vía A: Datos estructurados Schema.org
             blocks = re.findall(r'<script[^>]*type="application/ld\+json"[^>]*>(.*?)</script>', res.text, re.DOTALL)
             for b in blocks:
                 if '"@type":"Product"' in b or '"@type": "Product"' in b:
@@ -448,7 +504,7 @@ def extraer_precio_ripley(
                     except Exception:
                         pass
 
-            # 2. Intentar selector de precio DOM
+            # Vía B: Selector DOM visual si el JSON-LD no estaba presente
             p_val = soup.find(class_=lambda c: c and "price-value" in c)
             if p_val:
                 p_act = clean_digits(p_val.get_text())
@@ -499,6 +555,7 @@ def obtener_ultimo_reporte_scraping() -> Optional[Dict[str, Any]]:
 
 def ejecutar_ciclo_scraping_y_descubrimiento() -> Dict[str, Any]:
     """
+    ¿Qué hace este gran bloque orquestador?
     Ejecuta el ciclo de extracción ETL, auditoría periódica y persistencia de precios reales:
     1. Recupera catálogo de perfumes y comercios registrados en base de datos.
     2. Realiza extracciones en vivo contra los 5 comercios oficiales con cabeceras de navegador.
@@ -515,7 +572,10 @@ def ejecutar_ciclo_scraping_y_descubrimiento() -> Dict[str, Any]:
 
     logger.info("Iniciando ciclo de scraping ETL profesional con precios 100% reales")
 
+    # 1. Sesión HTTP reutilizable con reintentos exponenciales
     session = crear_sesion_robusta()
+    
+    # 2. Consultamos la lista de perfumes y tiendas desde la base de datos
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("SELECT id, nombre, marca, precio_referencia FROM perfumes;")
@@ -538,6 +598,7 @@ def ejecutar_ciclo_scraping_y_descubrimiento() -> Dict[str, Any]:
         for t in tiendas_db
     }
 
+    # 3. Bucle Principal: recorremos cada perfume del catálogo
     for p in perfumes_db:
         p_id = p["id"]
         p_nom = p["nombre"]
@@ -545,10 +606,12 @@ def ejecutar_ciclo_scraping_y_descubrimiento() -> Dict[str, Any]:
 
         logger.info(f"Auditando fragancia: {p_nom} ({p_marca})")
 
+        # 4. Bucle Secundario: consultamos cada tienda auditada
         for tienda in tiendas_db:
             t_id = tienda["id"]
             t_nom = tienda["nombre"]
 
+            # Regla de negocio: verificar si la tienda comercializa esa marca (evita búsquedas inútiles)
             comercializa = tienda_comercializa_marca(t_nom, p_marca)
             url_directa_info = obtener_url_directa_tienda(p_id, t_nom)
 
@@ -559,13 +622,13 @@ def ejecutar_ciclo_scraping_y_descubrimiento() -> Dict[str, Any]:
             tiendas_stats[t_nom]["consultas"] += 1
             url_directa_guardada, precio_base, precio_norm_base, vol_ml_base = url_directa_info
 
-            # Pequeña pausa cortés entre tiendas (anti-bloqueo y emulación humana)
+            # Pausa humana aleatoria (0.7s a 1.6s) para respetar los servidores y evitar baneos por IP
             time.sleep(random.uniform(0.7, 1.6))
 
             try:
                 datos_extraccion = {"exito": False}
 
-                # 1. Extracción para tiendas Shopify (Silk / Elite)
+                # Rama A: Tiendas basadas en Shopify (Silk Perfumes y Elite Perfumes)
                 if t_nom in tiendas_shopify:
                     dominio = tiendas_shopify[t_nom]
                     datos_extraccion = extraer_precio_shopify(
@@ -576,7 +639,7 @@ def ejecutar_ciclo_scraping_y_descubrimiento() -> Dict[str, Any]:
                         volumen_ml=vol_ml_base
                     )
 
-                # 2. Extracción para Falabella
+                # Rama B: Falabella (Next.js __NEXT_DATA__)
                 elif "falabella" in t_nom.lower():
                     datos_extraccion = extraer_precio_falabella(
                         session=session,
@@ -585,7 +648,7 @@ def ejecutar_ciclo_scraping_y_descubrimiento() -> Dict[str, Any]:
                         volumen_ml=vol_ml_base
                     )
 
-                # 3. Extracción para Paris
+                # Rama C: Paris (Schema.org JSON-LD de Google)
                 elif "paris" in t_nom.lower():
                     datos_extraccion = extraer_precio_paris(
                         session=session,
@@ -594,7 +657,7 @@ def ejecutar_ciclo_scraping_y_descubrimiento() -> Dict[str, Any]:
                         volumen_ml=vol_ml_base
                     )
 
-                # 4. Extracción para Ripley
+                # Rama D: Ripley (Schema.org y selectores DOM)
                 elif "ripley" in t_nom.lower():
                     datos_extraccion = extraer_precio_ripley(
                         session=session,
@@ -604,6 +667,7 @@ def ejecutar_ciclo_scraping_y_descubrimiento() -> Dict[str, Any]:
                     )
 
                 # Registrar resultado
+                # 5. Procesamiento del resultado de la extracción
                 if datos_extraccion.get("exito"):
                     precio_actual_final = datos_extraccion["precio_actual"]
                     precio_normal_final = datos_extraccion["precio_normal"]
@@ -611,6 +675,8 @@ def ejecutar_ciclo_scraping_y_descubrimiento() -> Dict[str, Any]:
                     vol_final = datos_extraccion.get("volumen_ml", vol_ml_base)
                     stock_final = bool(datos_extraccion.get("en_stock", True))
 
+                    # Persistencia Transaccional Atómica (ACID en Supabase y SQLite)
+                    # Esta función actualiza la oferta viva y guarda el historial solo si hubo un cambio real
                     res_obs = registrar_observacion_oferta({
                         "perfume_id": p_id,
                         "tienda_id": t_id,
@@ -635,7 +701,9 @@ def ejecutar_ciclo_scraping_y_descubrimiento() -> Dict[str, Any]:
                     })
                     logger.info(f"  -> [{t_nom}] EN VIVO: ${precio_actual_final:,} (Normal: ${precio_normal_final:,}) | stock: {stock_final} | ml: {vol_final}")
                 else:
-                    # Registrar fallo sin inventar datos ni alterar ofertas confirmadas
+                    # En caso de fallo de red, bloqueo o producto no encontrado:
+                    # NUNCA inventamos un precio artificial ni convertimos un 'Agotado' en 'Disponible'.
+                    # Se registra el fallo de forma limpia para que los administradores puedan auditarlo.
                     motivo_fallo = datos_extraccion.get("motivo", f"Extracción no exitosa en {t_nom}")
                     registrar_fallo_scraping(
                         tienda_id=t_id,

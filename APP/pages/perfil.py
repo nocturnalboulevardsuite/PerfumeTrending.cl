@@ -747,7 +747,16 @@ with col_title_back:
 
 st.markdown("<div style='margin-top: 16px;'></div>", unsafe_allow_html=True)
 
-# VERIFICACIÓN DE INICIO DE SESIÓN REAL
+# =============================================================================
+# BLOQUE 3: CONTROL DE ACCESO DEFENSIVO Y GESTIÓN DE SESIÓN
+# -----------------------------------------------------------------------------
+# ¿QUÉ HACE ESTE BLOQUE?
+# 1. Verifica si el usuario ha iniciado sesión consultando `st.session_state['logged_in']`.
+# 2. Si no está autenticado, detiene la ejecución con `st.stop()` y ofrece un botón
+#    para abrir el modal de acceso (OTP o credenciales).
+# 3. Si está autenticado, extrae de forma reactiva los datos del usuario (`user_info`)
+#    y prepara su nombre, correo, teléfono, bio y estado de alertas.
+# =============================================================================
 if not st.session_state['logged_in'] or not st.session_state.get('user_info'):
     st.info("Debes iniciar sesión para personalizar tu perfil y administrar tus fragancias monitoreadas.")
     if st.button("Ingresar a mi cuenta", key="btn_must_login"):
@@ -755,7 +764,7 @@ if not st.session_state['logged_in'] or not st.session_state.get('user_info'):
         st.rerun()
     st.stop()
 
-# EXTRAER DATOS REALES REGISTRADOS EN LA SESIÓN (SIN DUMMIES)
+# Extraer los datos reales registrados en la sesión activa del usuario
 u_info = st.session_state['user_info']
 u_nombre = u_info.get('nombre', '').strip()
 u_email = u_info.get('email', '').strip()
@@ -764,17 +773,17 @@ u_bio = u_info.get('bio', '').strip()
 u_foto = u_info.get('foto_perfil', '').strip()
 u_alerta = u_info.get('alerta_email', False)
 
-# SILUETA VECTORIAL O FOTO/GIF PERSONALIZADO
+# Silueta vectorial predeterminada o imagen/GIF en Base64 cargado por el usuario
 default_avatar_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238c7b6d' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'><path d='M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2'/><circle cx='12' cy='7' r='4'/></svg>"
 avatar_src = get_image_src(u_foto) if u_foto else default_avatar_svg
 
-# FORMATEO DINÁMICO DE TEXTOS SEGÚN DATOS DISPONIBLES
+# Formateo dinámico de datos de contacto
 u_nombre_display = u_nombre if u_nombre else "Usuario Registrado"
 u_email_display = u_email if u_email else "<i style='opacity:0.6;'>Sin correo registrado</i>"
 u_telefono_display = u_telefono if u_telefono else "<i style='opacity:0.6;'>Sin teléfono registrado</i>"
 u_bio_display = u_bio if u_bio else "<i style='opacity:0.7;'>Aún no has agregado una biografía. Completa tus datos personales más abajo en la pestaña 'Editar Datos Personales'.</i>"
 
-# BADGE DE ALERTA DINÁMICO
+# Indicador visual del estado de alertas por correo
 if u_email and u_alerta:
     badge_alerta = f"<span style='background: {'rgba(34, 197, 94, 0.15)' if is_dark else '#e8f5e9'}; color: {'#4ade80' if is_dark else '#2e7d32'}; border: 1px solid {'rgba(74, 222, 128, 0.35)' if is_dark else 'rgba(46, 125, 50, 0.3)'}; font-size: 0.78rem; font-weight: 700; padding: 5px 12px; border-radius: 6px;'>{svg_bell_active} ALERTAS GMAIL ACTIVADAS</span>"
 elif u_email and not u_alerta:
@@ -782,7 +791,15 @@ elif u_email and not u_alerta:
 else:
     badge_alerta = f"<span style='background: {btn_border}; color: {subtext_color}; font-size: 0.78rem; font-weight: 600; padding: 5px 12px; border-radius: 6px;'>{svg_bell_off} AGREGA UN CORREO PARA ALERTAS</span>"
 
-# RENDERIZADO DE LA TARJETA CON ICONO DE PERFIL CLIQUEABLE (ABRE SELECTOR DE ARCHIVOS DEL NAVEGADOR)
+
+# =============================================================================
+# BLOQUE 4: TARJETA DE PERFIL Y SUBIDA DE AVATAR / GIF (DATA URI EN BASE64)
+# -----------------------------------------------------------------------------
+# ¿QUÉ HACE ESTE BLOQUE?
+# 1. Permite cambiar la foto de perfil o GIF animado directamente con un botón `file_uploader`.
+# 2. Codifica los bytes del archivo a una Data URI en base64 (`data:image/png;base64,...`),
+#    almacenándola en la sesión y persistiendo en la base de datos sin necesidad de hosting adicional.
+# =============================================================================
 st.markdown('<div class="profile-card-container">', unsafe_allow_html=True)
 col_av, col_details = st.columns([1.5, 8.5], vertical_alignment="center")
 
@@ -797,7 +814,7 @@ with col_av:
     </div>
     '''), unsafe_allow_html=True)
     
-    # Cargar foto directamente al hacer clic en el avatar
+    # Cargar foto o GIF directamente
     quick_file = st.file_uploader(
         "Subir Foto", 
         type=["png", "jpg", "jpeg", "gif", "webp"], 
@@ -831,7 +848,18 @@ with col_details:
 
 st.markdown('</div>', unsafe_allow_html=True)
 
-# PESTAÑAS DE EDICIÓN Y MONITOREO
+
+# =============================================================================
+# BLOQUE 5: GESTIÓN DE FRAGANCIAS FAVORITAS Y ALGORITMO DE DETECCIÓN DE REBAJAS
+# -----------------------------------------------------------------------------
+# ¿QUÉ HACE ESTE BLOQUE?
+# En la pestaña "Fragancias Monitoreadas":
+# 1. Recupera la lista de IDs guardados en `st.session_state['favoritos']`.
+# 2. Por cada perfume, consulta los precios en vivo con `get_cached_precios(p_id)`.
+# 3. Compara el mejor precio actual (`p_min`) contra el precio guardado/referencia (`p_ref`).
+# 4. Si `p_min < p_ref`, activa la insignia verde con animación de flecha hacia abajo
+#    indicando que hubo una baja de precio real en el mercado chileno.
+# =============================================================================
 tab_favs, tab_edit, tab_notif = st.tabs([
     "Fragancias Monitoreadas", 
     "Editar Datos Personales", 
