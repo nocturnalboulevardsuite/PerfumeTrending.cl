@@ -852,7 +852,9 @@ def generar_url_tienda(tienda_nombre: str, perfume_nombre: str, url_directa: Opt
     elif "elite" in t:
         return f"https://www.eliteperfumes.cl/search?q={q}"
     elif "alisha" in t:
-        return f"https://www.alisha.cl/search?q={q}"
+        return f"https://www.alishaperfumes.cl/search?q={q}"
+    elif "yauras" in t:
+        return f"https://yauras.cl/search?q={q}"
     elif "dbs" in t:
         return f"https://www.dbs.cl/search?q={q}"
     return None
@@ -929,9 +931,29 @@ def registrar_observacion_oferta(observacion: Dict[str, Any]) -> Dict[str, Any]:
         sb_variante_id = variante_id
         if not sb_variante_id and perfume_id:
             try:
-                r_v = sb.table("variantes_perfume").select("id").eq("perfume_id", perfume_id).limit(1).execute()
+                vol_int = int(round(float(volumen_ml))) if volumen_ml else 100
+                r_v = sb.table("variantes_perfume").select("id").eq("perfume_id", perfume_id).eq("volumen_ml", vol_int).limit(1).execute()
                 if r_v.data and len(r_v.data) > 0:
                     sb_variante_id = r_v.data[0]["id"]
+                else:
+                    # Si no existe variante para este volumen, crearla dinámicamente en Supabase
+                    r_p = sb.table("perfumes").select("tipo, nombre").eq("id", perfume_id).limit(1).execute()
+                    tipo_p = r_p.data[0]["tipo"] if (r_p.data and len(r_p.data) > 0) else "Eau de Parfum"
+                    slug_v = f"perfume-{perfume_id}-{vol_int}ml"
+                    r_ins = sb.table("variantes_perfume").insert({
+                        "perfume_id": perfume_id,
+                        "concentracion": tipo_p,
+                        "volumen_ml": vol_int,
+                        "formato": "regular",
+                        "slug": slug_v,
+                        "activa": True
+                    }).execute()
+                    if r_ins.data and len(r_ins.data) > 0:
+                        sb_variante_id = r_ins.data[0]["id"]
+                    else:
+                        r_any = sb.table("variantes_perfume").select("id").eq("perfume_id", perfume_id).limit(1).execute()
+                        if r_any.data and len(r_any.data) > 0:
+                            sb_variante_id = r_any.data[0]["id"]
             except Exception as e:
                 logger.debug(f"Error resolviendo variante en Supabase: {e}")
 
@@ -1416,7 +1438,7 @@ def obtener_precios_actuales(perfume_id: int) -> List[Dict[str, Any]]:
       AND pr.fecha_registro = (
           SELECT MAX(fecha_registro)
           FROM precios_registro
-          WHERE perfume_id = ? AND tienda_id = t.id
+          WHERE perfume_id = ? AND tienda_id = t.id AND ABS(COALESCE(volumen_ml, 100) - COALESCE(pr.volumen_ml, 100)) < 1
       )
     ORDER BY pr.precio_actual ASC;
     """
