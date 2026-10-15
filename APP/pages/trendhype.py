@@ -959,7 +959,7 @@ else:
     btn_col1, btn_col2 = col_actions.columns([1.8, 1.0], vertical_alignment="center")
 
 with col_logo:
-    st.button("Perfume**Trending**", key="btn_logo_home", help="Ir al inicio de PerfumeTrending", on_click=lambda: st.switch_page("app.py"))
+    st.button("Perfume**Trending**", key="btn_logo_home", on_click=lambda: st.switch_page("app.py"))
 
 with btn_col1:
     if st.session_state['logged_in']:

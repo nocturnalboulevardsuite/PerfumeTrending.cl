@@ -755,7 +755,9 @@ col_title_text, col_title_back = st.columns([7, 3], vertical_alignment="center")
 with col_title_text:
     st.markdown(f"""
     <div style='display: flex; align-items: center; gap: 10px;'>
-        <span style='font-size: 1.6rem;'>⚡</span>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#d83737" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+        </svg>
         <h1 style='color: {text_color}; font-size: 1.5rem; font-weight: 800; margin: 0; letter-spacing: 0.5px;'>REMATES DE ÚLTIMO MINUTO Y LIQUIDACIONES</h1>
     </div>
     <div style='color: {subtext_color}; font-size: 0.9rem; margin-top: 4px;'>
@@ -898,7 +900,7 @@ else:
                     html_card = f"""
                     <div class="remate-card">
                         <div class="badge-discount">{item['descuento']}</div>
-                        <div class="badge-timer">⏱️ {item['timer']}</div>
+                        <div class="badge-timer"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align: -1px; margin-right: 3px;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>{item['timer']}</div>
                         <div class="remate-img-box">
                             <img src="{item['img']}" alt="{item['nombre']}">
                         </div>
@@ -906,7 +908,7 @@ else:
                         <div class="remate-brand">{item['marca']}</div>
                         <div class="remate-store-row">
                             <span>Vendido por: <b>{item['tienda']}</b></span>
-                            <span style="color: #4ade80; font-weight: 700;">Verificado ✓</span>
+                            <span style="color: #4ade80; font-weight: 700;">Verificado</span>
                         </div>
                         <div class="stock-badge">{item['stock']}</div>
                         <div class="price-box">

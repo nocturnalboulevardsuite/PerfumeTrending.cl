@@ -408,12 +408,7 @@ def modal_busqueda_visual():
 # 3. RENDERIZADO EXCLUSIVO DE MODALES
 if st.session_state.get('show_login_modal', False):
     st.session_state['show_login_modal'] = False
-    st.session_state['show_visual_modal'] = False
     modal_autenticacion()
-elif st.session_state.get('show_visual_modal', False):
-    st.session_state['show_login_modal'] = False
-    st.session_state['show_visual_modal'] = False
-    modal_busqueda_visual()
 
 # Posicionamiento del Switch de Tema
 bottle_left_pos = "42px" if is_dark else "-2px"
@@ -444,6 +439,8 @@ shield_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg
 tag_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d83737' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z'/><circle cx='7' cy='7' r='1.5' fill='%23d83737'/></svg>"
 home_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d83737' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z'/><polyline points='9 22 9 12 15 12 15 22'/></svg>"
 flame_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d83737' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z'/></svg>"
+grid_icon_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d83737' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><rect x='3' y='3' width='7' height='7'/><rect x='14' y='3' width='7' height='7'/><rect x='14' y='14' width='7' height='7'/><rect x='3' y='14' width='7' height='7'/></svg>"
+diamond_icon_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d83737' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M6 3h12l4 6-10 12L2 9z'/></svg>"
 logo_color_encoded = "%238c7b6d"
 text_color_encoded = "%23ffffff" if is_dark else "%2318181b"
 logo_svg_data = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 36' fill='none' stroke-linecap='round' stroke-linejoin='round'><path d='M 6.8 21 L 29.2 21 C 30 25 27 32 18 32 C 9 32 6 25 6.8 21 Z' fill='{logo_color_encoded}' /><line x1='6.8' y1='21' x2='29.2' y2='21' stroke='{text_color_encoded}' stroke-width='1.5' /><line x1='18' y1='10' x2='18' y2='30' stroke='{text_color_encoded}' stroke-width='1' /><path d='M 18 32 C 9 32 5 24 7.5 17 C 9 12 13 10 15 10 L 21 10 C 23 10 27 12 28.5 17 C 31 24 27 32 18 32 Z' stroke='{text_color_encoded}' stroke-width='2' /><rect x='15' y='7' width='6' height='3' stroke='{text_color_encoded}' stroke-width='1.5' /><rect x='13' y='3' width='10' height='4' rx='1' stroke='{text_color_encoded}' stroke-width='1.5' /><rect x='16' y='0' width='4' height='3' rx='1' fill='{logo_color_encoded}' stroke='{text_color_encoded}' stroke-width='1' /></svg>"
@@ -1081,25 +1078,7 @@ st.markdown(f"""
         background-color: {input_bg} !important;
     }}
 
-    /* BÚSQUEDA VISUAL */
-    .st-key-btn_photo_search button {{
-        background-color: {input_bg} !important;
-        border: 1px solid {input_border} !important;
-        border-radius: 8px !important;
-        padding: 0.3rem 0.6rem 0.3rem 2.5rem !important;
-        background-image: url("{camera_icon_svg}") !important;
-        background-repeat: no-repeat !important;
-        background-position: 14px center !important;
-        background-size: 18px 18px !important;
-        font-size: 0.95rem !important;
-        min-height: 44px !important;
-    }}
-    
-    .stApp .st-key-btn_photo_search button p {{
-        font-size: 0.95rem !important;
-        color: {btn_text} !important;
-        font-weight: 600 !important;
-    }}
+
 
     /* BRAND LOGO INTERACTIVO NATIVO */
     .st-key-btn_logo_home,
@@ -1154,17 +1133,66 @@ st.markdown(f"""
         color: {text_color} !important;
     }}
 
-    /* BOTONES DE CATEGORÍAS CATÁLOGO */
+    /* BOTONES DE CATEGORÍAS CATÁLOGO CON ICONOS VECTORIALES */
     div.st-key-btn_cat_todos button,
     div.st-key-btn_cat_arabes button,
     div.st-key-btn_cat_remates button {{
         border-radius: 20px !important;
-        padding: 0.35rem 0.8rem !important;
+        padding: 0.35rem 1rem 0.35rem 2.3rem !important;
         font-size: 0.85rem !important;
         font-weight: 600 !important;
         min-height: 36px !important;
         height: 36px !important;
         letter-spacing: 0.3px !important;
+        position: relative !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), border-color 0.15s ease !important;
+    }}
+    div.st-key-btn_cat_todos button:hover,
+    div.st-key-btn_cat_arabes button:hover,
+    div.st-key-btn_cat_remates button:hover {{
+        transform: scale(1.03) !important;
+    }}
+    div.st-key-btn_cat_todos button::before {{
+        content: '' !important;
+        position: absolute !important;
+        left: 12px !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        width: 14px !important;
+        height: 14px !important;
+        background-image: url("{grid_icon_svg}") !important;
+        background-repeat: no-repeat !important;
+        background-size: contain !important;
+        background-position: center !important;
+    }}
+    div.st-key-btn_cat_arabes button::before {{
+        content: '' !important;
+        position: absolute !important;
+        left: 12px !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        width: 14px !important;
+        height: 14px !important;
+        background-image: url("{diamond_icon_svg}") !important;
+        background-repeat: no-repeat !important;
+        background-size: contain !important;
+        background-position: center !important;
+    }}
+    div.st-key-btn_cat_remates button::before {{
+        content: '' !important;
+        position: absolute !important;
+        left: 12px !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        width: 14px !important;
+        height: 14px !important;
+        background-image: url("{tag_red_svg}") !important;
+        background-repeat: no-repeat !important;
+        background-size: contain !important;
+        background-position: center !important;
     }}
 
     /* BOTÓN VER MÁS PERFUMES */
@@ -1591,35 +1619,37 @@ st.markdown(f"""
 col_logo, col_espacio, col_actions = st.columns([5.5, 1.3, 2.4], vertical_alignment="center")
 
 with col_logo:
-    st.button("Perfume**Trending**", key="btn_logo_home", help="Ir al inicio de PerfumeTrending", on_click=reset_to_home)
+    st.button("Perfume**Trending**", key="btn_logo_home", on_click=reset_to_home)
 
-with btn_col1:
-    if st.session_state['logged_in']:
-        user_display = st.session_state['user_info'].get('nombre') or st.session_state['user_info'].get('email', 'Usuario')
-        st.markdown('<div class="user-popover-container">', unsafe_allow_html=True)
-        with st.popover(f"{user_display}", use_container_width=True):
-            st.write(f"**Conectado como:**")
-            st.write(st.session_state['user_info'].get('email', ''))
-            st.markdown("<div style='margin-top: 8px;'></div>", unsafe_allow_html=True)
-            
-            if st.button("Mi Perfil y Alertas", key="btn_go_profile", use_container_width=True):
-                reset_modals()
-                st.switch_page("pages/perfil.py")
+with col_actions:
+    btn_col1, btn_col2 = st.columns([1.8, 1.0], vertical_alignment="center")
+    with btn_col1:
+        if st.session_state['logged_in']:
+            user_display = st.session_state['user_info'].get('nombre') or st.session_state['user_info'].get('email', 'Usuario')
+            st.markdown('<div class="user-popover-container">', unsafe_allow_html=True)
+            with st.popover(f"{user_display}", use_container_width=True):
+                st.write(f"**Conectado como:**")
+                st.write(st.session_state['user_info'].get('email', ''))
+                st.markdown("<div style='margin-top: 8px;'></div>", unsafe_allow_html=True)
                 
-            if st.button("Cerrar Sesión", key="btn_logout", use_container_width=True):
-                st.session_state['logged_in'] = False
-                st.session_state['user_info'] = None
-                reset_modals()
+                if st.button("Mi Perfil y Alertas", key="btn_go_profile", use_container_width=True):
+                    reset_modals()
+                    st.switch_page("pages/perfil.py")
+                    
+                if st.button("Cerrar Sesión", key="btn_logout", use_container_width=True):
+                    st.session_state['logged_in'] = False
+                    st.session_state['user_info'] = None
+                    reset_modals()
+                    st.rerun()
+            st.markdown('</div>', unsafe_allow_html=True)
+        else:
+            if st.button("Ingresar", key="login_btn", use_container_width=True):
+                st.session_state['show_login_modal'] = True
+                st.session_state['show_visual_modal'] = False
                 st.rerun()
-        st.markdown('</div>', unsafe_allow_html=True)
-    else:
-        if st.button("Ingresar", key="login_btn", use_container_width=True):
-            st.session_state['show_login_modal'] = True
-            st.session_state['show_visual_modal'] = False
-            st.rerun()
-            
-with btn_col2:
-    st.button(" ", key="theme_toggle", on_click=toggle_theme)
+                
+    with btn_col2:
+        st.button(" ", key="theme_toggle", on_click=toggle_theme)
 
 # 7. NAVEGACIÓN PRINCIPAL
 st.markdown("<div style='margin-top: 14px;'></div>", unsafe_allow_html=True)
@@ -1633,7 +1663,7 @@ with nav_cols[1]:
 st.markdown(f"<hr style='margin: 10px 0 24px 0; border: none; border-bottom: 1px solid {btn_border}; opacity: 0.3;'>", unsafe_allow_html=True)
 
 # 8. BÚSQUEDA Y FILTRO DE ESENCIAS
-col_search, col_filter, col_separator, col_photo = st.columns([5.5, 1.8, 0.1, 2.0])
+col_search, col_filter = st.columns([7.8, 2.2], vertical_alignment="center")
 
 with col_search:
     search_query = st.text_input("Buscar", placeholder="Buscar perfume, marca o esencias...", label_visibility="collapsed")
@@ -1665,15 +1695,6 @@ with col_filter:
             label_visibility="collapsed"
         )
 
-with col_separator:
-    st.markdown(f"<div style='border-left: 1px solid {btn_border}; height: 32px; margin: auto;'></div>", unsafe_allow_html=True)
-
-with col_photo:
-    if st.button("Búsqueda visual", key="btn_photo_search", help="Buscar por imagen o cámara", use_container_width=True):
-        st.session_state['show_visual_modal'] = True
-        st.session_state['show_login_modal'] = False
-        st.rerun()
-
 # 7. CHIPS DE ENLACE RÁPIDO (5 ACCESOS DIRECTOS)
 st.markdown("<div style='margin-top: 14px;'></div>", unsafe_allow_html=True)
 c_chip0, c_chip1, c_chip2, c_chip3, c_chip4 = st.columns([1.7, 1.6, 2.0, 1.8, 1.8], vertical_alignment="center")
@@ -1702,24 +1723,32 @@ if st.session_state['current_page'] == 'home':
     # 8.1 Barra de filtros por categoría y ordenamiento
     col_filter_chips, col_sort_select = st.columns([7, 3], vertical_alignment="center")
     
+    cur_cat = st.session_state.get('selected_category', 'todos')
+    cat_active_key = f"btn_cat_{cur_cat}"
+    st.markdown(f"""
+        <style>
+        div.st-key-{cat_active_key} button {{
+            border-color: #d83737 !important;
+            background-color: {"#241518" if is_dark else "#fdf2f2"} !important;
+            box-shadow: 0 0 0 1px #d83737 !important;
+        }}
+        </style>
+    """, unsafe_allow_html=True)
+
     with col_filter_chips:
-        c_cat1, c_cat2, c_cat3 = st.columns([1.8, 2.3, 2.2])
-        cur_cat = st.session_state.get('selected_category', 'todos')
+        c_cat1, c_cat2, c_cat3 = st.columns([1.8, 2.0, 2.1])
         with c_cat1:
-            sel_mark = "● " if cur_cat == "todos" else ""
-            if st.button(f"{sel_mark}Todos los Perfumes", key="btn_cat_todos", use_container_width=True):
+            if st.button("Todos los Perfumes", key="btn_cat_todos", use_container_width=True):
                 st.session_state['selected_category'] = 'todos'
                 st.session_state['catalog_page'] = 1
                 st.rerun()
         with c_cat2:
-            sel_mark = "● " if cur_cat == "arabes" else ""
-            if st.button(f"{sel_mark}💎 Árabes & Nicho", key="btn_cat_arabes", use_container_width=True):
+            if st.button("Árabes & Nicho", key="btn_cat_arabes", use_container_width=True):
                 st.session_state['selected_category'] = 'arabes'
                 st.session_state['catalog_page'] = 1
                 st.rerun()
         with c_cat3:
-            sel_mark = "● " if cur_cat == "remates" else ""
-            if st.button(f"{sel_mark}🏷️ Remates & Ofertas", key="btn_cat_remates", use_container_width=True):
+            if st.button("Remates & Ofertas", key="btn_cat_remates", use_container_width=True):
                 st.session_state['selected_category'] = 'remates'
                 st.session_state['catalog_page'] = 1
                 st.rerun()
@@ -1779,31 +1808,7 @@ if st.session_state['current_page'] == 'home':
         end_idx = min(start_idx + items_per_page, total_perfumes)
         
         # Indicador de estado y cantidad
-        col_status_info, col_per_page = st.columns([7, 3], vertical_alignment="center")
-        with col_status_info:
-            st.markdown(f"<div style='font-size: 0.88rem; color: {subtext_color}; margin: 8px 0 16px 0;'>Mostrando <b>{start_idx + 1}–{end_idx}</b> de <b>{total_perfumes}</b> fragancias en Chile</div>", unsafe_allow_html=True)
-        with col_per_page:
-            p_cols = st.columns([1, 1, 1, 1.4])
-            with p_cols[0]:
-                if st.button("12", key="btn_ipp_12", help="12 por página"):
-                    st.session_state['items_per_page'] = 12
-                    st.session_state['catalog_page'] = 1
-                    st.rerun()
-            with p_cols[1]:
-                if st.button("24", key="btn_ipp_24", help="24 por página"):
-                    st.session_state['items_per_page'] = 24
-                    st.session_state['catalog_page'] = 1
-                    st.rerun()
-            with p_cols[2]:
-                if st.button("48", key="btn_ipp_48", help="48 por página"):
-                    st.session_state['items_per_page'] = 48
-                    st.session_state['catalog_page'] = 1
-                    st.rerun()
-            with p_cols[3]:
-                if st.button("Todos", key="btn_ipp_all", help="Ver todas"):
-                    st.session_state['items_per_page'] = max(total_perfumes, 12)
-                    st.session_state['catalog_page'] = 1
-                    st.rerun()
+        st.markdown(f"<div style='font-size: 0.88rem; color: {subtext_color}; margin: 8px 0 16px 0;'>Mostrando <b>{start_idx + 1}–{end_idx}</b> de <b>{total_perfumes}</b> fragancias en Chile</div>", unsafe_allow_html=True)
 
         page_perfumes = catalog_perfumes[start_idx:end_idx]
         cols_per_row = 3
@@ -1860,7 +1865,7 @@ if st.session_state['current_page'] == 'home':
             siguientes_cant = min(items_per_page, total_perfumes - end_idx)
             c_more_l, c_more_mid, c_more_r = st.columns([1, 2, 1])
             with c_more_mid:
-                if st.button(f"✨ Ver más perfumes (+{siguientes_cant} fragancias) ↓", key="btn_load_more", use_container_width=True):
+                if st.button(f"Ver más perfumes (+{siguientes_cant} fragancias) ↓", key="btn_load_more", use_container_width=True):
                     st.session_state['catalog_page'] += 1
                     st.rerun()
 
