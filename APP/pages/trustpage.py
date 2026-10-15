@@ -1,3 +1,13 @@
+"""
+PerfumeTrending.cl — Directorio de Confianza y Auditoría de Comercios (Trust Score)
+===================================================================================
+Módulo de transparencia y evaluación de legitimidad para tiendas de perfumería en Chile:
+- Cálculo del Trust Score (0 - 100) basado en RUT verificado, antigüedad, certificados SSL y reclamos SERNAC.
+- Distinción entre grandes retailers (Falabella, Paris, Ripley) y perfumerías boutique especializadas.
+- Desglose de políticas de devolución, sellos de la Cámara de Comercio de Santiago (CCS) y despacho.
+- Guía al consumidor para evitar falsificaciones y compras en sitios no oficiales o fraudulentos.
+"""
+
 import streamlit as st
 import sys
 import os

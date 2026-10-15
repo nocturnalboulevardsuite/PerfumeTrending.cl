@@ -1,3 +1,14 @@
+"""
+PerfumeTrending.cl — Página de Comparador de Precios y Detalle de Fragancias
+=============================================================================
+Vista principal interactiva para comparar ofertas vigentes en tiempo real:
+- Ficha técnica completa de la fragancia (marca, concentración, notas, familia olfativa).
+- Comparativa en vivo de precios entre comercios chilenos auditados (Falabella, Paris, Ripley, Silk, Elite, etc.).
+- Cálculo del precio por mililitro ($/ml) para comparar distintas presentaciones de volumen de manera justa.
+- Visualización de la evolución histórica de precios mediante gráficos interactivos de series temporales.
+- Gestión de favoritos y alertas de precio por usuario autenticado.
+"""
+
 import streamlit as st
 import streamlit.components.v1 as components
 import pandas as pd

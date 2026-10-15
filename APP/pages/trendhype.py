@@ -1,3 +1,13 @@
+"""
+PerfumeTrending.cl — Radar de Tendencias Virales y Hype Score (TikTok/Instagram)
+================================================================================
+Panel de analítica y descubrimiento de fragancias virales en redes sociales y mercado:
+- Cálculo del Hype Score (0 - 100) ponderando menciones semanales, tasa de crecimiento y volumen de búsqueda.
+- Segmentación por perfumería oriental/árabe de alta demanda (Lattafa, Armaf, Afnan) vs diseñador occidental.
+- Identificación de dupes (clones accesibles de fragancias de nicho de alto costo).
+- Gráficas de aceleración de tendencias y recomendaciones personalizadas por afinidad.
+"""
+
 import streamlit as st
 import streamlit.components.v1 as components
 import sys

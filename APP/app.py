@@ -1,3 +1,14 @@
+"""
+PerfumeTrending.cl — Aplicación Web Principal (Streamlit Portal)
+================================================================
+Punto de entrada de la plataforma chilena de comparación de precios de fragancias:
+- Arquitectura de navegación multipágina (Home, Comparador, Remates, TrendHype, TrustScore, Perfil).
+- Catálogo interactivo con filtrado multifacético: por búsqueda difusa, familias olfativas, notas y marcas.
+- Renderizado de componentes visuales con CSS personalizado (modo oscuro/claro y glassmorphism).
+- Paginación dinámica y caché en memoria con invalidación TTL para alto rendimiento.
+- Consumo resiliente de datos: consulta primaria a Supabase (PostgreSQL en la nube) con fallback a SQLite.
+"""
+
 import streamlit as st
 import streamlit.components.v1 as components
 import pandas as pd

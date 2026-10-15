@@ -53,9 +53,6 @@ SEED_PATH = resolver_ruta("database/seed_catalogo.json")
 # Cache en memoria para catálogo semilla desacoplado
 _SEED_CACHE: Optional[Dict[str, Any]] = None
 
-# Singleton del cliente Supabase
-_SUPABASE_CLIENT = None
-_SUPABASE_VERIFICADO = False
 
 
 def hash_password(password: str) -> str:
