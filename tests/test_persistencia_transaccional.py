@@ -16,10 +16,12 @@ from datetime import datetime
 TEST_DIR = tempfile.mkdtemp()
 TEST_DB_PATH = os.path.join(TEST_DIR, "test_perfumes.db")
 
-# Sobrescribir DB_PATH para aislar completamente las pruebas
+# Sobrescribir DB_PATH y desconectar supabase para aislar completamente las pruebas
 import APP.backend.database as db_module
 db_module.DB_PATH = TEST_DB_PATH
 db_module.DB_DIR = TEST_DIR
+db_module.is_supabase_disponible = lambda: False
+db_module.get_supabase = lambda *args, **kwargs: None
 
 from APP.backend.database import (
     init_db,
