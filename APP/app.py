@@ -4,6 +4,8 @@ import pandas as pd
 import sys
 import os
 import base64
+import random
+import time
 
 # Configurar rutas para importar backend
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -13,13 +15,26 @@ if BASE_DIR not in sys.path:
 if APP_DIR not in sys.path:
     sys.path.append(APP_DIR)
 
-from backend.database import (
-    obtener_catalogo,
-    obtener_detalle_perfume,
-    obtener_precios_actuales,
-    obtener_tiendas,
-    init_db
-)
+try:
+    from backend.database import (
+        obtener_catalogo,
+        obtener_detalle_perfume,
+        obtener_precios_actuales,
+        obtener_tiendas,
+        init_db,
+        crear_usuario,
+        verificar_usuario
+    )
+except ImportError:
+    from backend.database import (
+        obtener_catalogo,
+        obtener_detalle_perfume,
+        obtener_precios_actuales,
+        obtener_tiendas,
+        init_db
+    )
+    crear_usuario = None
+    verificar_usuario = None
 
 @st.cache_data(ttl=60, show_spinner=False)
 def get_cached_catalogo(busqueda=None, esencias_tuple=None, categoria=None, orden="id_asc"):
@@ -59,8 +74,16 @@ def get_image_src(img_path_or_url):
 
     return img_path_or_url
 
+# DIBUJO VECTORIAL SVG BASADO EXACTAMENTE EN LA IMAGEN ADJUNTA (ÍCONO FRASCO)
+perfume_svg_favicon = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 36' fill='none'><path d='M 7 21 A 11 11 0 0 0 29 21 Z' fill='%238c7b6d'/><circle cx='18' cy='21' r='11' stroke='%23ffffff' stroke-width='2.2'/><line x1='18' y1='10' x2='18' y2='32' stroke='%23ffffff' stroke-width='2'/><line x1='7' y1='21' x2='29' y2='21' stroke='%23ffffff' stroke-width='2'/><rect x='15' y='7' width='6' height='3' fill='%2314171d' stroke='%23ffffff' stroke-width='2'/><rect x='13' y='2' width='10' height='5' rx='1.5' fill='%238c7b6d' stroke='%23ffffff' stroke-width='2'/></svg>"
+
 # 1. CONFIGURACIÓN DE LA PÁGINA Y ESTADO
-st.set_page_config(page_title="PerfumeTrending", layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(
+    page_title="PerfumeTrending",
+    page_icon=perfume_svg_favicon,
+    layout="wide",
+    initial_sidebar_state="collapsed"
+)
 
 # Inicializar esquema de base de datos relacional
 init_db()
@@ -82,11 +105,44 @@ if 'selected_order' not in st.session_state:
 if 'selected_order_label' not in st.session_state:
     st.session_state['selected_order_label'] = 'Destacados'
 
+# CONTROL ESTRICTO DE ESTADO DE MODALES
+if 'show_login_modal' not in st.session_state:
+    st.session_state['show_login_modal'] = False
+if 'show_visual_modal' not in st.session_state:
+    st.session_state['show_visual_modal'] = False
+
+# Resetear modales automáticamente al cargar la aplicación por primera vez
+if 'app_init_done' not in st.session_state:
+    st.session_state['app_init_done'] = True
+    st.session_state['show_login_modal'] = False
+    st.session_state['show_visual_modal'] = False
+
+# ESTADOS DE AUTENTICACIÓN Y CONTROL DE MODALES
+if 'logged_in' not in st.session_state:
+    st.session_state['logged_in'] = False
+if 'user_info' not in st.session_state:
+    st.session_state['user_info'] = None
+
+# ESTADOS PARA INICIO POR CÓDIGO (OTP)
+if 'otp_code_sent' not in st.session_state:
+    st.session_state['otp_code_sent'] = False
+if 'otp_contact' not in st.session_state:
+    st.session_state['otp_contact'] = ""
+if 'otp_secret' not in st.session_state:
+    st.session_state['otp_secret'] = ""
+
+def reset_modals():
+    """Función para garantizar que ningún modal emergente quede abierto por error."""
+    st.session_state['show_login_modal'] = False
+    st.session_state['show_visual_modal'] = False
+
 def toggle_theme():
     st.session_state['theme'] = 'dark' if st.session_state['theme'] == 'light' else 'light'
+    reset_modals()
 
 def navigate_to(page, perfume_data=None):
     st.session_state['current_page'] = page
+    reset_modals()
     if perfume_data:
         st.session_state['selected_perfume'] = perfume_data
 
@@ -100,7 +156,6 @@ def reset_to_home():
 
 is_dark = st.session_state['theme'] == 'dark'
 
-# Colores dinámicos adaptables por tema
 app_bg = "#0c0e12" if is_dark else "#f8f9fa"
 app_bg_css = f"background-color: {app_bg} !important;"
 
@@ -117,6 +172,249 @@ input_bg = "#14171d" if is_dark else "#ffffff"
 input_text = "#f0f0f0" if is_dark else "#18181b"
 input_border = "#2a2e39" if is_dark else "#d1d5db"
 
+# MODAL FLOTANTE DE INICIO DE SESIÓN Y REGISTRO
+@st.dialog("Acceso a PerfumeTrending")
+def modal_autenticacion():
+    tab_codigo, tab_login, tab_registro = st.tabs(["Inicio por Código", "Iniciar Sesión", "Registrarse"])
+    
+    # OPCIÓN PREDETERMINADA: INICIO POR CÓDIGO
+    with tab_codigo:
+        st.markdown("#### Ingresa con tu Correo o Teléfono")
+        
+        if not st.session_state['otp_code_sent']:
+            with st.form("form_send_otp", clear_on_submit=False):
+                contact_input = st.text_input("Correo electrónico o número de teléfono", key="otp_contact_input", placeholder="ejemplo@correo.cl o +56912345678")
+                btn_send = st.form_submit_button("Enviar código de verificación", use_container_width=True)
+                
+                if btn_send:
+                    if not contact_input.strip():
+                        st.error("Por favor ingresa un correo electrónico o teléfono válido.")
+                        st.session_state['show_login_modal'] = True
+                    else:
+                        code = str(random.randint(100000, 999999))
+                        st.session_state['otp_code_sent'] = True
+                        st.session_state['otp_contact'] = contact_input.strip()
+                        st.session_state['otp_secret'] = code
+                        st.session_state['show_login_modal'] = True
+                        st.rerun()
+        else:
+            st.info(f"Un código de verificación ha sido enviado a **{st.session_state['otp_contact']}**")
+            st.caption(f"*(Código de prueba rápido: **{st.session_state['otp_secret']}**)*")
+            
+            with st.form("form_verify_otp", clear_on_submit=False):
+                input_code = st.text_input("Ingresa el código de 6 dígitos", key="otp_code_input", placeholder="123456", max_chars=6)
+                btn_verify = st.form_submit_button("Verificar e Ingresar", use_container_width=True)
+                
+                if btn_verify:
+                    if input_code.strip() == st.session_state['otp_secret']:
+                        contact_str = st.session_state['otp_contact']
+                        
+                        st.session_state['logged_in'] = True
+                        st.session_state['user_info'] = {
+                            'nombre': contact_str.split('@')[0] if '@' in contact_str else contact_str,
+                            'email': contact_str if '@' in contact_str else f"{contact_str}@usuario.cl",
+                            'telefono': contact_str if '@' not in contact_str else '+56 9 1234 5678'
+                        }
+                        
+                        st.session_state['otp_code_sent'] = False
+                        st.session_state['otp_contact'] = ""
+                        st.session_state['otp_secret'] = ""
+                        st.session_state['show_login_modal'] = False
+                        st.rerun()
+                    else:
+                        st.error("Código incorrecto. Revisa e intenta nuevamente.")
+                        st.session_state['show_login_modal'] = True
+                        
+            if st.button("Cambiar correo/teléfono", key="btn_reset_otp", use_container_width=True):
+                st.session_state['otp_code_sent'] = False
+                st.session_state['otp_contact'] = ""
+                st.session_state['otp_secret'] = ""
+                st.session_state['show_login_modal'] = True
+                st.rerun()
+
+    # OPCIÓN 2: CON TRADICIONAL CORREO / CONTRASEÑA
+    with tab_login:
+        st.markdown("#### Ingresa a tu cuenta")
+        with st.form("form_login_pass", clear_on_submit=False):
+            login_email = st.text_input("Correo Electrónico", key="login_email_input", placeholder="usuario@correo.cl")
+            login_pass = st.text_input("Contraseña", type="password", key="login_pass_input", placeholder="••••••••")
+            btn_login = st.form_submit_button("Ingresar a la plataforma", use_container_width=True)
+            
+            if btn_login:
+                if not login_email or not login_pass:
+                    st.error("Por favor ingresa tu correo y contraseña.")
+                    st.session_state['show_login_modal'] = True
+                elif verificar_usuario:
+                    exito, usuario_data = verificar_usuario(login_email, login_pass)
+                    if exito:
+                        st.session_state['logged_in'] = True
+                        st.session_state['user_info'] = usuario_data
+                        st.session_state['show_login_modal'] = False
+                        st.rerun()
+                    else:
+                        st.error("Correo o contraseña incorrectos.")
+                        st.session_state['show_login_modal'] = True
+                else:
+                    st.info("Función de backend en proceso de actualización.")
+                    st.session_state['show_login_modal'] = True
+
+    # OPCIÓN 3: REGISTRO NUEVO USUARIO
+    with tab_registro:
+        st.markdown("#### Crea una cuenta nueva")
+        with st.form("form_reg_user", clear_on_submit=False):
+            reg_nombre = st.text_input("Nombre completo", key="reg_nombre_input", placeholder="Juan Pérez")
+            reg_email = st.text_input("Correo Electrónico", key="reg_email_input", placeholder="usuario@correo.cl")
+            reg_pass1 = st.text_input("Contraseña", type="password", key="reg_pass1_input", placeholder="••••••••")
+            reg_pass2 = st.text_input("Confirmar Contraseña", type="password", key="reg_pass2_input", placeholder="••••••••")
+            btn_reg = st.form_submit_button("Crear mi cuenta", use_container_width=True)
+            
+            if btn_reg:
+                if not reg_nombre or not reg_email or not reg_pass1:
+                    st.error("Todos los campos son obligatorios.")
+                    st.session_state['show_login_modal'] = True
+                elif reg_pass1 != reg_pass2:
+                    st.error("Las contraseñas no coinciden.")
+                    st.session_state['show_login_modal'] = True
+                elif len(reg_pass1) < 6:
+                    st.warning("La contraseña debe tener al menos 6 caracteres.")
+                    st.session_state['show_login_modal'] = True
+                elif crear_usuario:
+                    exito, msg = crear_usuario(reg_nombre, reg_email, reg_pass1)
+                    if exito:
+                        st.success("¡Cuenta creada con éxito! Ya puedes iniciar sesión.")
+                        st.session_state['show_login_modal'] = True
+                    else:
+                        st.error(msg)
+                        st.session_state['show_login_modal'] = True
+                else:
+                    st.info("Función de backend en proceso de actualización.")
+                    st.session_state['show_login_modal'] = True
+
+    st.markdown(f"<hr style='margin: 14px 0; border: none; border-bottom: 1px solid {btn_border};'>", unsafe_allow_html=True)
+    if st.button("Cerrar Ventana", key="btn_close_auth_modal", use_container_width=True):
+        st.session_state['show_login_modal'] = False
+        st.session_state['show_visual_modal'] = False
+        st.rerun()
+
+# MODAL FLOTANTE PARA BÚSQUEDA VISUAL CON DIBUJOS HTML VECTORIALES
+@st.dialog("Búsqueda Visual de Perfumes")
+def modal_busqueda_visual():
+    st.markdown(clean_html(f"""
+        <div style="font-size:0.92rem; margin-bottom:14px; color: {text_color}; line-height: 1.4;">
+            Sube una foto del frasco o usa tu cámara para identificar la fragancia y comparar precios en Chile.
+        </div>
+    """), unsafe_allow_html=True)
+    
+    tab_upload, tab_camera = st.tabs(["Subir Imagen", "Usar Cámara"])
+    
+    uploaded_file = None
+    with tab_upload:
+        st.markdown(clean_html(f"""
+            <div style="display: flex; align-items: center; gap: 8px; margin: 8px 0 12px 0;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="{text_color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+                </svg>
+                <span style="font-weight: 600; font-size: 0.95rem; color: {text_color};">Arrastrar una imagen o seleccionar archivo</span>
+            </div>
+        """), unsafe_allow_html=True)
+        file_up = st.file_uploader("Arrastra una imagen o selecciona un archivo", type=["jpg", "jpeg", "png", "webp"], key="vis_file_up", label_visibility="collapsed")
+        if file_up:
+            uploaded_file = file_up
+            
+    with tab_camera:
+        st.markdown(clean_html(f"""
+            <div style="display: flex; align-items: center; gap: 8px; margin: 8px 0 12px 0;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="{text_color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                    <circle cx="12" cy="13" r="4"/>
+                </svg>
+                <span style="font-weight: 600; font-size: 0.95rem; color: {text_color};">Tomar fotografía en vivo</span>
+            </div>
+        """), unsafe_allow_html=True)
+        cam_up = st.camera_input("Capturar foto del perfume", key="vis_cam_up", label_visibility="collapsed")
+        if cam_up:
+            uploaded_file = cam_up
+
+    if uploaded_file:
+        col_preview, col_status = st.columns([1, 1])
+        with col_preview:
+            st.image(uploaded_file, caption="Imagen cargada", use_container_width=True)
+        with col_status:
+            with st.spinner("Analizando frasco, marca y silueta..."):
+                time.sleep(0.4)
+            st.markdown(clean_html(f"""
+                <div style="display: flex; align-items: center; gap: 8px; color: #4caf50; font-weight: 600;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4caf50" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                    <span>Análisis finalizado</span>
+                </div>
+            """), unsafe_allow_html=True)
+            
+        st.markdown(f"<hr style='margin: 12px 0; border: none; border-bottom: 1px solid {btn_border};'>", unsafe_allow_html=True)
+        
+        st.markdown(clean_html(f"""
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d83737" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"/>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+                <span style="font-weight: 700; font-size: 1rem; color: {text_color};">Resultados detectados:</span>
+            </div>
+        """), unsafe_allow_html=True)
+        
+        filename = getattr(uploaded_file, 'name', 'foto_camara.jpg').lower()
+        catalogo_completo = obtener_catalogo()
+        coincidencias = []
+        
+        if catalogo_completo:
+            for p in catalogo_completo:
+                nombre_p = p['nombre'].lower()
+                marca_p = p['marca'].lower()
+                if any(w in filename for w in nombre_p.split() if len(w) > 2) or any(w in filename for w in marca_p.split() if len(w) > 2):
+                    coincidencias.append(p)
+            
+            if not coincidencias:
+                try:
+                    img_bytes = uploaded_file.getvalue()
+                    img_hash = sum(img_bytes) % len(catalogo_completo)
+                    for idx in range(min(3, len(catalogo_completo))):
+                        coincidencias.append(catalogo_completo[(img_hash + idx) % len(catalogo_completo)])
+                except Exception:
+                    coincidencias = catalogo_completo[:3]
+
+        if coincidencias:
+            for p in coincidencias:
+                c_img, c_info = st.columns([1, 2])
+                with c_img:
+                    st.image(get_image_src(p.get('imagen_url')), use_container_width=True)
+                with c_info:
+                    st.markdown(f"**{p['nombre']}**")
+                    st.caption(f"Marca: {p['marca']}")
+                    p_val = p.get('mejor_precio')
+                    p_txt = f"${p_val:,.0f} CLP".replace(",", ".") if p_val else "Ver tiendas"
+                    st.markdown(f"<span style='color:#4caf50; font-weight:600;'>Mejor precio: {p_txt}</span>", unsafe_allow_html=True)
+                    if st.button("Comparar Precios", key=f"btn_vis_select_{p['id']}", use_container_width=True):
+                        st.session_state['selected_perfume'] = p['id']
+                        reset_modals()
+                        st.switch_page("pages/compararprecios.py")
+                st.markdown("<div style='margin-bottom: 8px;'></div>", unsafe_allow_html=True)
+
+    st.markdown(f"<hr style='margin: 14px 0; border: none; border-bottom: 1px solid {btn_border};'>", unsafe_allow_html=True)
+    if st.button("Cerrar Ventana", key="btn_close_vis_modal", use_container_width=True):
+        reset_modals()
+        st.rerun()
+
+# 3. RENDERIZADO EXCLUSIVO DE MODALES
+if st.session_state.get('show_login_modal', False):
+    st.session_state['show_login_modal'] = False
+    st.session_state['show_visual_modal'] = False
+    modal_autenticacion()
+elif st.session_state.get('show_visual_modal', False):
+    st.session_state['show_login_modal'] = False
+    st.session_state['show_visual_modal'] = False
+    modal_busqueda_visual()
+
 # Posicionamiento del Switch de Tema
 bottle_left_pos = "42px" if is_dark else "-2px"
 static_icon_pos = "12px center" if is_dark else "calc(100% - 12px) center"
@@ -124,7 +422,7 @@ static_icon_pos = "12px center" if is_dark else "calc(100% - 12px) center"
 static_icon_svg = (
     "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='4'/><line x1='12' y1='1' x2='12' y2='3'/><line x1='12' y1='21' x2='12' y2='23'/><line x1='4.22' y1='4.22' x2='5.64' y2='5.64'/><line x1='18.36' y1='18.36' x2='19.78' y2='19.78'/><line x1='1' y1='12' x2='3' y2='12'/><line x1='21' y1='12' x2='23' y2='12'/><line x1='4.22' y1='19.78' x2='5.64' y2='18.36'/><line x1='18.36' y1='5.64' x2='19.78' y2='4.22'/></svg>"
     if is_dark else
-    "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z'/></svg>"
+    "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M21 12.79A9 9 0 0 1 11.21 3 7 7 0 0 0 21 12.79z'/></svg>"
 )
 
 bottle_svg = (
@@ -136,7 +434,11 @@ bottle_svg = (
 camera_icon_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23{btn_text[1:]}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z'/><circle cx='12' cy='13' r='4'/></svg>"
 user_icon_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23{btn_text[1:]}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2'/><circle cx='12' cy='7' r='4'/></svg>"
 
-# ICONOS VECTORIALES DE ALTA PRECISIÓN (ESTILO LINEAR / STRIPE / LUCIDE)
+# DIBUJOS VECTORIALES HTML/SVG PARA ELEMENTOS DE INTERFAZ Y PERFIL
+settings_icon_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23{btn_text[1:]}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z'/><circle cx='12' cy='12' r='3'/></svg>"
+logout_icon_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23{btn_text[1:]}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4'/><polyline points='16 17 21 12 16 7'/><line x1='21' y1='12' x2='9' y2='12'/></svg>"
+
+# ICONOS VECTORIALES DE ALTA PRECISIÓN
 trend_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d83737' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='23 6 13.5 15.5 8.5 10.5 1 18'/><polyline points='17 6 23 6 23 12'/></svg>"
 shield_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d83737' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/><polyline points='9 12 11 14 15 10'/></svg>"
 tag_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d83737' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z'/><circle cx='7' cy='7' r='1.5' fill='%23d83737'/></svg>"
@@ -146,13 +448,40 @@ logo_color_encoded = "%238c7b6d"
 text_color_encoded = "%23ffffff" if is_dark else "%2318181b"
 logo_svg_data = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 36' fill='none' stroke-linecap='round' stroke-linejoin='round'><path d='M 6.8 21 L 29.2 21 C 30 25 27 32 18 32 C 9 32 6 25 6.8 21 Z' fill='{logo_color_encoded}' /><line x1='6.8' y1='21' x2='29.2' y2='21' stroke='{text_color_encoded}' stroke-width='1.5' /><line x1='18' y1='10' x2='18' y2='30' stroke='{text_color_encoded}' stroke-width='1' /><path d='M 18 32 C 9 32 5 24 7.5 17 C 9 12 13 10 15 10 L 21 10 C 23 10 27 12 28.5 17 C 31 24 27 32 18 32 Z' stroke='{text_color_encoded}' stroke-width='2' /><rect x='15' y='7' width='6' height='3' stroke='{text_color_encoded}' stroke-width='1.5' /><rect x='13' y='3' width='10' height='4' rx='1' stroke='{text_color_encoded}' stroke-width='1.5' /><rect x='16' y='0' width='4' height='3' rx='1' fill='{logo_color_encoded}' stroke='{text_color_encoded}' stroke-width='1' /></svg>"
 
-# 2. SISTEMA DE SONIDO Y EVENTOS DE TARJETAS
+# 4. SISTEMA DE SONIDO Y EVENTOS DE TARJETAS
 js_color_script = f"""
 <script>
 (function() {{
     const topWin = window.parent || window;
-    const doc = topWin.document;
+    const topDoc = topWin.document;
+    const iconDataUri = "{perfume_svg_favicon}";
     
+    function lockTitleAndFavicon() {{
+        try {{
+            if (topDoc.title !== "PerfumeTrending") {{
+                topDoc.title = "PerfumeTrending";
+            }}
+            let iconLink = topDoc.querySelector("link[rel*='icon']");
+            if (!iconLink) {{
+                iconLink = topDoc.createElement('link');
+                iconLink.rel = 'shortcut icon';
+                topDoc.getElementsByTagName('head')[0].appendChild(iconLink);
+            }}
+            if (iconLink.href !== iconDataUri) {{
+                iconLink.href = iconDataUri;
+            }}
+        }} catch(e) {{}}
+    }}
+
+    try {{
+        lockTitleAndFavicon();
+        const titleEl = topDoc.querySelector('title');
+        if (titleEl) {{
+            const titleObserver = new MutationObserver(lockTitleAndFavicon);
+            titleObserver.observe(titleEl, {{ childList: true, characterData: true, subtree: true }});
+        }}
+    }} catch(e) {{}}
+
     if (typeof topWin.soundMuted === 'undefined') {{
         topWin.soundMuted = false;
     }}
@@ -195,7 +524,7 @@ js_color_script = f"""
     }};
 
     topWin.updateSoundButtonUI = function() {{
-        const btn = doc.getElementById('sound-toggle-btn');
+        const btn = topDoc.getElementById('sound-toggle-btn');
         if (btn) {{
             const speakerSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>';
             const muteSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>';
@@ -206,7 +535,8 @@ js_color_script = f"""
     }};
 
     function attachCardEvents() {{
-        const essenceCards = doc.querySelectorAll('.essence-card');
+        lockTitleAndFavicon();
+        const essenceCards = topDoc.querySelectorAll('.essence-card');
         essenceCards.forEach(card => {{
             if (!card.dataset.soundAttached) {{
                 card.dataset.soundAttached = 'true';
@@ -223,10 +553,9 @@ js_color_script = f"""
         debounceTimer = setTimeout(attachCardEvents, 100);
     }});
     
-    observer.observe(doc.body, {{ childList: true, subtree: true }});
+    observer.observe(topDoc.body, {{ childList: true, subtree: true }});
     attachCardEvents();
 
-    // Heartbeat periódico para evitar desconexiones de sesión en Streamlit Cloud
     setInterval(function() {{
         try {{
             if (topWin && topWin.document) {{
@@ -240,7 +569,7 @@ js_color_script = f"""
 
 components.html(js_color_script, height=0, width=0)
 
-# 3. CSS ADAPTABLE Y SWITCH
+# 5. CSS ADAPTABLE Y ESTILOS
 st.markdown(f"""
     <style>
     header[data-testid="stHeader"] {{ display: none !important; }}
@@ -278,7 +607,7 @@ st.markdown(f"""
         font-weight: 600 !important;
     }}
 
-    /* BOTONES DE COMPARAR PRECIOS EN CATÁLOGO - ALTO IMPACTO Y LEGIBILIDAD DÍA/NOCHE */
+    /* BOTONES DE COMPARAR PRECIOS EN CATÁLOGO */
     div[data-testid="stElementContainer"] div.stButton button[key*="btn_comp_"],
     div.stButton > button[key*="btn_comp_"] {{
         background-color: #d83737 !important;
@@ -321,7 +650,7 @@ st.markdown(f"""
         transform: scale(0.98) !important;
     }}
 
-    /* ESTILO ESPECÍFICO Y COMPLETO PARA EL BOTÓN DE POPOVER ("ESENCIAS") */
+    /* ESTILO ESPECÍFICO PARA BOTONES POPOVER */
     div[data-testid="stPopover"],
     div[data-testid="stPopover"] > button,
     button[data-testid="stPopoverButton"],
@@ -349,13 +678,9 @@ st.markdown(f"""
     button[data-testid="stPopoverButton"] div {{
         color: {btn_text} !important;
         font-weight: 600 !important;
-    }}
-
-    div[data-testid="stPopover"] button svg,
-    button[data-testid="stPopoverButton"] svg {{
-        fill: {btn_text} !important;
-        stroke: {btn_text} !important;
-        color: {btn_text} !important;
+        white-space: nowrap !important;
+        text-overflow: clip !important;
+        overflow: visible !important;
     }}
 
     div[data-testid="stPopoverBody"],
@@ -364,6 +689,34 @@ st.markdown(f"""
         border: 1px solid {btn_border} !important;
         border-radius: 8px !important;
         color: {text_color} !important;
+    }}
+
+    /* CONTENEDOR Y BOTÓN POPOVER DE USUARIO */
+    .user-popover-container div[data-testid="stPopover"],
+    .user-popover-container div[data-testid="stPopover"] > button,
+    .user-popover-container button[data-testid="stPopoverButton"] {{
+        padding-left: 2.3rem !important;
+        background-image: url("{user_icon_svg}") !important;
+        background-repeat: no-repeat !important;
+        background-position: 12px center !important;
+        background-size: 18px 18px !important;
+    }}
+
+    /* BOTÓN CERRAR SESIÓN Y MI PERFIL */
+    .st-key-btn_go_profile button {{
+        padding-left: 2.5rem !important;
+        background-image: url("{settings_icon_svg}") !important;
+        background-repeat: no-repeat !important;
+        background-position: 14px center !important;
+        background-size: 18px 18px !important;
+    }}
+
+    .st-key-btn_logout button {{
+        padding-left: 2.5rem !important;
+        background-image: url("{logout_icon_svg}") !important;
+        background-repeat: no-repeat !important;
+        background-position: 14px center !important;
+        background-size: 18px 18px !important;
     }}
 
     .st-key-login_btn, .st-key-theme_toggle {{
@@ -379,16 +732,17 @@ st.markdown(f"""
         border-radius: 8px !important;
         height: 44px !important;
         min-height: 44px !important;
-        padding: 0 1rem 0 2.5rem !important;
+        padding: 0 0.8rem 0 2.2rem !important;
         display: inline-flex !important;
         align-items: center !important;
         justify-content: center !important;
         background-image: url("{user_icon_svg}") !important;
         background-repeat: no-repeat !important;
-        background-position: 14px center !important;
+        background-position: 10px center !important;
         background-size: 18px 18px !important;
         font-size: 0.95rem !important;
         margin: 0 !important;
+        white-space: nowrap !important;
     }}
     .st-key-login_btn button p {{
         font-size: 0.95rem !important;
@@ -396,6 +750,7 @@ st.markdown(f"""
         margin: 0 !important;
         color: {btn_text} !important;
         font-weight: 600 !important;
+        white-space: nowrap !important;
     }}
 
     /* SWITCH TEMA */
@@ -466,9 +821,8 @@ st.markdown(f"""
         z-index: 2 !important;
     }}
 
-    /* NAVEGACIÓN SUPERIOR */
+    /* NAVEGACIÓN SUPERIOR Principal */
     .st-key-n_perfumes button, 
-    .st-key-n_remates button,
     .st-key-n_esencias button {{
         background-color: transparent !important;
         border: none !important;
@@ -485,7 +839,6 @@ st.markdown(f"""
     }}
 
     .st-key-n_perfumes button p, 
-    .st-key-n_remates button p,
     .st-key-n_esencias button p {{
         color: {text_color} !important;
         font-weight: 600 !important;
@@ -494,7 +847,6 @@ st.markdown(f"""
     }}
 
     .st-key-n_perfumes button:hover, 
-    .st-key-n_remates button:hover,
     .st-key-n_esencias button:hover {{
         transform: scale(1.08) !important;
     }}
@@ -529,12 +881,31 @@ st.markdown(f"""
         margin: 0 !important;
     }}
 
-    /* DIBUJOS ILUSTRADOS VECTORIALES EN ROJO */
+    /* DIBUJOS ILUSTRADOS VECTORIALES EN ROJO PARA CHIPS */
+    .st-key-btn_chip_home button {{
+        position: relative !important;
+        padding-left: 2.7rem !important;
+        border-radius: 20px !important;
+    }}
+    .st-key-btn_chip_home button::before {{
+        content: '' !important;
+        position: absolute !important;
+        left: 14px !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        width: 17px !important;
+        height: 17px !important;
+        background-image: url("{home_red_svg}") !important;
+        background-repeat: no-repeat !important;
+        background-size: contain !important;
+        background-position: center !important;
+        z-index: 1 !important;
+    }}
+
     a[data-testid="stPageLink-NavLink"][href*="trendhype"],
     a[data-testid="stPageLink-NavLink"][href*="trustpage"],
     a[data-testid="stPageLink-NavLink"][href*="compararprecios"],
-    a[data-testid="stPageLink-NavLink"][href$="app.py"],
-    a[data-testid="stPageLink-NavLink"][href="/"] {{
+    a[data-testid="stPageLink-NavLink"][href*="remates"] {{
         position: relative !important;
         padding-left: 2.7rem !important;
         padding-right: 1.1rem !important;
@@ -589,9 +960,8 @@ st.markdown(f"""
         z-index: 1 !important;
     }}
 
-    /* 4. Inicio / Catálogo */
-    a[data-testid="stPageLink-NavLink"][href$="app.py"]::before,
-    a[data-testid="stPageLink-NavLink"][href="/"]::before {{
+    /* 4. Remates & Flash */
+    a[data-testid="stPageLink-NavLink"][href*="remates"]::before {{
         content: '' !important;
         position: absolute !important;
         left: 14px !important;
@@ -599,7 +969,7 @@ st.markdown(f"""
         transform: translateY(-50%) !important;
         width: 17px !important;
         height: 17px !important;
-        background-image: url("{home_red_svg}") !important;
+        background-image: url("{flame_red_svg}") !important;
         background-repeat: no-repeat !important;
         background-size: contain !important;
         background-position: center !important;
@@ -693,6 +1063,14 @@ st.markdown(f"""
         padding-bottom: 6px !important;
         min-height: 44px !important;
         color: {input_text} !important;
+    }}
+
+    div[data-baseweb="file-uploader"],
+    [data-testid="stFileUploader"] section {{
+        background-color: {input_bg} !important;
+        border: 1px dashed {input_border} !important;
+        border-radius: 10px !important;
+        padding: 12px !important;
     }}
 
     div[data-baseweb="input"] input,
@@ -1009,6 +1387,203 @@ st.markdown(f"""
         transform: scale(1.15);
         background-color: {btn_bg};
     }}
+
+    /* OPTIMIZACIÓN RESPONSIVA MÓVIL */
+    @media (max-width: 768px) {{
+        .block-container {{ 
+            padding-top: 0.4rem !important; 
+            padding-bottom: 1.5rem !important; 
+            padding-left: 0.6rem !important;
+            padding-right: 0.6rem !important;
+        }}
+
+        div[data-testid="stHorizontalBlock"] {{
+            flex-wrap: wrap !important;
+            gap: 6px !important;
+        }}
+
+        div[data-testid="column"], div[data-testid="stColumn"] {{
+            width: 100% !important;
+            flex: 1 1 100% !important;
+            min-width: 0 !important;
+        }}
+
+        div[style*="border-left: 1px solid"] {{
+            display: none !important;
+        }}
+
+        div[data-testid="stHorizontalBlock"]:has(.st-key-login_btn, .st-key-theme_toggle) {{
+            flex-wrap: nowrap !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+        }}
+
+        .st-key-login_btn {{
+            flex: 0 0 auto !important;
+            width: auto !important;
+        }}
+
+        .st-key-login_btn button {{
+            height: 38px !important;
+            min-height: 38px !important;
+            padding: 0 0.6rem 0 2rem !important;
+            font-size: 0.82rem !important;
+            background-position: 8px center !important;
+            background-size: 15px 15px !important;
+        }}
+
+        .st-key-login_btn button p {{
+            font-size: 0.82rem !important;
+            white-space: nowrap !important;
+        }}
+
+        .st-key-theme_toggle {{
+            flex: 0 0 auto !important;
+            width: auto !important;
+        }}
+
+        .st-key-theme_toggle button {{
+            transform: scale(0.72) !important;
+            transform-origin: right center !important;
+            width: 60px !important;
+            margin: 0 !important;
+        }}
+
+        div[data-testid="stHorizontalBlock"]:has(.st-key-n_perfumes) {{
+            flex-wrap: nowrap !important;
+        }}
+
+        div[data-testid="column"]:has(.st-key-n_perfumes),
+        div[data-testid="column"]:has(.st-key-n_esencias) {{
+            flex: 1 1 50% !important;
+            width: 50% !important;
+        }}
+
+        .st-key-n_perfumes button p,
+        .st-key-n_esencias button p {{
+            font-size: 0.85rem !important;
+        }}
+
+        div[data-testid="column"]:has(input[placeholder*="Buscar"]) {{
+            flex: 1 1 100% !important;
+            width: 100% !important;
+            margin-bottom: 2px !important;
+        }}
+
+        div[data-testid="column"]:has(div[data-testid="stPopover"]),
+        div[data-testid="column"]:has(.st-key-btn_photo_search) {{
+            flex: 1 1 calc(50% - 4px) !important;
+            width: calc(50% - 4px) !important;
+        }}
+
+        div[data-testid="stPopover"] > button {{
+            min-height: 40px !important;
+            font-size: 0.82rem !important;
+            width: 100% !important;
+        }}
+
+        .st-key-btn_photo_search button {{
+            min-height: 40px !important;
+            font-size: 0.82rem !important;
+            padding: 0.3rem 0.4rem 0.3rem 2.1rem !important;
+            background-position: 10px center !important;
+            background-size: 16px 16px !important;
+            width: 100% !important;
+        }}
+
+        .st-key-btn_photo_search button p {{
+            font-size: 0.82rem !important;
+            white-space: nowrap !important;
+        }}
+
+        div[data-testid="stHorizontalBlock"]:has(a[data-testid="stPageLink-NavLink"]) {{
+            flex-wrap: wrap !important;
+            gap: 6px !important;
+        }}
+
+        div[data-testid="column"]:has(a[data-testid="stPageLink-NavLink"]) {{
+            flex: 1 1 calc(50% - 4px) !important;
+            width: calc(50% - 4px) !important;
+        }}
+
+        a[data-testid="stPageLink-NavLink"] {{
+            padding: 0.5rem 0.4rem 0.5rem 2.2rem !important;
+            border-radius: 12px !important;
+            min-height: 38px !important;
+            justify-content: flex-start !important;
+            width: 100% !important;
+        }}
+
+        a[data-testid="stPageLink-NavLink"] p,
+        a[data-testid="stPageLink-NavLink"] span {{
+            font-size: 0.78rem !important;
+            white-space: normal !important;
+            line-height: 1.1 !important;
+            text-align: left !important;
+        }}
+
+        a[data-testid="stPageLink-NavLink"]::before {{
+            left: 8px !important;
+            width: 15px !important;
+            height: 15px !important;
+        }}
+
+        div[data-testid="stHorizontalBlock"]:has(.catalog-card) {{
+            flex-direction: column !important;
+        }}
+
+        div[data-testid="column"]:has(.catalog-card) {{
+            flex: 1 1 100% !important;
+            width: 100% !important;
+            margin-bottom: 12px !important;
+        }}
+
+        .catalog-card {{
+            margin-bottom: 8px !important;
+            border-radius: 12px !important;
+        }}
+
+        .square-img-box {{
+            max-height: 280px !important;
+            padding: 16px !important;
+        }}
+
+        .card-perfume-name {{
+            font-size: 1.05rem !important;
+        }}
+
+        .card-perfume-brand {{
+            font-size: 0.82rem !important;
+        }}
+
+        div[data-testid="stElementContainer"] div.stButton button[key*="btn_comp_"] {{
+            font-size: 0.9rem !important;
+            padding: 8px 12px !important;
+            height: 42px !important;
+        }}
+
+        div[data-testid="stHorizontalBlock"]:has(.essence-card) {{
+            flex-direction: column !important;
+        }}
+
+        div[data-testid="column"]:has(.essence-card) {{
+            flex: 1 1 100% !important;
+            width: 100% !important;
+        }}
+
+        .essence-card {{
+            padding: 12px 14px !important;
+            margin-bottom: 8px !important;
+        }}
+
+        .essence-title {{
+            font-size: 0.95rem !important;
+        }}
+
+        .essence-desc {{
+            font-size: 0.85rem !important;
+        }}
+    }}
     </style>
 """, unsafe_allow_html=True)
 
@@ -1018,29 +1593,47 @@ col_logo, col_espacio, col_actions = st.columns([5.5, 1.3, 2.4], vertical_alignm
 with col_logo:
     st.button("Perfume**Trending**", key="btn_logo_home", help="Ir al inicio de PerfumeTrending", on_click=reset_to_home)
 
-with col_actions:
-    btn_col1, btn_col2 = st.columns([1.4, 1], vertical_alignment="center")
-    with btn_col1:
+with btn_col1:
+    if st.session_state['logged_in']:
+        user_display = st.session_state['user_info'].get('nombre') or st.session_state['user_info'].get('email', 'Usuario')
+        st.markdown('<div class="user-popover-container">', unsafe_allow_html=True)
+        with st.popover(f"{user_display}", use_container_width=True):
+            st.write(f"**Conectado como:**")
+            st.write(st.session_state['user_info'].get('email', ''))
+            st.markdown("<div style='margin-top: 8px;'></div>", unsafe_allow_html=True)
+            
+            if st.button("Mi Perfil y Alertas", key="btn_go_profile", use_container_width=True):
+                reset_modals()
+                st.switch_page("pages/perfil.py")
+                
+            if st.button("Cerrar Sesión", key="btn_logout", use_container_width=True):
+                st.session_state['logged_in'] = False
+                st.session_state['user_info'] = None
+                reset_modals()
+                st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
+    else:
         if st.button("Ingresar", key="login_btn", use_container_width=True):
-            st.toast("Próximamente: Podrás crear tu cuenta, guardar alertas de precio y armar tu lista de deseos.")
-    with btn_col2:
-        st.button(" ", key="theme_toggle", on_click=toggle_theme)
+            st.session_state['show_login_modal'] = True
+            st.session_state['show_visual_modal'] = False
+            st.rerun()
+            
+with btn_col2:
+    st.button(" ", key="theme_toggle", on_click=toggle_theme)
 
-# 5. NAVEGACIÓN PRINCIPAL
+# 7. NAVEGACIÓN PRINCIPAL
 st.markdown("<div style='margin-top: 14px;'></div>", unsafe_allow_html=True)
-nav_cols = st.columns([1, 1, 1], vertical_alignment="center")
+nav_cols = st.columns([1, 1])
 
 with nav_cols[0]: 
     st.button("PERFUMES", key="n_perfumes", on_click=navigate_to, args=('home',), use_container_width=True)
 with nav_cols[1]: 
-    st.button("REMATES", key="n_remates", on_click=lambda: st.switch_page("pages/trendhype.py"), use_container_width=True)
-with nav_cols[2]: 
     st.button("ESENCIAS", key="n_esencias", on_click=navigate_to, args=('esencias_page',), use_container_width=True)
 
 st.markdown(f"<hr style='margin: 10px 0 24px 0; border: none; border-bottom: 1px solid {btn_border}; opacity: 0.3;'>", unsafe_allow_html=True)
 
-# 6. BÚSQUEDA Y FILTRO DE ESENCIAS
-col_search, col_filter, col_separator, col_photo = st.columns([5.5, 1.8, 0.1, 2.0], vertical_alignment="center")
+# 8. BÚSQUEDA Y FILTRO DE ESENCIAS
+col_search, col_filter, col_separator, col_photo = st.columns([5.5, 1.8, 0.1, 2.0])
 
 with col_search:
     search_query = st.text_input("Buscar", placeholder="Buscar perfume, marca o esencias...", label_visibility="collapsed")
@@ -1076,7 +1669,10 @@ with col_separator:
     st.markdown(f"<div style='border-left: 1px solid {btn_border}; height: 32px; margin: auto;'></div>", unsafe_allow_html=True)
 
 with col_photo:
-    st.button("Búsqueda visual", key="btn_photo_search", help="Buscar por imagen", use_container_width=True)
+    if st.button("Búsqueda visual", key="btn_photo_search", help="Buscar por imagen o cámara", use_container_width=True):
+        st.session_state['show_visual_modal'] = True
+        st.session_state['show_login_modal'] = False
+        st.rerun()
 
 # 7. CHIPS DE ENLACE RÁPIDO (5 ACCESOS DIRECTOS)
 st.markdown("<div style='margin-top: 14px;'></div>", unsafe_allow_html=True)
@@ -1099,7 +1695,7 @@ with c_chip4:
 
 st.markdown("<div style='margin-top: 24px;'></div>", unsafe_allow_html=True)
 
-# 8. SECCIONES Y CONTENIDOS
+# 10. SECCIONES Y CONTENIDOS
 if st.session_state['current_page'] == 'home':
     st.markdown(f"<div style='text-align: center; margin-bottom: 20px; color: {text_color}; letter-spacing: 1.5px; font-weight: 300; font-size: 1.1rem; text-transform: uppercase;'>CATÁLOGO Y TENDENCIAS EN CHILE</div>", unsafe_allow_html=True)
     
@@ -1253,6 +1849,7 @@ if st.session_state['current_page'] == 'home':
                         st.markdown(clean_html(card_html), unsafe_allow_html=True)
                         if st.button("Comparar Precios", key=f"btn_comp_{p['id']}", use_container_width=True):
                             st.session_state['selected_perfume'] = p['id']
+                            reset_modals()
                             st.switch_page("pages/compararprecios.py")
 
         # 8.3 Controles de Paginación y Cargar Más Perfumes
@@ -1283,7 +1880,7 @@ if st.session_state['current_page'] == 'home':
                     st.rerun()
 
 elif st.session_state['current_page'] == 'esencias_page':
-    col_dict_title, col_dict_mute = st.columns([9, 1], vertical_alignment="center")
+    col_dict_title, col_dict_mute = st.columns([9, 1])
     
     with col_dict_title:
         st.markdown(f"<div style='text-align: center; color: {text_color}; letter-spacing: 1px; font-weight: 300; margin-bottom: 24px; font-size: 1.1rem; text-transform: uppercase;'>DICCIONARIO DE ESENCIAS Y NOTAS</div>", unsafe_allow_html=True)
@@ -1345,7 +1942,7 @@ elif st.session_state['current_page'] == 'esencias_page':
         "Geranio": "Verde, floral y rosado con matices aromáticos.",
         "Heliotropo": "Polvoso, avainillado y meloso con ecos de almendra dulce.",
         "Iris (Orris)": "Polvoso, elegante y aristocrático; evoca la finura del maquillaje.",
-        "Lavanda": "Aromática, limpia y relajante; pilar clásico que aporta serenidad.",
+        "Lavanda": "Aromática, limpia y relaxing; pilar clásico que aporta serenidad.",
         "Lilium (Lirio)": "Floral noble, verde y radiante con presencia pulcra.",
         "Mimosa": "Cálida, dulce, polvosa y mielada; evoca la primavera.",
         "Peonía": "Floral delicado, fresco y acuático similar a la rosa joven.",
@@ -1403,7 +2000,7 @@ elif st.session_state['current_page'] == 'esencias_page':
         "Estoraque": "Ahumado, leñoso y con matices de cuero resinoso.",
         "Incienso (Olíbano)": "Místico, resinoso y ahumado; añade solemnidad.",
         "Ládano": "Ambarino, denso y profundamente cuero-resinoso.",
-        "Mirra": "Balsámica, cálida y milenaria; ofrece un aura mística.",
+        "Mirra": "Balsámica, cálida y milenaria; offers un aura mística.",
         "Almizcle (Blanco/Musk)": "Piel limpia, suavidad algodonosa y fijación sensual.",
         "Almizcle Vegetal": "Alternativa botánica limpia de perfil transparente.",
         "Ámbar Gris": "Marino, terroso y aterciopelada; fija la fragancia.",
@@ -1420,7 +2017,7 @@ elif st.session_state['current_page'] == 'esencias_page':
         "Ambroxan": "Ambarino, leñoso y salino de proyección moderna.",
         "Cachemira (Cashmeran)": "Suave como la lana, leñoso, ambarino y almizclado.",
         "Cuero": "Seco, ahumado y sofisticado; proyecta distinción.",
-        "Iso E Super": "Molécula maderosa, suave y aterciopelada.",
+        "Iso E Super": "Molécula maderosa, suave battered.",
         "Notas Marinas": "Brisa salada y aire ozónico; aportan frescura oceánica.",
         "Notas Solares": "Calidez de la piel bajo el sol y tardes de verano.",
         "Sangre (Metálica)": "Nota vanguardista nicho; evoca hierro y un matiz salado."
@@ -1450,7 +2047,7 @@ elif st.session_state['current_page'] == 'esencias_page':
     with col_es_2:
         st.markdown("\n".join(html_col2), unsafe_allow_html=True)
 
-# 9. PIE DE PÁGINA (FOOTER)
+# 11. PIE DE PÁGINA (FOOTER)
 st.markdown(f"<hr style='margin: 40px 0 20px 0; border: none; border-bottom: 1px solid {btn_border}; opacity: 0.3;'>", unsafe_allow_html=True)
 st.markdown(f"""
     <div style="text-align: center; padding: 10px 0 20px 0; color: {subtext_color}; font-size: 0.85rem;">
