@@ -78,7 +78,7 @@ try:
         get_supabase,
         is_supabase_disponible
     )
-    from backend.normalizador import es_producto_perfume_valido, extraer_volumen_ml
+    from backend.normalizador import es_producto_perfume_valido, extraer_volumen_ml, coincide_con_perfume
 except ImportError:
     from database import (
         guardar_o_actualizar_perfume_scraped,
@@ -92,7 +92,7 @@ except ImportError:
         get_supabase,
         is_supabase_disponible
     )
-    from normalizador import es_producto_perfume_valido, extraer_volumen_ml
+    from normalizador import es_producto_perfume_valido, extraer_volumen_ml, coincide_con_perfume
 
 # Pool de User-Agents residenciales modernos
 USER_AGENTS = [
@@ -191,7 +191,6 @@ TIENDAS_SHOPIFY = {
     "Elite Perfumes": "eliteperfumes.cl",
     "Alisha Perfumes": "alishaperfumes.cl",
     "Yauras Perfumes": "yauras.cl",
-    "DBS Beauty Store": "dbs.cl",
 }
 
 
@@ -204,10 +203,11 @@ def extraer_variedades_shopify(
 ) -> List[Dict[str, Any]]:
     """
     Extrae múltiples variedades de tamaño (ml) y stock real en tiendas Shopify
-    (Silk Perfumes, Elite Perfumes, Alisha Perfumes, Yauras Perfumes, DBS Beauty Store).
+    (Silk Perfumes, Elite Perfumes, Alisha Perfumes, Yauras Perfumes).
     Retorna una lista de diccionarios, uno por cada tamaño/presentación detectada.
     """
-    q = urllib.parse.quote(perfume_nombre)
+    query_str = f"{marca} {perfume_nombre}".strip() if (marca and marca.lower() not in perfume_nombre.lower()) else perfume_nombre.strip()
+    q = urllib.parse.quote(query_str)
     url_api = f"https://www.{dominio}/search/suggest.json?q={q}&resources[type]=product"
     headers = obtener_headers_json(referer=f"https://www.{dominio}/")
 
@@ -218,7 +218,9 @@ def extraer_variedades_shopify(
         res = session.get(url_api, headers=headers, timeout=9)
         if res.status_code == 200:
             productos = res.json().get("resources", {}).get("results", {}).get("products", [])
-            tokens = [t.lower() for t in perfume_nombre.split() if len(t) > 3]
+            tokens = [t.lower() for t in re.sub(r"[^\w\s]", " ", perfume_nombre).split() if len(t) >= 2]
+            if not tokens:
+                tokens = [perfume_nombre.lower().strip()]
             for p in productos:
                 raw_title = p.get("title", "")
                 
@@ -226,34 +228,34 @@ def extraer_variedades_shopify(
                 if not es_producto_perfume_valido(raw_title):
                     continue
 
-                titulo_lower = raw_title.lower()
-                coincide = any(tok in titulo_lower for tok in tokens) or (marca.lower() in titulo_lower)
-
-                # Regla de seguridad especial: evitar cruces con fragancias de Chanel
-                if "chanel" in perfume_nombre.lower() and "chanel" not in titulo_lower:
+                # Validar correspondencia exacta con la fragancia
+                if not coincide_con_perfume(raw_title, perfume_nombre, marca):
                     continue
 
-                if coincide:
-                    vol_encontrado = extraer_volumen_ml(raw_title) or volumen_ml_defecto or 100
-                    if vol_encontrado in vols_vistos:
-                        continue
+                # Regla de seguridad especial: evitar cruces con fragancias de Chanel
+                if "chanel" in perfume_nombre.lower() and "chanel" not in raw_title.lower():
+                    continue
 
-                    precio_act = int(float(p.get("price", 0)))
-                    p_comp_raw = p.get("compare_at_price_max") or p.get("compare_at_price_min")
-                    precio_norm = int(float(p_comp_raw)) if p_comp_raw else precio_act
+                vol_encontrado = extraer_volumen_ml(raw_title) or volumen_ml_defecto or 100
+                if vol_encontrado in vols_vistos:
+                    continue
 
-                    if precio_act >= 10000:
-                        vols_vistos.add(vol_encontrado)
-                        clean_url = f"https://www.{dominio}" + p.get("url", "").split("?")[0]
-                        variedades.append({
-                            "exito": True,
-                            "precio_actual": precio_act,
-                            "precio_normal": precio_norm if precio_norm > precio_act else precio_act,
-                            "url": clean_url,
-                            "en_stock": bool(p.get("available", True)),
-                            "volumen_ml": vol_encontrado,
-                            "metodo": "Shopify Multi-Suggest"
-                        })
+                precio_act = int(float(p.get("price", 0)))
+                p_comp_raw = p.get("compare_at_price_max") or p.get("compare_at_price_min")
+                precio_norm = int(float(p_comp_raw)) if p_comp_raw else precio_act
+
+                if precio_act >= 10000:
+                    vols_vistos.add(vol_encontrado)
+                    clean_url = f"https://www.{dominio}" + p.get("url", "").split("?")[0]
+                    variedades.append({
+                        "exito": True,
+                        "precio_actual": precio_act,
+                        "precio_normal": precio_norm if precio_norm > precio_act else precio_act,
+                        "url": clean_url,
+                        "en_stock": bool(p.get("available", True)),
+                        "volumen_ml": vol_encontrado,
+                        "metodo": "Shopify Multi-Suggest"
+                    })
     except Exception as e:
         logger.warning(f"Error consultando Shopify {dominio} para '{perfume_nombre}': {e}")
 
@@ -341,7 +343,8 @@ def extraer_variedades_falabella(
         return variedades
 
     # Intento 2: Búsqueda dinámica en vivo en Falabella
-    q = urllib.parse.quote(perfume_nombre)
+    query_str = f"{marca} {perfume_nombre}".strip() if (marca and marca.lower() not in perfume_nombre.lower()) else perfume_nombre.strip()
+    q = urllib.parse.quote(query_str)
     search_url = f"https://www.falabella.com/falabella-cl/search?Ntt={q}"
     try:
         res_s = session.get(search_url, headers=headers, timeout=11)
@@ -351,13 +354,14 @@ def extraer_variedades_falabella(
             if tag_s and tag_s.string:
                 data_s = json.loads(tag_s.string)
                 results = data_s.get("props", {}).get("pageProps", {}).get("results", [])
-                tokens = [t.lower() for t in perfume_nombre.split() if len(t) > 3]
+                tokens = [t.lower() for t in re.sub(r"[^\w\s]", " ", perfume_nombre).split() if len(t) >= 2]
+                if not tokens:
+                    tokens = [perfume_nombre.lower().strip()]
                 for r in results:
                     d_name = r.get("displayName", "")
                     if not es_producto_perfume_valido(d_name):
                         continue
-                    name_lower = d_name.lower()
-                    if not any(tok in name_lower for tok in tokens):
+                    if not coincide_con_perfume(d_name, perfume_nombre, marca):
                         continue
                     prod_url = r.get("url", "")
                     if prod_url and len(variedades) < 4:
@@ -493,13 +497,16 @@ def extraer_variedades_paris(
         return variedades
 
     # Intento 2: Búsqueda dinámica en vivo en Paris
-    q = urllib.parse.quote(perfume_nombre)
+    query_str = f"{marca} {perfume_nombre}".strip() if (marca and marca.lower() not in perfume_nombre.lower()) else perfume_nombre.strip()
+    q = urllib.parse.quote(query_str)
     url_search = f"https://www.paris.cl/search?q={q}"
     try:
         res_s = session.get(url_search, headers=headers, timeout=10)
         if res_s.status_code == 200:
             soup_s = BeautifulSoup(res_s.text, "html.parser")
-            tokens = [t.lower() for t in perfume_nombre.split() if len(t) > 3]
+            tokens = [t.lower() for t in re.sub(r"[^\w\s]", " ", perfume_nombre).split() if len(t) >= 2]
+            if not tokens:
+                tokens = [perfume_nombre.lower().strip()]
             links = []
             for a in soup_s.find_all("a", href=True):
                 h = a.get("href", "")
@@ -572,7 +579,8 @@ def extraer_variedades_ripley(
     """
     variedades: List[Dict[str, Any]] = []
     vols_vistos = set()
-    q = urllib.parse.quote(perfume_nombre)
+    query_str = f"{marca} {perfume_nombre}".strip() if (marca and marca.lower() not in perfume_nombre.lower()) else perfume_nombre.strip()
+    q = urllib.parse.quote(query_str)
     url_search = f"https://simple.ripley.cl/search/{q}"
 
     headers = {
@@ -593,13 +601,14 @@ def extraer_variedades_ripley(
             if tag and tag.text:
                 data = json.loads(tag.text)
                 prods = data.get("props", {}).get("pageProps", {}).get("findabilityProps", {}).get("data", {}).get("products", [])
-                tokens = [t.lower() for t in perfume_nombre.split() if len(t) > 3]
+                tokens = [t.lower() for t in re.sub(r"[^\w\s]", " ", perfume_nombre).split() if len(t) >= 2]
+                if not tokens:
+                    tokens = [perfume_nombre.lower().strip()]
                 for p in prods:
                     d_name = p.get("name", "")
                     if not es_producto_perfume_valido(d_name):
                         continue
-                    name_lower = d_name.lower()
-                    if not any(tok in name_lower for tok in tokens):
+                    if not coincide_con_perfume(d_name, perfume_nombre, marca):
                         continue
                     p_act = p.get("priceNumber", 0)
                     p_norm = p.get("masterPriceNumber", p_act) or p_act

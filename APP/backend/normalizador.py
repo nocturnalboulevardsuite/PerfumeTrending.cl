@@ -241,3 +241,21 @@ def limpiar_nombre_perfume(titulo: str, marca: str = "") -> str:
 
     # Formatear el resultado final a formato Capitalizado (Title Case)
     return limpio.title()
+
+
+def coincide_con_perfume(titulo: str, perfume_nombre: str, marca: str = "") -> bool:
+    """
+    Verifica con alta fidelidad si el título de un producto de e-commerce corresponde a la fragancia.
+    Exige que todos los tokens significativos del nombre del perfume estén presentes en el título.
+    Evita falsos positivos cruzados (por ejemplo, evitar que 'Afnan Turathi' coincida con '9 PM').
+    """
+    tit = titulo.lower()
+    t_clean = re.sub(r"[^\w\s]", " ", perfume_nombre).lower()
+    stop_words = {
+        "de", "la", "el", "los", "las", "en", "pour", "for", "men", "women",
+        "homme", "femme", "eau", "parfum", "toilette", "edp", "edt", "unisex"
+    }
+    tokens = [t for t in t_clean.split() if t not in stop_words]
+    if not tokens:
+        tokens = [t for t in t_clean.split()]
+    return all(tok in tit for tok in tokens)

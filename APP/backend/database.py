@@ -883,7 +883,7 @@ def tienda_comercializa_marca(tienda_nombre: str, marca: str) -> bool:
 # 5. `registrar_fallo_scraping()`: Si una tienda bloquea el bot o falla el scraping, incrementa
 #    el contador `fallos_consecutivos` sin destruir el último precio conocido ni crear datos ficticios.
 # =============================================================================
-def registrar_observacion_oferta(observacion: Dict[str, Any]) -> Dict[str, Any]:
+def registrar_observacion_oferta(observacion: Optional[Dict[str, Any]] = None, **kwargs) -> Dict[str, Any]:
     """
     Persistencia transaccional de una observación de precio/stock:
     - Valida precio actual > 0, precio normal válido, stock explícito y URL válida.
@@ -892,6 +892,11 @@ def registrar_observacion_oferta(observacion: Dict[str, Any]) -> Dict[str, Any]:
     - Propaga excepciones y garantiza que nunca se creen ofertas ficticias ni se altere el estado
       con datos inválidos o fallos de scraping.
     """
+    if observacion is None:
+        observacion = kwargs
+    elif kwargs:
+        observacion = {**observacion, **kwargs}
+
     if not isinstance(observacion, dict):
         raise ValueError("La observación debe ser un diccionario válido")
 
