@@ -1,25 +1,25 @@
 {
-  "actualizaciones": 0,
-  "fecha": "2026-10-15 22:07:11",
-  "duracion_segundos": 66.72,
+  "actualizaciones": 26,
+  "fecha": "2026-10-15 22:36:11",
+  "duracion_segundos": 85.46,
   "metadata": {
     "version_etl": "3.0.0",
     "sistema": "PerfumeTrending Professional Anti-Bot ETL",
-    "fecha_ejecucion": "2026-10-15 22:07:11",
-    "duracion_segundos": 66.72,
-    "estado": "FALLIDO"
+    "fecha_ejecucion": "2026-10-15 22:36:11",
+    "duracion_segundos": 85.46,
+    "estado": "EXITOSO"
   },
   "metricas": {
-    "total_perfumes_catalogo": 132,
+    "total_perfumes_catalogo": 134,
     "total_tiendas_registradas": 8,
-    "precios_actualizados": 0,
-    "exclusiones_marca": 1015,
-    "errores_totales": 26
+    "precios_actualizados": 26,
+    "exclusiones_marca": 1031,
+    "errores_totales": 0
   },
   "estadisticas_tiendas": {
     "Falabella": {
       "consultas": 12,
-      "exitos_en_vivo": 0,
+      "exitos_en_vivo": 10,
       "fallbacks_seguridad": 2,
       "trust_score": 96
     },
@@ -37,13 +37,13 @@
     },
     "Silk Perfumes": {
       "consultas": 9,
-      "exitos_en_vivo": 0,
+      "exitos_en_vivo": 9,
       "fallbacks_seguridad": 0,
       "trust_score": 92
     },
     "Elite Perfumes": {
       "consultas": 7,
-      "exitos_en_vivo": 0,
+      "exitos_en_vivo": 7,
       "fallbacks_seguridad": 0,
       "trust_score": 89
     },
@@ -66,33 +66,157 @@
       "trust_score": 88
     }
   },
-  "muestra_capturas": [],
-  "errores": [
-    "Error en ciclo para Bleu de Chanel en Falabella: FOREIGN KEY constraint failed",
-    "Error en ciclo para YSL Libre en Falabella: FOREIGN KEY constraint failed",
-    "Error en ciclo para YSL Libre en Silk Perfumes: FOREIGN KEY constraint failed",
-    "Error en ciclo para YSL Libre en Elite Perfumes: FOREIGN KEY constraint failed",
-    "Error en ciclo para Dior Sauvage en Silk Perfumes: FOREIGN KEY constraint failed",
-    "Error en ciclo para Club de Nuit Intense Man en Falabella: FOREIGN KEY constraint failed",
-    "Error en ciclo para Club de Nuit Intense Man en Silk Perfumes: FOREIGN KEY constraint failed",
-    "Error en ciclo para Club de Nuit Intense Man en Elite Perfumes: FOREIGN KEY constraint failed",
-    "Error en ciclo para Khamrah en Falabella: FOREIGN KEY constraint failed",
-    "Error en ciclo para Khamrah en Silk Perfumes: FOREIGN KEY constraint failed",
-    "Error en ciclo para Khamrah en Elite Perfumes: FOREIGN KEY constraint failed",
-    "Error en ciclo para Baccarat Rouge 540 en Falabella: FOREIGN KEY constraint failed",
-    "Error en ciclo para Acqua Di Gio en Falabella: FOREIGN KEY constraint failed",
-    "Error en ciclo para Acqua Di Gio en Silk Perfumes: FOREIGN KEY constraint failed",
-    "Error en ciclo para Acqua Di Gio en Elite Perfumes: FOREIGN KEY constraint failed",
-    "Error en ciclo para Scandal Pour Homme en Falabella: FOREIGN KEY constraint failed",
-    "Error en ciclo para Scandal Pour Homme en Silk Perfumes: FOREIGN KEY constraint failed",
-    "Error en ciclo para Scandal Pour Homme en Elite Perfumes: FOREIGN KEY constraint failed",
-    "Error en ciclo para Hawas for Men en Falabella: FOREIGN KEY constraint failed",
-    "Error en ciclo para Hawas for Men en Silk Perfumes: FOREIGN KEY constraint failed",
-    "Error en ciclo para Hawas for Men en Elite Perfumes: FOREIGN KEY constraint failed",
-    "Error en ciclo para Eros en Falabella: FOREIGN KEY constraint failed",
-    "Error en ciclo para Eros en Silk Perfumes: FOREIGN KEY constraint failed",
-    "Error en ciclo para Le Male Elixir en Falabella: FOREIGN KEY constraint failed",
-    "Error en ciclo para Le Male Elixir en Silk Perfumes: FOREIGN KEY constraint failed",
-    "Error en ciclo para Le Male Elixir en Elite Perfumes: FOREIGN KEY constraint failed"
-  ]
+  "muestra_capturas": [
+    {
+      "perfume": "Bleu de Chanel",
+      "tienda": "Falabella",
+      "precio_actual": 145200,
+      "precio_normal": 145200,
+      "tiene_descuento": false,
+      "origen": "Falabella Next Direct",
+      "volumen_ml": 100,
+      "en_stock": false
+    },
+    {
+      "perfume": "YSL Libre",
+      "tienda": "Falabella",
+      "precio_actual": 86990,
+      "precio_normal": 86990,
+      "tiene_descuento": false,
+      "origen": "Falabella Next Direct",
+      "volumen_ml": 90,
+      "en_stock": true
+    },
+    {
+      "perfume": "YSL Libre",
+      "tienda": "Silk Perfumes",
+      "precio_actual": 106990,
+      "precio_normal": 235390,
+      "tiene_descuento": true,
+      "origen": "Shopify Live Suggest",
+      "volumen_ml": 90,
+      "en_stock": true
+    },
+    {
+      "perfume": "YSL Libre",
+      "tienda": "Elite Perfumes",
+      "precio_actual": 110990,
+      "precio_normal": 129990,
+      "tiene_descuento": true,
+      "origen": "Shopify Live Suggest",
+      "volumen_ml": 90,
+      "en_stock": true
+    },
+    {
+      "perfume": "Dior Sauvage",
+      "tienda": "Silk Perfumes",
+      "precio_actual": 124990,
+      "precio_normal": 274990,
+      "tiene_descuento": true,
+      "origen": "Shopify Live Suggest",
+      "volumen_ml": 100,
+      "en_stock": true
+    },
+    {
+      "perfume": "Club de Nuit Intense Man",
+      "tienda": "Falabella",
+      "precio_actual": 46990,
+      "precio_normal": 91990,
+      "tiene_descuento": true,
+      "origen": "Falabella Next Direct",
+      "volumen_ml": 100,
+      "en_stock": true
+    },
+    {
+      "perfume": "Club de Nuit Intense Man",
+      "tienda": "Silk Perfumes",
+      "precio_actual": 32990,
+      "precio_normal": 72590,
+      "tiene_descuento": true,
+      "origen": "Shopify Live Suggest",
+      "volumen_ml": 105,
+      "en_stock": true
+    },
+    {
+      "perfume": "Club de Nuit Intense Man",
+      "tienda": "Elite Perfumes",
+      "precio_actual": 32990,
+      "precio_normal": 59990,
+      "tiene_descuento": true,
+      "origen": "Shopify Live Suggest",
+      "volumen_ml": 105,
+      "en_stock": true
+    },
+    {
+      "perfume": "Khamrah",
+      "tienda": "Falabella",
+      "precio_actual": 33990,
+      "precio_normal": 54790,
+      "tiene_descuento": true,
+      "origen": "Falabella Next Direct",
+      "volumen_ml": 100,
+      "en_stock": true
+    },
+    {
+      "perfume": "Khamrah",
+      "tienda": "Silk Perfumes",
+      "precio_actual": 24990,
+      "precio_normal": 59390,
+      "tiene_descuento": true,
+      "origen": "Shopify Live Suggest",
+      "volumen_ml": 100,
+      "en_stock": true
+    },
+    {
+      "perfume": "Khamrah",
+      "tienda": "Elite Perfumes",
+      "precio_actual": 24990,
+      "precio_normal": 49990,
+      "tiene_descuento": true,
+      "origen": "Shopify Live Suggest",
+      "volumen_ml": 100,
+      "en_stock": true
+    },
+    {
+      "perfume": "Baccarat Rouge 540",
+      "tienda": "Falabella",
+      "precio_actual": 23990,
+      "precio_normal": 23990,
+      "tiene_descuento": false,
+      "origen": "Falabella Next Search Healed",
+      "volumen_ml": 70,
+      "en_stock": true
+    },
+    {
+      "perfume": "Acqua Di Gio",
+      "tienda": "Falabella",
+      "precio_actual": 141990,
+      "precio_normal": 243990,
+      "tiene_descuento": true,
+      "origen": "Falabella Next Direct",
+      "volumen_ml": 100,
+      "en_stock": true
+    },
+    {
+      "perfume": "Acqua Di Gio",
+      "tienda": "Silk Perfumes",
+      "precio_actual": 79990,
+      "precio_normal": 175990,
+      "tiene_descuento": true,
+      "origen": "Shopify Live Suggest",
+      "volumen_ml": 100,
+      "en_stock": true
+    },
+    {
+      "perfume": "Acqua Di Gio",
+      "tienda": "Elite Perfumes",
+      "precio_actual": 94990,
+      "precio_normal": 159990,
+      "tiene_descuento": true,
+      "origen": "Shopify Live Suggest",
+      "volumen_ml": 100,
+      "en_stock": true
+    }
+  ],
+  "errores": []
 }
