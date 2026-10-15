@@ -1,3 +1,14 @@
+"""
+PerfumeTrending.cl — Página de Remates, Liquidaciones y Descuentos Reales
+========================================================================
+Módulo de visualización y filtrado de ofertas con rebajas genuinas en el mercado:
+- Algoritmo de detección de gangas: compara el precio_actual contra el precio_normal confirmado.
+- Filtro estricto contra falsos descuentos: solo muestra ofertas con rebaja porcentual real demostrable.
+- Indicadores visuales de porcentaje de ahorro y diferencia en pesos chilenos ($ CLP).
+- Ordenamiento dinámico por mayor porcentaje de descuento o menor precio absoluto.
+- Tarjetas de producto interactivas con acceso directo a la compra en el comercio respectivo.
+"""
+
 import streamlit as st
 import streamlit.components.v1 as components
 import pandas as pd

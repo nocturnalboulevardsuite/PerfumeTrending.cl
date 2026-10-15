@@ -1,3 +1,13 @@
+"""
+PerfumeTrending.cl — Perfil de Usuario, Favoritos y Gestión de Alertas
+======================================================================
+Módulo de gestión de cuentas de usuario, listas de deseos y preferencias:
+- Autenticación local y en la nube (registro, inicio de sesión seguro con hash SHA-256).
+- Gestión de fragancias favoritas (guardar, ver y remover de la colección personal).
+- Alertas de bajada de precio personalizadas cuando una oferta cae por debajo del umbral objetivo.
+- Historial de actividad y recomendaciones personalizadas según las familias olfativas guardadas.
+"""
+
 import streamlit as st
 import streamlit.components.v1 as components
 import pandas as pd
