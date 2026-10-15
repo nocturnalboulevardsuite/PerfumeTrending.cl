@@ -806,21 +806,30 @@ def registrar_observacion_oferta(observacion: Dict[str, Any]) -> Dict[str, Any]:
 
     # 1. Intentar llamar a RPC en Supabase si está disponible
     sb = get_supabase()
-    if sb and is_supabase_disponible() and variante_id:
-        try:
-            rpc_res = sb.rpc("registrar_observacion_oferta", {
-                "p_variante_id": variante_id,
-                "p_tienda_id": tienda_id,
-                "p_precio_actual": precio_actual,
-                "p_precio_normal": precio_normal,
-                "p_en_stock": en_stock,
-                "p_url_producto": url_producto,
-                "p_scraping_run_id": scraping_run_id
-            }).execute()
-            if rpc_res.data:
-                return rpc_res.data
-        except Exception as e:
-            logger.debug(f"RPC Supabase registrar_observacion_oferta omitida o no instalada ({e}), sincronizando vía capa local.")
+    if sb and is_supabase_disponible():
+        if not variante_id and perfume_id:
+            try:
+                r_v = sb.table("variantes_perfume").select("id").eq("perfume_id", perfume_id).limit(1).execute()
+                if r_v.data and len(r_v.data) > 0:
+                    variante_id = r_v.data[0]["id"]
+            except Exception as e:
+                logger.debug(f"Error resolviendo variante en Supabase: {e}")
+
+        if variante_id:
+            try:
+                rpc_res = sb.rpc("registrar_observacion_oferta", {
+                    "p_variante_id": variante_id,
+                    "p_tienda_id": tienda_id,
+                    "p_precio_actual": precio_actual,
+                    "p_precio_normal": precio_normal,
+                    "p_en_stock": en_stock,
+                    "p_url_producto": url_producto,
+                    "p_scraping_run_id": scraping_run_id
+                }).execute()
+                if rpc_res.data:
+                    return rpc_res.data
+            except Exception as e:
+                logger.debug(f"RPC Supabase registrar_observacion_oferta omitida o no instalada ({e}), sincronizando vía capa local.")
 
     # 2. Persistencia Transaccional Atómica en SQLite Local
     init_db()
@@ -1009,17 +1018,26 @@ def registrar_fallo_scraping(
 
     # Intentar RPC en Supabase si está disponible
     sb = get_supabase()
-    if sb and is_supabase_disponible() and variante_id:
-        try:
-            rpc_res = sb.rpc("registrar_fallo_scraping", {
-                "p_variante_id": variante_id,
-                "p_tienda_id": tienda_id,
-                "p_mensaje": msg_clean
-            }).execute()
-            if rpc_res.data:
-                return rpc_res.data
-        except Exception as e:
-            logger.debug(f"RPC registrar_fallo_scraping en Supabase omitida ({e}).")
+    if sb and is_supabase_disponible():
+        if not variante_id and perfume_id:
+            try:
+                r_v = sb.table("variantes_perfume").select("id").eq("perfume_id", perfume_id).limit(1).execute()
+                if r_v.data and len(r_v.data) > 0:
+                    variante_id = r_v.data[0]["id"]
+            except Exception as e:
+                logger.debug(f"Error resolviendo variante en Supabase: {e}")
+
+        if variante_id:
+            try:
+                rpc_res = sb.rpc("registrar_fallo_scraping", {
+                    "p_variante_id": variante_id,
+                    "p_tienda_id": tienda_id,
+                    "p_mensaje": msg_clean
+                }).execute()
+                if rpc_res.data:
+                    return rpc_res.data
+            except Exception as e:
+                logger.debug(f"RPC registrar_fallo_scraping en Supabase omitida ({e}).")
 
     init_db()
     with get_db_cursor(commit=True) as cursor:
