@@ -65,6 +65,8 @@ try:
         guardar_o_actualizar_perfume_scraped,
         get_connection,
         registrar_precio,
+        registrar_observacion_oferta,
+        registrar_fallo_scraping,
         init_db,
         tienda_comercializa_marca,
         obtener_url_directa_tienda
@@ -75,6 +77,8 @@ except ImportError:
         guardar_o_actualizar_perfume_scraped,
         get_connection,
         registrar_precio,
+        registrar_observacion_oferta,
+        registrar_fallo_scraping,
         init_db,
         tienda_comercializa_marca,
         obtener_url_directa_tienda
@@ -247,13 +251,14 @@ def extraer_precio_falabella(
                             prices = r.get("prices", [])
                             if prices:
                                 p_act = clean_digits(prices[0].get("price", ["0"])[0])
+                                is_out = bool(r.get("isOutOfStock", False))
                                 if p_act >= 10000:
                                     return {
                                         "exito": True,
                                         "precio_actual": p_act,
                                         "precio_normal": p_act,
                                         "url": url_a_probar,
-                                        "en_stock": True,
+                                        "en_stock": not is_out,
                                         "volumen_ml": volumen_ml or 100,
                                         "metodo": "Falabella Next Search Healed"
                                     }
@@ -274,7 +279,7 @@ def extraer_precio_falabella(
                 prices = []
                 if skus:
                     prices = skus[0].get("prices", [])
-                elif "prices" in prod:
+                if not prices and "prices" in prod:
                     prices = prod.get("prices", [])
 
                 p_act, p_norm = 0, 0
@@ -289,13 +294,17 @@ def extraer_precio_falabella(
                 if p_act == 0 and prices:
                     p_act = clean_digits(prices[0].get("price", ["0"])[0])
 
+                is_out = bool(prod.get("isOutOfStock", False))
+                if skus:
+                    is_out = is_out or bool(skus[0].get("isOutOfStock", False))
+
                 if p_act >= 10000:
                     return {
                         "exito": True,
                         "precio_actual": p_act,
                         "precio_normal": p_norm if p_norm > p_act else p_act,
                         "url": url_a_probar,
-                        "en_stock": True,
+                        "en_stock": not is_out,
                         "volumen_ml": volumen_ml or 100,
                         "metodo": "Falabella Next Direct"
                     }
@@ -353,6 +362,8 @@ def extraer_precio_paris(
                     offers = d.get("offers", [])
                     offer_obj = offers[0] if isinstance(offers, list) and offers else (offers if isinstance(offers, dict) else {})
                     p_raw = offer_obj.get("price")
+                    avail = str(offer_obj.get("availability", "")).lower()
+                    en_stock_val = False if ("outofstock" in avail or "agotado" in avail) else True
                     if p_raw:
                         p_act = int(float(p_raw))
                         if p_act >= 10000:
@@ -361,7 +372,7 @@ def extraer_precio_paris(
                                 "precio_actual": p_act,
                                 "precio_normal": p_act,
                                 "url": url_a_probar,
-                                "en_stock": True,
+                                "en_stock": en_stock_val,
                                 "volumen_ml": volumen_ml or 100,
                                 "metodo": "Paris JSON-LD Direct"
                             }
@@ -422,13 +433,15 @@ def extraer_precio_ripley(
                         offers = d.get("offers", {})
                         if isinstance(offers, dict) and "price" in offers:
                             p_act = clean_digits(offers["price"])
+                            avail_r = str(offers.get("availability", "")).lower()
+                            en_stock_r = False if ("outofstock" in avail_r or "agotado" in avail_r) else True
                             if p_act >= 10000:
                                 return {
                                     "exito": True,
                                     "precio_actual": p_act,
                                     "precio_normal": p_act,
                                     "url": url_a_probar,
-                                    "en_stock": True,
+                                    "en_stock": en_stock_r,
                                     "volumen_ml": volumen_ml or 100,
                                     "metodo": "Ripley Schema.org"
                                 }
@@ -439,13 +452,14 @@ def extraer_precio_ripley(
             p_val = soup.find(class_=lambda c: c and "price-value" in c)
             if p_val:
                 p_act = clean_digits(p_val.get_text())
+                agotado_dom = bool(soup.find(string=re.compile(r"agotado|sin stock", re.I)))
                 if p_act >= 10000:
                     return {
                         "exito": True,
                         "precio_actual": p_act,
                         "precio_normal": p_act,
                         "url": url_a_probar,
-                        "en_stock": True,
+                        "en_stock": not agotado_dom,
                         "volumen_ml": volumen_ml or 100,
                         "metodo": "Ripley DOM Price"
                     }
@@ -595,18 +609,19 @@ def ejecutar_ciclo_scraping_y_descubrimiento() -> Dict[str, Any]:
                     precio_normal_final = datos_extraccion["precio_normal"]
                     url_final = datos_extraccion["url"]
                     vol_final = datos_extraccion.get("volumen_ml", vol_ml_base)
+                    stock_final = bool(datos_extraccion.get("en_stock", True))
 
-                    registrar_precio(
-                        perfume_id=p_id,
-                        tienda_id=t_id,
-                        precio_actual=precio_actual_final,
-                        precio_normal=precio_normal_final,
-                        en_stock=datos_extraccion.get("en_stock", True),
-                        url_producto=url_final,
-                        fecha=ahora,
-                        volumen_ml=vol_final
-                    )
-                    actualizaciones += 1
+                    res_obs = registrar_observacion_oferta({
+                        "perfume_id": p_id,
+                        "tienda_id": t_id,
+                        "precio_actual": precio_actual_final,
+                        "precio_normal": precio_normal_final,
+                        "en_stock": stock_final,
+                        "url_producto": url_final,
+                        "volumen_ml": vol_final
+                    })
+                    if res_obs.get("resultado") in ("creada", "actualizada"):
+                        actualizaciones += 1
                     tiendas_stats[t_nom]["exitos_en_vivo"] += 1
                     detalle_precios.append({
                         "perfume": p_nom,
@@ -615,38 +630,33 @@ def ejecutar_ciclo_scraping_y_descubrimiento() -> Dict[str, Any]:
                         "precio_normal": precio_normal_final,
                         "tiene_descuento": bool(precio_normal_final > precio_actual_final),
                         "origen": datos_extraccion.get("metodo", "Extracción en Vivo"),
-                        "volumen_ml": vol_final
+                        "volumen_ml": vol_final,
+                        "en_stock": stock_final
                     })
-                    logger.info(f"  -> [{t_nom}] EN VIVO: ${precio_actual_final:,} (Normal: ${precio_normal_final:,}) | ml: {vol_final}")
+                    logger.info(f"  -> [{t_nom}] EN VIVO: ${precio_actual_final:,} (Normal: ${precio_normal_final:,}) | stock: {stock_final} | ml: {vol_final}")
                 else:
-                    # Fallback de Seguridad Zero-Downtime: Mantener último precio verificado
-                    registrar_precio(
-                        perfume_id=p_id,
+                    # Registrar fallo sin inventar datos ni alterar ofertas confirmadas
+                    motivo_fallo = datos_extraccion.get("motivo", f"Extracción no exitosa en {t_nom}")
+                    registrar_fallo_scraping(
                         tienda_id=t_id,
-                        precio_actual=precio_base,
-                        precio_normal=precio_norm_base,
-                        en_stock=True,
-                        url_producto=url_directa_guardada,
-                        fecha=ahora,
-                        volumen_ml=vol_ml_base
+                        perfume_id=p_id,
+                        mensaje=motivo_fallo
                     )
-                    actualizaciones += 1
                     tiendas_stats[t_nom]["fallbacks_seguridad"] += 1
-                    detalle_precios.append({
-                        "perfume": p_nom,
-                        "tienda": t_nom,
-                        "precio_actual": precio_base,
-                        "precio_normal": precio_norm_base,
-                        "tiene_descuento": bool(precio_norm_base > precio_base),
-                        "origen": "Respaldo Histórico Verificado",
-                        "volumen_ml": vol_ml_base
-                    })
-                    logger.info(f"  -> [{t_nom}] RESPALDO VERIFICADO: ${precio_base:,} | ml: {vol_ml_base}")
+                    logger.warning(f"  -> [{t_nom}] FALLO SCRAPING: {motivo_fallo}. No se altera precio ni stock.")
 
             except Exception as ex:
                 err_msg = f"Error en ciclo para {p_nom} en {t_nom}: {ex}"
                 logger.error(err_msg)
                 errores.append(err_msg)
+                try:
+                    registrar_fallo_scraping(
+                        tienda_id=t_id,
+                        perfume_id=p_id,
+                        mensaje=str(ex)
+                    )
+                except Exception:
+                    pass
 
     duracion = round(time.time() - inicio, 2)
     estado_general = "EXITOSO" if not errores else ("DEGRADADO" if actualizaciones > 0 else "FALLIDO")

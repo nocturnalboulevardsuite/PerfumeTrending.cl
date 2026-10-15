@@ -21,6 +21,7 @@ import sqlite3
 import sys
 from typing import Any, Dict, Generator, List, Optional, Tuple
 import urllib.parse
+import uuid
 
 logger = logging.getLogger("PerfumeDatabase")
 
@@ -240,8 +241,16 @@ def init_db(force_reseed: bool = False) -> None:
             if cursor.fetchone():
                 cursor.execute("PRAGMA table_info(precios_registro);")
                 cols = {c["name"] for c in cursor.fetchall()}
-                if "volumen_ml" not in cols:
-                    cursor.execute("ALTER TABLE precios_registro ADD COLUMN volumen_ml INTEGER DEFAULT 100;")
+                for col_name, col_def in [
+                    ("volumen_ml", "INTEGER DEFAULT 100"),
+                    ("variante_id", "INTEGER"),
+                    ("tipo_evento", "TEXT"),
+                    ("campos_modificados", "TEXT"),
+                    ("observacion_id", "TEXT"),
+                    ("scraping_run_id", "INTEGER")
+                ]:
+                    if col_name not in cols:
+                        cursor.execute(f"ALTER TABLE precios_registro ADD COLUMN {col_name} {col_def};")
 
             cursor.executescript(schema_sql)
 
@@ -751,8 +760,304 @@ def tienda_comercializa_marca(tienda_nombre: str, marca: str) -> bool:
 
 
 # -----------------------------------------------------------------------------
-# CONSULTAS DE DOMINIO Y ACCESO A DATOS (DAO HÍBRIDO: SUPABASE + SQLITE)
+# PERSISTENCIA TRANSACCIONAL ATÓMICA Y CONTROL DE ERRORES DE SCRAPING
 # -----------------------------------------------------------------------------
+def registrar_observacion_oferta(observacion: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Persistencia transaccional de una observación de precio/stock:
+    - Valida precio actual > 0, precio normal válido, stock explícito y URL válida.
+    - Soporta Supabase RPC si está disponible.
+    - Fallback y soporte nativo en SQLite local con transacción atómica (ofertas_actuales + precios_registro).
+    - Propaga excepciones y garantiza que nunca se creen ofertas ficticias ni se altere el estado
+      con datos inválidos o fallos de scraping.
+    """
+    if not isinstance(observacion, dict):
+        raise ValueError("La observación debe ser un diccionario válido")
+
+    variante_id = observacion.get("variante_id")
+    perfume_id = observacion.get("perfume_id")
+    tienda_id = observacion.get("tienda_id")
+    precio_actual = observacion.get("precio_actual")
+    precio_normal = observacion.get("precio_normal")
+    en_stock = observacion.get("en_stock")
+    url_producto = (observacion.get("url_producto") or "").strip()
+    volumen_ml = observacion.get("volumen_ml") or 100
+    scraping_run_id = observacion.get("scraping_run_id")
+
+    # Validaciones obligatorias de negocio
+    if tienda_id is None:
+        raise ValueError("tienda_id es obligatorio")
+    if variante_id is None and perfume_id is None:
+        raise ValueError("Se requiere al menos variante_id o perfume_id")
+    if precio_actual is None or not isinstance(precio_actual, (int, float)) or int(precio_actual) <= 0:
+        raise ValueError("El precio actual confirmado debe ser un entero positivo")
+    precio_actual = int(precio_actual)
+
+    if precio_normal is not None:
+        if not isinstance(precio_normal, (int, float)) or int(precio_normal) <= 0:
+            raise ValueError("El precio normal debe ser un entero positivo o None")
+        precio_normal = int(precio_normal)
+
+    if en_stock is None or not isinstance(en_stock, bool):
+        raise ValueError("El stock debe ser explícito (True o False), no desconocido ni nulo")
+
+    if not url_producto or not (url_producto.startswith("http://") or url_producto.startswith("https://")):
+        raise ValueError("Se requiere una URL HTTP(S) válida")
+
+    # 1. Intentar llamar a RPC en Supabase si está disponible
+    sb = get_supabase()
+    if sb and is_supabase_disponible() and variante_id:
+        try:
+            rpc_res = sb.rpc("registrar_observacion_oferta", {
+                "p_variante_id": variante_id,
+                "p_tienda_id": tienda_id,
+                "p_precio_actual": precio_actual,
+                "p_precio_normal": precio_normal,
+                "p_en_stock": en_stock,
+                "p_url_producto": url_producto,
+                "p_scraping_run_id": scraping_run_id
+            }).execute()
+            if rpc_res.data:
+                return rpc_res.data
+        except Exception as e:
+            logger.debug(f"RPC Supabase registrar_observacion_oferta omitida o no instalada ({e}), sincronizando vía capa local.")
+
+    # 2. Persistencia Transaccional Atómica en SQLite Local
+    init_db()
+    with get_db_cursor(commit=True) as cursor:
+        # Asegurar perfume_id y variante_id
+        if not variante_id and perfume_id:
+            cursor.execute(
+                "SELECT id FROM variantes_perfume WHERE perfume_id = ? AND ABS(volumen_ml - ?) < 1 LIMIT 1;",
+                (perfume_id, volumen_ml)
+            )
+            row_v = cursor.fetchone()
+            if row_v:
+                variante_id = row_v["id"]
+            else:
+                cursor.execute("SELECT tipo, nombre FROM perfumes WHERE id = ?;", (perfume_id,))
+                row_p = cursor.fetchone()
+                tipo_p = row_p["tipo"] if row_p else "Eau de Parfum"
+                slug_v = f"perfume-{perfume_id}-{int(volumen_ml)}ml"
+                cursor.execute("""
+                INSERT OR IGNORE INTO variantes_perfume (perfume_id, concentracion, volumen_ml, formato, slug, activa)
+                VALUES (?, ?, ?, 'regular', ?, 1);
+                """, (perfume_id, tipo_p, volumen_ml, slug_v))
+                cursor.execute(
+                    "SELECT id FROM variantes_perfume WHERE perfume_id = ? AND ABS(volumen_ml - ?) < 1 LIMIT 1;",
+                    (perfume_id, volumen_ml)
+                )
+                row_v = cursor.fetchone()
+                variante_id = row_v["id"] if row_v else 1
+        elif variante_id and not perfume_id:
+            cursor.execute("SELECT perfume_id, volumen_ml FROM variantes_perfume WHERE id = ?;", (variante_id,))
+            row_v = cursor.fetchone()
+            if row_v:
+                perfume_id = row_v["perfume_id"]
+                volumen_ml = row_v["volumen_ml"]
+            else:
+                raise ValueError(f"La variante_id {variante_id} no existe")
+
+        # Comprobar si existe oferta previa
+        cursor.execute(
+            "SELECT * FROM ofertas_actuales WHERE variante_id = ? AND tienda_id = ?;",
+            (variante_id, tienda_id)
+        )
+        row_oferta = cursor.fetchone()
+
+        ahora = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        obs_uuid = str(observacion.get("observacion_id") or uuid.uuid4())
+        p_normal_final = precio_normal if precio_normal else (row_oferta["precio_normal"] if row_oferta else precio_actual)
+
+        if not row_oferta:
+            # Crear nueva oferta
+            estado_ini = 'activa' if en_stock else 'agotada'
+            cursor.execute("""
+            INSERT INTO ofertas_actuales (
+                variante_id, tienda_id, precio_actual, precio_normal, en_stock, url_producto,
+                estado, ultima_verificacion_exitosa, ultimo_intento, ultimo_cambio_confirmado,
+                fallos_consecutivos, ultimo_error, created_at, updated_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, NULL, ?, ?);
+            """, (variante_id, tienda_id, precio_actual, p_normal_final, int(en_stock), url_producto,
+                  estado_ini, ahora, ahora, ahora, ahora, ahora))
+            oferta_id = cursor.lastrowid
+            tipo_evento = 'observacion_inicial'
+            campos_mod = ['precio_actual', 'en_stock', 'url_producto']
+            if precio_normal:
+                campos_mod.append('precio_normal')
+            resultado = 'creada'
+
+            cursor.execute("""
+            INSERT INTO precios_registro (
+                perfume_id, tienda_id, precio_actual, precio_normal, en_stock,
+                volumen_ml, url_producto, fecha_registro, variante_id, tipo_evento,
+                campos_modificados, observacion_id, scraping_run_id
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+            """, (perfume_id, tienda_id, precio_actual, p_normal_final, int(en_stock),
+                  volumen_ml, url_producto, ahora, variante_id, tipo_evento,
+                  json.dumps(campos_mod), obs_uuid, scraping_run_id))
+
+            return {
+                "oferta_id": oferta_id,
+                "resultado": resultado,
+                "tipo_evento": tipo_evento,
+                "campos_modificados": campos_mod,
+                "precio_anterior": None,
+                "precio_nuevo": precio_actual,
+                "stock_anterior": None,
+                "stock_nuevo": en_stock,
+                "url_anterior": None,
+                "url_nueva": url_producto
+            }
+        else:
+            # Oferta preexistente: comparar campos para detectar variaciones
+            oferta_id = row_oferta["id"]
+            precio_ant = row_oferta["precio_actual"]
+            stock_ant = bool(row_oferta["en_stock"])
+            url_ant = row_oferta["url_producto"]
+            p_norm_ant = row_oferta["precio_normal"]
+
+            campos_mod = []
+            if precio_ant != precio_actual:
+                campos_mod.append('precio_actual')
+            if stock_ant != en_stock:
+                campos_mod.append('en_stock')
+            if url_ant != url_producto:
+                campos_mod.append('url_producto')
+            if precio_normal and p_norm_ant != precio_normal:
+                campos_mod.append('precio_normal')
+
+            if len(campos_mod) == 0:
+                # Sin cambios confirmados: sólo actualizar verificación
+                cursor.execute("""
+                UPDATE ofertas_actuales
+                SET ultima_verificacion_exitosa = ?, ultimo_intento = ?,
+                    fallos_consecutivos = 0, ultimo_error = NULL,
+                    estado = ?, updated_at = ?
+                WHERE id = ?;
+                """, (ahora, ahora, 'activa' if en_stock else 'agotada', ahora, oferta_id))
+                return {
+                    "oferta_id": oferta_id,
+                    "resultado": "sin_cambios",
+                    "tipo_evento": None,
+                    "campos_modificados": []
+                }
+
+            # Determinar tipo de evento
+            if len(campos_mod) > 1:
+                tipo_evento = 'cambio_multiple'
+            elif campos_mod[0] == 'precio_actual':
+                tipo_evento = 'cambio_precio'
+            elif campos_mod[0] == 'en_stock':
+                tipo_evento = 'cambio_stock'
+            elif campos_mod[0] == 'url_producto':
+                tipo_evento = 'cambio_url'
+            else:
+                tipo_evento = 'cambio_datos'
+
+            cursor.execute("""
+            UPDATE ofertas_actuales
+            SET precio_actual = ?, precio_normal = ?, en_stock = ?, url_producto = ?,
+                estado = ?, ultima_verificacion_exitosa = ?, ultimo_intento = ?,
+                ultimo_cambio_confirmado = ?, fallos_consecutivos = 0,
+                ultimo_error = NULL, updated_at = ?
+            WHERE id = ?;
+            """, (precio_actual, p_normal_final, int(en_stock), url_producto,
+                  'activa' if en_stock else 'agotada', ahora, ahora, ahora, ahora, oferta_id))
+            resultado = 'actualizada'
+
+            cursor.execute("""
+            INSERT INTO precios_registro (
+                perfume_id, tienda_id, precio_actual, precio_normal, en_stock,
+                volumen_ml, url_producto, fecha_registro, variante_id, tipo_evento,
+                campos_modificados, observacion_id, scraping_run_id
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+            """, (perfume_id, tienda_id, precio_actual, p_normal_final, int(en_stock),
+                  volumen_ml, url_producto, ahora, variante_id, tipo_evento,
+                  json.dumps(campos_mod), obs_uuid, scraping_run_id))
+
+            return {
+                "oferta_id": oferta_id,
+                "resultado": resultado,
+                "tipo_evento": tipo_evento,
+                "campos_modificados": campos_mod,
+                "precio_anterior": precio_ant,
+                "precio_nuevo": precio_actual,
+                "stock_anterior": stock_ant,
+                "stock_nuevo": en_stock,
+                "url_anterior": url_ant,
+                "url_nueva": url_producto
+            }
+
+
+def registrar_fallo_scraping(
+    tienda_id: int,
+    mensaje: str,
+    variante_id: Optional[int] = None,
+    perfume_id: Optional[int] = None
+) -> Dict[str, Any]:
+    """
+    Registra un fallo de extracción sin alterar el precio actual, stock ni URL confirmada.
+    """
+    if tienda_id is None:
+        raise ValueError("tienda_id es obligatorio")
+    if not mensaje or not str(mensaje).strip():
+        raise ValueError("Debe indicarse el motivo del fallo")
+
+    ahora = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    msg_clean = str(mensaje).strip()[:2000]
+
+    # Intentar RPC en Supabase si está disponible
+    sb = get_supabase()
+    if sb and is_supabase_disponible() and variante_id:
+        try:
+            rpc_res = sb.rpc("registrar_fallo_scraping", {
+                "p_variante_id": variante_id,
+                "p_tienda_id": tienda_id,
+                "p_mensaje": msg_clean
+            }).execute()
+            if rpc_res.data:
+                return rpc_res.data
+        except Exception as e:
+            logger.debug(f"RPC registrar_fallo_scraping en Supabase omitida ({e}).")
+
+    init_db()
+    with get_db_cursor(commit=True) as cursor:
+        target_variante_id = variante_id
+        if not target_variante_id and perfume_id:
+            cursor.execute("SELECT id FROM variantes_perfume WHERE perfume_id = ? LIMIT 1;", (perfume_id,))
+            row_v = cursor.fetchone()
+            if row_v:
+                target_variante_id = row_v["id"]
+
+        if not target_variante_id:
+            return {"resultado": "fallo_sin_variante", "mensaje": msg_clean}
+
+        cursor.execute(
+            "SELECT id, fallos_consecutivos, precio_actual, en_stock FROM ofertas_actuales WHERE variante_id = ? AND tienda_id = ?;",
+            (target_variante_id, tienda_id)
+        )
+        row_oferta = cursor.fetchone()
+
+        if not row_oferta:
+            return {"resultado": "fallo_sin_oferta", "mensaje": msg_clean}
+
+        nueva_cuenta = (row_oferta["fallos_consecutivos"] or 0) + 1
+        cursor.execute("""
+        UPDATE ofertas_actuales
+        SET ultimo_intento = ?, fallos_consecutivos = ?, ultimo_error = ?, updated_at = ?
+        WHERE id = ?;
+        """, (ahora, nueva_cuenta, msg_clean, ahora, row_oferta["id"]))
+
+        return {
+            "resultado": "fallo_registrado",
+            "oferta_id": row_oferta["id"],
+            "fallos_consecutivos": nueva_cuenta,
+            "precio_actual": row_oferta["precio_actual"],
+            "en_stock": bool(row_oferta["en_stock"])
+        }
+
+
 def registrar_precio(
     perfume_id: int,
     tienda_id: int,
@@ -763,36 +1068,16 @@ def registrar_precio(
     fecha: Optional[str] = None,
     volumen_ml: int = 100
 ) -> None:
-    """Inserta una captura periódica de precio en Supabase y en SQLite local."""
-    if fecha is None:
-        fecha = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-    # 1. Guardar en Supabase si está disponible
-    sb = get_supabase()
-    if sb and is_supabase_disponible():
-        try:
-            sb.table("precios_registro").insert({
-                "perfume_id": perfume_id,
-                "tienda_id": tienda_id,
-                "precio_actual": precio_actual,
-                "precio_normal": precio_normal,
-                "en_stock": bool(en_stock),
-                "volumen_ml": volumen_ml,
-                "url_producto": url_producto,
-                "fecha_registro": fecha
-            }).execute()
-        except Exception as e:
-            logger.warning(f"No se pudo guardar precio en Supabase: {e}")
-
-    # 2. Respaldo determinista en SQLite
-    try:
-        with get_db_cursor(commit=True) as cursor:
-            cursor.execute("""
-            INSERT INTO precios_registro (perfume_id, tienda_id, precio_actual, precio_normal, en_stock, volumen_ml, url_producto, fecha_registro)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?);
-            """, (perfume_id, tienda_id, precio_actual, precio_normal, int(en_stock), volumen_ml, url_producto, fecha))
-    except Exception as e:
-        logger.error(f"Error registrando precio en SQLite: {e}")
+    """Wrapper retrocompatible que delega en la persistencia transaccional registrar_observacion_oferta."""
+    registrar_observacion_oferta({
+        "perfume_id": perfume_id,
+        "tienda_id": tienda_id,
+        "precio_actual": precio_actual,
+        "precio_normal": precio_normal,
+        "en_stock": bool(en_stock),
+        "url_producto": url_producto,
+        "volumen_ml": volumen_ml
+    })
 
 
 def obtener_catalogo(

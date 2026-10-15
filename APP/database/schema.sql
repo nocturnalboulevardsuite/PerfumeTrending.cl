@@ -44,7 +44,62 @@ CREATE TABLE IF NOT EXISTS tiendas (
     puntos_reputacion INTEGER DEFAULT 20
 );
 
--- 3. Registro Histórico de Precios (Time-Series & ETL Ingestion)
+-- 3. Variantes de Perfume (Presentación / SKU Físico)
+CREATE TABLE IF NOT EXISTS variantes_perfume (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    perfume_id INTEGER NOT NULL,
+    concentracion TEXT,
+    volumen_ml REAL DEFAULT 100,
+    formato TEXT NOT NULL DEFAULT 'regular',
+    identificador_externo TEXT,
+    slug TEXT UNIQUE,
+    activa BOOLEAN NOT NULL DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (perfume_id) REFERENCES perfumes (id) ON DELETE RESTRICT
+);
+
+-- 4. Ofertas Actuales Vivas (Snapshot de Precios y Stock por Comercio)
+CREATE TABLE IF NOT EXISTS ofertas_actuales (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    variante_id INTEGER NOT NULL,
+    tienda_id INTEGER NOT NULL,
+    precio_actual INTEGER,
+    precio_normal INTEGER,
+    en_stock BOOLEAN,
+    url_producto TEXT,
+    estado TEXT NOT NULL DEFAULT 'no_verificada',
+    ultima_verificacion_exitosa TIMESTAMP,
+    ultimo_intento TIMESTAMP,
+    ultimo_cambio_confirmado TIMESTAMP,
+    fallos_consecutivos INTEGER NOT NULL DEFAULT 0,
+    ultimo_error TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (variante_id, tienda_id),
+    FOREIGN KEY (variante_id) REFERENCES variantes_perfume (id) ON DELETE RESTRICT,
+    FOREIGN KEY (tienda_id) REFERENCES tiendas (id) ON DELETE RESTRICT
+);
+
+-- 5. Auditoría de Ejecuciones ETL (scraping_runs)
+CREATE TABLE IF NOT EXISTS scraping_runs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    tipo_scraper TEXT NOT NULL,
+    tienda_id INTEGER,
+    estado TEXT NOT NULL DEFAULT 'iniciado',
+    fecha_inicio TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    fecha_fin TIMESTAMP,
+    productos_procesados INTEGER NOT NULL DEFAULT 0,
+    ofertas_nuevas INTEGER NOT NULL DEFAULT 0,
+    cambios_precio INTEGER NOT NULL DEFAULT 0,
+    cambios_stock INTEGER NOT NULL DEFAULT 0,
+    cambios_url INTEGER NOT NULL DEFAULT 0,
+    errores INTEGER NOT NULL DEFAULT 0,
+    mensaje_detalle TEXT,
+    FOREIGN KEY (tienda_id) REFERENCES tiendas (id) ON DELETE RESTRICT
+);
+
+-- 6. Registro Histórico de Precios (Time-Series & ETL Ingestion)
 CREATE TABLE IF NOT EXISTS precios_registro (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     perfume_id INTEGER NOT NULL,
@@ -55,17 +110,54 @@ CREATE TABLE IF NOT EXISTS precios_registro (
     volumen_ml INTEGER DEFAULT 100,
     url_producto TEXT NOT NULL,
     fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    variante_id INTEGER,
+    tipo_evento TEXT,
+    campos_modificados TEXT,
+    observacion_id TEXT,
+    scraping_run_id INTEGER,
     FOREIGN KEY (perfume_id) REFERENCES perfumes (id) ON DELETE CASCADE,
-    FOREIGN KEY (tienda_id) REFERENCES tiendas (id) ON DELETE CASCADE
+    FOREIGN KEY (tienda_id) REFERENCES tiendas (id) ON DELETE CASCADE,
+    FOREIGN KEY (variante_id) REFERENCES variantes_perfume (id) ON DELETE RESTRICT,
+    FOREIGN KEY (scraping_run_id) REFERENCES scraping_runs (id) ON DELETE RESTRICT
 );
 
--- 4. Índices B-Tree de Alto Rendimiento (Optimización de Consultas)
+-- 7. Usuarios Registrados y Autenticación
+CREATE TABLE IF NOT EXISTS usuarios (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nombre TEXT NOT NULL,
+    email TEXT NOT NULL UNIQUE,
+    password_hash TEXT NOT NULL,
+    telefono TEXT DEFAULT '',
+    bio TEXT DEFAULT '',
+    foto_perfil TEXT DEFAULT '',
+    alerta_email BOOLEAN DEFAULT 1,
+    umbral_descuento INTEGER DEFAULT 10,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 8. Favoritos y Alertas de Precios por Usuario
+CREATE TABLE IF NOT EXISTS favoritos (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    usuario_id INTEGER NOT NULL,
+    perfume_id INTEGER NOT NULL,
+    precio_guardado INTEGER,
+    fecha_agregado TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (usuario_id, perfume_id),
+    FOREIGN KEY (usuario_id) REFERENCES usuarios (id) ON DELETE CASCADE,
+    FOREIGN KEY (perfume_id) REFERENCES perfumes (id) ON DELETE CASCADE
+);
+
+-- 9. Índices B-Tree de Alto Rendimiento (Optimización de Consultas)
 CREATE INDEX IF NOT EXISTS idx_precios_perfume ON precios_registro(perfume_id);
 CREATE INDEX IF NOT EXISTS idx_precios_tienda ON precios_registro(tienda_id);
 CREATE INDEX IF NOT EXISTS idx_precios_fecha ON precios_registro(fecha_registro);
 CREATE INDEX IF NOT EXISTS idx_precios_volumen ON precios_registro(perfume_id, volumen_ml);
 CREATE INDEX IF NOT EXISTS idx_precios_stock_act ON precios_registro(en_stock, precio_actual);
+CREATE INDEX IF NOT EXISTS idx_precios_variante ON precios_registro(variante_id);
 CREATE INDEX IF NOT EXISTS idx_perfumes_marca ON perfumes(marca);
 CREATE INDEX IF NOT EXISTS idx_perfumes_genero ON perfumes(genero);
 CREATE INDEX IF NOT EXISTS idx_perfumes_arabe ON perfumes(es_arabe);
 CREATE INDEX IF NOT EXISTS idx_tiendas_trust ON tiendas(trust_score DESC);
+CREATE INDEX IF NOT EXISTS idx_ofertas_variante ON ofertas_actuales(variante_id);
+CREATE INDEX IF NOT EXISTS idx_ofertas_tienda ON ofertas_actuales(tienda_id);
+CREATE INDEX IF NOT EXISTS idx_favoritos_user ON favoritos(usuario_id);
