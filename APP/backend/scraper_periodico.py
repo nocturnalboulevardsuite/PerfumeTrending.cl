@@ -37,6 +37,11 @@ import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util import Retry
 
+try:
+    from curl_cffi import requests as curl_requests
+except ImportError:
+    curl_requests = None
+
 # Ajuste de codificación para consola Windows
 if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
     try:
@@ -553,6 +558,81 @@ def extraer_precio_paris(
     return {"exito": False}
 
 
+def extraer_variedades_ripley(
+    session: requests.Session,
+    url_directa: Optional[str],
+    perfume_nombre: str,
+    marca: str = "",
+    volumen_ml_defecto: Optional[int] = None
+) -> List[Dict[str, Any]]:
+    """
+    Extrae múltiples presentaciones de Ripley Chile (30ml, 50ml, 60ml, 100ml, 200ml, etc.):
+    Utiliza curl_cffi para emulación nativa de TLS Chrome (evasión transparente de Cloudflare 403)
+    y lee la estructura de productos desde __NEXT_DATA__.
+    """
+    variedades: List[Dict[str, Any]] = []
+    vols_vistos = set()
+    q = urllib.parse.quote(perfume_nombre)
+    url_search = f"https://simple.ripley.cl/search/{q}"
+
+    headers = {
+        "User-Agent": random.choice(USER_AGENTS),
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "es-CL,es;q=0.9,en;q=0.8",
+    }
+
+    try:
+        if curl_requests is not None:
+            res = curl_requests.get(url_search, headers=headers, impersonate="chrome124", timeout=14)
+        else:
+            res = session.get(url_search, headers=obtener_headers_navegador(), timeout=10)
+
+        if res.status_code == 200:
+            soup = BeautifulSoup(res.text, "html.parser")
+            tag = soup.find("script", id="__NEXT_DATA__")
+            if tag and tag.text:
+                data = json.loads(tag.text)
+                prods = data.get("props", {}).get("pageProps", {}).get("findabilityProps", {}).get("data", {}).get("products", [])
+                tokens = [t.lower() for t in perfume_nombre.split() if len(t) > 3]
+                for p in prods:
+                    d_name = p.get("name", "")
+                    if not es_producto_perfume_valido(d_name):
+                        continue
+                    name_lower = d_name.lower()
+                    if not any(tok in name_lower for tok in tokens):
+                        continue
+                    p_act = p.get("priceNumber", 0)
+                    p_norm = p.get("masterPriceNumber", p_act) or p_act
+                    if not p_act or p_act < 10000:
+                        continue
+                    vol = extraer_volumen_ml(d_name) or volumen_ml_defecto or 100
+                    if vol in vols_vistos:
+                        continue
+                    vols_vistos.add(vol)
+                    in_stock = bool(p.get("inStock", True))
+                    p_id = p.get("parentProductID") or p.get("sku")
+                    prod_url = f"https://simple.ripley.cl/{p_id}" if p_id else url_search
+                    variedades.append({
+                        "exito": True,
+                        "precio_actual": p_act,
+                        "precio_normal": p_norm if p_norm > p_act else p_act,
+                        "url": prod_url,
+                        "en_stock": in_stock,
+                        "volumen_ml": vol,
+                        "metodo": "Ripley Chrome Engine"
+                    })
+    except Exception as e:
+        logger.warning(f"Error consultando Ripley para '{perfume_nombre}': {e}")
+
+    # Fallback a URL directa si no hubo resultados en búsqueda viva
+    if not variedades and url_directa:
+        res_old = extraer_precio_ripley(session, url_directa, perfume_nombre, volumen_ml_defecto)
+        if res_old.get("exito"):
+            variedades.append(res_old)
+
+    return variedades
+
+
 def extraer_precio_ripley(
     session: requests.Session,
     url_directa: str,
@@ -797,16 +877,15 @@ def ejecutar_ciclo_scraping_y_descubrimiento() -> Dict[str, Any]:
                         volumen_ml_defecto=vol_ml_base
                     )
 
-                # Rama D: Ripley (Schema.org y selectores DOM)
+                # Rama D: Ripley (Búsqueda viva Next.js + curl_cffi Chrome TLS)
                 elif "ripley" in t_nom.lower():
-                    res_rip = extraer_precio_ripley(
+                    lista_variedades = extraer_variedades_ripley(
                         session=session,
-                        url_directa=url_directa_guardada or f"https://simple.ripley.cl/search/{urllib.parse.quote(p_nom)}",
+                        url_directa=url_directa_guardada,
                         perfume_nombre=p_nom,
-                        volumen_ml=vol_ml_base
+                        marca=p_marca,
+                        volumen_ml_defecto=vol_ml_base
                     )
-                    if res_rip.get("exito"):
-                        lista_variedades = [res_rip]
 
                 # 5. Procesamiento y persistencia de cada variedad extraída
                 if lista_variedades:
