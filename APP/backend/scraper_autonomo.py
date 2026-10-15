@@ -60,7 +60,8 @@ try:
         init_db,
         get_supabase,
         is_supabase_disponible,
-        registrar_precio
+        registrar_precio,
+        registrar_observacion_oferta
     )
     from backend.normalizador import (
         extraer_volumen_ml,
@@ -76,7 +77,8 @@ except ImportError:
         init_db,
         get_supabase,
         is_supabase_disponible,
-        registrar_precio
+        registrar_precio,
+        registrar_observacion_oferta
     )
     from normalizador import (
         extraer_volumen_ml,
@@ -420,36 +422,25 @@ def ejecutar_descubrimiento_autonomo(
                             if v_price <= 0:
                                 continue
 
-                            v_compare = int(float(v.get("compare_at_price") or v_price))
-                            v_stock = 1 if v.get("available", True) else 0
+                            v_avail = v.get("available")
+                            v_stock = bool(v_avail) if v_avail is not None else True
                             v_title = v.get("title", "")
                             volumen_ml = extraer_volumen_ml(f"{raw_title} {v_title}")
 
-                            # Registrar en Supabase
-                            if supabase_activo and sb and perfume_id_sb and t_id_supabase:
-                                try:
-                                    sb.table("precios_registro").insert({
-                                        "perfume_id": perfume_id_sb,
-                                        "tienda_id": t_id_supabase,
-                                        "precio_actual": v_price,
-                                        "precio_normal": v_compare,
-                                        "en_stock": bool(v_stock),
-                                        "volumen_ml": volumen_ml,
-                                        "url_producto": url_producto,
-                                        "fecha_registro": ahora
-                                    }).execute()
-                                except Exception as e:
-                                    logger.debug(f"Aviso guardando variante en Supabase: {e}")
-
-                            # Registrar en SQLite
-                            cursor.execute("""
-                            INSERT INTO precios_registro (
-                                perfume_id, tienda_id, precio_actual, precio_normal, en_stock, volumen_ml, url_producto, fecha_registro
-                            )
-                            VALUES (?, ?, ?, ?, ?, ?, ?, ?);
-                            """, (perfume_id_sqlite, t_id_sqlite, v_price, v_compare, v_stock, volumen_ml, url_producto, ahora))
-
-                            precios_registrados += 1
+                            # Persistencia atómica de oferta viva e historial
+                            try:
+                                registrar_observacion_oferta({
+                                    "perfume_id": perfume_id_sqlite,
+                                    "tienda_id": t_id_sqlite,
+                                    "precio_actual": v_price,
+                                    "precio_normal": v_compare,
+                                    "en_stock": v_stock,
+                                    "volumen_ml": volumen_ml,
+                                    "url_producto": url_producto
+                                })
+                                precios_registrados += 1
+                            except Exception as ex_obs:
+                                logger.warning(f"Aviso registrando oferta de {nombre_limpio}: {ex_obs}")
 
                 except Exception as e:
                     err_msg = f"Fallo procesando {t_nombre} página {pag}: {e}"
