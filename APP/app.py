@@ -1377,20 +1377,34 @@ st.markdown(f"""
         align-items: center;
         justify-content: center;
         gap: 6px;
-        margin-top: 4px;
-        padding-top: 6px;
-        border-top: 1px dashed {border_color};
+        margin-top: 6px;
+        padding: 4px 10px;
+        background-color: { "rgba(255, 255, 255, 0.04)" if is_dark else "rgba(0, 0, 0, 0.03)" };
+        border-radius: 6px;
+        border: 1px solid { border_color };
     }}
     .price-label {{
-        font-size: 0.72rem;
+        font-size: 0.74rem;
         color: {subtext_color};
         text-transform: uppercase;
-        letter-spacing: 0.5px;
+        font-weight: 600;
+        letter-spacing: 0.4px;
     }}
     .price-val {{
-        font-size: 0.95rem;
+        font-size: 0.96rem;
+        font-weight: 800;
+        color: { "#4ade80" if is_dark else "#15803d" };
+        letter-spacing: 0.2px;
+    }}
+    .price-val-agotado {{
+        font-size: 0.8rem;
         font-weight: 700;
-        color: { "#4ade80" if is_dark else "#16a34a" };
+        color: { "#f87171" if is_dark else "#dc2626" };
+        letter-spacing: 0.3px;
+    }}
+    .out-of-stock-card-price {{
+        background-color: { "rgba(239, 68, 68, 0.08)" if is_dark else "rgba(239, 68, 68, 0.05)" } !important;
+        border-color: { "rgba(239, 68, 68, 0.2)" if is_dark else "rgba(239, 68, 68, 0.15)" } !important;
     }}
 
     /* TARJETAS ESENCIAS */
@@ -1887,7 +1901,22 @@ if st.session_state['current_page'] == 'home':
                     img_src = get_image_src(p.get('imagen_url'))
                     
                     mejor_p = p.get('mejor_precio')
-                    mejor_p_txt = f"${mejor_p:,.0f} CLP".replace(",", ".") if mejor_p else "Ver tiendas"
+                    if mejor_p and mejor_p > 0:
+                        precio_num_txt = f"${mejor_p:,.0f} CLP".replace(",", ".")
+                        precio_html = f"""
+                        <div class="card-perfume-price">
+                            <span class="price-label">Desde</span>
+                            <span class="price-val">{precio_num_txt}</span>
+                        </div>
+                        """
+                        overlay_badge_html = f'<div class="overlay-price-badge">Mejor oferta: {precio_num_txt}</div>'
+                    else:
+                        precio_html = f"""
+                        <div class="card-perfume-price out-of-stock-card-price">
+                            <span class="price-val-agotado">Sin stock</span>
+                        </div>
+                        """
+                        overlay_badge_html = '<div class="overlay-price-badge" style="background: rgba(239, 68, 68, 0.2); border-color: rgba(239, 68, 68, 0.4); color: #f87171;">Agotado en tiendas</div>'
 
                     card_html = f"""
                     <div class="catalog-card">
@@ -1898,7 +1927,7 @@ if st.session_state['current_page'] == 'home':
                                 <div class="overlay-info"><b>Marca:</b> {p['marca']} ({tipo_txt})</div>
                                 <div class="overlay-info"><b>Origen:</b> {pais_origen}</div>
                                 <div class="overlay-info overlay-notes" style="margin-top: 4px;"><b>Notas:</b> {notas_txt}</div>
-                                <div class="overlay-price-badge">Mejor oferta: {mejor_p_txt}</div>
+                                {overlay_badge_html}
                             </div>
                         </div>
                         <div class="card-footer-info">
@@ -1906,10 +1935,7 @@ if st.session_state['current_page'] == 'home':
                                 <div class="card-perfume-name" title="{p['nombre']}">{p['nombre']}</div>
                                 <div class="card-perfume-brand">{p['marca']}</div>
                             </div>
-                            <div class="card-perfume-price">
-                                <span class="price-label">Mejor precio</span>
-                                <span class="price-val">{mejor_p_txt}</span>
-                            </div>
+                            {precio_html}
                         </div>
                     </div>
                     """

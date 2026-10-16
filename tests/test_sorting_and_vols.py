@@ -42,5 +42,14 @@ class TestSortingAndVols(unittest.TestCase):
             if seen_out_of_stock:
                 self.assertFalse(p.get('en_stock', True), "In-stock item found after out-of-stock item!")
 
+    def test_obtener_catalogo_real_price(self):
+        from backend.database import obtener_catalogo
+        catalogo = obtener_catalogo()
+        self.assertTrue(len(catalogo) > 0)
+        bleu = next((p for p in catalogo if p['id'] == 1), None)
+        self.assertIsNotNone(bleu)
+        # In Supabase ofertas_actuales, Bleu de Chanel in-stock best price is 181500 (Paris)
+        self.assertEqual(bleu['mejor_precio'], 181500)
+
 if __name__ == '__main__':
     unittest.main()

@@ -1320,7 +1320,8 @@ def obtener_catalogo(
     sb = get_supabase()
     if sb and is_supabase_disponible():
         try:
-            query = sb.table("vista_catalogo").select("*")
+            # 1. Consultar catálogo de perfumes desde Supabase
+            query = sb.table("perfumes").select("*")
 
             if busqueda:
                 term = busqueda.strip()
@@ -1331,17 +1332,36 @@ def obtener_catalogo(
             elif categoria == "remates":
                 query = query.eq("en_remate", True)
 
-            if orden == "precio_asc":
-                query = query.order("mejor_precio", desc=False, nulls_first=False)
-            elif orden == "precio_desc":
-                query = query.order("mejor_precio", desc=True, nulls_first=False)
-            elif orden == "nombre_asc":
-                query = query.order("nombre", desc=False)
-            else:
-                query = query.order("id", desc=False)
+            resp_p = query.execute()
+            perfumes = resp_p.data or []
 
-            resp = query.execute()
-            perfumes = resp.data or []
+            # 2. Consultar mejores precios reales y EN STOCK desde ofertas_actuales en Supabase
+            resp_of = sb.table("ofertas_actuales").select(
+                "precio_actual, en_stock, variantes_perfume!inner(perfume_id)"
+            ).in_("estado", ["activa"]).eq("en_stock", True).gt("precio_actual", 0).execute()
+
+            precios_map = {}
+            for o in (resp_of.data or []):
+                vp = o.get("variantes_perfume") or {}
+                pid = vp.get("perfume_id")
+                p_act = o.get("precio_actual", 0)
+                if pid and p_act > 0:
+                    if pid not in precios_map or p_act < precios_map[pid]:
+                        precios_map[pid] = p_act
+
+            # Asignar mejor_precio real en stock
+            for p in perfumes:
+                p_id = p.get("id")
+                p["mejor_precio"] = precios_map.get(p_id, None)
+
+            if orden == "precio_asc":
+                perfumes.sort(key=lambda x: (x.get("mejor_precio") is None, x.get("mejor_precio") or 999999999))
+            elif orden == "precio_desc":
+                perfumes.sort(key=lambda x: (x.get("mejor_precio") is None, -(x.get("mejor_precio") or 0)))
+            elif orden == "nombre_asc":
+                perfumes.sort(key=lambda x: x.get("nombre", "").lower())
+            else:
+                perfumes.sort(key=lambda x: x.get("id", 0))
 
             if esencias:
                 perfumes_filtrados = []
@@ -1354,7 +1374,7 @@ def obtener_catalogo(
 
             return perfumes
         except Exception as e:
-            logger.warning(f"Error consultando vista_catalogo en Supabase ({e}), recurriendo a SQLite.")
+            logger.warning(f"Error consultando perfumes en Supabase ({e}), recurriendo a SQLite de respaldo.")
 
     # Fallback SQLite
     init_db()
