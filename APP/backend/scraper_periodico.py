@@ -303,9 +303,7 @@ def extraer_variedades_falabella(
                 if tag and tag.string:
                     data = json.loads(tag.string)
                     pdata = data.get("props", {}).get("pageProps", {}).get("productData", {})
-                    is_prod_out = bool(pdata.get("isOutOfStock", False)) or any(
-                        w in res.text.lower() for w in ['justo se agotó', 'justo se agoto', 'sin stock', 'producto agotado', 'agotado temporalmente']
-                    )
+                    is_prod_out = bool(pdata.get("isOutOfStock", False))
                     skus = pdata.get("variants", []) or pdata.get("skus", [])
                     prod_name = pdata.get("name", perfume_nombre)
                     for v in skus:
@@ -328,7 +326,7 @@ def extraer_variedades_falabella(
                         if p_act == 0 and prices:
                             p_act = clean_digits(prices[0].get("price", ["0"])[0])
                         if p_act >= 10000:
-                            is_out = bool(v.get("isOutOfStock", False)) or is_prod_out
+                            is_out = bool(v.get("isOutOfStock", False)) or is_prod_out or (v.get("isPurchaseable") is False)
                             vols_vistos.add(vol)
                             variedades.append({
                                 "exito": True,
@@ -376,9 +374,7 @@ def extraer_variedades_falabella(
                                 if tag_p and tag_p.string:
                                     data_p = json.loads(tag_p.string)
                                     pdata = data_p.get("props", {}).get("pageProps", {}).get("productData", {})
-                                    is_prod_out = bool(pdata.get("isOutOfStock", False)) or any(
-                                        w in res_p.text.lower() for w in ['justo se agotó', 'justo se agoto', 'sin stock', 'producto agotado', 'agotado temporalmente']
-                                    )
+                                    is_prod_out = bool(pdata.get("isOutOfStock", False))
                                     skus = pdata.get("variants", []) or pdata.get("skus", [])
                                     for v in skus:
                                         v_name = v.get("name") or d_name
@@ -400,7 +396,7 @@ def extraer_variedades_falabella(
                                         if p_act == 0 and prices:
                                             p_act = clean_digits(prices[0].get("price", ["0"])[0])
                                         if p_act >= 10000:
-                                            is_out = bool(v.get("isOutOfStock", False)) or is_prod_out
+                                            is_out = bool(v.get("isOutOfStock", False)) or is_prod_out or (v.get("isPurchaseable") is False)
                                             vols_vistos.add(vol)
                                             variedades.append({
                                                 "exito": True,
@@ -444,9 +440,13 @@ def extraer_precio_falabella(
     perfume_nombre: str,
     volumen_ml: Optional[int] = None
 ) -> Dict[str, Any]:
-    """Retrocompatibilidad con pruebas unitarias."""
+    """Retrocompatibilidad con pruebas unitarias y selección de volumen específico."""
     vars_found = extraer_variedades_falabella(session, url_directa, perfume_nombre, "", volumen_ml)
     if vars_found:
+        if volumen_ml:
+            exacto = [v for v in vars_found if v.get("volumen_ml") == volumen_ml]
+            if exacto:
+                return exacto[0]
         return vars_found[0]
     return {"exito": False}
 
@@ -569,9 +569,13 @@ def extraer_precio_paris(
     perfume_nombre: str,
     volumen_ml: Optional[int] = None
 ) -> Dict[str, Any]:
-    """Retrocompatibilidad con pruebas unitarias."""
+    """Retrocompatibilidad con pruebas unitarias y selección de volumen específico."""
     vars_found = extraer_variedades_paris(session, url_directa, perfume_nombre, "", volumen_ml)
     if vars_found:
+        if volumen_ml:
+            exacto = [v for v in vars_found if v.get("volumen_ml") == volumen_ml]
+            if exacto:
+                return exacto[0]
         return vars_found[0]
     return {"exito": False}
 
