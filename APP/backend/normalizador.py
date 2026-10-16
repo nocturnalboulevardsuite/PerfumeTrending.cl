@@ -12,7 +12,7 @@ para la estandarización de metadatos de perfumes provenientes de catálogos y t
 """
 
 import re
-from typing import List, Optional, Tuple
+from typing import Any, List, Optional, Tuple, Union
 
 # =============================================================================
 # CONSTANTES Y LISTAS DE CONTROL
@@ -169,6 +169,33 @@ def es_arabe(marca: str, nombre: str = "") -> bool:
     return any(k in texto for k in lineas_iconicas)
 
 
+def es_precio_valido(precio: Optional[Any]) -> bool:
+    """
+    Validador de sanidad comercial para precios de perfumes en CLP (pesos chilenos).
+    
+    Descarta:
+    - Precios nulos, vacíos o no numéricos.
+    - Precios menores a $8.000 CLP (generalmente muestras de 1ml, decants no oficiales o errores).
+    - Precios iguales o mayores a $1.000.000 CLP (valores atípicos fuera de escala comercial retail).
+    - Placeholders de comercio electrónico como $9.999.999 o $9.999.990 (utilizados por tiendas
+      como Yauras Perfumes para productos agotados o preventas cerradas).
+    """
+    if precio is None:
+        return False
+    try:
+        p = int(round(float(precio)))
+    except (ValueError, TypeError):
+        return False
+
+    if p < 8000:
+        return False
+    if p >= 1000000:
+        return False
+    if p in (9999999, 9999990, 999999):
+        return False
+    return True
+
+
 def es_producto_perfume_valido(titulo: str, tags: Optional[List[str]] = None) -> bool:
     """
     Validador de integridad: filtra y descarta productos no relacionados (accesorios,
@@ -236,7 +263,10 @@ def limpiar_nombre_perfume(titulo: str, marca: str = "") -> str:
     for r in ruidos:
         limpio = re.sub(rf'\b{r}\b', '', limpio, flags=re.IGNORECASE)
 
-    # 6. Limpieza de caracteres residuales, puntuaciones y espacios múltiples
+    # 6. Remover sufijos de género aislados de catálogos e-commerce (ej: ' H', ' M', ' U')
+    limpio = re.sub(r'\s+[hmuHMU]\b', '', limpio)
+
+    # 7. Limpieza de caracteres residuales, puntuaciones y espacios múltiples
     limpio = re.sub(r'[-–—/|()\[\]:]', ' ', limpio)
     limpio = re.sub(r'\s+', ' ', limpio).strip()
 

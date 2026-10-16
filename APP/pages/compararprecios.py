@@ -45,6 +45,19 @@ except ImportError:
     crear_usuario = None
     verificar_usuario = None
 
+try:
+    from backend.normalizador import es_precio_valido
+except ImportError:
+    try:
+        from normalizador import es_precio_valido
+    except ImportError:
+        def es_precio_valido(p):
+            try:
+                val = int(round(float(p)))
+                return 8000 <= val < 1000000 and val not in (9999999, 9999990, 999999)
+            except Exception:
+                return False
+
 # =============================================================================
 # BLOQUE 1: CACHÉ EN MEMORIA DE ALTO RENDIMIENTO (STREAMLIT CACHE DATA)
 # -----------------------------------------------------------------------------
@@ -947,6 +960,8 @@ with col_img:
 
 with col_info:
     ref_precio = detalle.get('precio_referencia')
+    if not es_precio_valido(ref_precio):
+        ref_precio = None
     ref_str = f"${ref_precio:,.0f} CLP".replace(",", ".") if ref_precio else "Consultar"
     
     st.markdown(f"""
@@ -985,6 +1000,8 @@ st.markdown(f"<h3 style='font-size: 1.15rem; color: {text_color}; font-weight: 6
 # 4. Enlace de compra verificado con `resolver_url_oferta()`.
 # =============================================================================
 tiendas_db = get_cached_precios(selected_id)
+if tiendas_db:
+    tiendas_db = [t for t in tiendas_db if es_precio_valido(t.get('precio_actual'))]
 
 if not tiendas_db:
     st.info("Actualmente estamos sincronizando los precios en tiempo real para esta fragancia.")

@@ -924,11 +924,15 @@ def registrar_observacion_oferta(observacion: Optional[Dict[str, Any]] = None, *
     if precio_actual is None or not isinstance(precio_actual, (int, float)) or int(precio_actual) <= 0:
         raise ValueError("El precio actual confirmado debe ser un entero positivo")
     precio_actual = int(precio_actual)
+    if precio_actual < 8000 or precio_actual >= 1000000 or precio_actual in (9999999, 9999990, 999999):
+        raise ValueError(f"Precio fuera de rango comercial ({precio_actual}). Se descartan precios irreales o placeholders como $9.999.999.")
 
     if precio_normal is not None:
         if not isinstance(precio_normal, (int, float)) or int(precio_normal) <= 0:
             raise ValueError("El precio normal debe ser un entero positivo o None")
         precio_normal = int(precio_normal)
+        if precio_normal >= 1000000 or precio_normal in (9999999, 9999990, 999999):
+            precio_normal = None
 
     if en_stock is None or not isinstance(en_stock, bool):
         raise ValueError("El stock debe ser explícito (True o False), no desconocido ni nulo")
@@ -1558,6 +1562,16 @@ def guardar_o_actualizar_perfume_scraped(
     volumen_ml: int = 100
 ) -> Dict[str, Any]:
     """Inserta o actualiza un perfume descubierto tanto en Supabase como en SQLite local."""
+    # Validación comercial: descartar placeholders de tiendas agotadas (como $9.999.999) o valores irreales
+    try:
+        p_act_int = int(round(float(precio_actual)))
+    except (ValueError, TypeError):
+        return {"exito": False, "motivo": f"Precio inválido: {precio_actual}"}
+
+    if p_act_int < 8000 or p_act_int >= 1000000 or p_act_int in (9999999, 9999990, 999999):
+        logger.warning(f"Descartando perfume '{nombre}' con precio comercial inválido/placeholder (${p_act_int:,} CLP)")
+        return {"exito": False, "motivo": f"Precio fuera de rango comercial (${p_act_int})"}
+
     fecha_actual = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     # 1. Persistencia en Supabase

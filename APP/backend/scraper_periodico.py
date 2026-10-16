@@ -78,7 +78,7 @@ try:
         get_supabase,
         is_supabase_disponible
     )
-    from backend.normalizador import es_producto_perfume_valido, extraer_volumen_ml, coincide_con_perfume
+    from backend.normalizador import es_producto_perfume_valido, extraer_volumen_ml, coincide_con_perfume, es_precio_valido
 except ImportError:
     from database import (
         guardar_o_actualizar_perfume_scraped,
@@ -92,7 +92,7 @@ except ImportError:
         get_supabase,
         is_supabase_disponible
     )
-    from normalizador import es_producto_perfume_valido, extraer_volumen_ml, coincide_con_perfume
+    from normalizador import es_producto_perfume_valido, extraer_volumen_ml, coincide_con_perfume, es_precio_valido
 
 # Pool de User-Agents residenciales modernos
 USER_AGENTS = [
@@ -245,13 +245,14 @@ def extraer_variedades_shopify(
                 p_comp_raw = p.get("compare_at_price_max") or p.get("compare_at_price_min")
                 precio_norm = int(float(p_comp_raw)) if p_comp_raw else precio_act
 
-                if precio_act >= 10000:
+                if es_precio_valido(precio_act):
                     vols_vistos.add(vol_encontrado)
                     clean_url = f"https://www.{dominio}" + p.get("url", "").split("?")[0]
+                    norm_valido = precio_norm if (es_precio_valido(precio_norm) and precio_norm > precio_act) else precio_act
                     variedades.append({
                         "exito": True,
                         "precio_actual": precio_act,
-                        "precio_normal": precio_norm if precio_norm > precio_act else precio_act,
+                        "precio_normal": norm_valido,
                         "url": clean_url,
                         "en_stock": bool(p.get("available", True)),
                         "volumen_ml": vol_encontrado,
@@ -331,13 +332,14 @@ def extraer_variedades_falabella(
                                     p_norm = val
                             if p_act == 0 and prices:
                                 p_act = clean_digits(prices[0].get("price", ["0"])[0])
-                            if p_act >= 10000:
+                            if es_precio_valido(p_act):
                                 is_out = bool(v.get("isOutOfStock", False)) or is_prod_out or (v.get("isPurchaseable") is False)
                                 vols_vistos.add(vol)
+                                norm_valido = p_norm if (es_precio_valido(p_norm) and p_norm > p_act) else p_act
                                 variedades.append({
                                     "exito": True,
                                     "precio_actual": p_act,
-                                    "precio_normal": p_norm if p_norm > p_act else p_act,
+                                    "precio_normal": norm_valido,
                                     "url": url_directa,
                                     "en_stock": not is_out,
                                     "volumen_ml": vol,
@@ -401,13 +403,14 @@ def extraer_variedades_falabella(
                                                 p_norm = val
                                         if p_act == 0 and prices:
                                             p_act = clean_digits(prices[0].get("price", ["0"])[0])
-                                        if p_act >= 10000:
+                                        if es_precio_valido(p_act):
                                             is_out = bool(v.get("isOutOfStock", False)) or is_prod_out or (v.get("isPurchaseable") is False)
                                             vols_vistos.add(vol)
+                                            norm_valido = p_norm if (es_precio_valido(p_norm) and p_norm > p_act) else p_act
                                             variedades.append({
                                                 "exito": True,
                                                 "precio_actual": p_act,
-                                                "precio_normal": p_norm if p_norm > p_act else p_act,
+                                                "precio_normal": norm_valido,
                                                 "url": prod_url,
                                                 "en_stock": not is_out,
                                                 "volumen_ml": vol,
@@ -421,7 +424,7 @@ def extraer_variedades_falabella(
                         if prices:
                             p_act = clean_digits(prices[0].get("price", ["0"])[0])
                             vol = extraer_volumen_ml(d_name) or volumen_ml_defecto or 100
-                            if p_act >= 10000 and vol not in vols_vistos:
+                            if es_precio_valido(p_act) and vol not in vols_vistos:
                                 vols_vistos.add(vol)
                                 variedades.append({
                                     "exito": True,
@@ -495,7 +498,7 @@ def extraer_variedades_paris(
                             if p_raw:
                                 p_act = clean_digits(p_raw)
                                 vol = extraer_volumen_ml(p_name) or volumen_ml_defecto or 100
-                                if p_act >= 10000 and vol not in vols_vistos:
+                                if es_precio_valido(p_act) and vol not in vols_vistos:
                                     vols_vistos.add(vol)
                                     avail = str(off.get("availability", "")).lower()
                                     en_stock = False if ("outofstock" in avail or "agotado" in avail) else True
@@ -551,7 +554,7 @@ def extraer_variedades_paris(
                                 if p_raw:
                                     p_act = clean_digits(p_raw)
                                     vol = extraer_volumen_ml(p_name) or volumen_ml_defecto or 100
-                                    if p_act >= 10000 and vol not in vols_vistos:
+                                    if es_precio_valido(p_act) and vol not in vols_vistos:
                                         vols_vistos.add(vol)
                                         avail = str(off.get("availability", "")).lower()
                                         en_stock = False if ("outofstock" in avail or "agotado" in avail) else True
@@ -668,7 +671,7 @@ def extraer_variedades_ripley(
                                         price_obj = v.get("price", {})
                                         sale_p = price_obj.get("sale", {}).get("valueNumber") or price_obj.get("master", {}).get("valueNumber")
                                         norm_p = price_obj.get("master", {}).get("valueNumber") or sale_p
-                                        if not sale_p or sale_p < 10000:
+                                        if not sale_p or not es_precio_valido(sale_p):
                                             continue
 
                                         # Identificar volumen específico desde definingAttribute o attributes
@@ -704,10 +707,11 @@ def extraer_variedades_ripley(
                                             and "agotado" not in str(v.get("statusUI", "")).lower()
                                         )
 
+                                        norm_valido = norm_p if (es_precio_valido(norm_p) and norm_p > sale_p) else sale_p
                                         variedades.append({
                                             "exito": True,
                                             "precio_actual": sale_p,
-                                            "precio_normal": norm_p if norm_p > sale_p else sale_p,
+                                            "precio_normal": norm_valido,
                                             "url": pdp_url,
                                             "en_stock": in_stock,
                                             "volumen_ml": vol,
@@ -719,14 +723,15 @@ def extraer_variedades_ripley(
                     if not variedades:
                         p_act = p.get("priceNumber", 0)
                         p_norm = p.get("masterPriceNumber", p_act) or p_act
-                        if p_act and p_act >= 10000:
+                        if p_act and es_precio_valido(p_act):
                             vol = extraer_volumen_ml(p.get("name", "")) or volumen_ml_defecto or 100
                             if vol not in vols_vistos:
                                 vols_vistos.add(vol)
+                                norm_valido = p_norm if (es_precio_valido(p_norm) and p_norm > p_act) else p_act
                                 variedades.append({
                                     "exito": True,
                                     "precio_actual": p_act,
-                                    "precio_normal": p_norm if p_norm > p_act else p_act,
+                                    "precio_normal": norm_valido,
                                     "url": pdp_url or url_search,
                                     "en_stock": bool(p.get("inStock", True)),
                                     "volumen_ml": vol,
@@ -800,7 +805,7 @@ def extraer_precio_ripley(
                             p_act = clean_digits(offers["price"])
                             avail_r = str(offers.get("availability", "")).lower()
                             en_stock_r = False if ("outofstock" in avail_r or "agotado" in avail_r) else True
-                            if p_act >= 10000:
+                            if es_precio_valido(p_act):
                                 return {
                                     "exito": True,
                                     "precio_actual": p_act,
@@ -817,7 +822,7 @@ def extraer_precio_ripley(
             if p_val:
                 p_act = clean_digits(p_val.get_text())
                 agotado_dom = bool(soup.find(string=re.compile(r"agotado|sin stock", re.I)))
-                if p_act >= 10000:
+                if es_precio_valido(p_act):
                     return {
                         "exito": True,
                         "precio_actual": p_act,
@@ -1009,6 +1014,8 @@ def ejecutar_ciclo_scraping_y_descubrimiento() -> Dict[str, Any]:
                         if not var_data.get("exito"):
                             continue
                         precio_actual_final = var_data["precio_actual"]
+                        if not es_precio_valido(precio_actual_final):
+                            continue
                         precio_normal_final = var_data["precio_normal"]
                         url_final = var_data["url"]
                         vol_final = var_data.get("volumen_ml", vol_ml_base)
