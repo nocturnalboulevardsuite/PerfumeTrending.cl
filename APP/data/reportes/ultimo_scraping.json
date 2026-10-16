@@ -1,68 +1,68 @@
 {
-  "actualizaciones": 26,
-  "fecha": "2026-10-15 22:36:11",
-  "duracion_segundos": 85.46,
+  "actualizaciones": 380,
+  "fecha": "2026-10-16 12:03:57",
+  "duracion_segundos": 1559.09,
   "metadata": {
     "version_etl": "3.0.0",
     "sistema": "PerfumeTrending Professional Anti-Bot ETL",
-    "fecha_ejecucion": "2026-10-15 22:36:11",
-    "duracion_segundos": 85.46,
+    "fecha_ejecucion": "2026-10-16 12:03:57",
+    "duracion_segundos": 1559.09,
     "estado": "EXITOSO"
   },
   "metricas": {
-    "total_perfumes_catalogo": 134,
+    "total_perfumes_catalogo": 153,
     "total_tiendas_registradas": 8,
-    "precios_actualizados": 26,
-    "exclusiones_marca": 1031,
+    "precios_actualizados": 380,
+    "exclusiones_marca": 50,
     "errores_totales": 0
   },
   "estadisticas_tiendas": {
     "Falabella": {
-      "consultas": 12,
-      "exitos_en_vivo": 10,
-      "fallbacks_seguridad": 2,
+      "consultas": 153,
+      "exitos_en_vivo": 236,
+      "fallbacks_seguridad": 47,
       "trust_score": 96
     },
     "Paris": {
-      "consultas": 8,
+      "consultas": 153,
       "exitos_en_vivo": 0,
-      "fallbacks_seguridad": 8,
+      "fallbacks_seguridad": 153,
       "trust_score": 95
     },
     "Ripley": {
-      "consultas": 5,
+      "consultas": 153,
       "exitos_en_vivo": 0,
-      "fallbacks_seguridad": 5,
+      "fallbacks_seguridad": 153,
       "trust_score": 94
     },
     "Silk Perfumes": {
-      "consultas": 9,
-      "exitos_en_vivo": 9,
-      "fallbacks_seguridad": 0,
+      "consultas": 143,
+      "exitos_en_vivo": 136,
+      "fallbacks_seguridad": 54,
       "trust_score": 92
     },
     "Elite Perfumes": {
-      "consultas": 7,
-      "exitos_en_vivo": 7,
-      "fallbacks_seguridad": 0,
+      "consultas": 143,
+      "exitos_en_vivo": 78,
+      "fallbacks_seguridad": 90,
       "trust_score": 89
     },
     "DBS Beauty Store": {
-      "consultas": 0,
+      "consultas": 143,
       "exitos_en_vivo": 0,
-      "fallbacks_seguridad": 0,
+      "fallbacks_seguridad": 143,
       "trust_score": 91
     },
     "Alisha Perfumes": {
-      "consultas": 0,
-      "exitos_en_vivo": 0,
-      "fallbacks_seguridad": 0,
+      "consultas": 143,
+      "exitos_en_vivo": 98,
+      "fallbacks_seguridad": 67,
       "trust_score": 88
     },
     "Yauras Perfumes": {
-      "consultas": 0,
-      "exitos_en_vivo": 0,
-      "fallbacks_seguridad": 0,
+      "consultas": 143,
+      "exitos_en_vivo": 121,
+      "fallbacks_seguridad": 66,
       "trust_score": 88
     }
   },
@@ -73,9 +73,59 @@
       "precio_actual": 145200,
       "precio_normal": 145200,
       "tiene_descuento": false,
-      "origen": "Falabella Next Direct",
+      "origen": "Falabella Direct Variants",
+      "volumen_ml": 50,
+      "en_stock": false
+    },
+    {
+      "perfume": "Bleu de Chanel",
+      "tienda": "Falabella",
+      "precio_actual": 225500,
+      "precio_normal": 225500,
+      "tiene_descuento": false,
+      "origen": "Falabella Direct Variants",
+      "volumen_ml": 150,
+      "en_stock": false
+    },
+    {
+      "perfume": "Bleu de Chanel",
+      "tienda": "Falabella",
+      "precio_actual": 181500,
+      "precio_normal": 181500,
+      "tiene_descuento": false,
+      "origen": "Falabella Direct Variants",
       "volumen_ml": 100,
       "en_stock": false
+    },
+    {
+      "perfume": "YSL Libre",
+      "tienda": "Falabella",
+      "precio_actual": 125990,
+      "precio_normal": 125990,
+      "tiene_descuento": false,
+      "origen": "Falabella Direct Variants",
+      "volumen_ml": 50,
+      "en_stock": true
+    },
+    {
+      "perfume": "YSL Libre",
+      "tienda": "Falabella",
+      "precio_actual": 176990,
+      "precio_normal": 176990,
+      "tiene_descuento": false,
+      "origen": "Falabella Direct Variants",
+      "volumen_ml": 90,
+      "en_stock": true
+    },
+    {
+      "perfume": "YSL Libre",
+      "tienda": "Falabella",
+      "precio_actual": 157990,
+      "precio_normal": 157990,
+      "tiene_descuento": false,
+      "origen": "Falabella Direct Variants",
+      "volumen_ml": 100,
+      "en_stock": true
     },
     {
       "perfume": "YSL Libre",
@@ -83,8 +133,18 @@
       "precio_actual": 86990,
       "precio_normal": 86990,
       "tiene_descuento": false,
-      "origen": "Falabella Next Direct",
-      "volumen_ml": 90,
+      "origen": "Falabella Direct Variants",
+      "volumen_ml": 30,
+      "en_stock": true
+    },
+    {
+      "perfume": "YSL Libre",
+      "tienda": "Silk Perfumes",
+      "precio_actual": 54990,
+      "precio_normal": 120990,
+      "tiene_descuento": true,
+      "origen": "Shopify Multi-Suggest",
+      "volumen_ml": 30,
       "en_stock": true
     },
     {
@@ -93,128 +153,68 @@
       "precio_actual": 106990,
       "precio_normal": 235390,
       "tiene_descuento": true,
-      "origen": "Shopify Live Suggest",
+      "origen": "Shopify Multi-Suggest",
       "volumen_ml": 90,
       "en_stock": true
     },
     {
       "perfume": "YSL Libre",
-      "tienda": "Elite Perfumes",
-      "precio_actual": 110990,
-      "precio_normal": 129990,
+      "tienda": "Alisha Perfumes",
+      "precio_actual": 117990,
+      "precio_normal": 145490,
       "tiene_descuento": true,
-      "origen": "Shopify Live Suggest",
+      "origen": "Shopify Multi-Suggest",
+      "volumen_ml": 90,
+      "en_stock": true
+    },
+    {
+      "perfume": "YSL Libre",
+      "tienda": "Alisha Perfumes",
+      "precio_actual": 43990,
+      "precio_normal": 59990,
+      "tiene_descuento": true,
+      "origen": "Shopify Multi-Suggest",
+      "volumen_ml": 30,
+      "en_stock": false
+    },
+    {
+      "perfume": "YSL Libre",
+      "tienda": "Alisha Perfumes",
+      "precio_actual": 68990,
+      "precio_normal": 99990,
+      "tiene_descuento": true,
+      "origen": "Shopify Multi-Suggest",
+      "volumen_ml": 50,
+      "en_stock": false
+    },
+    {
+      "perfume": "YSL Libre",
+      "tienda": "Yauras Perfumes",
+      "precio_actual": 107900,
+      "precio_normal": 107900,
+      "tiene_descuento": false,
+      "origen": "Shopify Multi-Suggest",
       "volumen_ml": 90,
       "en_stock": true
     },
     {
       "perfume": "Dior Sauvage",
-      "tienda": "Silk Perfumes",
-      "precio_actual": 124990,
-      "precio_normal": 274990,
-      "tiene_descuento": true,
-      "origen": "Shopify Live Suggest",
-      "volumen_ml": 100,
-      "en_stock": true
-    },
-    {
-      "perfume": "Club de Nuit Intense Man",
       "tienda": "Falabella",
-      "precio_actual": 46990,
-      "precio_normal": 91990,
-      "tiene_descuento": true,
-      "origen": "Falabella Next Direct",
-      "volumen_ml": 100,
-      "en_stock": true
-    },
-    {
-      "perfume": "Club de Nuit Intense Man",
-      "tienda": "Silk Perfumes",
-      "precio_actual": 32990,
-      "precio_normal": 72590,
-      "tiene_descuento": true,
-      "origen": "Shopify Live Suggest",
-      "volumen_ml": 105,
-      "en_stock": true
-    },
-    {
-      "perfume": "Club de Nuit Intense Man",
-      "tienda": "Elite Perfumes",
-      "precio_actual": 32990,
-      "precio_normal": 59990,
-      "tiene_descuento": true,
-      "origen": "Shopify Live Suggest",
-      "volumen_ml": 105,
-      "en_stock": true
-    },
-    {
-      "perfume": "Khamrah",
-      "tienda": "Falabella",
-      "precio_actual": 33990,
-      "precio_normal": 54790,
-      "tiene_descuento": true,
-      "origen": "Falabella Next Direct",
-      "volumen_ml": 100,
-      "en_stock": true
-    },
-    {
-      "perfume": "Khamrah",
-      "tienda": "Silk Perfumes",
-      "precio_actual": 24990,
-      "precio_normal": 59390,
-      "tiene_descuento": true,
-      "origen": "Shopify Live Suggest",
-      "volumen_ml": 100,
-      "en_stock": true
-    },
-    {
-      "perfume": "Khamrah",
-      "tienda": "Elite Perfumes",
-      "precio_actual": 24990,
-      "precio_normal": 49990,
-      "tiene_descuento": true,
-      "origen": "Shopify Live Suggest",
-      "volumen_ml": 100,
-      "en_stock": true
-    },
-    {
-      "perfume": "Baccarat Rouge 540",
-      "tienda": "Falabella",
-      "precio_actual": 23990,
-      "precio_normal": 23990,
+      "precio_actual": 227800,
+      "precio_normal": 227800,
       "tiene_descuento": false,
-      "origen": "Falabella Next Search Healed",
-      "volumen_ml": 70,
+      "origen": "Falabella Live Variants",
+      "volumen_ml": 50,
       "en_stock": true
     },
     {
-      "perfume": "Acqua Di Gio",
+      "perfume": "Dior Sauvage",
       "tienda": "Falabella",
-      "precio_actual": 141990,
-      "precio_normal": 243990,
-      "tiene_descuento": true,
-      "origen": "Falabella Next Direct",
-      "volumen_ml": 100,
-      "en_stock": true
-    },
-    {
-      "perfume": "Acqua Di Gio",
-      "tienda": "Silk Perfumes",
-      "precio_actual": 79990,
-      "precio_normal": 175990,
-      "tiene_descuento": true,
-      "origen": "Shopify Live Suggest",
-      "volumen_ml": 100,
-      "en_stock": true
-    },
-    {
-      "perfume": "Acqua Di Gio",
-      "tienda": "Elite Perfumes",
-      "precio_actual": 94990,
-      "precio_normal": 159990,
-      "tiene_descuento": true,
-      "origen": "Shopify Live Suggest",
-      "volumen_ml": 100,
+      "precio_actual": 81500,
+      "precio_normal": 81500,
+      "tiene_descuento": false,
+      "origen": "Falabella Live Variants",
+      "volumen_ml": 30,
       "en_stock": true
     }
   ],
