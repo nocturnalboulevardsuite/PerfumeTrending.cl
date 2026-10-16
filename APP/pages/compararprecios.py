@@ -728,6 +728,49 @@ st.markdown(f"""
         background-color: #726255;
     }}
 
+    /* TARJETAS DE OFERTAS AGOTADAS (EN EL FONDO/AL FINAL) */
+    .price-card.out-of-stock {{
+        opacity: 0.68;
+        background-color: { "rgba(22, 24, 30, 0.55)" if is_dark else "rgba(244, 244, 246, 0.75)" } !important;
+        border-color: { "rgba(255, 255, 255, 0.05)" if is_dark else "rgba(0, 0, 0, 0.06)" } !important;
+        filter: grayscale(12%);
+    }}
+    .price-card.out-of-stock:hover {{
+        opacity: 0.9;
+        transform: translateY(-1px);
+        filter: grayscale(0%);
+        border-color: { "rgba(248, 113, 113, 0.35)" if is_dark else "rgba(220, 38, 38, 0.25)" } !important;
+    }}
+
+    /* SELECTOR DE PRESENTACIÓN ESTILO FALABELLA */
+    div[data-testid="stPills"] {{
+        gap: 8px !important;
+        margin-top: 4px !important;
+        margin-bottom: 16px !important;
+    }}
+    div[data-testid="stPills"] button {{
+        border-radius: 8px !important;
+        border: 1px solid {btn_border} !important;
+        background-color: {btn_bg} !important;
+        color: {text_color} !important;
+        font-weight: 600 !important;
+        font-size: 0.86rem !important;
+        letter-spacing: 0.3px !important;
+        padding: 6px 16px !important;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }}
+    div[data-testid="stPills"] button:hover {{
+        border-color: { "#d4c2a5" if is_dark else "#8c7b6d" } !important;
+        transform: translateY(-1px) !important;
+    }}
+    div[data-testid="stPills"] button[aria-checked="true"],
+    div[data-testid="stPills"] button[data-selected="true"] {{
+        background-color: { "#282c37" if is_dark else "#ede6dc" } !important;
+        border-color: { "#e2d5c4" if is_dark else "#8c7b6d" } !important;
+        color: { "#ffffff" if is_dark else "#111827" } !important;
+        box-shadow: 0 0 10px { "rgba(226, 213, 196, 0.25)" if is_dark else "rgba(140, 123, 109, 0.2)" } !important;
+    }}
+
     /* BRAND LOGO INTERACTIVO NATIVO 100% LIMPIO Y TRANSPARENTE */
     a.brand-logo-clean,
     a.brand-logo-clean:visited,
@@ -946,17 +989,155 @@ tiendas_db = get_cached_precios(selected_id)
 if not tiendas_db:
     st.info("Actualmente estamos sincronizando los precios en tiempo real para esta fragancia.")
 else:
-    # Identificar el mejor precio únicamente entre ofertas con stock disponible
-    precios_validos = [t['precio_actual'] for t in tiendas_db if t.get('precio_actual', 0) > 0 and t.get('en_stock', True)]
+    def extraer_volumen(item):
+        try:
+            val = item.get('volumen_ml')
+            if val is not None and float(val) > 0:
+                return int(round(float(val)))
+        except Exception:
+            pass
+        return 100
+
+    def esta_en_stock(item):
+        val = item.get('en_stock')
+        if val is None:
+            return True
+        if isinstance(val, str):
+            return val.lower() not in ('false', '0', 'agotado', 'f', 'no')
+        return bool(val)
+
+    # 1. Obtener todas las presentaciones de volumen (ml) disponibles para la fragancia
+    vols_disponibles = sorted(list({extraer_volumen(t) for t in tiendas_db}))
+    key_filtro = f"filtro_vol_{selected_id}"
+
+    # 2. Selector de presentación estilo Falabella ("Elige una opción:")
+    if vols_disponibles:
+        opciones_vol = ["Todos"] + [f"{v} ML" for v in vols_disponibles]
+        
+        sel_guardada = st.session_state.get(key_filtro, "Todos")
+        default_val = sel_guardada if sel_guardada in opciones_vol else "Todos"
+
+        # Pre-filtrar temporalmente para obtener métricas de stock antes de renderizar el selector
+        if sel_guardada and sel_guardada != "Todos":
+            try:
+                v_num_pre = int(sel_guardada.upper().replace("ML", "").strip())
+                pre_filtradas = [t for t in tiendas_db if extraer_volumen(t) == v_num_pre]
+            except Exception:
+                pre_filtradas = list(tiendas_db)
+        else:
+            pre_filtradas = list(tiendas_db)
+
+        if not pre_filtradas:
+            pre_filtradas = list(tiendas_db)
+
+        hay_stock_pre = any(esta_en_stock(t) for t in pre_filtradas)
+        if hay_stock_pre:
+            indicador_stock = f"<span style='color: {'#4ade80' if is_dark else '#2e7d32'}; font-size: 0.8rem; font-weight: 600; display: inline-flex; align-items: center; gap: 5px;'><span style='width: 7px; height: 7px; border-radius: 50%; background-color: {'#4ade80' if is_dark else '#2e7d32'};'></span> En stock</span>"
+        else:
+            indicador_stock = f"<span style='color: {'#f87171' if is_dark else '#dc2626'}; font-size: 0.8rem; font-weight: 600; display: inline-flex; align-items: center; gap: 5px;'><span style='width: 7px; height: 7px; border-radius: 50%; background-color: {'#f87171' if is_dark else '#dc2626'};'></span> Agotado en tiendas</span>"
+
+        st.markdown(
+            f"""
+            <div style="margin: 0 0 6px 0; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 0.95rem; font-weight: 700; color: {text_color}; letter-spacing: 0.3px;">
+                        Elige una opción:
+                    </span>
+                    {indicador_stock}
+                </div>
+                <span style="font-size: 0.78rem; color: {subtext_color};">
+                    Mostrando {len(pre_filtradas)} oferta{'s' if len(pre_filtradas) != 1 else ''} &bull; Ordenadas por precio (disponibles primero)
+                </span>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+        seleccion_vol = st.pills(
+            "Elige una opción (ml):",
+            options=opciones_vol,
+            default=default_val,
+            key=key_filtro,
+            label_visibility="collapsed"
+        )
+        if not seleccion_vol:
+            seleccion_vol = "Todos"
+
+        if seleccion_vol != "Todos":
+            try:
+                vol_num = int(seleccion_vol.upper().replace("ML", "").strip())
+                tiendas_filtradas = [t for t in tiendas_db if extraer_volumen(t) == vol_num]
+            except Exception:
+                tiendas_filtradas = list(tiendas_db)
+        else:
+            tiendas_filtradas = list(tiendas_db)
+    else:
+        seleccion_vol = "Todos"
+        tiendas_filtradas = list(tiendas_db)
+
+    if not tiendas_filtradas:
+        tiendas_filtradas = list(tiendas_db)
+
+    # 3. Ordenamiento inteligente estricto:
+    #    - Primero: ofertas con stock disponible (en_stock == True), ordenadas de menor a mayor precio.
+    #    - Al final: ofertas agotadas (en_stock == False), ordenadas de menor a mayor precio.
+    tiendas_ordenadas = sorted(
+        tiendas_filtradas,
+        key=lambda x: (
+            0 if esta_en_stock(x) else 1,
+            x.get('precio_actual', 0) if x.get('precio_actual', 0) > 0 else 999999999
+        )
+    )
+
+    # 4. Identificar el mejor precio únicamente entre ofertas con stock disponible dentro del filtro
+    precios_validos = [
+        t['precio_actual']
+        for t in tiendas_filtradas
+        if t.get('precio_actual', 0) > 0 and esta_en_stock(t)
+    ]
     min_precio = min(precios_validos) if precios_validos else 0
 
-    for item in tiendas_db:
+    total_agotados = len([t for t in tiendas_ordenadas if not esta_en_stock(t)])
+    total_disponibles = len(tiendas_ordenadas) - total_agotados
+
+    if not precios_validos:
+        st.markdown(
+            f"""
+            <div style="background-color: {'rgba(239, 68, 68, 0.1)' if is_dark else '#fef2f2'}; border: 1px solid {'rgba(239, 68, 68, 0.25)' if is_dark else '#fecaca'}; border-radius: 8px; padding: 10px 14px; margin: 4px 0 16px 0; display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 1.05rem;">🔴</span>
+                <span style="font-size: 0.85rem; color: {'#f87171' if is_dark else '#dc2626'}; font-weight: 600;">
+                    Presentación sin stock disponible en este momento. Mostrando últimos precios de referencia abajo.
+                </span>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+    # 5. Renderizado de tarjetas con separador antes de los agotados
+    separador_mostrado = False
+
+    for item in tiendas_ordenadas:
         p_act = item.get('precio_actual', 0)
         p_norm = item.get('precio_normal', 0)
-        vol_ml = item.get('volumen_ml', 100) or 100
-        en_stock = bool(item.get('en_stock', True))
+        vol_ml = extraer_volumen(item)
+        en_stock = esta_en_stock(item)
         is_best_deal = (p_act == min_precio and p_act > 0 and en_stock)
         
+        # Si pasamos a las ofertas agotadas y habían ofertas en stock, mostrar separador al final
+        if not en_stock and not separador_mostrado and total_disponibles > 0:
+            separador_mostrado = True
+            st.markdown(
+                f"""
+                <div style="margin: 24px 0 14px 0; display: flex; align-items: center; gap: 12px;">
+                    <span style="font-size: 0.78rem; font-weight: 700; color: {subtext_color}; text-transform: uppercase; letter-spacing: 0.8px;">
+                        Tiendas sin stock ({total_agotados})
+                    </span>
+                    <div style="flex: 1; height: 1px; background-color: {btn_border};"></div>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+
         card_class = "price-card best-deal" if is_best_deal else ("price-card" if en_stock else "price-card out-of-stock")
         
         if is_best_deal:
