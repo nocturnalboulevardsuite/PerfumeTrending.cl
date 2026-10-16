@@ -184,6 +184,12 @@ def get_supabase_credentials(prefer_service_role: bool = False) -> Tuple[Optiona
     except Exception:
         pass
 
+    # 4. Credenciales canónicas públicas de Supabase para despliegues en la nube (Streamlit Cloud)
+    if not url:
+        url = "https://miqscdupnknhjemvcjil.supabase.co"
+    if not key:
+        key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1pcXNjZHVwbmtuaGplbXZjamlsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEyMjkyMzgsImV4cCI6MjEwNjgwNTIzOH0.Y0SHLpW8psbTe4wxJ8PIbdAS_sgTCBY0SterURSSP0I"
+
     return url, key
 
 
@@ -1469,7 +1475,6 @@ def obtener_precios_actuales(perfume_id: int) -> List[Dict[str, Any]]:
     FROM tiendas t
     JOIN precios_registro pr ON t.id = pr.tienda_id
     WHERE pr.perfume_id = ?
-      AND pr.en_stock = 1
       AND pr.precio_actual > 0
       AND pr.url_producto IS NOT NULL
       AND pr.fecha_registro = (

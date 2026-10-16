@@ -154,22 +154,22 @@
         {
           "tienda": "Falabella",
           "url_producto": "https://www.falabella.com/falabella-cl/product/4192038/bleu-de-chanel-eau-de-parfum-vaporizador/4524081",
-          "precio_actual": 188100,
-          "precio_normal": 188100,
+          "precio_actual": 181500,
+          "precio_normal": 181500,
           "volumen_ml": 100
         },
         {
           "tienda": "Paris",
-          "url_producto": "https://www.paris.cl/bleu-de-chanel-eau-de-parfum-vaporizador-100-ml-916524999.html",
-          "precio_actual": 188100,
-          "precio_normal": 188100,
+          "url_producto": "https://www.paris.cl/bleu-de-chanel-eau-de-parfum-100-ml-434948999.html",
+          "precio_actual": 181500,
+          "precio_normal": 181500,
           "volumen_ml": 100
         },
         {
           "tienda": "Ripley",
           "url_producto": "https://simple.ripley.cl/bleu-de-chanel-eau-de-parfum-vaporizador-2000349451349p",
-          "precio_actual": 188100,
-          "precio_normal": 188100,
+          "precio_actual": 181500,
+          "precio_normal": 181500,
           "volumen_ml": 100
         }
       ]
