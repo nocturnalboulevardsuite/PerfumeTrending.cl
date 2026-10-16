@@ -303,6 +303,9 @@ def extraer_variedades_falabella(
                 if tag and tag.string:
                     data = json.loads(tag.string)
                     pdata = data.get("props", {}).get("pageProps", {}).get("productData", {})
+                    is_prod_out = bool(pdata.get("isOutOfStock", False)) or any(
+                        w in res.text.lower() for w in ['justo se agotó', 'justo se agoto', 'sin stock', 'producto agotado', 'agotado temporalmente']
+                    )
                     skus = pdata.get("variants", []) or pdata.get("skus", [])
                     prod_name = pdata.get("name", perfume_nombre)
                     for v in skus:
@@ -325,7 +328,7 @@ def extraer_variedades_falabella(
                         if p_act == 0 and prices:
                             p_act = clean_digits(prices[0].get("price", ["0"])[0])
                         if p_act >= 10000:
-                            is_out = bool(v.get("isOutOfStock", False))
+                            is_out = bool(v.get("isOutOfStock", False)) or is_prod_out
                             vols_vistos.add(vol)
                             variedades.append({
                                 "exito": True,
@@ -339,7 +342,7 @@ def extraer_variedades_falabella(
         except Exception as e:
             logger.debug(f"Aviso leyendo URL directa Falabella: {e}")
 
-    if variedades:
+    if variedades and any(v.get("en_stock") for v in variedades):
         return variedades
 
     # Intento 2: Búsqueda dinámica en vivo en Falabella
@@ -373,6 +376,9 @@ def extraer_variedades_falabella(
                                 if tag_p and tag_p.string:
                                     data_p = json.loads(tag_p.string)
                                     pdata = data_p.get("props", {}).get("pageProps", {}).get("productData", {})
+                                    is_prod_out = bool(pdata.get("isOutOfStock", False)) or any(
+                                        w in res_p.text.lower() for w in ['justo se agotó', 'justo se agoto', 'sin stock', 'producto agotado', 'agotado temporalmente']
+                                    )
                                     skus = pdata.get("variants", []) or pdata.get("skus", [])
                                     for v in skus:
                                         v_name = v.get("name") or d_name
@@ -394,7 +400,7 @@ def extraer_variedades_falabella(
                                         if p_act == 0 and prices:
                                             p_act = clean_digits(prices[0].get("price", ["0"])[0])
                                         if p_act >= 10000:
-                                            is_out = bool(v.get("isOutOfStock", False))
+                                            is_out = bool(v.get("isOutOfStock", False)) or is_prod_out
                                             vols_vistos.add(vol)
                                             variedades.append({
                                                 "exito": True,
@@ -466,30 +472,35 @@ def extraer_variedades_paris(
         try:
             res = session.get(url_directa, headers=headers, timeout=10)
             if res.status_code == 200:
-                soup = BeautifulSoup(res.text, "html.parser")
-                for s_tag in soup.find_all("script", type="application/ld+json"):
-                    if "Product" in s_tag.text:
-                        d = json.loads(s_tag.text)
-                        p_name = d.get("name", perfume_nombre)
-                        offers = d.get("offers", [])
-                        off = offers[0] if isinstance(offers, list) and offers else (offers if isinstance(offers, dict) else {})
-                        p_raw = off.get("price")
-                        if p_raw:
-                            p_act = clean_digits(p_raw)
-                            vol = extraer_volumen_ml(p_name) or volumen_ml_defecto or 100
-                            if p_act >= 10000 and vol not in vols_vistos:
-                                vols_vistos.add(vol)
-                                avail = str(off.get("availability", "")).lower()
-                                en_stock = False if ("outofstock" in avail or "agotado" in avail) else True
-                                variedades.append({
-                                    "exito": True,
-                                    "precio_actual": p_act,
-                                    "precio_normal": p_act,
-                                    "url": url_directa,
-                                    "en_stock": en_stock,
-                                    "volumen_ml": vol,
-                                    "metodo": "Paris Schema.org Direct"
-                                })
+                is_dead_paris = any(w in res.text.lower() for w in [
+                    'página en construcción', 'pagina en construccion',
+                    'mejorando tu experiencia', 'página no encontrada', 'no encontramos productos'
+                ])
+                if not is_dead_paris:
+                    soup = BeautifulSoup(res.text, "html.parser")
+                    for s_tag in soup.find_all("script", type="application/ld+json"):
+                        if "Product" in s_tag.text:
+                            d = json.loads(s_tag.text)
+                            p_name = d.get("name", perfume_nombre)
+                            offers = d.get("offers", [])
+                            off = offers[0] if isinstance(offers, list) and offers else (offers if isinstance(offers, dict) else {})
+                            p_raw = off.get("price")
+                            if p_raw:
+                                p_act = clean_digits(p_raw)
+                                vol = extraer_volumen_ml(p_name) or volumen_ml_defecto or 100
+                                if p_act >= 10000 and vol not in vols_vistos:
+                                    vols_vistos.add(vol)
+                                    avail = str(off.get("availability", "")).lower()
+                                    en_stock = False if ("outofstock" in avail or "agotado" in avail) else True
+                                    variedades.append({
+                                        "exito": True,
+                                        "precio_actual": p_act,
+                                        "precio_normal": p_act,
+                                        "url": url_directa,
+                                        "en_stock": en_stock,
+                                        "volumen_ml": vol,
+                                        "metodo": "Paris Schema.org Direct"
+                                    })
         except Exception as e:
             logger.debug(f"Aviso leyendo URL directa Paris: {e}")
 

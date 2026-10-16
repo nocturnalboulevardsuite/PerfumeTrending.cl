@@ -243,13 +243,29 @@ def limpiar_nombre_perfume(titulo: str, marca: str = "") -> str:
     return limpio.title()
 
 
+KNOWN_FLANKERS = [
+    "profondo", "profumo", "absolu", "gioia", "elixir", "cobalt",
+    "intensely", "absolutely", "freeze", "coral", "night", "sport",
+    "cologne", "parfum", "fraiche"
+]
+
+
 def coincide_con_perfume(titulo: str, perfume_nombre: str, marca: str = "") -> bool:
     """
     Verifica con alta fidelidad si el título de un producto de e-commerce corresponde a la fragancia.
-    Exige que todos los tokens significativos del nombre del perfume estén presentes en el título.
-    Evita falsos positivos cruzados (por ejemplo, evitar que 'Afnan Turathi' coincida con '9 PM').
+    - Exige que todos los tokens significativos del nombre del perfume estén presentes en el título.
+    - Aplica guardia de flankers: descarta productos que contengan nombres de flankers no presentes en el perfume buscado (ej: no emparejar 'Acqua Di Gio Profondo' con 'Acqua Di Gio').
+    - Usa límites de palabra (\b) para evitar cruces como 'gio' con 'gioia'.
     """
     tit = titulo.lower()
+    p_lower = perfume_nombre.lower()
+
+    # 1. Guardia de flankers: si el título contiene un flanker conocido que NO está en el perfume, descartar
+    for fl in KNOWN_FLANKERS:
+        if re.search(rf"\b{re.escape(fl)}\b", tit) and fl not in p_lower:
+            return False
+
+    # 2. Tokens significativos del perfume
     t_clean = re.sub(r"[^\w\s]", " ", perfume_nombre).lower()
     stop_words = {
         "de", "la", "el", "los", "las", "en", "pour", "for", "men", "women",
@@ -258,4 +274,13 @@ def coincide_con_perfume(titulo: str, perfume_nombre: str, marca: str = "") -> b
     tokens = [t for t in t_clean.split() if t not in stop_words]
     if not tokens:
         tokens = [t for t in t_clean.split()]
-    return all(tok in tit for tok in tokens)
+
+    for tok in tokens:
+        if tok.isdigit() or len(tok) <= 2:
+            if tok not in tit:
+                return False
+        else:
+            if not re.search(rf"\b{re.escape(tok)}\b", tit):
+                return False
+
+    return True

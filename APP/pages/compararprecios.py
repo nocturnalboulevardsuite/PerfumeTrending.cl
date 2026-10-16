@@ -90,16 +90,22 @@ def clean_html(html_str: str) -> str:
     """Limpia espacios iniciales y elimina saltos de línea para evitar que Streamlit interprete HTML como código."""
     return " ".join(line.strip() for line in html_str.splitlines() if line.strip())
 
-def resolver_url_oferta(tienda_nombre: str, perfume_nombre: str, url_prod: str, url_base: str) -> str:
+def resolver_url_oferta(tienda_nombre: str, perfume_nombre: str, url_prod: str, url_base: str, marca: str = "") -> str:
     """
     Retorna el enlace directo a la ficha del perfume exacto en la tienda.
-    Si por algún motivo no existe URL directa, usa la búsqueda directa en la tienda.
+    Si por algún motivo no existe URL directa o es una URL obsoleta / rota, redirige a la búsqueda de la tienda.
     """
-    if url_prod and url_prod.startswith("http") and url_prod != "#":
-        return url_prod
-
     t = (tienda_nombre or "").lower()
-    q = urllib.parse.quote(perfume_nombre.strip())
+    query_parts = f"{marca} {perfume_nombre}".strip() if (marca and marca.lower() not in perfume_nombre.lower()) else perfume_nombre.strip()
+    q = urllib.parse.quote(query_parts)
+
+    # Validar que la URL directa no sea un marcador o enlace muerto conocido
+    if url_prod and url_prod.startswith("http") and url_prod != "#":
+        # Descartar URLs de Paris u otras tiendas que redirigen a 'página en construcción'
+        url_lower = url_prod.lower()
+        if "paris.cl" in url_lower and ("434948999" in url_lower or "construccion" in url_lower or "experiencia" in url_lower):
+            return f"https://www.paris.cl/search?q={q}"
+        return url_prod
 
     if "falabella" in t:
         return f"https://www.falabella.com/falabella-cl/search?Ntt={q}"
@@ -113,6 +119,8 @@ def resolver_url_oferta(tienda_nombre: str, perfume_nombre: str, url_prod: str, 
         return f"https://www.eliteperfumes.cl/search?q={q}"
     elif "alisha" in t:
         return f"https://www.alisha.cl/search?q={q}"
+    elif "yauras" in t:
+        return f"https://www.yauras.cl/search?q={q}"
     elif "dbs" in t:
         return f"https://www.dbs.cl/search?q={q}"
 
@@ -963,7 +971,8 @@ else:
             tienda_nombre=item.get('tienda_nombre', ''),
             perfume_nombre=detalle.get('nombre', ''),
             url_prod=item.get('url_producto', ''),
-            url_base=item.get('url_base', '')
+            url_base=item.get('url_base', ''),
+            marca=detalle.get('marca', '')
         )
         badge_tienda = item.get('badge', 'Tienda Verificada')
         badge_vol = f"<span class='store-badge' style='background: {btn_bg}; border: 1px solid {btn_border}; font-weight: 600;'>{vol_ml}ml</span>" if vol_ml else ""
