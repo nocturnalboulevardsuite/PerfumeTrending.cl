@@ -224,3 +224,5 @@ APP/.streamlit/secrets.toml
 *.sqlite3
 APP/data/*.db
 data/*.db
+scratch/
+

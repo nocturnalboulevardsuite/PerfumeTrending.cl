@@ -11,8 +11,9 @@ para la estandarización de metadatos de perfumes provenientes de catálogos y t
 - Limpieza de títulos de e-commerce para obtener nombres canónicos y limpios.
 """
 
+from dataclasses import dataclass
 import re
-from typing import Any, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 # =============================================================================
 # CONSTANTES Y LISTAS DE CONTROL
@@ -278,126 +279,376 @@ def limpiar_nombre_perfume(titulo: str, marca: str = "") -> str:
     return limpio.title()
 
 
-MARCAS_CONOCIDAS_INTEGRIDAD = {
-    "chanel", "dior", "versace", "givenchy", "gaultier", "jean paul gaultier",
-    "armani", "giorgio armani", "carolina herrera", "paco rabanne", "rabanne",
-    "tom ford", "yves saint laurent", "saint laurent", "ysl", "creed",
-    "parfums de marly", "xerjoff", "maison francis kurkdjian", "kurkdjian", "mfk",
-    "azzaro", "dolce & gabbana", "dolce gabbana", "d&g", "calvin klein", "ck",
-    "hugo boss", "boss", "moschino", "valentino", "prada", "montblanc", "mont blanc",
-    "burberry", "gucci", "bvlgari", "bulgari", "narciso rodriguez", "hermes", "hermès",
-    "mugler", "thierry mugler", "loewe", "kenzo", "issey miyake", "lancome", "lancôme",
-    "guerlain", "ralph lauren", "antonio banderas", "benetton", "guess", "nike",
-    "rihanna", "ariana grande", "sabrina carpenter", "tous", "lattafa", "armaf",
-    "afnan", "rasasi", "al haramain", "orientica", "swiss arabian"
-}
+# =============================================================================
+# BLOQUE: MOTOR DE RESOLUCIÓN DETERMINISTA DE ENTIDADES (ENTITY RESOLUTION)
+# =============================================================================
 
-MARCAS_CLONES_DUPE = {
+@dataclass
+class ResultadoCoincidencia:
+    """Estructura de trazabilidad para validación y auditoría de ofertas."""
+    coincide: bool
+    confianza: float
+    motivo: str
+    marca_detectada: Optional[str] = None
+    flanker_detectado: Optional[str] = None
+    concentracion_detectada: Optional[str] = None
+    volumen_detectado: Optional[int] = None
+    formato_invalido: Optional[str] = None
+
+
+# Casas dedicadas de clones, dupes y equivalencias (mercado global y local)
+CASAS_CLON_DEDICADAS: Set[str] = {
     "fragrance world", "maison alhambra", "alhambra", "paris corner", "la french",
-    "french avenue", "barakkat", "orientica", "zimaya"
+    "french avenue", "barakkat", "orientica", "zimaya", "emper", "milestone",
+    "camara", "dumont", "flavia", "sterling", "pendora", "pendora scents",
+    "khalis", "ard al zaafaran", "al zaafaran", "my perfumes", "paris riviera",
+    "georges mezotti", "creation lamis", "dorall collection", "shirley may"
 }
 
-KNOWN_FLANKERS = [
-    # Cítricos / Frescos / Deportes
-    "energy", "sport", "cologne", "fraiche", "fresh", "freeze", "ice",
-    # Intensos / Fuego / Noche / Oscuros
-    "flame", "intense", "intensely", "absolutely", "extreme", "noir", "black", "night", "nuit", "dark",
-    # Maderas / Oud / Ámbar
-    "oud", "amber", "leather", "tobacco",
-    # Acuáticos / Profundos
-    "profondo", "profumo", "absolu", "ocean", "deep",
-    # Metales / Joyas / Colores
-    "rouge", "white", "blanche", "gold", "silver", "cobalt", "coral", "crystal", "bright", "pink",
-    # Ediciones de concentración superior o flankers icónicos
-    "elixir", "ultra", "lucky", "prive", "privé", "royal", "victory", "legend",
-    "platinum", "forever", "summer", "lover", "hero", "blush", "sparkling",
-    "dazzling", "najim", "gioia", "barakkat"
+# Marcas de prestigio / diseñador internacional reconocidas
+MARCAS_DISENADOR_PRESTIGIO: Dict[str, List[str]] = {
+    "christian dior": ["dior", "christian dior"],
+    "chanel": ["chanel"],
+    "versace": ["versace"],
+    "jean paul gaultier": ["jean paul gaultier", "gaultier", "jpg"],
+    "giorgio armani": ["giorgio armani", "armani"],
+    "carolina herrera": ["carolina herrera", "ch"],
+    "paco rabanne": ["paco rabanne", "rabanne"],
+    "tom ford": ["tom ford"],
+    "yves saint laurent": ["yves saint laurent", "saint laurent", "ysl"],
+    "creed": ["creed"],
+    "parfums de marly": ["parfums de marly", "de marly", "pdm"],
+    "xerjoff": ["xerjoff"],
+    "maison francis kurkdjian": ["maison francis kurkdjian", "francis kurkdjian", "mfk"],
+    "azzaro": ["azzaro"],
+    "dolce & gabbana": ["dolce & gabbana", "dolce gabbana", "dolce and gabbana", "d&g"],
+    "calvin klein": ["calvin klein", "ck"],
+    "hugo boss": ["hugo boss", "boss"],
+    "moschino": ["moschino"],
+    "valentino": ["valentino"],
+    "prada": ["prada"],
+    "montblanc": ["montblanc", "mont blanc"],
+    "burberry": ["burberry"],
+    "gucci": ["gucci"],
+    "bvlgari": ["bvlgari", "bulgari"],
+    "narciso rodriguez": ["narciso rodriguez"],
+    "hermes": ["hermes", "hermès"],
+    "mugler": ["mugler", "thierry mugler"],
+    "loewe": ["loewe"],
+    "kenzo": ["kenzo"],
+    "issey miyake": ["issey miyake"],
+    "lancome": ["lancome", "lancôme"],
+    "guerlain": ["guerlain"],
+    "ralph lauren": ["ralph lauren", "polo ralph lauren"],
+    "antonio banderas": ["antonio banderas", "banderas"],
+    "benetton": ["benetton"],
+    "guess": ["guess"],
+    "ariana grande": ["ariana grande"],
+    "rihanna": ["rihanna"],
+    "billie eilish": ["billie eilish", "eilish"],
+    "sabrina carpenter": ["sabrina carpenter"],
+    "tous": ["tous"]
+}
+
+# Casas orientales legítimas de alta gama y hype
+MARCAS_ORIENTALES_RECONOCIDAS: Dict[str, List[str]] = {
+    "lattafa": ["lattafa"],
+    "armaf": ["armaf"],
+    "afnan": ["afnan"],
+    "rasasi": ["rasasi"],
+    "al haramain": ["al haramain", "al-haramain", "haramain"],
+    "swiss arabian": ["swiss arabian"]
+}
+
+# Patrones de formatos y accesorios excluidos (evita asociar recargas o kits)
+FORMATOS_EXCLUIDOS: List[Tuple[str, str]] = [
+    (r"\b(recarga|recargable|refill|refillable|recharge)\b", "Recarga / Refill"),
+    (r"\b(set|estuche|cofre|gift\s*set|travel\s*set|pack\s*\+\s*)\b", "Set / Estuche"),
+    (r"\b(desodorante|deodorant|roll\s*on|roll-on)\b", "Desodorante"),
+    (r"\b(body\s*spray|bodyspray|body\s*mist|bodymist|body\s*splash|hair\s*mist)\b", "Body / Hair Mist"),
+    (r"\b(after\s*shave|after-shave|aftershave|balsamo|balm)\b", "After Shave"),
+    (r"\b(shower\s*gel|gel\s*de\s*ducha|shampoo|champu|jabon|jabón|soap|locion\s*corporal|body\s*lotion|crema)\b", "Baño / Cuidado Corporal"),
+    (r"\b(decant|muestra|sample|vial)\b", "Muestra / Decant"),
+    (r"\b(inspirad[oa]\s+en|imitaci[oó]n|equivalencia|tipo\s+|dupe)\b", "Imitación / Dupe explícito"),
 ]
 
+# Mapa de flankers conocidos y sus variantes de escritura
+FLANKERS_MAP: Dict[str, List[str]] = {
+    "elixir": [r"\belixir\b", r"\bl'elixir\b"],
+    "flame": [r"\bflame\b"],
+    "energy": [r"\benergy\b"],
+    "lucky": [r"\blucky\b"],
+    "royal": [r"\broyal\b"],
+    "prive": [r"\bprive\b", r"\bprivé\b"],
+    "profondo": [r"\bprofondo\b"],
+    "profumo": [r"\bprofumo\b"],
+    "absolu": [r"\babsolu\b", r"\babsolute\b", r"\babsolue\b"],
+    "intense": [r"\bintense\b", r"\bintensely\b", r"\bintenso\b"],
+    "extreme": [r"\bextreme\b", r"\bextremo\b"],
+    "noir": [r"\bnoir\b", r"\bblack\b", r"\bnight\b", r"\bnuit\b", r"\bdark\b"],
+    "white": [r"\bwhite\b", r"\bblanche\b"],
+    "rouge": [r"\brouge\b", r"\bred\b"],
+    "gold": [r"\bgold\b", r"\bdorado\b"],
+    "cobalt": [r"\bcobalt\b"],
+    "coral": [r"\bcoral\b"],
+    "crystal": [r"\bcrystal\b"],
+    "bright": [r"\bbright\b"],
+    "ultra": [r"\bultra\b"],
+    "victory": [r"\bvictory\b"],
+    "legend": [r"\blegend\b"],
+    "hero": [r"\bhero\b"],
+    "lover": [r"\blover\b"],
+    "blush": [r"\bblush\b"],
+    "sport": [r"\bsport\b"],
+    "fraiche": [r"\bfraiche\b", r"\beau\s+fraiche\b", r"\bfresh\b"],
+    "ice": [r"\bice\b", r"\bfreeze\b"],
+    "le beau": [r"\ble\s+beau\b", r"\bbeau\b"],
+    "bad boy": [r"\bbad\s+boy\b"],
+    "very good girl": [r"\bvery\s+good\s+girl\b"],
+    "good girl": [r"\bgood\s+girl\b"],
+    "dylan blue": [r"\bdylan\s*blue\b", r"\bdylan\b"],
+    "eros": [r"\beros\b"],
+    "the one": [r"\bthe\s*one\b"],
+    "light blue": [r"\blight\s*blue\b"],
+    "black xs": [r"\bblack\s*xs\b"],
+    "pure xs": [r"\bpure\s*xs\b"],
+    "le male": [r"\ble\s*male\b"],
+    "scandal": [r"\bscandal\b"],
+    "invictus": [r"\binvictus\b"],
+    "phantom": [r"\bphantom\b"],
+    "one million": [r"\b1\s*million\b", r"\bone\s*million\b"],
+    "sauvage": [r"\bsauvage\b"],
+    "bleu": [r"\bbleu\b"],
+    "libre": [r"\blibre\b"],
+    "toy boy": [r"\btoy\s*boy\b"],
+}
 
-def coincide_con_perfume(titulo: str, perfume_nombre: str, marca: str = "", concentracion: str = "") -> bool:
+
+def _normalizar_para_matching(s: str) -> str:
+    """Normaliza texto removiendo diacríticos y homogeneizando espacios."""
+    if not s:
+        return ""
+    t = s.lower()
+    t = t.replace("á", "a").replace("é", "e").replace("í", "i").replace("ó", "o").replace("ú", "u").replace("ñ", "n")
+    return t
+
+
+def coincide_entidad_detallada(
+    titulo: str,
+    perfume_nombre: str,
+    marca: str = "",
+    concentracion: str = "",
+    volumen_esperado: Optional[int] = None,
+    url: str = ""
+) -> ResultadoCoincidencia:
     """
-    Verifica con alta fidelidad e integridad si el título de un producto de e-commerce corresponde a la fragancia.
+    Motor determinista jerárquico de resolución de entidades.
     
-    Capacidades de Integridad:
-    1. Descarte inmediato de imitaciones, dupes y equivalencias ('inspirado en', 'tipo', etc.).
-    2. Integridad de Marca:
-       - Si el perfume buscado es de una casa original, descarta productos de casas clon (Fragrance World, Barakkat, etc.).
-       - En títulos estructurados ('MARCA | Producto' o 'MARCA - Producto'), exige que el prefijo sea compatible con la marca buscada.
-       - Si el título menciona explícitamente otra marca mayor conocida (ej: Givenchy buscando Maison Francis Kurkdjian), descarta.
-    3. Guardia de Flankers: si el título contiene un flanker conocido (ej: 'energy', 'flame', 'profondo', 'rouge') que no pertenece al perfume canónico, descarta.
-    4. Guardia de Género / Variantes: descarta 'Eros Woman' o 'Eros Pour Femme' si se busca el 'Eros' clásico masculino.
-    5. Coherencia de Concentración: evita cruces incompatibles (EDP vs EDT) cuando está especificado.
-    6. Verificación de Tokens: exige que todos los tokens significativos del nombre del perfume estén presentes.
+    Verifica con alta precisión si una oferta de e-commerce corresponde exactamente
+    al perfume canónico, evaluando de forma desacoplada:
+    1. Formato de producto (descarte de recargas, sets, cosméticos).
+    2. Integridad de marca (bloqueo total de casas clon en fragancias de diseñador).
+    3. Conflicto con marcas ajenas en el título o URL.
+    4. Guard de Flankers (rechazo si contiene flankers no solicitados o carece de requeridos).
+    5. Género y líneas cruzadas (ej: Libre vs Y, Scandal Homme vs Woman, Eros Men vs Woman).
+    6. Tokens nucleares obligatorios de la fragancia.
+    7. Compatibilidad de formulación / concentración (EDT vs EDP).
+    8. Verificación de volumen (ml) frente a la variante esperada.
     """
-    tit = titulo.lower()
-    p_lower = perfume_nombre.lower()
-    m_lower = marca.lower().strip() if marca else ""
-    c_lower = concentracion.lower().strip() if concentracion else ""
+    tit = _normalizar_para_matching(titulo)
+    p_norm = _normalizar_para_matching(perfume_nombre)
+    m_norm = _normalizar_para_matching(marca) if marca else ""
+    c_norm = _normalizar_para_matching(concentracion) if concentracion else ""
+    url_norm = _normalizar_para_matching(url) if url else ""
+    combo_text = f"{tit} {url_norm}"
 
-    # 0. Descarte inmediato de imitaciones, dupes o equivalencias
-    if re.search(r"\b(inspirad[oa]\s+en|imitaci[oó]n|equivalencia|tipo\s+|dupe)\b", tit):
-        return False
+    # 1. Guard de Formato de Producto (Recargas, Sets, Cosméticos, Decants)
+    for pattern, desc in FORMATOS_EXCLUIDOS:
+        if not re.search(pattern, p_norm):
+            if re.search(pattern, combo_text):
+                return ResultadoCoincidencia(
+                    coincide=False,
+                    confianza=0.0,
+                    motivo=f"Formato excluido detectado: {desc}",
+                    formato_invalido=desc
+                )
 
-    # 1. Validación estricta de Marca (Brand Integrity)
-    if m_lower:
-        # A. Si la marca buscada NO es una casa de clones, pero el título contiene una marca clon -> descartar
-        es_marca_clon = any(clon in m_lower for clon in MARCAS_CLONES_DUPE)
-        if not es_marca_clon:
-            if any(re.search(rf"\b{re.escape(clon)}\b", tit) for clon in MARCAS_CLONES_DUPE):
-                return False
+    # 2. Guard de Integridad de Marca y Clones Árabes
+    es_marca_clon_buscada = any(re.search(rf"\b{re.escape(clon)}\b", m_norm) for clon in CASAS_CLON_DEDICADAS)
+    es_marca_disenador = False
+    if not es_marca_clon_buscada:
+        for can_k, aliases in MARCAS_DISENADOR_PRESTIGIO.items():
+            if any(re.search(rf"\b{re.escape(a)}\b", m_norm) for a in aliases):
+                es_marca_disenador = True
+                break
+            if any(len(a) >= 4 and re.search(rf"\b{re.escape(a)}\b", p_norm) for a in aliases):
+                es_marca_disenador = True
+                break
 
-        # B. Títulos estructurados con delimitador (ej: 'GIVENCHY | Perfume Mujer L'Interdit...')
-        if "|" in titulo:
-            prefix_marca = titulo.split("|")[0].strip().lower()
-            for k_brand in MARCAS_CONOCIDAS_INTEGRIDAD:
-                if re.search(rf"\b{re.escape(k_brand)}\b", prefix_marca):
-                    if not (k_brand in m_lower or m_lower in k_brand or k_brand in p_lower):
-                        return False
+    if es_marca_disenador:
+        for clon in CASAS_CLON_DEDICADAS:
+            if re.search(rf"\b{re.escape(clon)}\b", combo_text):
+                return ResultadoCoincidencia(
+                    coincide=False,
+                    confianza=0.0,
+                    motivo=f"Casa clon detectada '{clon}' en producto de diseñador",
+                    marca_detectada=clon
+                )
+        for ar_k, aliases in MARCAS_ORIENTALES_RECONOCIDAS.items():
+            for a in aliases:
+                if re.search(rf"\b{re.escape(a)}\b", combo_text):
+                    return ResultadoCoincidencia(
+                        coincide=False,
+                        confianza=0.0,
+                        motivo=f"Casa oriental ajena '{a}' detectada en perfume de diseñador",
+                        marca_detectada=a
+                    )
 
-        # C. Conflicto con marcas reconocidas incompatibles en el título
-        for k_brand in MARCAS_CONOCIDAS_INTEGRIDAD:
-            if len(k_brand) >= 4 and re.search(rf"\b{re.escape(k_brand)}\b", tit):
-                if not (k_brand in m_lower or m_lower in k_brand or k_brand in p_lower):
-                    return False
+    # Conflicto con marcas de diseñador incompatibles en título o URL
+    for can_k, aliases in MARCAS_DISENADOR_PRESTIGIO.items():
+        es_marca_propia = any(re.search(rf"\b{re.escape(a)}\b", m_norm) for a in aliases) or any(re.search(rf"\b{re.escape(a)}\b", p_norm) for a in aliases)
+        if not es_marca_propia:
+            for a in aliases:
+                if len(a) >= 4 and re.search(rf"\b{re.escape(a)}\b", tit):
+                    return ResultadoCoincidencia(
+                        coincide=False,
+                        confianza=0.0,
+                        motivo=f"Conflicto de marca: se detectó marca ajena '{a}'",
+                        marca_detectada=a
+                    )
 
-    # 2. Guardia de concentración (evitar emparejar EDT si buscamos EDP, o viceversa)
-    if c_lower:
-        if ("parfum" in c_lower or "edp" in c_lower) and not ("toilette" in c_lower or "edt" in c_lower):
-            if ("toilette" in tit or "edt" in tit) and not ("eau de parfum" in tit or "edp" in tit):
-                return False
-        elif ("toilette" in c_lower or "edt" in c_lower) and not ("parfum" in c_lower or "edp" in c_lower):
-            if ("eau de parfum" in tit or "edp" in tit) and not ("toilette" in tit or "edt" in tit):
-                return False
+    # 3. Guard de Flankers (Positivos y Negativos)
+    for fl_key, patterns in FLANKERS_MAP.items():
+        flanker_en_perfume = any(re.search(p, p_norm) for p in patterns)
+        flanker_en_candidato = any(re.search(p, combo_text) for p in patterns)
 
-    # 3. Guardia de Flankers: si el título contiene un flanker que NO está en el nombre del perfume, descartar
-    for fl in KNOWN_FLANKERS:
-        if fl == "parfum" and "eau de parfum" in tit:
-            continue
-        if re.search(rf"\b{re.escape(fl)}\b", tit) and fl not in p_lower:
-            return False
+        if fl_key in ("noir", "white", "gold") and fl_key in p_norm:
+            pass
 
-    # 4. Guardia de Género / Variantes ('Woman', 'Pour Femme')
-    if re.search(rf"\b{re.escape(p_lower)}\s+(?:woman|femme|pour femme)\b", tit):
-        if not re.search(r"\b(woman|women|femme|mujer|dama|donna)\b", p_lower):
-            return False
+        if not flanker_en_perfume and flanker_en_candidato:
+            return ResultadoCoincidencia(
+                coincide=False,
+                confianza=0.0,
+                motivo=f"Flanker no solicitado '{fl_key}' detectado en candidato",
+                flanker_detectado=fl_key
+            )
+        elif flanker_en_perfume and not flanker_en_candidato:
+            return ResultadoCoincidencia(
+                coincide=False,
+                confianza=0.0,
+                motivo=f"Flanker obligatorio '{fl_key}' ausente en candidato",
+                flanker_detectado=fl_key
+            )
 
-    # 5. Tokens significativos del perfume
-    t_clean = re.sub(r"[^\w\s]", " ", perfume_nombre).lower()
+    # 4. Guard de Género y Líneas Cruzadas
+    if "libre" in p_norm and not ("libre" in tit or "libre" in url_norm):
+        return ResultadoCoincidencia(coincide=False, confianza=0.0, motivo="Línea 'Libre' ausente")
+    if "myslf" in combo_text and "myslf" not in p_norm:
+        return ResultadoCoincidencia(coincide=False, confianza=0.0, motivo="Línea 'MYSLF' no corresponde")
+    if re.search(r"\by\b", combo_text) and " y " not in f" {p_norm} " and not p_norm.startswith("y "):
+        if "yves saint laurent" in m_norm or "ysl" in m_norm:
+            if "libre" in p_norm:
+                return ResultadoCoincidencia(coincide=False, confianza=0.0, motivo="Línea masculina 'Y' no corresponde a 'Libre'")
+
+    if "scandal" in p_norm:
+        if "homme" in p_norm and any(re.search(r, tit) for r in [r"\bwoman\b", r"\bfemme\b", r"\bmujer\b", r"\bdama\b"]):
+            return ResultadoCoincidencia(coincide=False, confianza=0.0, motivo="Género femenino incompatible con Scandal Pour Homme")
+        if any(re.search(r, p_norm) for r in [r"\bwoman\b", r"\bfemme\b", r"\bmujer\b"]) and any(re.search(r, tit) for r in [r"\bhomme\b", r"\bmen\b", r"\bhombre\b"]):
+            return ResultadoCoincidencia(coincide=False, confianza=0.0, motivo="Género masculino incompatible con Scandal Woman")
+
+    if "eros" in p_norm and not any(w in p_norm for w in ["woman", "femme", "mujer", "dama"]):
+        if any(re.search(r, tit) for r in [r"\bwoman\b", r"\bfemme\b", r"\bmujer\b", r"\bdama\b"]):
+            return ResultadoCoincidencia(coincide=False, confianza=0.0, motivo="Eros Woman no coincide con Eros masculino")
+
+    # 5. Tokens nucleares obligatorios de la fragancia
     stop_words = {
-        "de", "la", "el", "los", "las", "en", "pour", "for", "men", "women",
-        "homme", "femme", "eau", "parfum", "toilette", "edp", "edt", "unisex"
+        "de", "la", "el", "los", "las", "en", "para", "por", "un", "una",
+        "pour", "for", "men", "women", "homme", "femme", "man", "woman",
+        "eau", "parfum", "toilette", "cologne", "edp", "edt", "edc",
+        "unisex", "perfume", "fragancia", "colonia", "spray", "vaporisateur",
+        "vaporizador", "natural", "original", "hombre", "mujer", "dama",
+        "nueva", "presentacion", "presentación"
     }
-    tokens = [t for t in t_clean.split() if t not in stop_words]
+
+    # Limpiar marca redundante de los tokens del nombre
+    p_clean_nom = p_norm
+    if m_norm:
+        p_clean_nom = re.sub(rf"\b{re.escape(m_norm)}\b", " ", p_clean_nom)
+    for acr in ["ysl", "jpg", "d&g", "ch", "ck", "mfk"]:
+        p_clean_nom = re.sub(rf"\b{acr}\b", " ", p_clean_nom)
+
+    t_clean = re.sub(r"[^\w\s]", " ", p_clean_nom)
+    tokens = [tok for tok in t_clean.split() if tok not in stop_words and len(tok) >= 2]
     if not tokens:
-        tokens = [t for t in t_clean.split()]
+        t_clean_orig = re.sub(r"[^\w\s]", " ", p_norm)
+        tokens = [tok for tok in t_clean_orig.split() if tok not in stop_words and len(tok) >= 2]
+        if not tokens:
+            tokens = [tok for tok in t_clean_orig.split() if len(tok) >= 2]
 
     for tok in tokens:
-        if tok.isdigit() or len(tok) <= 2:
-            if tok not in tit:
-                return False
-        else:
-            if not re.search(rf"\b{re.escape(tok)}\b", tit):
-                return False
+        # Equivalencias de marca / nombres
+        if tok == "ysl" and ("yves saint laurent" in combo_text or "saint laurent" in combo_text):
+            continue
+        if tok == "sweet" and re.search(r"\bsweettooth\b", combo_text):
+            continue
+        if tok == "tooth" and re.search(r"\bsweettooth\b", combo_text):
+            continue
+        if tok == "dior" and "dior" in m_norm:
+            continue
 
-    return True
+        if not re.search(rf"\b{re.escape(tok)}\b", combo_text):
+            return ResultadoCoincidencia(
+                coincide=False,
+                confianza=0.0,
+                motivo=f"Token nuclear obligatorio '{tok}' ausente en candidato"
+            )
+
+    # 6. Guard de Concentración (EDT vs EDP)
+    if c_norm:
+        es_edt_p = "toilette" in c_norm or "edt" in c_norm
+        es_edp_p = ("parfum" in c_norm or "edp" in c_norm) and not es_edt_p
+
+        es_edt_t = ("toilette" in tit or "edt" in tit) and not ("eau de parfum" in tit or "edp" in tit)
+        es_edp_t = ("eau de parfum" in tit or "edp" in tit) and not ("toilette" in tit or "edt" in tit)
+
+        if es_edt_p and es_edp_t:
+            return ResultadoCoincidencia(coincide=False, confianza=0.0, motivo="Incompatibilidad: esperado EDT, candidato es EDP")
+        if es_edp_p and es_edt_t:
+            return ResultadoCoincidencia(coincide=False, confianza=0.0, motivo="Incompatibilidad: esperado EDP, candidato es EDT")
+
+    # 7. Guard de Volumen (si se especifica volumen esperado)
+    if volumen_esperado:
+        vol_candidato = extraer_volumen_ml(combo_text, default=0)
+        if vol_candidato > 0 and abs(vol_candidato - volumen_esperado) > 5:
+            return ResultadoCoincidencia(
+                coincide=False,
+                confianza=0.0,
+                motivo=f"Discrepancia de volumen: esperado {volumen_esperado}ml, recibido {vol_candidato}ml",
+                volumen_detectado=vol_candidato
+            )
+
+    return ResultadoCoincidencia(
+        coincide=True,
+        confianza=0.98,
+        motivo="Entidad validada con alta fidelidad"
+    )
+
+
+def coincide_con_perfume(
+    titulo: str,
+    perfume_nombre: str,
+    marca: str = "",
+    concentracion: str = "",
+    volumen_esperado: Optional[int] = None,
+    url: str = ""
+) -> bool:
+    """Wrapper retrocompatible que devuelve un booleano para los scrapers y vistas."""
+    return coincide_entidad_detallada(
+        titulo=titulo,
+        perfume_nombre=perfume_nombre,
+        marca=marca,
+        concentracion=concentracion,
+        volumen_esperado=volumen_esperado,
+        url=url
+    ).coincide
+

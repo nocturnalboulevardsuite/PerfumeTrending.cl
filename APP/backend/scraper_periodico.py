@@ -229,8 +229,9 @@ def extraer_variedades_shopify(
                 if not es_producto_perfume_valido(raw_title):
                     continue
 
-                # Validar correspondencia exacta con la fragancia y concentración
-                if not coincide_con_perfume(raw_title, perfume_nombre, marca, concentracion):
+                clean_url = f"https://www.{dominio}" + p.get("url", "").split("?")[0]
+                # Validar correspondencia exacta con la fragancia, concentración y URL
+                if not coincide_con_perfume(raw_title, perfume_nombre, marca, concentracion, url=clean_url):
                     continue
 
                 # Regla de seguridad especial: evitar cruces con fragancias de Chanel
@@ -310,7 +311,7 @@ def extraer_variedades_falabella(
                     skus = pdata.get("variants", []) or pdata.get("skus", [])
                     prod_name = pdata.get("name", perfume_nombre)
                     # Validación de integridad: asegurar que la URL directa corresponde al perfume auditado
-                    if not coincide_con_perfume(prod_name, perfume_nombre, marca, concentracion):
+                    if not coincide_con_perfume(prod_name, perfume_nombre, marca, concentracion, url=url_directa):
                         logger.warning(f"⚠️ URL directa Falabella descartada por inconsistencia ({prod_name} != {perfume_nombre})")
                     else:
                         for v in skus:
@@ -368,11 +369,11 @@ def extraer_variedades_falabella(
                     tokens = [perfume_nombre.lower().strip()]
                 for r in results:
                     d_name = r.get("displayName", "")
+                    prod_url = r.get("url", "")
                     if not es_producto_perfume_valido(d_name):
                         continue
-                    if not coincide_con_perfume(d_name, perfume_nombre, marca, concentracion):
+                    if not coincide_con_perfume(d_name, perfume_nombre, marca, concentracion, url=prod_url):
                         continue
-                    prod_url = r.get("url", "")
                     if prod_url and len(variedades) < 4:
                         try:
                             res_p = session.get(prod_url, headers=headers, timeout=9)
@@ -546,7 +547,7 @@ def extraer_variedades_paris(
                                 p_name = d.get("name", perfume_nombre)
                                 if not es_producto_perfume_valido(p_name):
                                     continue
-                                if not coincide_con_perfume(p_name, perfume_nombre, marca, concentracion):
+                                if not coincide_con_perfume(p_name, perfume_nombre, marca, concentracion, url=lk):
                                     continue
                                 offers = d.get("offers", [])
                                 off = offers[0] if isinstance(offers, list) and offers else (offers if isinstance(offers, dict) else {})
@@ -638,17 +639,17 @@ def extraer_variedades_ripley(
                 candidatos = []
                 for p in prods:
                     d_name = p.get("name", "")
-                    if not es_producto_perfume_valido(d_name):
-                        continue
-                    if not coincide_con_perfume(d_name, perfume_nombre, marca, concentracion):
-                        continue
-                    candidatos.append(p)
-
-                # Inspeccionar fichas PDP de los productos coincidentes
-                for p in candidatos[:2]:
                     p_id = p.get("parentProductID") or p.get("sku")
                     slug = p.get("url") or p_id
                     pdp_url = f"https://simple.ripley.cl/{slug.lstrip('/')}" if slug and not slug.startswith("http") else (slug or f"https://simple.ripley.cl/{p_id}")
+                    if not es_producto_perfume_valido(d_name):
+                        continue
+                    if not coincide_con_perfume(d_name, perfume_nombre, marca, concentracion, url=pdp_url):
+                        continue
+                    candidatos.append((p, pdp_url))
+
+                # Inspeccionar fichas PDP de los productos coincidentes
+                for p, pdp_url in candidatos[:2]:
 
                     if pdp_url and c_session is not None:
                         try:
