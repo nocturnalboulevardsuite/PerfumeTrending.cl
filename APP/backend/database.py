@@ -1418,15 +1418,47 @@ def obtener_detalle_perfume(perfume_id: int) -> Optional[Dict[str, Any]]:
 
 
 def obtener_precios_actuales(perfume_id: int) -> List[Dict[str, Any]]:
-    """Retorna el precio más reciente registrado en cada tienda para el perfume dado."""
+    """Retorna el precio más reciente registrado en cada tienda para el perfume dado, incluyendo estado de stock."""
     sb = get_supabase()
     if sb and is_supabase_disponible():
         try:
-            resp = sb.table("vista_precios_actuales").select("*").eq("perfume_id", perfume_id).order("precio_actual", desc=False).execute()
-            if resp.data is not None:
-                return resp.data
+            resp = sb.table("ofertas_actuales").select(
+                "id, precio_actual, precio_normal, en_stock, url_producto, ultima_verificacion_exitosa, "
+                "tiendas(id, nombre, url_base, trust_score, badge, logo_emoji), "
+                "variantes_perfume!inner(id, perfume_id, volumen_ml)"
+            ).eq("variantes_perfume.perfume_id", perfume_id).in_("estado", ["activa", "agotada"]).order("precio_actual", desc=False).execute()
+            if resp.data:
+                res_lista = []
+                for item in resp.data:
+                    t = item.get("tiendas") or {}
+                    v = item.get("variantes_perfume") or {}
+                    p_act = item.get("precio_actual", 0)
+                    vol = int(round(float(v.get("volumen_ml") or 100)))
+                    p_ml = int(round(p_act / vol)) if (p_act and vol) else 0
+                    res_lista.append({
+                        "id": item.get("id"),
+                        "perfume_id": perfume_id,
+                        "tienda_id": t.get("id"),
+                        "tienda_nombre": t.get("nombre", "Tienda"),
+                        "url_base": t.get("url_base", ""),
+                        "trust_score": t.get("trust_score", 90),
+                        "badge": t.get("badge", "Retail Oficial"),
+                        "logo_emoji": t.get("logo_emoji", "🏬"),
+                        "precio_actual": p_act,
+                        "precio_normal": item.get("precio_normal", p_act),
+                        "en_stock": bool(item.get("en_stock", True)),
+                        "volumen_ml": vol,
+                        "precio_por_ml": p_ml,
+                        "url_producto": item.get("url_producto", ""),
+                        "fecha_registro": item.get("ultima_verificacion_exitosa")
+                    })
+                return res_lista
+            # Fallback a vista_precios_actuales si ofertas_actuales no tuvo resultados
+            resp_v = sb.table("vista_precios_actuales").select("*").eq("perfume_id", perfume_id).order("precio_actual", desc=False).execute()
+            if resp_v.data is not None:
+                return resp_v.data
         except Exception as e:
-            logger.warning(f"Error en Supabase vista_precios_actuales ({e}), usando SQLite.")
+            logger.warning(f"Error en Supabase obtener_precios_actuales ({e}), recurriendo a SQLite de respaldo.")
 
     init_db()
     query = """

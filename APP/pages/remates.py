@@ -55,7 +55,7 @@ def resolver_url_oferta(tienda_nombre: str, perfume_nombre: str, url_prod: str =
     q = urllib.parse.quote(perfume_nombre.strip())
 
     if "paris" in t or ("paris.cl" in (url_prod or "").lower()):
-        if not url_prod or ".html" in url_prod.lower() or "search" not in url_prod.lower():
+        if not url_prod or url_prod == "#" or any(dead in url_prod for dead in ["916524999", "construccion", "experiencia"]):
             return f"https://www.paris.cl/search?q={q}"
         return url_prod
 

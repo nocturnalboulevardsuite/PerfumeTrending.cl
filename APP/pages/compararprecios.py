@@ -99,10 +99,10 @@ def resolver_url_oferta(tienda_nombre: str, perfume_nombre: str, url_prod: str, 
     query_parts = f"{marca} {perfume_nombre}".strip() if (marca and marca.lower() not in perfume_nombre.lower()) else perfume_nombre.strip()
     q = urllib.parse.quote(query_parts)
 
-    # Paris.cl rota constantemente sus IDs de catálogo (.html) provocando 404 "Página en Construcción".
-    # Redirigir siempre a la búsqueda oficial de Paris garantiza que el usuario llegue a la fragancia disponible.
+    # Paris.cl: Respetar URLs directas a la ficha concreta (.html o búsqueda).
+    # Solo recurrir a búsqueda si la URL está vacía, no es válida o contiene IDs obsoletos conocidos (ej. 916524999).
     if "paris" in t or ("paris.cl" in (url_prod or "").lower()):
-        if not url_prod or ".html" in url_prod.lower() or "search" not in url_prod.lower():
+        if not url_prod or url_prod == "#" or any(dead in url_prod for dead in ["916524999", "construccion", "experiencia"]):
             return f"https://www.paris.cl/search?q={q}"
         return url_prod
 
@@ -946,26 +946,33 @@ tiendas_db = get_cached_precios(selected_id)
 if not tiendas_db:
     st.info("Actualmente estamos sincronizando los precios en tiempo real para esta fragancia.")
 else:
-    # Identificar el mejor precio (mínimo precio_actual > 0)
-    precios_validos = [t['precio_actual'] for t in tiendas_db if t.get('precio_actual', 0) > 0]
+    # Identificar el mejor precio únicamente entre ofertas con stock disponible
+    precios_validos = [t['precio_actual'] for t in tiendas_db if t.get('precio_actual', 0) > 0 and t.get('en_stock', True)]
     min_precio = min(precios_validos) if precios_validos else 0
 
     for item in tiendas_db:
         p_act = item.get('precio_actual', 0)
         p_norm = item.get('precio_normal', 0)
         vol_ml = item.get('volumen_ml', 100) or 100
-        is_best_deal = (p_act == min_precio and p_act > 0)
+        en_stock = bool(item.get('en_stock', True))
+        is_best_deal = (p_act == min_precio and p_act > 0 and en_stock)
         
-        card_class = "price-card best-deal" if is_best_deal else "price-card"
-        best_badge = f"<span style='background: {'rgba(34, 197, 94, 0.15)' if is_dark else '#e8f5e9'}; color: {'#4ade80' if is_dark else '#2e7d32'}; border: 1px solid {'rgba(74, 222, 128, 0.35)' if is_dark else 'rgba(46, 125, 50, 0.3)'}; font-weight: 700; margin-left: 8px; font-size: 0.72rem; padding: 2px 8px; border-radius: 4px; letter-spacing: 0.5px;'>MEJOR PRECIO</span>" if is_best_deal else ""
+        card_class = "price-card best-deal" if is_best_deal else ("price-card" if en_stock else "price-card out-of-stock")
+        
+        if is_best_deal:
+            status_badge = f"<span style='background: {'rgba(34, 197, 94, 0.15)' if is_dark else '#e8f5e9'}; color: {'#4ade80' if is_dark else '#2e7d32'}; border: 1px solid {'rgba(74, 222, 128, 0.35)' if is_dark else 'rgba(46, 125, 50, 0.3)'}; font-weight: 700; margin-left: 8px; font-size: 0.72rem; padding: 2px 8px; border-radius: 4px; letter-spacing: 0.5px;'>MEJOR PRECIO</span>"
+        elif not en_stock:
+            status_badge = f"<span style='background: {'rgba(239, 68, 68, 0.15)' if is_dark else '#fee2e2'}; color: {'#f87171' if is_dark else '#dc2626'}; border: 1px solid {'rgba(248, 113, 113, 0.35)' if is_dark else 'rgba(220, 38, 38, 0.3)'}; font-weight: 700; margin-left: 8px; font-size: 0.72rem; padding: 2px 8px; border-radius: 4px; letter-spacing: 0.5px;'>AGOTADO</span>"
+        else:
+            status_badge = ""
         
         precio_actual_str = f"${p_act:,.0f}".replace(",", ".")
         precio_ant_str = f"${p_norm:,.0f}".replace(",", ".") if p_norm and p_norm > p_act else ""
-        old_price_html = f"<span class='old-price'>{precio_ant_str}</span>" if precio_ant_str else ""
+        old_price_html = f"<span class='old-price'>{precio_ant_str}</span>" if (precio_ant_str and en_stock) else ""
         
         # Cálculo de valor por mililitro ($/ml)
         ml_txt = ""
-        if p_act > 0 and vol_ml > 0:
+        if p_act > 0 and vol_ml > 0 and en_stock:
             p_ml = int(round(p_act / vol_ml))
             ml_txt = f"<span style='font-size: 0.78rem; color: {subtext_color}; display: block; text-align: right;'>${p_ml:,.0f}/ml ({vol_ml}ml)</span>".replace(",", ".")
         
@@ -980,21 +987,37 @@ else:
         badge_tienda = item.get('badge', 'Tienda Verificada')
         badge_vol = f"<span class='store-badge' style='background: {btn_bg}; border: 1px solid {btn_border}; font-weight: 600;'>{vol_ml}ml</span>" if vol_ml else ""
         
+        if not en_stock:
+            price_display_html = f"""
+            <div style="text-align: right;">
+                <span style="font-size: 1.12rem; font-weight: 700; color: {'#ef4444' if is_dark else '#dc2626'}; letter-spacing: 0.5px;">AGOTADO</span>
+                <span style="display: block; font-size: 0.8rem; color: {subtext_color}; text-decoration: line-through;">{precio_actual_str} CLP</span>
+            </div>
+            """
+            btn_label = "Ver en tienda (Agotado) ↗"
+            btn_extra_style = "opacity: 0.65; filter: grayscale(30%);"
+        else:
+            price_display_html = f"""
+            <div style="text-align: right;">
+                {old_price_html}
+                <span class="price-value">{precio_actual_str} CLP</span>
+                {ml_txt}
+            </div>
+            """
+            btn_label = "Ir a la oferta ↗"
+            btn_extra_style = ""
+        
         html_card = f"""
         <div class="{card_class}">
             <div>
                 <span class="store-name">{item['tienda_nombre']}</span>
                 <span class="store-badge">{badge_tienda}</span>
                 {badge_vol}
-                {best_badge}
+                {status_badge}
             </div>
             <div style="display: flex; align-items: center; gap: 16px;">
-                <div>
-                    {old_price_html}
-                    <span class="price-value">{precio_actual_str} CLP</span>
-                    {ml_txt}
-                </div>
-                <a href="{url_directa}" class="buy-btn" target="_blank" rel="noopener noreferrer">Ir a la oferta ↗</a>
+                {price_display_html}
+                <a href="{url_directa}" class="buy-btn" style="{btn_extra_style}" target="_blank" rel="noopener noreferrer">{btn_label}</a>
             </div>
         </div>
         """
