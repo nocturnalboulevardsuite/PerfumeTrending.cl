@@ -54,7 +54,7 @@ except ImportError:
         def es_precio_valido(p):
             try:
                 val = int(round(float(p)))
-                return 8000 <= val < 1000000 and val not in (9999999, 9999990, 999999)
+                return 4000 <= val < 1000000 and val not in (9999999, 9999990, 999999)
             except Exception:
                 return False
 

@@ -924,7 +924,7 @@ def registrar_observacion_oferta(observacion: Optional[Dict[str, Any]] = None, *
     if precio_actual is None or not isinstance(precio_actual, (int, float)) or int(precio_actual) <= 0:
         raise ValueError("El precio actual confirmado debe ser un entero positivo")
     precio_actual = int(precio_actual)
-    if precio_actual < 8000 or precio_actual >= 1000000 or precio_actual in (9999999, 9999990, 999999):
+    if precio_actual < 4000 or precio_actual >= 1000000 or precio_actual in (9999999, 9999990, 999999):
         raise ValueError(f"Precio fuera de rango comercial ({precio_actual}). Se descartan precios irreales o placeholders como $9.999.999.")
 
     if precio_normal is not None:
@@ -1568,7 +1568,7 @@ def guardar_o_actualizar_perfume_scraped(
     except (ValueError, TypeError):
         return {"exito": False, "motivo": f"Precio inválido: {precio_actual}"}
 
-    if p_act_int < 8000 or p_act_int >= 1000000 or p_act_int in (9999999, 9999990, 999999):
+    if p_act_int < 4000 or p_act_int >= 1000000 or p_act_int in (9999999, 9999990, 999999):
         logger.warning(f"Descartando perfume '{nombre}' con precio comercial inválido/placeholder (${p_act_int:,} CLP)")
         return {"exito": False, "motivo": f"Precio fuera de rango comercial (${p_act_int})"}
 

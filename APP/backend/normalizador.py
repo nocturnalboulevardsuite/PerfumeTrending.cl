@@ -187,7 +187,7 @@ def es_precio_valido(precio: Optional[Any]) -> bool:
     except (ValueError, TypeError):
         return False
 
-    if p < 8000:
+    if p < 4000:
         return False
     if p >= 1000000:
         return False
