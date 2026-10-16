@@ -30,9 +30,11 @@ MARCAS_ARABES_CONOCIDAS = {
 PALABRAS_EXCLUSION = [
     "desodorante", "deodorant", "body mist", "bodymist", "body spray", "bodyspray",
     "body splash", "bodysplash", "body lotion", "crema corporal", "locion corporal",
+    "locion para despues", "loción para después", "después del afeitado", "despues del afeitado",
     "shampoo", "champu", "gel de ducha", "shower gel", "jabon", "vela", "after shave",
-    "after-shave", "balsamo", "neceser", "estuche vacio", "atomizador recargable",
-    "labial", "mascara pestañas", "roll on", "roll-on"
+    "after-shave", "aftershave", "balsamo", "neceser", "estuche vacio", "atomizador recargable",
+    "labial", "mascara pestañas", "roll on", "roll-on", "cuidado del cabello", "tratamiento hidratante",
+    "twist and spray", "twist & spray"
 ]
 
 
@@ -250,18 +252,31 @@ KNOWN_FLANKERS = [
 ]
 
 
-def coincide_con_perfume(titulo: str, perfume_nombre: str, marca: str = "") -> bool:
+def coincide_con_perfume(titulo: str, perfume_nombre: str, marca: str = "", concentracion: str = "") -> bool:
     """
     Verifica con alta fidelidad si el título de un producto de e-commerce corresponde a la fragancia.
     - Exige que todos los tokens significativos del nombre del perfume estén presentes en el título.
     - Aplica guardia de flankers: descarta productos que contengan nombres de flankers no presentes en el perfume buscado (ej: no emparejar 'Acqua Di Gio Profondo' con 'Acqua Di Gio').
+    - Valida coherencia de concentración: evita cruzar Eau de Parfum con Eau de Toilette cuando está especificado.
     - Usa límites de palabra (\b) para evitar cruces como 'gio' con 'gioia'.
     """
     tit = titulo.lower()
     p_lower = perfume_nombre.lower()
+    c_lower = concentracion.lower() if concentracion else ""
+
+    # Guardia de concentración (evitar emparejar EDT si buscamos EDP, o viceversa)
+    if c_lower:
+        if ("parfum" in c_lower or "edp" in c_lower) and not ("toilette" in c_lower or "edt" in c_lower):
+            if ("toilette" in tit or "edt" in tit) and not ("eau de parfum" in tit or "edp" in tit):
+                return False
+        elif ("toilette" in c_lower or "edt" in c_lower) and not ("parfum" in c_lower or "edp" in c_lower):
+            if ("eau de parfum" in tit or "edp" in tit) and not ("toilette" in tit or "edt" in tit):
+                return False
 
     # 1. Guardia de flankers: si el título contiene un flanker conocido que NO está en el perfume, descartar
     for fl in KNOWN_FLANKERS:
+        if fl == "parfum" and "eau de parfum" in tit:
+            continue
         if re.search(rf"\b{re.escape(fl)}\b", tit) and fl not in p_lower:
             return False
 

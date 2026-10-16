@@ -31,8 +31,10 @@ from APP.backend.scraper_periodico import (
     extraer_precio_shopify,
     extraer_precio_falabella,
     extraer_precio_paris,
-    extraer_precio_ripley
+    extraer_precio_ripley,
+    extraer_variedades_ripley
 )
+from APP.backend.normalizador import coincide_con_perfume, es_producto_perfume_valido
 
 
 class TestScrapersFallosYStock(unittest.TestCase):
@@ -188,6 +190,120 @@ class TestScrapersFallosYStock(unittest.TestCase):
         self.assertTrue(res.get("exito"))
         self.assertEqual(res.get("precio_actual"), 110000)
         self.assertFalse(res.get("en_stock"), "DOM con 'Producto Agotado' debe retornar en_stock=False")
+
+    def test_06_ripley_variantes_pdp_extrae_stock_y_volumen_exacto(self):
+        """Verifica que extraer_variedades_ripley procesa múltiples variantes con volúmenes y stock exactos."""
+        import json
+        mock_session = MagicMock()
+
+        # Mock de búsqueda Ripley
+        search_html = """
+        <html><script id="__NEXT_DATA__" type="application/json">
+        {"props": {"pageProps": {"findabilityProps": {"data": {"products": [
+            {"name": "Bleu de Chanel Eau de Parfum Vaporizador", "parentProductID": "2000349451349p", "url": "/bleu-de-chanel-p", "priceNumber": 145200, "inStock": true}
+        ]}}}}}
+        </script></html>
+        """
+        # Mock de ficha técnica PDP Ripley con 3 variantes (50ml, 100ml, 150ml)
+        pdp_html = """
+        <html><script id="__NEXT_DATA__" type="application/json">
+        {"props": {"pageProps": {"detailProps": {"data": {"product": {
+            "name": "Bleu de Chanel Eau de Parfum Vaporizador",
+            "canonicalSlug": "bleu-de-chanel-pdp",
+            "variants": [
+                {
+                    "sku": "SKU50",
+                    "definingAttribute": [{"identifier": "contenido_perfume", "value": "50 ml"}],
+                    "price": {"sale": {"valueNumber": 145200}, "master": {"valueNumber": 145200}},
+                    "stock": true,
+                    "notBuyable": false,
+                    "notSelectable": false,
+                    "statusUI": "Disponible"
+                },
+                {
+                    "sku": "SKU100",
+                    "definingAttribute": [{"identifier": "contenido_perfume", "value": "100 ml"}],
+                    "price": {"sale": {"valueNumber": 181500}, "master": {"valueNumber": 181500}},
+                    "stock": false,
+                    "notBuyable": false,
+                    "notSelectable": true,
+                    "statusUI": "Sin stock"
+                },
+                {
+                    "sku": "SKU150",
+                    "definingAttribute": [{"identifier": "contenido_perfume", "value": "150 ml"}],
+                    "price": {"sale": {"valueNumber": 225500}, "master": {"valueNumber": 225500}},
+                    "stock": false,
+                    "notBuyable": false,
+                    "notSelectable": true,
+                    "statusUI": "Sin stock"
+                }
+            ]
+        }}}}}}
+        </script></html>
+        """
+
+        mock_resp_search = MagicMock(status_code=200, text=search_html)
+        mock_resp_pdp = MagicMock(status_code=200, text=pdp_html)
+        mock_session.get.side_effect = [mock_resp_search, mock_resp_pdp]
+
+        with patch("APP.backend.scraper_periodico.curl_requests", None):
+            res_list = extraer_variedades_ripley(
+                session=mock_session,
+                url_directa=None,
+                perfume_nombre="Bleu de Chanel",
+                marca="Chanel",
+                concentracion="Eau de Parfum"
+            )
+
+        self.assertEqual(len(res_list), 1)  # Fallback a search card si curl_requests es None
+        # Ahora con curl_requests simulado
+        mock_curl_session = MagicMock()
+        mock_curl_session.get.side_effect = [mock_resp_search, mock_resp_pdp]
+        mock_curl_module = MagicMock()
+        mock_curl_module.Session.return_value = mock_curl_session
+
+        with patch("APP.backend.scraper_periodico.curl_requests", mock_curl_module):
+            vars_curl = extraer_variedades_ripley(
+                session=mock_session,
+                url_directa=None,
+                perfume_nombre="Bleu de Chanel",
+                marca="Chanel",
+                concentracion="Eau de Parfum"
+            )
+
+        self.assertEqual(len(vars_curl), 3)
+        # 50ml: Disponible
+        v50 = [v for v in vars_curl if v["volumen_ml"] == 50][0]
+        self.assertEqual(v50["precio_actual"], 145200)
+        self.assertTrue(v50["en_stock"])
+
+        # 100ml: Agotado / Sin stock
+        v100 = [v for v in vars_curl if v["volumen_ml"] == 100][0]
+        self.assertEqual(v100["precio_actual"], 181500)
+        self.assertFalse(v100["en_stock"], "100ml con statusUI Sin stock debe reportar en_stock=False")
+
+        # 150ml: Agotado / Sin stock
+        v150 = [v for v in vars_curl if v["volumen_ml"] == 150][0]
+        self.assertEqual(v150["precio_actual"], 225500)
+        self.assertFalse(v150["en_stock"], "150ml con statusUI Sin stock debe reportar en_stock=False")
+
+    def test_07_coincidencia_concentracion_evita_cruces_edp_edt(self):
+        """Verifica que el normalizador no empareja EDT con EDP ni accesorios de afeitado."""
+        self.assertFalse(coincide_con_perfume(
+            "Bleu de Chanel Eau de Toilette Vaporizador 100ml",
+            "Bleu de Chanel",
+            "Chanel",
+            concentracion="Eau de Parfum"
+        ))
+        self.assertTrue(coincide_con_perfume(
+            "Bleu de Chanel Eau de Parfum Vaporizador 100ml",
+            "Bleu de Chanel",
+            "Chanel",
+            concentracion="Eau de Parfum"
+        ))
+        self.assertFalse(es_producto_perfume_valido("Bleu de Chanel Bálsamo Después del Afeitado"))
+        self.assertFalse(es_producto_perfume_valido("Bleu de Chanel Twist and Spray Recargas"))
 
 
 if __name__ == "__main__":

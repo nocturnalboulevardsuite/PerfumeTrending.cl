@@ -199,7 +199,8 @@ def extraer_variedades_shopify(
     dominio: str,
     perfume_nombre: str,
     marca: str,
-    volumen_ml_defecto: Optional[int] = None
+    volumen_ml_defecto: Optional[int] = None,
+    concentracion: str = ""
 ) -> List[Dict[str, Any]]:
     """
     Extrae múltiples variedades de tamaño (ml) y stock real en tiendas Shopify
@@ -228,8 +229,8 @@ def extraer_variedades_shopify(
                 if not es_producto_perfume_valido(raw_title):
                     continue
 
-                # Validar correspondencia exacta con la fragancia
-                if not coincide_con_perfume(raw_title, perfume_nombre, marca):
+                # Validar correspondencia exacta con la fragancia y concentración
+                if not coincide_con_perfume(raw_title, perfume_nombre, marca, concentracion):
                     continue
 
                 # Regla de seguridad especial: evitar cruces con fragancias de Chanel
@@ -281,7 +282,8 @@ def extraer_variedades_falabella(
     url_directa: Optional[str],
     perfume_nombre: str,
     marca: str = "",
-    volumen_ml_defecto: Optional[int] = None
+    volumen_ml_defecto: Optional[int] = None,
+    concentracion: str = ""
 ) -> List[Dict[str, Any]]:
     """
     Extrae múltiples presentaciones de Falabella Chile (30ml, 50ml, 60ml, 100ml, 200ml, etc.):
@@ -362,7 +364,7 @@ def extraer_variedades_falabella(
                     d_name = r.get("displayName", "")
                     if not es_producto_perfume_valido(d_name):
                         continue
-                    if not coincide_con_perfume(d_name, perfume_nombre, marca):
+                    if not coincide_con_perfume(d_name, perfume_nombre, marca, concentracion):
                         continue
                     prod_url = r.get("url", "")
                     if prod_url and len(variedades) < 4:
@@ -456,7 +458,8 @@ def extraer_variedades_paris(
     url_directa: Optional[str],
     perfume_nombre: str,
     marca: str = "",
-    volumen_ml_defecto: Optional[int] = None
+    volumen_ml_defecto: Optional[int] = None,
+    concentracion: str = ""
 ) -> List[Dict[str, Any]]:
     """
     Extrae presentaciones y precios reales en Paris.cl:
@@ -534,6 +537,10 @@ def extraer_variedades_paris(
                             if "Product" in s_tag.text:
                                 d = json.loads(s_tag.text)
                                 p_name = d.get("name", perfume_nombre)
+                                if not es_producto_perfume_valido(p_name):
+                                    continue
+                                if not coincide_con_perfume(p_name, perfume_nombre, marca, concentracion):
+                                    continue
                                 offers = d.get("offers", [])
                                 off = offers[0] if isinstance(offers, list) and offers else (offers if isinstance(offers, dict) else {})
                                 p_raw = off.get("price")
@@ -585,12 +592,13 @@ def extraer_variedades_ripley(
     url_directa: Optional[str],
     perfume_nombre: str,
     marca: str = "",
-    volumen_ml_defecto: Optional[int] = None
+    volumen_ml_defecto: Optional[int] = None,
+    concentracion: str = ""
 ) -> List[Dict[str, Any]]:
     """
     Extrae múltiples presentaciones de Ripley Chile (30ml, 50ml, 60ml, 100ml, 200ml, etc.):
-    Utiliza curl_cffi para emulación nativa de TLS Chrome (evasión transparente de Cloudflare 403)
-    y lee la estructura de productos desde __NEXT_DATA__.
+    Utiliza curl_cffi para emulación nativa de TLS Chrome (evasión transparente de Cloudflare 403),
+    inspecciona las fichas técnicas (PDP) encontradas y extrae cada variante con su volumen, precio y stock real.
     """
     variedades: List[Dict[str, Any]] = []
     vols_vistos = set()
@@ -602,11 +610,14 @@ def extraer_variedades_ripley(
         "User-Agent": random.choice(USER_AGENTS),
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "Accept-Language": "es-CL,es;q=0.9,en;q=0.8",
+        "Referer": "https://simple.ripley.cl/"
     }
 
     try:
+        c_session = None
         if curl_requests is not None:
-            res = curl_requests.get(url_search, headers=headers, impersonate="chrome124", timeout=14)
+            c_session = curl_requests.Session(impersonate="chrome124")
+            res = c_session.get(url_search, headers=headers, timeout=14)
         else:
             res = session.get(url_search, headers=obtener_headers_navegador(), timeout=10)
 
@@ -616,35 +627,107 @@ def extraer_variedades_ripley(
             if tag and tag.text:
                 data = json.loads(tag.text)
                 prods = data.get("props", {}).get("pageProps", {}).get("findabilityProps", {}).get("data", {}).get("products", [])
-                tokens = [t.lower() for t in re.sub(r"[^\w\s]", " ", perfume_nombre).split() if len(t) >= 2]
-                if not tokens:
-                    tokens = [perfume_nombre.lower().strip()]
+
+                candidatos = []
                 for p in prods:
                     d_name = p.get("name", "")
                     if not es_producto_perfume_valido(d_name):
                         continue
-                    if not coincide_con_perfume(d_name, perfume_nombre, marca):
+                    if not coincide_con_perfume(d_name, perfume_nombre, marca, concentracion):
                         continue
-                    p_act = p.get("priceNumber", 0)
-                    p_norm = p.get("masterPriceNumber", p_act) or p_act
-                    if not p_act or p_act < 10000:
-                        continue
-                    vol = extraer_volumen_ml(d_name) or volumen_ml_defecto or 100
-                    if vol in vols_vistos:
-                        continue
-                    vols_vistos.add(vol)
-                    in_stock = bool(p.get("inStock", True))
+                    candidatos.append(p)
+
+                # Inspeccionar fichas PDP de los productos coincidentes
+                for p in candidatos[:2]:
                     p_id = p.get("parentProductID") or p.get("sku")
-                    prod_url = f"https://simple.ripley.cl/{p_id}" if p_id else url_search
-                    variedades.append({
-                        "exito": True,
-                        "precio_actual": p_act,
-                        "precio_normal": p_norm if p_norm > p_act else p_act,
-                        "url": prod_url,
-                        "en_stock": in_stock,
-                        "volumen_ml": vol,
-                        "metodo": "Ripley Chrome Engine"
-                    })
+                    slug = p.get("url") or p_id
+                    pdp_url = f"https://simple.ripley.cl/{slug.lstrip('/')}" if slug and not slug.startswith("http") else (slug or f"https://simple.ripley.cl/{p_id}")
+
+                    if pdp_url and c_session is not None:
+                        try:
+                            headers_pdp = {
+                                "User-Agent": headers["User-Agent"],
+                                "Referer": url_search,
+                                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+                                "Accept-Language": "es-CL,es;q=0.9,en;q=0.8",
+                            }
+                            res_p = c_session.get(pdp_url, headers=headers_pdp, timeout=20)
+                            if res_p.status_code == 200:
+                                soup_p = BeautifulSoup(res_p.text, "html.parser")
+                                tag_p = soup_p.find("script", id="__NEXT_DATA__")
+                                if tag_p and tag_p.text:
+                                    d_pdp = json.loads(tag_p.text)
+                                    prod_info = d_pdp.get("props", {}).get("pageProps", {}).get("detailProps", {}).get("data", {}).get("product", {})
+                                    variants = prod_info.get("variants", [])
+
+                                    for v in variants:
+                                        price_obj = v.get("price", {})
+                                        sale_p = price_obj.get("sale", {}).get("valueNumber") or price_obj.get("master", {}).get("valueNumber")
+                                        norm_p = price_obj.get("master", {}).get("valueNumber") or sale_p
+                                        if not sale_p or sale_p < 10000:
+                                            continue
+
+                                        # Identificar volumen específico desde definingAttribute o attributes
+                                        vol = None
+                                        for def_attr in v.get("definingAttribute", []):
+                                            val_str = def_attr.get("value", "")
+                                            vol = extraer_volumen_ml(val_str)
+                                            if vol:
+                                                break
+
+                                        if not vol:
+                                            for attr in v.get("attributes", []):
+                                                if attr.get("usage") == "Defining" or "contenido_perfume" in (attr.get("identifier") or "").lower():
+                                                    vals = attr.get("Values", [{}])
+                                                    v_str = vals[0].get("values", "") if vals else ""
+                                                    vol = extraer_volumen_ml(v_str)
+                                                    if vol:
+                                                        break
+
+                                        if not vol:
+                                            vol = extraer_volumen_ml(prod_info.get("name", "")) or volumen_ml_defecto or 100
+
+                                        if vol in vols_vistos:
+                                            continue
+                                        vols_vistos.add(vol)
+
+                                        # Determinar stock real con precisión milimétrica
+                                        in_stock = (
+                                            bool(v.get("stock", False))
+                                            and not bool(v.get("notBuyable", False))
+                                            and not bool(v.get("notSelectable", False))
+                                            and "sin stock" not in str(v.get("statusUI", "")).lower()
+                                            and "agotado" not in str(v.get("statusUI", "")).lower()
+                                        )
+
+                                        variedades.append({
+                                            "exito": True,
+                                            "precio_actual": sale_p,
+                                            "precio_normal": norm_p if norm_p > sale_p else sale_p,
+                                            "url": pdp_url,
+                                            "en_stock": in_stock,
+                                            "volumen_ml": vol,
+                                            "metodo": "Ripley Live PDP Variants"
+                                        })
+                        except Exception as e_pdp:
+                            logger.debug(f"Aviso leyendo PDP Ripley {pdp_url}: {e_pdp}")
+
+                    if not variedades:
+                        p_act = p.get("priceNumber", 0)
+                        p_norm = p.get("masterPriceNumber", p_act) or p_act
+                        if p_act and p_act >= 10000:
+                            vol = extraer_volumen_ml(p.get("name", "")) or volumen_ml_defecto or 100
+                            if vol not in vols_vistos:
+                                vols_vistos.add(vol)
+                                variedades.append({
+                                    "exito": True,
+                                    "precio_actual": p_act,
+                                    "precio_normal": p_norm if p_norm > p_act else p_act,
+                                    "url": pdp_url or url_search,
+                                    "en_stock": bool(p.get("inStock", True)),
+                                    "volumen_ml": vol,
+                                    "metodo": "Ripley Chrome Search Card"
+                                })
     except Exception as e:
         logger.warning(f"Error consultando Ripley para '{perfume_nombre}': {e}")
 
@@ -845,6 +928,7 @@ def ejecutar_ciclo_scraping_y_descubrimiento() -> Dict[str, Any]:
         p_id = p["id"]
         p_nom = p["nombre"]
         p_marca = p["marca"]
+        p_tipo = p.get("tipo", "")
 
         logger.info(f"Auditando fragancia: {p_nom} ({p_marca})")
 
@@ -878,7 +962,8 @@ def ejecutar_ciclo_scraping_y_descubrimiento() -> Dict[str, Any]:
                         dominio=dominio,
                         perfume_nombre=p_nom,
                         marca=p_marca,
-                        volumen_ml_defecto=vol_ml_base
+                        volumen_ml_defecto=vol_ml_base,
+                        concentracion=p_tipo
                     )
 
                 # Rama B: Falabella (Búsqueda viva Next.js + múltiples variantes de volumen)
@@ -888,7 +973,8 @@ def ejecutar_ciclo_scraping_y_descubrimiento() -> Dict[str, Any]:
                         url_directa=url_directa_guardada,
                         perfume_nombre=p_nom,
                         marca=p_marca,
-                        volumen_ml_defecto=vol_ml_base
+                        volumen_ml_defecto=vol_ml_base,
+                        concentracion=p_tipo
                     )
 
                 # Rama C: Paris (Schema.org JSON-LD de Google + búsqueda viva)
@@ -898,7 +984,8 @@ def ejecutar_ciclo_scraping_y_descubrimiento() -> Dict[str, Any]:
                         url_directa=url_directa_guardada,
                         perfume_nombre=p_nom,
                         marca=p_marca,
-                        volumen_ml_defecto=vol_ml_base
+                        volumen_ml_defecto=vol_ml_base,
+                        concentracion=p_tipo
                     )
 
                 # Rama D: Ripley (Búsqueda viva Next.js + curl_cffi Chrome TLS)
@@ -908,7 +995,8 @@ def ejecutar_ciclo_scraping_y_descubrimiento() -> Dict[str, Any]:
                         url_directa=url_directa_guardada,
                         perfume_nombre=p_nom,
                         marca=p_marca,
-                        volumen_ml_defecto=vol_ml_base
+                        volumen_ml_defecto=vol_ml_base,
+                        concentracion=p_tipo
                     )
 
                 # 5. Procesamiento y persistencia de cada variedad extraída
