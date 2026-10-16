@@ -22,6 +22,15 @@ import urllib.parse
 import requests
 from bs4 import BeautifulSoup
 
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if BASE_DIR not in sys.path:
+    sys.path.insert(0, BASE_DIR)
+
+try:
+    from backend.normalizador import coincide_con_perfume, es_producto_perfume_valido
+except ImportError:
+    from normalizador import coincide_con_perfume, es_producto_perfume_valido
+
 # Configuración del registro de eventos (Logging) para ver en consola qué está pasando paso a paso
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger("SyncPreciosReales")
@@ -55,69 +64,56 @@ def clean_price_str(val_str: str) -> int:
 # BLOQUE 1: EXTRACCIÓN EN TIENDAS BASADAS EN SHOPIFY (Silk y Elite Perfumes)
 # =============================================================================
 
-def buscar_silk(nombre_perfume: str) -> tuple:
+def buscar_silk(nombre_perfume: str, marca: str = "") -> tuple:
     """
-    ¿Qué hace esta función?
     Busca un perfume en Silk Perfumes aprovechando el endpoint interno de sugerencias de Shopify.
-    
-    ¿Por qué se usa este método?
-    Shopify expone una API JSON ultrarrápida ('/search/suggest.json') que devuelve el título,
-    URL y precio sin tener que descargar ni parsear todo el HTML de la página web.
-    
-    Retorna:
-        tuple: (url_directa, precio_actual) o (None, None) si no se encontró.
+    Valida estrictamente que el producto devuelto coincida en perfume, marca y sin flankers incompatibles.
     """
     try:
-        # 1. Codificamos el nombre para que sea seguro en una URL (espacios -> %20)
-        q = urllib.parse.quote(nombre_perfume)
+        query_str = f"{marca} {nombre_perfume}".strip() if (marca and marca.lower() not in nombre_perfume.lower()) else nombre_perfume.strip()
+        q = urllib.parse.quote(query_str)
         url = f"https://www.silkperfumes.cl/search/suggest.json?q={q}&resources[type]=product"
         
-        # 2. Petición GET con timeout de 6 segundos para evitar que el proceso se quede pegado
         r = requests.get(url, headers=HEADERS_API, timeout=6)
-        
         if r.status_code == 200:
-            # 3. Parseamos la respuesta JSON estructurada que devuelve Shopify
             prods = r.json().get('resources', {}).get('results', {}).get('products', [])
             for p in prods:
-                title = p.get('title', '').lower()
-                
-                # 4. Verificamos que las palabras clave principales del perfume coincidan en el título
-                tokens = [t.lower() for t in nombre_perfume.split() if len(t) > 3]
-                if any(tok in title for tok in tokens):
-                    # Construimos la URL limpia sin parámetros de tracking (?...)
-                    p_url = "https://www.silkperfumes.cl" + p.get('url', '').split('?')[0]
-                    precio = int(float(p.get('price', 0)))
+                title = p.get('title', '')
+                if not es_producto_perfume_valido(title):
+                    continue
+                if not coincide_con_perfume(title, nombre_perfume, marca):
+                    continue
+                p_url = "https://www.silkperfumes.cl" + p.get('url', '').split('?')[0]
+                precio = int(float(p.get('price', 0)))
+                if precio >= 10000:
                     return p_url, precio
     except Exception as e:
         logger.warning(f"Error buscando Silk para '{nombre_perfume}': {e}")
     return None, None
 
 
-def buscar_elite(nombre_perfume: str) -> tuple:
+def buscar_elite(nombre_perfume: str, marca: str = "") -> tuple:
     """
-    ¿Qué hace esta función?
     Busca un perfume en Elite Perfumes utilizando la misma arquitectura Shopify Suggest API.
-    
-    Retorna:
-        tuple: (url_directa, precio_actual) o (None, None) si falla o no hay stock.
+    Valida estrictamente que el producto coincida con el perfume auditado.
     """
     try:
-        # Codificación segura del término de búsqueda
-        q = urllib.parse.quote(nombre_perfume)
+        query_str = f"{marca} {nombre_perfume}".strip() if (marca and marca.lower() not in nombre_perfume.lower()) else nombre_perfume.strip()
+        q = urllib.parse.quote(query_str)
         url = f"https://www.eliteperfumes.cl/search/suggest.json?q={q}&resources[type]=product"
         
-        # Consulta HTTP a la API de Elite Perfumes
         r = requests.get(url, headers=HEADERS_API, timeout=6)
-        
         if r.status_code == 200:
             prods = r.json().get('resources', {}).get('results', {}).get('products', [])
             for p in prods:
-                title = p.get('title', '').lower()
-                # Coincidencia con tokens representativos del nombre
-                tokens = [t.lower() for t in nombre_perfume.split() if len(t) > 3]
-                if any(tok in title for tok in tokens):
-                    p_url = "https://www.eliteperfumes.cl" + p.get('url', '').split('?')[0]
-                    precio = int(float(p.get('price', 0)))
+                title = p.get('title', '')
+                if not es_producto_perfume_valido(title):
+                    continue
+                if not coincide_con_perfume(title, nombre_perfume, marca):
+                    continue
+                p_url = "https://www.eliteperfumes.cl" + p.get('url', '').split('?')[0]
+                precio = int(float(p.get('price', 0)))
+                if precio >= 10000:
                     return p_url, precio
     except Exception as e:
         logger.warning(f"Error buscando Elite para '{nombre_perfume}': {e}")
@@ -128,81 +124,67 @@ def buscar_elite(nombre_perfume: str) -> tuple:
 # BLOQUE 2: EXTRACCIÓN EN RETAILERS TRADICIONALES (Falabella, Paris, Ripley)
 # =============================================================================
 
-def buscar_falabella(nombre_perfume: str) -> tuple:
+def buscar_falabella(nombre_perfume: str, marca: str = "") -> tuple:
     """
-    ¿Qué hace esta función?
-    Extrae productos de Falabella Chile mediante la inspección del bloque de hidratación de Next.js.
-    
-    ¿Por qué se usa este método?
-    Falabella está construida con Next.js (React). En lugar de pelear con clases CSS dinámicas que
-    cambian cada semana, el servidor de Falabella inyecta un script llamado '__NEXT_DATA__' con todo el catálogo
-    en formato JSON puro. Parsear este script es 10 veces más rápido y 100% inmune a cambios de diseño.
+    Extrae productos de Falabella Chile mediante la inspección de __NEXT_DATA__.
+    Valida con precisión estricta de entidad y marca (evita flankers como Eros Energy o marcas cruzadas).
     """
     try:
-        q = urllib.parse.quote(nombre_perfume)
+        query_str = f"{marca} {nombre_perfume}".strip() if (marca and marca.lower() not in nombre_perfume.lower()) else nombre_perfume.strip()
+        q = urllib.parse.quote(query_str)
         url = f"https://www.falabella.com/falabella-cl/search?Ntt={q}"
         r = requests.get(url, headers=HEADERS_BROWSER, timeout=8)
         
         if r.status_code == 200:
             soup = BeautifulSoup(r.text, 'html.parser')
-            # Localizamos la etiqueta script con id __NEXT_DATA__
             tag = soup.find('script', id='__NEXT_DATA__')
             if tag and tag.string:
                 data = json.loads(tag.string)
-                # Navegamos en el árbol JSON hasta los resultados de productos
                 results = data.get('props', {}).get('pageProps', {}).get('results', [])
                 for res in results:
-                    name = res.get('displayName', '').lower()
-                    tokens = [t.lower() for t in nombre_perfume.split() if len(t) > 3]
-                    
-                    # Verificamos que el producto mostrado sea el perfume buscado
-                    if any(tok in name for tok in tokens):
-                        p_url = res.get('url')
-                        prices = res.get('prices', [])
-                        if prices and p_url:
-                            # Extraemos el precio vigente (internetPrice o normalPrice)
-                            raw_p = prices[0].get('price', ['0'])[0]
-                            precio = clean_price_str(raw_p)
-                            # Filtro de sanidad: un perfume real no cuesta menos de $10.000 (evita miniaturas o muestras)
-                            if precio >= 10000:
-                                return p_url, precio
+                    name = res.get('displayName', '')
+                    if not es_producto_perfume_valido(name):
+                        continue
+                    if not coincide_con_perfume(name, nombre_perfume, marca):
+                        continue
+                    p_url = res.get('url')
+                    prices = res.get('prices', [])
+                    if prices and p_url:
+                        raw_p = prices[0].get('price', ['0'])[0]
+                        precio = clean_price_str(raw_p)
+                        if precio >= 10000:
+                            return p_url, precio
     except Exception as e:
         logger.warning(f"Error buscando Falabella para '{nombre_perfume}': {e}")
     return None, None
 
 
-def buscar_paris(nombre_perfume: str) -> tuple:
+def buscar_paris(nombre_perfume: str, marca: str = "") -> tuple:
     """
-    ¿Qué hace esta función?
-    Busca en Paris.cl localizando el enlace del producto y extrayendo los metadatos oficiales
-    del estándar semántico Schema.org (JSON-LD 'Product').
-    
-    ¿Por qué se usa este método?
-    Paris publica datos enriquecidos para Google (SEO) en etiquetas JSON-LD. Estos datos
-    son la fuente oficial más confiable porque indican el precio exacto y la disponibilidad de stock.
+    Busca en Paris.cl localizando el enlace del producto y extrayendo metadatos Schema.org.
     """
     try:
-        q = urllib.parse.quote(nombre_perfume)
+        query_str = f"{marca} {nombre_perfume}".strip() if (marca and marca.lower() not in nombre_perfume.lower()) else nombre_perfume.strip()
+        q = urllib.parse.quote(query_str)
         search_url = f"https://www.paris.cl/search?q={q}"
         r = requests.get(search_url, headers=HEADERS_BROWSER, timeout=8)
         
         if r.status_code == 200:
             soup = BeautifulSoup(r.text, 'html.parser')
-            # Buscamos enlaces de productos (en Paris terminan en .html)
             for a in soup.find_all('a', href=True):
                 href = a.get('href', '')
-                tokens = [t.lower() for t in nombre_perfume.split() if len(t) > 3]
-                
-                if any(tok in href.lower() for tok in tokens) and '.html' in href:
+                if '.html' in href and not any(k in href.lower() for k in ["login", "cart", "micuenta"]):
                     clean_url = "https://www.paris.cl" + href.split('?')[0]
-                    
-                    # Abrimos directamente la ficha del producto para leer el bloque JSON-LD de ofertas
                     r_prod = requests.get(clean_url, headers=HEADERS_BROWSER, timeout=6)
                     if r_prod.status_code == 200:
-                        # Expresión regular para encontrar todos los bloques de datos estructurados Schema.org
                         for b in re.findall(r'<script[^>]*type="application/ld\+json"[^>]*>(.*?)</script>', r_prod.text, re.S):
                             if 'Product' in b:
                                 d = json.loads(b)
+                                p_name = d.get('name', '')
+                                if not es_producto_perfume_valido(p_name):
+                                    continue
+                                if not coincide_con_perfume(p_name, nombre_perfume, marca):
+                                    continue
                                 offers = d.get('offers', [])
                                 if isinstance(offers, list) and offers:
                                     precio = int(float(offers[0].get('price', 0)))
@@ -212,45 +194,43 @@ def buscar_paris(nombre_perfume: str) -> tuple:
                                     precio = int(float(offers.get('price', 0)))
                                     if precio >= 10000:
                                         return clean_url, precio
-                    return clean_url, None
     except Exception as e:
         logger.warning(f"Error buscando Paris para '{nombre_perfume}': {e}")
     return None, None
 
 
-def buscar_ripley(nombre_perfume: str) -> tuple:
+def buscar_ripley(nombre_perfume: str, marca: str = "") -> tuple:
     """
-    ¿Qué hace esta función?
-    Busca en simple.ripley.cl extrayendo el enlace directo a la ficha y obteniendo el precio
-    a través de los selectores DOM de la tienda.
+    Busca en simple.ripley.cl validando correspondencia estricta antes de aceptar enlaces directos.
     """
     try:
-        q = urllib.parse.quote(nombre_perfume)
+        query_str = f"{marca} {nombre_perfume}".strip() if (marca and marca.lower() not in nombre_perfume.lower()) else nombre_perfume.strip()
+        q = urllib.parse.quote(query_str)
         search_url = f"https://simple.ripley.cl/search/{q}"
         r = requests.get(search_url, headers=HEADERS_BROWSER, timeout=8)
         
         if r.status_code == 200:
             soup = BeautifulSoup(r.text, 'html.parser')
-            # En Ripley las fichas de productos tienen enlaces que terminan en 'p'
             for a in soup.find_all('a', href=True):
                 href = a.get('href', '')
                 clean_href = href.split('?')[0]
-                tokens = [t.lower() for t in nombre_perfume.split() if len(t) > 3]
-                
-                if any(tok in clean_href.lower() for tok in tokens) and clean_href.endswith('p'):
+                if clean_href.endswith('p'):
                     clean_url = "https://simple.ripley.cl" + clean_href
-                    
-                    # Consultamos la ficha viva para obtener el precio en pantalla
                     r_prod = requests.get(clean_url, headers=HEADERS_BROWSER, timeout=6)
                     if r_prod.status_code == 200:
                         soup_p = BeautifulSoup(r_prod.text, 'html.parser')
-                        # Localizamos el elemento visual del precio en el HTML de Ripley
+                        # Validar nombre del producto en el PDP
+                        name_tag = soup_p.find('h1') or soup_p.find(class_=lambda c: c and 'product-name' in c)
+                        prod_title = name_tag.get_text().strip() if name_tag else clean_href.replace('-', ' ')
+                        if not es_producto_perfume_valido(prod_title):
+                            continue
+                        if not coincide_con_perfume(prod_title, nombre_perfume, marca):
+                            continue
                         p_val = soup_p.find(class_=lambda c: c and 'price-value' in c)
                         if p_val:
                             precio = clean_price_str(p_val.get_text())
                             if precio >= 10000:
                                 return clean_url, precio
-                    return clean_url, None
     except Exception as e:
         logger.warning(f"Error buscando Ripley para '{nombre_perfume}': {e}")
     return None, None
@@ -283,7 +263,6 @@ def main():
     for p in catalogo["perfumes"]:
         nombre = p["nombre"]
         marca = p["marca"]
-        busqueda = f"{marca} {nombre}"
         logger.info(f"--- Procesando: {nombre} ({marca}) ---")
 
         # 3. Recorremos cada tienda registrada para este perfume
@@ -293,15 +272,15 @@ def main():
 
             # Enrutamiento según el comercio correspondiente
             if tienda == "Falabella":
-                url_res, precio_res = buscar_falabella(busqueda)
+                url_res, precio_res = buscar_falabella(nombre, marca)
             elif tienda == "Paris":
-                url_res, precio_res = buscar_paris(busqueda)
+                url_res, precio_res = buscar_paris(nombre, marca)
             elif tienda == "Ripley":
-                url_res, precio_res = buscar_ripley(busqueda)
+                url_res, precio_res = buscar_ripley(nombre, marca)
             elif tienda == "Silk Perfumes":
-                url_res, precio_res = buscar_silk(nombre)
+                url_res, precio_res = buscar_silk(nombre, marca)
             elif tienda == "Elite Perfumes":
-                url_res, precio_res = buscar_elite(nombre)
+                url_res, precio_res = buscar_elite(nombre, marca)
 
             # Si encontramos URL directa, la guardamos
             if url_res:

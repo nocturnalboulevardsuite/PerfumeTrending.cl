@@ -519,16 +519,16 @@
         },
         {
           "tienda": "Falabella",
-          "url_producto": "https://www.falabella.com/falabella-cl/product/154970630/perfume-hombre-versace-eros-energy-pour-homme-edp-50-ml",
-          "precio_actual": 57990,
-          "precio_normal": 57990,
-          "volumen_ml": 50
+          "url_producto": "https://www.falabella.com/falabella-cl/product/122570009/Versace-Eros-100ML-EDT-Hombre-Versace",
+          "precio_actual": 84990,
+          "precio_normal": 99990,
+          "volumen_ml": 100
         },
         {
           "tienda": "Ripley",
-          "url_producto": "https://simple.ripley.cl/perfume-versace-eros-energy-hombre-edp-100-ml-2000408174875p",
-          "precio_actual": 122990,
-          "precio_normal": 122990,
+          "url_producto": "https://simple.ripley.cl/perfume-versace-eros-edt-100-ml-2000350414777p",
+          "precio_actual": 89990,
+          "precio_normal": 105990,
           "volumen_ml": 100
         }
       ]

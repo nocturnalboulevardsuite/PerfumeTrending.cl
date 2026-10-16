@@ -34,7 +34,10 @@ PALABRAS_EXCLUSION = [
     "shampoo", "champu", "gel de ducha", "shower gel", "jabon", "vela", "after shave",
     "after-shave", "aftershave", "balsamo", "neceser", "estuche vacio", "atomizador recargable",
     "labial", "mascara pestañas", "roll on", "roll-on", "cuidado del cabello", "tratamiento hidratante",
-    "twist and spray", "twist & spray"
+    "twist and spray", "twist & spray",
+    # Imitaciones, clones y equivalencias de baja fidelidad
+    "inspirado en", "inspirada en", "inspiracion", "inspiración", "tipo ", "dupe",
+    "equivalencia", "imitacion", "imitación", "clon"
 ]
 
 
@@ -245,26 +248,90 @@ def limpiar_nombre_perfume(titulo: str, marca: str = "") -> str:
     return limpio.title()
 
 
+MARCAS_CONOCIDAS_INTEGRIDAD = {
+    "chanel", "dior", "versace", "givenchy", "gaultier", "jean paul gaultier",
+    "armani", "giorgio armani", "carolina herrera", "paco rabanne", "rabanne",
+    "tom ford", "yves saint laurent", "saint laurent", "ysl", "creed",
+    "parfums de marly", "xerjoff", "maison francis kurkdjian", "kurkdjian", "mfk",
+    "azzaro", "dolce & gabbana", "dolce gabbana", "d&g", "calvin klein", "ck",
+    "hugo boss", "boss", "moschino", "valentino", "prada", "montblanc", "mont blanc",
+    "burberry", "gucci", "bvlgari", "bulgari", "narciso rodriguez", "hermes", "hermès",
+    "mugler", "thierry mugler", "loewe", "kenzo", "issey miyake", "lancome", "lancôme",
+    "guerlain", "ralph lauren", "antonio banderas", "benetton", "guess", "nike",
+    "rihanna", "ariana grande", "sabrina carpenter", "tous", "lattafa", "armaf",
+    "afnan", "rasasi", "al haramain", "orientica", "swiss arabian"
+}
+
+MARCAS_CLONES_DUPE = {
+    "fragrance world", "maison alhambra", "alhambra", "paris corner", "la french",
+    "french avenue", "barakkat", "orientica", "zimaya"
+}
+
 KNOWN_FLANKERS = [
-    "profondo", "profumo", "absolu", "gioia", "elixir", "cobalt",
-    "intensely", "absolutely", "freeze", "coral", "night", "sport",
-    "cologne", "parfum", "fraiche"
+    # Cítricos / Frescos / Deportes
+    "energy", "sport", "cologne", "fraiche", "fresh", "freeze", "ice",
+    # Intensos / Fuego / Noche / Oscuros
+    "flame", "intense", "intensely", "absolutely", "extreme", "noir", "black", "night", "nuit", "dark",
+    # Maderas / Oud / Ámbar
+    "oud", "amber", "leather", "tobacco",
+    # Acuáticos / Profundos
+    "profondo", "profumo", "absolu", "ocean", "deep",
+    # Metales / Joyas / Colores
+    "rouge", "white", "blanche", "gold", "silver", "cobalt", "coral", "crystal", "bright", "pink",
+    # Ediciones de concentración superior o flankers icónicos
+    "elixir", "ultra", "lucky", "prive", "privé", "royal", "victory", "legend",
+    "platinum", "forever", "summer", "lover", "hero", "blush", "sparkling",
+    "dazzling", "najim", "gioia", "barakkat"
 ]
 
 
 def coincide_con_perfume(titulo: str, perfume_nombre: str, marca: str = "", concentracion: str = "") -> bool:
     """
-    Verifica con alta fidelidad si el título de un producto de e-commerce corresponde a la fragancia.
-    - Exige que todos los tokens significativos del nombre del perfume estén presentes en el título.
-    - Aplica guardia de flankers: descarta productos que contengan nombres de flankers no presentes en el perfume buscado (ej: no emparejar 'Acqua Di Gio Profondo' con 'Acqua Di Gio').
-    - Valida coherencia de concentración: evita cruzar Eau de Parfum con Eau de Toilette cuando está especificado.
-    - Usa límites de palabra (\b) para evitar cruces como 'gio' con 'gioia'.
+    Verifica con alta fidelidad e integridad si el título de un producto de e-commerce corresponde a la fragancia.
+    
+    Capacidades de Integridad:
+    1. Descarte inmediato de imitaciones, dupes y equivalencias ('inspirado en', 'tipo', etc.).
+    2. Integridad de Marca:
+       - Si el perfume buscado es de una casa original, descarta productos de casas clon (Fragrance World, Barakkat, etc.).
+       - En títulos estructurados ('MARCA | Producto' o 'MARCA - Producto'), exige que el prefijo sea compatible con la marca buscada.
+       - Si el título menciona explícitamente otra marca mayor conocida (ej: Givenchy buscando Maison Francis Kurkdjian), descarta.
+    3. Guardia de Flankers: si el título contiene un flanker conocido (ej: 'energy', 'flame', 'profondo', 'rouge') que no pertenece al perfume canónico, descarta.
+    4. Guardia de Género / Variantes: descarta 'Eros Woman' o 'Eros Pour Femme' si se busca el 'Eros' clásico masculino.
+    5. Coherencia de Concentración: evita cruces incompatibles (EDP vs EDT) cuando está especificado.
+    6. Verificación de Tokens: exige que todos los tokens significativos del nombre del perfume estén presentes.
     """
     tit = titulo.lower()
     p_lower = perfume_nombre.lower()
-    c_lower = concentracion.lower() if concentracion else ""
+    m_lower = marca.lower().strip() if marca else ""
+    c_lower = concentracion.lower().strip() if concentracion else ""
 
-    # Guardia de concentración (evitar emparejar EDT si buscamos EDP, o viceversa)
+    # 0. Descarte inmediato de imitaciones, dupes o equivalencias
+    if re.search(r"\b(inspirad[oa]\s+en|imitaci[oó]n|equivalencia|tipo\s+|dupe)\b", tit):
+        return False
+
+    # 1. Validación estricta de Marca (Brand Integrity)
+    if m_lower:
+        # A. Si la marca buscada NO es una casa de clones, pero el título contiene una marca clon -> descartar
+        es_marca_clon = any(clon in m_lower for clon in MARCAS_CLONES_DUPE)
+        if not es_marca_clon:
+            if any(re.search(rf"\b{re.escape(clon)}\b", tit) for clon in MARCAS_CLONES_DUPE):
+                return False
+
+        # B. Títulos estructurados con delimitador (ej: 'GIVENCHY | Perfume Mujer L'Interdit...')
+        if "|" in titulo:
+            prefix_marca = titulo.split("|")[0].strip().lower()
+            for k_brand in MARCAS_CONOCIDAS_INTEGRIDAD:
+                if re.search(rf"\b{re.escape(k_brand)}\b", prefix_marca):
+                    if not (k_brand in m_lower or m_lower in k_brand or k_brand in p_lower):
+                        return False
+
+        # C. Conflicto con marcas reconocidas incompatibles en el título
+        for k_brand in MARCAS_CONOCIDAS_INTEGRIDAD:
+            if len(k_brand) >= 4 and re.search(rf"\b{re.escape(k_brand)}\b", tit):
+                if not (k_brand in m_lower or m_lower in k_brand or k_brand in p_lower):
+                    return False
+
+    # 2. Guardia de concentración (evitar emparejar EDT si buscamos EDP, o viceversa)
     if c_lower:
         if ("parfum" in c_lower or "edp" in c_lower) and not ("toilette" in c_lower or "edt" in c_lower):
             if ("toilette" in tit or "edt" in tit) and not ("eau de parfum" in tit or "edp" in tit):
@@ -273,14 +340,19 @@ def coincide_con_perfume(titulo: str, perfume_nombre: str, marca: str = "", conc
             if ("eau de parfum" in tit or "edp" in tit) and not ("toilette" in tit or "edt" in tit):
                 return False
 
-    # 1. Guardia de flankers: si el título contiene un flanker conocido que NO está en el perfume, descartar
+    # 3. Guardia de Flankers: si el título contiene un flanker que NO está en el nombre del perfume, descartar
     for fl in KNOWN_FLANKERS:
         if fl == "parfum" and "eau de parfum" in tit:
             continue
         if re.search(rf"\b{re.escape(fl)}\b", tit) and fl not in p_lower:
             return False
 
-    # 2. Tokens significativos del perfume
+    # 4. Guardia de Género / Variantes ('Woman', 'Pour Femme')
+    if re.search(rf"\b{re.escape(p_lower)}\s+(?:woman|femme|pour femme)\b", tit):
+        if not re.search(r"\b(woman|women|femme|mujer|dama|donna)\b", p_lower):
+            return False
+
+    # 5. Tokens significativos del perfume
     t_clean = re.sub(r"[^\w\s]", " ", perfume_nombre).lower()
     stop_words = {
         "de", "la", "el", "los", "las", "en", "pour", "for", "men", "women",

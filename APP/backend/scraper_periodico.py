@@ -308,37 +308,41 @@ def extraer_variedades_falabella(
                     is_prod_out = bool(pdata.get("isOutOfStock", False))
                     skus = pdata.get("variants", []) or pdata.get("skus", [])
                     prod_name = pdata.get("name", perfume_nombre)
-                    for v in skus:
-                        v_name = v.get("name") or prod_name
-                        size_attr = v.get("attributes", {}).get("size")
-                        vol = clean_digits(size_attr) if size_attr else extraer_volumen_ml(v_name)
-                        if not vol or vol < 10 or vol > 1000:
-                            vol = extraer_volumen_ml(v_name) or volumen_ml_defecto or 100
-                        if vol in vols_vistos:
-                            continue
-                        prices = v.get("prices", [])
-                        p_act, p_norm = 0, 0
-                        for p_item in prices:
-                            t = p_item.get("type", "")
-                            val = clean_digits(p_item.get("price", ["0"])[0])
-                            if t in ("internetPrice", "eventPrice") and val > 0:
-                                p_act = val
-                            elif t == "normalPrice" and val > 0:
-                                p_norm = val
-                        if p_act == 0 and prices:
-                            p_act = clean_digits(prices[0].get("price", ["0"])[0])
-                        if p_act >= 10000:
-                            is_out = bool(v.get("isOutOfStock", False)) or is_prod_out or (v.get("isPurchaseable") is False)
-                            vols_vistos.add(vol)
-                            variedades.append({
-                                "exito": True,
-                                "precio_actual": p_act,
-                                "precio_normal": p_norm if p_norm > p_act else p_act,
-                                "url": url_directa,
-                                "en_stock": not is_out,
-                                "volumen_ml": vol,
-                                "metodo": "Falabella Direct Variants"
-                            })
+                    # Validación de integridad: asegurar que la URL directa corresponde al perfume auditado
+                    if not coincide_con_perfume(prod_name, perfume_nombre, marca, concentracion):
+                        logger.warning(f"⚠️ URL directa Falabella descartada por inconsistencia ({prod_name} != {perfume_nombre})")
+                    else:
+                        for v in skus:
+                            v_name = v.get("name") or prod_name
+                            size_attr = v.get("attributes", {}).get("size")
+                            vol = clean_digits(size_attr) if size_attr else extraer_volumen_ml(v_name)
+                            if not vol or vol < 10 or vol > 1000:
+                                vol = extraer_volumen_ml(v_name) or volumen_ml_defecto or 100
+                            if vol in vols_vistos:
+                                continue
+                            prices = v.get("prices", [])
+                            p_act, p_norm = 0, 0
+                            for p_item in prices:
+                                t = p_item.get("type", "")
+                                val = clean_digits(p_item.get("price", ["0"])[0])
+                                if t in ("internetPrice", "eventPrice") and val > 0:
+                                    p_act = val
+                                elif t == "normalPrice" and val > 0:
+                                    p_norm = val
+                            if p_act == 0 and prices:
+                                p_act = clean_digits(prices[0].get("price", ["0"])[0])
+                            if p_act >= 10000:
+                                is_out = bool(v.get("isOutOfStock", False)) or is_prod_out or (v.get("isPurchaseable") is False)
+                                vols_vistos.add(vol)
+                                variedades.append({
+                                    "exito": True,
+                                    "precio_actual": p_act,
+                                    "precio_normal": p_norm if p_norm > p_act else p_act,
+                                    "url": url_directa,
+                                    "en_stock": not is_out,
+                                    "volumen_ml": vol,
+                                    "metodo": "Falabella Direct Variants"
+                                })
         except Exception as e:
             logger.debug(f"Aviso leyendo URL directa Falabella: {e}")
 
