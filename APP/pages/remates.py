@@ -51,11 +51,16 @@ def clean_html(html_str: str) -> str:
 
 def resolver_url_oferta(tienda_nombre: str, perfume_nombre: str, url_prod: str = "", url_base: str = "") -> str:
     """Retorna la URL directa a la oferta o realiza la búsqueda directa en la tienda."""
-    if url_prod and url_prod.startswith("http") and url_prod != "#":
-        return url_prod
-
     t = (tienda_nombre or "").lower()
     q = urllib.parse.quote(perfume_nombre.strip())
+
+    if "paris" in t or ("paris.cl" in (url_prod or "").lower()):
+        if not url_prod or ".html" in url_prod.lower() or "search" not in url_prod.lower():
+            return f"https://www.paris.cl/search?q={q}"
+        return url_prod
+
+    if url_prod and url_prod.startswith("http") and url_prod != "#":
+        return url_prod
 
     if "falabella" in t:
         return f"https://www.falabella.com/falabella-cl/search?Ntt={q}"

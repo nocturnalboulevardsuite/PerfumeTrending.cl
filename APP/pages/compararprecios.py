@@ -99,12 +99,15 @@ def resolver_url_oferta(tienda_nombre: str, perfume_nombre: str, url_prod: str, 
     query_parts = f"{marca} {perfume_nombre}".strip() if (marca and marca.lower() not in perfume_nombre.lower()) else perfume_nombre.strip()
     q = urllib.parse.quote(query_parts)
 
-    # Validar que la URL directa no sea un marcador o enlace muerto conocido
-    if url_prod and url_prod.startswith("http") and url_prod != "#":
-        # Descartar URLs de Paris u otras tiendas que redirigen a 'página en construcción'
-        url_lower = url_prod.lower()
-        if "paris.cl" in url_lower and ("434948999" in url_lower or "construccion" in url_lower or "experiencia" in url_lower):
+    # Paris.cl rota constantemente sus IDs de catálogo (.html) provocando 404 "Página en Construcción".
+    # Redirigir siempre a la búsqueda oficial de Paris garantiza que el usuario llegue a la fragancia disponible.
+    if "paris" in t or ("paris.cl" in (url_prod or "").lower()):
+        if not url_prod or ".html" in url_prod.lower() or "search" not in url_prod.lower():
             return f"https://www.paris.cl/search?q={q}"
+        return url_prod
+
+    # Validar que la URL directa no sea un marcador o enlace muerto
+    if url_prod and url_prod.startswith("http") and url_prod != "#":
         return url_prod
 
     if "falabella" in t:
