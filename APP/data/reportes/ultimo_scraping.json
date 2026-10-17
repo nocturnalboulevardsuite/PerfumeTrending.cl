@@ -1,26 +1,26 @@
 {
-  "actualizaciones": 380,
-  "fecha": "2026-10-16 12:03:57",
-  "duracion_segundos": 1559.09,
+  "actualizaciones": 65,
+  "fecha": "2026-10-17 11:19:27",
+  "duracion_segundos": 1471.8,
   "metadata": {
     "version_etl": "3.0.0",
     "sistema": "PerfumeTrending Professional Anti-Bot ETL",
-    "fecha_ejecucion": "2026-10-16 12:03:57",
-    "duracion_segundos": 1559.09,
+    "fecha_ejecucion": "2026-10-17 11:19:27",
+    "duracion_segundos": 1471.8,
     "estado": "EXITOSO"
   },
   "metricas": {
     "total_perfumes_catalogo": 153,
     "total_tiendas_registradas": 8,
-    "precios_actualizados": 380,
+    "precios_actualizados": 65,
     "exclusiones_marca": 50,
     "errores_totales": 0
   },
   "estadisticas_tiendas": {
     "Falabella": {
       "consultas": 153,
-      "exitos_en_vivo": 236,
-      "fallbacks_seguridad": 47,
+      "exitos_en_vivo": 222,
+      "fallbacks_seguridad": 54,
       "trust_score": 96
     },
     "Paris": {
@@ -38,12 +38,12 @@
     "Silk Perfumes": {
       "consultas": 143,
       "exitos_en_vivo": 136,
-      "fallbacks_seguridad": 54,
+      "fallbacks_seguridad": 53,
       "trust_score": 92
     },
     "Elite Perfumes": {
       "consultas": 143,
-      "exitos_en_vivo": 78,
+      "exitos_en_vivo": 79,
       "fallbacks_seguridad": 90,
       "trust_score": 89
     },
@@ -55,14 +55,14 @@
     },
     "Alisha Perfumes": {
       "consultas": 143,
-      "exitos_en_vivo": 98,
-      "fallbacks_seguridad": 67,
+      "exitos_en_vivo": 97,
+      "fallbacks_seguridad": 68,
       "trust_score": 88
     },
     "Yauras Perfumes": {
       "consultas": 143,
-      "exitos_en_vivo": 121,
-      "fallbacks_seguridad": 66,
+      "exitos_en_vivo": 124,
+      "fallbacks_seguridad": 65,
       "trust_score": 88
     }
   },
@@ -75,7 +75,7 @@
       "tiene_descuento": false,
       "origen": "Falabella Direct Variants",
       "volumen_ml": 50,
-      "en_stock": false
+      "en_stock": true
     },
     {
       "perfume": "Bleu de Chanel",
@@ -85,7 +85,7 @@
       "tiene_descuento": false,
       "origen": "Falabella Direct Variants",
       "volumen_ml": 150,
-      "en_stock": false
+      "en_stock": true
     },
     {
       "perfume": "Bleu de Chanel",
@@ -95,7 +95,7 @@
       "tiene_descuento": false,
       "origen": "Falabella Direct Variants",
       "volumen_ml": 100,
-      "en_stock": false
+      "en_stock": true
     },
     {
       "perfume": "YSL Libre",
@@ -110,21 +110,21 @@
     {
       "perfume": "YSL Libre",
       "tienda": "Falabella",
-      "precio_actual": 176990,
-      "precio_normal": 176990,
-      "tiene_descuento": false,
-      "origen": "Falabella Direct Variants",
-      "volumen_ml": 90,
-      "en_stock": true
-    },
-    {
-      "perfume": "YSL Libre",
-      "tienda": "Falabella",
       "precio_actual": 157990,
       "precio_normal": 157990,
       "tiene_descuento": false,
       "origen": "Falabella Direct Variants",
       "volumen_ml": 100,
+      "en_stock": true
+    },
+    {
+      "perfume": "YSL Libre",
+      "tienda": "Falabella",
+      "precio_actual": 176990,
+      "precio_normal": 176990,
+      "tiene_descuento": false,
+      "origen": "Falabella Direct Variants",
+      "volumen_ml": 90,
       "en_stock": true
     },
     {
@@ -170,21 +170,21 @@
     {
       "perfume": "YSL Libre",
       "tienda": "Alisha Perfumes",
-      "precio_actual": 43990,
-      "precio_normal": 59990,
-      "tiene_descuento": true,
-      "origen": "Shopify Multi-Suggest",
-      "volumen_ml": 30,
-      "en_stock": false
-    },
-    {
-      "perfume": "YSL Libre",
-      "tienda": "Alisha Perfumes",
       "precio_actual": 68990,
       "precio_normal": 99990,
       "tiene_descuento": true,
       "origen": "Shopify Multi-Suggest",
       "volumen_ml": 50,
+      "en_stock": false
+    },
+    {
+      "perfume": "YSL Libre",
+      "tienda": "Alisha Perfumes",
+      "precio_actual": 43990,
+      "precio_normal": 59990,
+      "tiene_descuento": true,
+      "origen": "Shopify Multi-Suggest",
+      "volumen_ml": 30,
       "en_stock": false
     },
     {
