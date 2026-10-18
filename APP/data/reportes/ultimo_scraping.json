@@ -1,26 +1,26 @@
 {
-  "actualizaciones": 65,
-  "fecha": "2026-10-17 11:19:27",
-  "duracion_segundos": 1471.8,
+  "actualizaciones": 39,
+  "fecha": "2026-10-18 11:55:29",
+  "duracion_segundos": 1103.63,
   "metadata": {
     "version_etl": "3.0.0",
     "sistema": "PerfumeTrending Professional Anti-Bot ETL",
-    "fecha_ejecucion": "2026-10-17 11:19:27",
-    "duracion_segundos": 1471.8,
+    "fecha_ejecucion": "2026-10-18 11:55:29",
+    "duracion_segundos": 1103.63,
     "estado": "EXITOSO"
   },
   "metricas": {
     "total_perfumes_catalogo": 153,
     "total_tiendas_registradas": 8,
-    "precios_actualizados": 65,
+    "precios_actualizados": 39,
     "exclusiones_marca": 50,
     "errores_totales": 0
   },
   "estadisticas_tiendas": {
     "Falabella": {
       "consultas": 153,
-      "exitos_en_vivo": 222,
-      "fallbacks_seguridad": 54,
+      "exitos_en_vivo": 226,
+      "fallbacks_seguridad": 49,
       "trust_score": 96
     },
     "Paris": {
@@ -37,13 +37,13 @@
     },
     "Silk Perfumes": {
       "consultas": 143,
-      "exitos_en_vivo": 136,
-      "fallbacks_seguridad": 53,
+      "exitos_en_vivo": 135,
+      "fallbacks_seguridad": 54,
       "trust_score": 92
     },
     "Elite Perfumes": {
       "consultas": 143,
-      "exitos_en_vivo": 79,
+      "exitos_en_vivo": 78,
       "fallbacks_seguridad": 90,
       "trust_score": 89
     },
@@ -56,13 +56,13 @@
     "Alisha Perfumes": {
       "consultas": 143,
       "exitos_en_vivo": 97,
-      "fallbacks_seguridad": 68,
+      "fallbacks_seguridad": 69,
       "trust_score": 88
     },
     "Yauras Perfumes": {
       "consultas": 143,
-      "exitos_en_vivo": 124,
-      "fallbacks_seguridad": 65,
+      "exitos_en_vivo": 119,
+      "fallbacks_seguridad": 66,
       "trust_score": 88
     }
   },
@@ -160,8 +160,8 @@
     {
       "perfume": "YSL Libre",
       "tienda": "Alisha Perfumes",
-      "precio_actual": 117990,
-      "precio_normal": 145490,
+      "precio_actual": 107990,
+      "precio_normal": 139990,
       "tiene_descuento": true,
       "origen": "Shopify Multi-Suggest",
       "volumen_ml": 90,
@@ -190,8 +190,8 @@
     {
       "perfume": "YSL Libre",
       "tienda": "Yauras Perfumes",
-      "precio_actual": 107900,
-      "precio_normal": 107900,
+      "precio_actual": 105990,
+      "precio_normal": 105990,
       "tiene_descuento": false,
       "origen": "Shopify Multi-Suggest",
       "volumen_ml": 90,
