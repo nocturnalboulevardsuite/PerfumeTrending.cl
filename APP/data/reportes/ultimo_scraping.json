@@ -1,26 +1,26 @@
 {
-  "actualizaciones": 41,
-  "fecha": "2026-10-19 14:17:12",
-  "duracion_segundos": 1293.48,
+  "actualizaciones": 69,
+  "fecha": "2026-10-20 12:30:06",
+  "duracion_segundos": 1368.7,
   "metadata": {
     "version_etl": "3.0.0",
     "sistema": "PerfumeTrending Professional Anti-Bot ETL",
-    "fecha_ejecucion": "2026-10-19 14:17:12",
-    "duracion_segundos": 1293.48,
+    "fecha_ejecucion": "2026-10-20 12:30:06",
+    "duracion_segundos": 1368.7,
     "estado": "EXITOSO"
   },
   "metricas": {
     "total_perfumes_catalogo": 153,
     "total_tiendas_registradas": 8,
-    "precios_actualizados": 41,
+    "precios_actualizados": 69,
     "exclusiones_marca": 50,
     "errores_totales": 0
   },
   "estadisticas_tiendas": {
     "Falabella": {
       "consultas": 153,
-      "exitos_en_vivo": 233,
-      "fallbacks_seguridad": 46,
+      "exitos_en_vivo": 235,
+      "fallbacks_seguridad": 49,
       "trust_score": 96
     },
     "Paris": {
@@ -37,14 +37,14 @@
     },
     "Silk Perfumes": {
       "consultas": 143,
-      "exitos_en_vivo": 136,
+      "exitos_en_vivo": 133,
       "fallbacks_seguridad": 53,
       "trust_score": 92
     },
     "Elite Perfumes": {
       "consultas": 143,
-      "exitos_en_vivo": 77,
-      "fallbacks_seguridad": 90,
+      "exitos_en_vivo": 79,
+      "fallbacks_seguridad": 87,
       "trust_score": 89
     },
     "DBS Beauty Store": {
@@ -55,14 +55,14 @@
     },
     "Alisha Perfumes": {
       "consultas": 143,
-      "exitos_en_vivo": 94,
-      "fallbacks_seguridad": 72,
+      "exitos_en_vivo": 90,
+      "fallbacks_seguridad": 74,
       "trust_score": 88
     },
     "Yauras Perfumes": {
       "consultas": 143,
-      "exitos_en_vivo": 117,
-      "fallbacks_seguridad": 68,
+      "exitos_en_vivo": 109,
+      "fallbacks_seguridad": 72,
       "trust_score": 88
     }
   },
@@ -140,16 +140,6 @@
     {
       "perfume": "YSL Libre",
       "tienda": "Silk Perfumes",
-      "precio_actual": 54990,
-      "precio_normal": 120990,
-      "tiene_descuento": true,
-      "origen": "Shopify Multi-Suggest",
-      "volumen_ml": 30,
-      "en_stock": true
-    },
-    {
-      "perfume": "YSL Libre",
-      "tienda": "Silk Perfumes",
       "precio_actual": 106990,
       "precio_normal": 235390,
       "tiene_descuento": true,
@@ -159,23 +149,23 @@
     },
     {
       "perfume": "YSL Libre",
-      "tienda": "Alisha Perfumes",
-      "precio_actual": 117990,
-      "precio_normal": 145490,
+      "tienda": "Silk Perfumes",
+      "precio_actual": 54990,
+      "precio_normal": 120990,
       "tiene_descuento": true,
       "origen": "Shopify Multi-Suggest",
-      "volumen_ml": 90,
+      "volumen_ml": 30,
       "en_stock": true
     },
     {
       "perfume": "YSL Libre",
       "tienda": "Alisha Perfumes",
-      "precio_actual": 68990,
-      "precio_normal": 99990,
+      "precio_actual": 107990,
+      "precio_normal": 139990,
       "tiene_descuento": true,
       "origen": "Shopify Multi-Suggest",
-      "volumen_ml": 50,
-      "en_stock": false
+      "volumen_ml": 90,
+      "en_stock": true
     },
     {
       "perfume": "YSL Libre",
@@ -190,8 +180,8 @@
     {
       "perfume": "YSL Libre",
       "tienda": "Yauras Perfumes",
-      "precio_actual": 105990,
-      "precio_normal": 105990,
+      "precio_actual": 119990,
+      "precio_normal": 119990,
       "tiene_descuento": false,
       "origen": "Shopify Multi-Suggest",
       "volumen_ml": 90,
@@ -210,11 +200,21 @@
     {
       "perfume": "Dior Sauvage",
       "tienda": "Falabella",
-      "precio_actual": 81500,
-      "precio_normal": 81500,
+      "precio_actual": 228300,
+      "precio_normal": 228300,
       "tiene_descuento": false,
       "origen": "Falabella Live Variants",
-      "volumen_ml": 30,
+      "volumen_ml": 100,
+      "en_stock": true
+    },
+    {
+      "perfume": "Dior Sauvage",
+      "tienda": "Falabella",
+      "precio_actual": 371090,
+      "precio_normal": 371100,
+      "tiene_descuento": true,
+      "origen": "Falabella Live Variants",
+      "volumen_ml": 300,
       "en_stock": true
     }
   ],
