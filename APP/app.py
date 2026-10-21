@@ -7,6 +7,7 @@ Punto de entrada de la plataforma chilena de comparación de precios de fraganci
 - Renderizado de componentes visuales con CSS personalizado (modo oscuro/claro y glassmorphism).
 - Paginación dinámica y caché en memoria con invalidación TTL para alto rendimiento.
 - Consumo resiliente de datos: consulta primaria a Supabase (PostgreSQL en la nube) con fallback a SQLite.
+- Autenticación por código OTP enviado vía correo electrónico (100% gratuito).
 """
 
 import streamlit as st
@@ -17,6 +18,9 @@ import os
 import base64
 import random
 import time
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 # Configurar rutas para importar backend
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -48,13 +52,44 @@ except ImportError:
     verificar_usuario = None
 
 # =============================================================================
+# FUNCIÓN DE ENVÍO DE CORREO ELECTRÓNICO GRATUITO (SMTP)
+# =============================================================================
+def enviar_codigo_email(destinatario: str, codigo: str) -> bool:
+    """Envía un correo electrónico con el código de verificación usando servidor SMTP."""
+    smtp_email = st.secrets.get("SMTP_EMAIL", None)
+    smtp_password = st.secrets.get("SMTP_PASSWORD", None)
+
+    if not smtp_email or not smtp_password:
+        return False
+
+    try:
+        msg = MIMEMultipart("alternative")
+        msg["Subject"] = f"{codigo} es tu código de acceso a PerfumeTrending"
+        msg["From"] = f"PerfumeTrending <{smtp_email}>"
+        msg["To"] = destinatario
+
+        html_content = f"""
+        <div style="font-family: Arial, sans-serif; max-width: 500px; padding: 20px; border: 1px solid #e4e4e7; border-radius: 10px; background-color: #0c0e12; color: #f0f0f0;">
+            <h2 style="color: #d83737; margin-bottom: 10px;">PerfumeTrending</h2>
+            <p style="font-size: 15px; color: #cccccc;">Hola,</p>
+            <p style="font-size: 15px; color: #cccccc;">Tu código de verificación para ingresar a la plataforma es:</p>
+            <div style="text-align: center; margin: 25px 0;">
+                <span style="font-size: 32px; font-weight: bold; letter-spacing: 6px; color: #ffffff; background-color: #161920; padding: 12px 24px; border-radius: 8px; border: 1px solid #2a2e39;">{codigo}</span>
+            </div>
+            <p style="font-size: 13px; color: #888890;">Este código es válido para tu sesión actual. Si no solicitaste este acceso, puedes ignorar este mensaje.</p>
+        </div>
+        """
+        msg.attach(MIMEText(html_content, "html"))
+
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+            server.login(smtp_email, smtp_password)
+            server.sendmail(smtp_email, destinatario, msg.as_string())
+        return True
+    except Exception:
+        return False
+
+# =============================================================================
 # BLOQUE 1: CACHÉ EN MEMORIA DE ALTO RENDIMIENTO (STREAMLIT CACHE DATA)
-# -----------------------------------------------------------------------------
-# ¿QUÉ HACE ESTE BLOQUE?
-# Utiliza `@st.cache_data(ttl=60)` para memorizar las consultas al catálogo:
-# - Recibe parámetros de búsqueda textual, tupla inmutable de esencias, categoría y orden.
-# - Cachea en RAM los resultados por 60 segundos para que escribir en la barra de búsqueda
-#   o cambiar de página responda de manera instantánea (sub-segundo) sin recargar la base de datos.
 # =============================================================================
 @st.cache_data(ttl=60, show_spinner=False)
 def get_cached_catalogo(busqueda=None, esencias_tuple=None, categoria=None, orden="id_asc"):
@@ -98,22 +133,10 @@ def get_image_src(img_path_or_url):
 
     return img_path_or_url
 
-# DIBUJO VECTORIAL SVG BASADO EXACTAMENTE EN LA IMAGEN ADJUNTA (ÍCONO FRASCO)
 perfume_svg_favicon = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 36' fill='none'><path d='M 7 21 A 11 11 0 0 0 29 21 Z' fill='%238c7b6d'/><circle cx='18' cy='21' r='11' stroke='%23ffffff' stroke-width='2.2'/><line x1='18' y1='10' x2='18' y2='32' stroke='%23ffffff' stroke-width='2'/><line x1='7' y1='21' x2='29' y2='21' stroke='%23ffffff' stroke-width='2'/><rect x='15' y='7' width='6' height='3' fill='%2314171d' stroke='%23ffffff' stroke-width='2'/><rect x='13' y='2' width='10' height='5' rx='1.5' fill='%238c7b6d' stroke='%23ffffff' stroke-width='2'/></svg>"
-
 
 # =============================================================================
 # BLOQUE 2: CONFIGURACIÓN DE PÁGINA Y ESTADO GLOBAL REACTIVO (SESSION STATE)
-# -----------------------------------------------------------------------------
-# ¿QUÉ HACE ESTE BLOQUE?
-# 1. Configura el favicon oficial, el título y layout ancho (`wide`) de la SPA.
-# 2. Ejecuta `init_db()` para garantizar que la base de datos esté lista antes de renderizar.
-# 3. Administra las variables de sesión del usuario en `st.session_state`:
-#    - `theme`: 'dark' o 'light' para alternar temas visuales.
-#    - `catalog_page`: número de página actual del catálogo (paginación de 12 items).
-#    - `selected_category`: 'todos', 'arabes' o 'remates'.
-#    - `selected_order`: criterio de ordenamiento (id_asc, precio_asc, precio_desc, nombre_asc).
-#    - `logged_in` y `user_info`: estado de inicio de sesión del usuario.
 # =============================================================================
 st.set_page_config(
     page_title="PerfumeTrending",
@@ -122,7 +145,6 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Inicializar esquema de base de datos relacional
 init_db()
 
 if 'current_page' not in st.session_state:
@@ -142,34 +164,31 @@ if 'selected_order' not in st.session_state:
 if 'selected_order_label' not in st.session_state:
     st.session_state['selected_order_label'] = 'Destacados'
 
-# CONTROL ESTRICTO DE ESTADO DE MODALES
 if 'show_login_modal' not in st.session_state:
     st.session_state['show_login_modal'] = False
 if 'show_visual_modal' not in st.session_state:
     st.session_state['show_visual_modal'] = False
 
-# Resetear modales automáticamente al cargar la aplicación por primera vez
 if 'app_init_done' not in st.session_state:
     st.session_state['app_init_done'] = True
     st.session_state['show_login_modal'] = False
     st.session_state['show_visual_modal'] = False
 
-# ESTADOS DE AUTENTICACIÓN Y CONTROL DE MODALES
 if 'logged_in' not in st.session_state:
     st.session_state['logged_in'] = False
 if 'user_info' not in st.session_state:
     st.session_state['user_info'] = None
 
-# ESTADOS PARA INICIO POR CÓDIGO (OTP)
 if 'otp_code_sent' not in st.session_state:
     st.session_state['otp_code_sent'] = False
 if 'otp_contact' not in st.session_state:
     st.session_state['otp_contact'] = ""
 if 'otp_secret' not in st.session_state:
     st.session_state['otp_secret'] = ""
+if 'email_sent_real' not in st.session_state:
+    st.session_state['email_sent_real'] = False
 
 def reset_modals():
-    """Función para garantizar que ningún modal emergente quede abierto por error."""
     st.session_state['show_login_modal'] = False
     st.session_state['show_visual_modal'] = False
 
@@ -214,29 +233,34 @@ input_border = "#2a2e39" if is_dark else "#d1d5db"
 def modal_autenticacion():
     tab_codigo, tab_login, tab_registro = st.tabs(["Inicio por Código", "Iniciar Sesión", "Registrarse"])
     
-    # OPCIÓN PREDETERMINADA: INICIO POR CÓDIGO
     with tab_codigo:
-        st.markdown("#### Ingresa con tu Correo o Teléfono")
+        st.markdown("#### Ingresa con tu Correo Electrónico")
         
         if not st.session_state['otp_code_sent']:
             with st.form("form_send_otp", clear_on_submit=False):
-                contact_input = st.text_input("Correo electrónico o número de teléfono", key="otp_contact_input", placeholder="ejemplo@correo.cl o +56912345678")
+                contact_input = st.text_input("Correo electrónico", key="otp_contact_input", placeholder="tu_correo@ejemplo.cl")
                 btn_send = st.form_submit_button("Enviar código de verificación", use_container_width=True)
                 
                 if btn_send:
-                    if not contact_input.strip():
-                        st.error("Por favor ingresa un correo electrónico o teléfono válido.")
+                    if not contact_input.strip() or "@" not in contact_input:
+                        st.error("Por favor ingresa un correo electrónico válido.")
                         st.session_state['show_login_modal'] = True
                     else:
                         code = str(random.randint(100000, 999999))
                         st.session_state['otp_code_sent'] = True
                         st.session_state['otp_contact'] = contact_input.strip()
                         st.session_state['otp_secret'] = code
+                        
+                        enviado = enviar_codigo_email(contact_input.strip(), code)
+                        st.session_state['email_sent_real'] = enviado
                         st.session_state['show_login_modal'] = True
                         st.rerun()
         else:
-            st.info(f"Un código de verificación ha sido enviado a **{st.session_state['otp_contact']}**")
-            st.caption(f"*(Código de prueba rápido: **{st.session_state['otp_secret']}**)*")
+            if st.session_state.get('email_sent_real', False):
+                st.success(f"Código enviado exitosamente a **{st.session_state['otp_contact']}**. Revisa tu bandeja de entrada o spam.")
+            else:
+                st.info(f"Un código de verificación ha sido generado para **{st.session_state['otp_contact']}**")
+                st.caption(f"*(Código de demostración: **{st.session_state['otp_secret']}**)*")
             
             with st.form("form_verify_otp", clear_on_submit=False):
                 input_code = st.text_input("Ingresa el código de 6 dígitos", key="otp_code_input", placeholder="123456", max_chars=6)
@@ -248,9 +272,9 @@ def modal_autenticacion():
                         
                         st.session_state['logged_in'] = True
                         st.session_state['user_info'] = {
-                            'nombre': contact_str.split('@')[0] if '@' in contact_str else contact_str,
-                            'email': contact_str if '@' in contact_str else f"{contact_str}@usuario.cl",
-                            'telefono': contact_str if '@' not in contact_str else '+56 9 1234 5678'
+                            'nombre': contact_str.split('@')[0],
+                            'email': contact_str,
+                            'telefono': '+56 9 1234 5678'
                         }
                         
                         st.session_state['otp_code_sent'] = False
@@ -262,14 +286,13 @@ def modal_autenticacion():
                         st.error("Código incorrecto. Revisa e intenta nuevamente.")
                         st.session_state['show_login_modal'] = True
                         
-            if st.button("Cambiar correo/teléfono", key="btn_reset_otp", use_container_width=True):
+            if st.button("Cambiar correo electrónico", key="btn_reset_otp", use_container_width=True):
                 st.session_state['otp_code_sent'] = False
                 st.session_state['otp_contact'] = ""
                 st.session_state['otp_secret'] = ""
                 st.session_state['show_login_modal'] = True
                 st.rerun()
 
-    # OPCIÓN 2: CON TRADICIONAL CORREO / CONTRASEÑA
     with tab_login:
         st.markdown("#### Ingresa a tu cuenta")
         with st.form("form_login_pass", clear_on_submit=False):
@@ -295,7 +318,6 @@ def modal_autenticacion():
                     st.info("Función de backend en proceso de actualización.")
                     st.session_state['show_login_modal'] = True
 
-    # OPCIÓN 3: REGISTRO NUEVO USUARIO
     with tab_registro:
         st.markdown("#### Crea una cuenta nueva")
         with st.form("form_reg_user", clear_on_submit=False):
@@ -333,7 +355,6 @@ def modal_autenticacion():
         st.session_state['show_visual_modal'] = False
         st.rerun()
 
-# MODAL FLOTANTE PARA BÚSQUEDA VISUAL CON DIBUJOS HTML VECTORIALES
 @st.dialog("Búsqueda Visual de Perfumes")
 def modal_busqueda_visual():
     st.markdown(clean_html(f"""
@@ -442,12 +463,10 @@ def modal_busqueda_visual():
         reset_modals()
         st.rerun()
 
-# 3. RENDERIZADO EXCLUSIVO DE MODALES
 if st.session_state.get('show_login_modal', False):
     st.session_state['show_login_modal'] = False
     modal_autenticacion()
 
-# Posicionamiento del Switch de Tema
 bottle_left_pos = "42px" if is_dark else "-2px"
 static_icon_pos = "12px center" if is_dark else "calc(100% - 12px) center"
 
@@ -463,14 +482,10 @@ bottle_svg = (
     "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 58'><rect x='18' y='2' width='14' height='7' rx='2' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><rect x='21' y='9' width='8' height='5' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='19' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='5' fill='none' stroke='%23111111' stroke-width='2'/><line x1='25' y1='23' x2='25' y2='26' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='25' y1='42' x2='25' y2='45' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='14' y1='34' x2='17' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='33' y1='34' x2='36' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='17' y1='26' x2='19' y2='28' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='31' y1='40' x2='33' y2='42' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='17' y1='42' x2='19' y2='40' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='31' y1='28' x2='33' y2='26' stroke='%23111111' stroke-width='2' stroke-linecap='round'/></svg>"
 )
 
-camera_icon_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23{btn_text[1:]}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z'/><circle cx='12' cy='13' r='4'/></svg>"
 user_icon_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23{btn_text[1:]}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2'/><circle cx='12' cy='7' r='4'/></svg>"
-
-# DIBUJOS VECTORIALES HTML/SVG PARA ELEMENTOS DE INTERFAZ Y PERFIL
 settings_icon_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23{btn_text[1:]}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z'/><circle cx='12' cy='12' r='3'/></svg>"
 logout_icon_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23{btn_text[1:]}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4'/><polyline points='16 17 21 12 16 7'/><line x1='21' y1='12' x2='9' y2='12'/></svg>"
 
-# ICONOS VECTORIALES DE ALTA PRECISIÓN
 trend_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d83737' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='23 6 13.5 15.5 8.5 10.5 1 18'/><polyline points='17 6 23 6 23 12'/></svg>"
 shield_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d83737' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/><polyline points='9 12 11 14 15 10'/></svg>"
 tag_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d83737' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z'/><circle cx='7' cy='7' r='1.5' fill='%23d83737'/></svg>"
@@ -478,11 +493,7 @@ home_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' 
 flame_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d83737' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z'/></svg>"
 grid_icon_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d83737' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><rect x='3' y='3' width='7' height='7'/><rect x='14' y='3' width='7' height='7'/><rect x='14' y='14' width='7' height='7'/><rect x='3' y='14' width='7' height='7'/></svg>"
 diamond_icon_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d83737' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M6 3h12l4 6-10 12L2 9z'/></svg>"
-logo_color_encoded = "%238c7b6d"
-text_color_encoded = "%23ffffff" if is_dark else "%2318181b"
-logo_svg_data = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 36' fill='none' stroke-linecap='round' stroke-linejoin='round'><path d='M 6.8 21 L 29.2 21 C 30 25 27 32 18 32 C 9 32 6 25 6.8 21 Z' fill='{logo_color_encoded}' /><line x1='6.8' y1='21' x2='29.2' y2='21' stroke='{text_color_encoded}' stroke-width='1.5' /><line x1='18' y1='10' x2='18' y2='30' stroke='{text_color_encoded}' stroke-width='1' /><path d='M 18 32 C 9 32 5 24 7.5 17 C 9 12 13 10 15 10 L 21 10 C 23 10 27 12 28.5 17 C 31 24 27 32 18 32 Z' stroke='{text_color_encoded}' stroke-width='2' /><rect x='15' y='7' width='6' height='3' stroke='{text_color_encoded}' stroke-width='1.5' /><rect x='13' y='3' width='10' height='4' rx='1' stroke='{text_color_encoded}' stroke-width='1.5' /><rect x='16' y='0' width='4' height='3' rx='1' fill='{logo_color_encoded}' stroke='{text_color_encoded}' stroke-width='1' /></svg>"
 
-# 4. SISTEMA DE SONIDO Y EVENTOS DE TARJETAS
 js_color_script = f"""
 <script>
 (function() {{
@@ -603,7 +614,6 @@ js_color_script = f"""
 
 components.html(js_color_script, height=0, width=0)
 
-# 5. CSS ADAPTABLE Y ESTILOS
 st.markdown(f"""
     <style>
     header[data-testid="stHeader"] {{ display: none !important; }}
@@ -622,7 +632,6 @@ st.markdown(f"""
         text-shadow: none !important;
     }}
 
-    /* EFECTO DE BOTONES Y ENLACES PAGE_LINK */
     div.stButton > button,
     div.stDownloadButton > button {{
         background-color: {btn_bg} !important;
@@ -641,7 +650,6 @@ st.markdown(f"""
         font-weight: 600 !important;
     }}
 
-    /* BOTONES DE COMPARAR PRECIOS EN CATÁLOGO */
     div[data-testid="stElementContainer"] div.stButton button[key*="btn_comp_"],
     div.stButton > button[key*="btn_comp_"] {{
         background-color: #d83737 !important;
@@ -684,7 +692,6 @@ st.markdown(f"""
         transform: scale(0.98) !important;
     }}
 
-    /* ESTILO ESPECÍFICO PARA BOTONES POPOVER */
     div[data-testid="stPopover"],
     div[data-testid="stPopover"] > button,
     button[data-testid="stPopoverButton"],
@@ -725,7 +732,6 @@ st.markdown(f"""
         color: {text_color} !important;
     }}
 
-    /* CONTENEDOR Y BOTÓN POPOVER DE USUARIO */
     .user-popover-container div[data-testid="stPopover"],
     .user-popover-container div[data-testid="stPopover"] > button,
     .user-popover-container button[data-testid="stPopoverButton"] {{
@@ -736,7 +742,6 @@ st.markdown(f"""
         background-size: 18px 18px !important;
     }}
 
-    /* BOTÓN CERRAR SESIÓN Y MI PERFIL */
     .st-key-btn_go_profile button {{
         padding-left: 2.5rem !important;
         background-image: url("{settings_icon_svg}") !important;
@@ -787,7 +792,6 @@ st.markdown(f"""
         white-space: nowrap !important;
     }}
 
-    /* SWITCH TEMA */
     .st-key-theme_toggle,
     .st-key-theme_toggle div[data-testid="stButton"] {{
         background: transparent !important;
@@ -855,7 +859,6 @@ st.markdown(f"""
         z-index: 2 !important;
     }}
 
-    /* NAVEGACIÓN SUPERIOR Principal */
     .st-key-n_perfumes button, 
     .st-key-n_esencias button {{
         background-color: transparent !important;
@@ -885,7 +888,6 @@ st.markdown(f"""
         transform: scale(1.08) !important;
     }}
 
-    /* CHIPS DE ACCESO RÁPIDO Y PAGE LINKS */
     a[data-testid="stPageLink-NavLink"] {{
         background-color: {btn_bg} !important;
         border: 1px solid {btn_border} !important;
@@ -915,7 +917,6 @@ st.markdown(f"""
         margin: 0 !important;
     }}
 
-    /* DIBUJOS ILUSTRADOS VECTORIALES EN ROJO PARA CHIPS */
     .st-key-btn_chip_home button {{
         position: relative !important;
         padding-left: 2.7rem !important;
@@ -946,7 +947,6 @@ st.markdown(f"""
         overflow: hidden !important;
     }}
 
-    /* 1. Trend Del Hype */
     a[data-testid="stPageLink-NavLink"][href*="trendhype"]::before {{
         content: '' !important;
         position: absolute !important;
@@ -962,7 +962,6 @@ st.markdown(f"""
         z-index: 1 !important;
     }}
 
-    /* 2. Páginas de Confianza */
     a[data-testid="stPageLink-NavLink"][href*="trustpage"]::before {{
         content: '' !important;
         position: absolute !important;
@@ -978,7 +977,6 @@ st.markdown(f"""
         z-index: 1 !important;
     }}
 
-    /* 3. Comparar Precios */
     a[data-testid="stPageLink-NavLink"][href*="compararprecios"]::before {{
         content: '' !important;
         position: absolute !important;
@@ -994,7 +992,6 @@ st.markdown(f"""
         z-index: 1 !important;
     }}
 
-    /* 4. Remates & Flash */
     a[data-testid="stPageLink-NavLink"][href*="remates"]::before {{
         content: '' !important;
         position: absolute !important;
@@ -1010,7 +1007,6 @@ st.markdown(f"""
         z-index: 1 !important;
     }}
 
-    /* CHIPS DE ACCESO RÁPIDO CON BOTONES NATIVOS STREAMLIT */
     .st-key-chip_home button,
     .st-key-chip_remates button {{
         background-color: {btn_bg} !important;
@@ -1085,7 +1081,6 @@ st.markdown(f"""
         z-index: 1 !important;
     }}
 
-    /* INPUTS */
     div[data-baseweb="input"],
     div[data-baseweb="base-input"],
     div[data-baseweb="select"] > div {{
@@ -1115,9 +1110,6 @@ st.markdown(f"""
         background-color: {input_bg} !important;
     }}
 
-
-
-    /* BRAND LOGO INTERACTIVO NATIVO 100% LIMPIO Y TRANSPARENTE */
     a.brand-logo-clean,
     a.brand-logo-clean:visited,
     a.brand-logo-clean:hover,
@@ -1159,7 +1151,6 @@ st.markdown(f"""
         color: {text_color} !important;
     }}
 
-    /* BOTONES DE CATEGORÍAS CATÁLOGO CON ICONOS VECTORIALES */
     div.st-key-btn_cat_todos button,
     div.st-key-btn_cat_arabes button,
     div.st-key-btn_cat_remates button {{
@@ -1221,7 +1212,6 @@ st.markdown(f"""
         background-position: center !important;
     }}
 
-    /* BOTÓN VER MÁS PERFUMES */
     div.st-key-btn_load_more button {{
         background-color: {card_bg} !important;
         border: 1px solid { "#a39281" if is_dark else "#8c7b6d" } !important;
@@ -1241,7 +1231,6 @@ st.markdown(f"""
         box-shadow: { "0 8px 24px rgba(0,0,0,0.4)" if is_dark else "0 6px 16px rgba(0,0,0,0.12)" } !important;
     }}
 
-    /* TARJETAS CATÁLOGO LUXURY */
     .catalog-card {{
         background-color: {card_bg};
         border: 1px solid {border_color};
@@ -1407,7 +1396,6 @@ st.markdown(f"""
         border-color: { "rgba(239, 68, 68, 0.2)" if is_dark else "rgba(239, 68, 68, 0.15)" } !important;
     }}
 
-    /* TARJETAS ESENCIAS */
     .essence-card {{ 
         border-radius: 8px; 
         padding: 14px 16px; 
@@ -1456,7 +1444,6 @@ st.markdown(f"""
         background-color: {btn_bg};
     }}
 
-    /* OPTIMIZACIÓN RESPONSIVA MÓVIL */
     @media (max-width: 768px) {{
         .block-container {{ 
             padding-top: 0.4rem !important; 
@@ -1655,7 +1642,6 @@ st.markdown(f"""
     </style>
 """, unsafe_allow_html=True)
 
-# 4. CABECERA CON LOGO COMPACTO E INTERACTIVO
 col_logo, col_espacio, col_actions = st.columns([5.5, 1.3, 2.4], vertical_alignment="center")
 
 with col_logo:
@@ -1706,7 +1692,6 @@ with col_actions:
     with btn_col2:
         st.button(" ", key="theme_toggle", on_click=toggle_theme)
 
-# 7. NAVEGACIÓN PRINCIPAL
 st.markdown("<div style='margin-top: 14px;'></div>", unsafe_allow_html=True)
 nav_cols = st.columns([1, 1])
 
@@ -1717,7 +1702,6 @@ with nav_cols[1]:
 
 st.markdown(f"<hr style='margin: 10px 0 24px 0; border: none; border-bottom: 1px solid {btn_border}; opacity: 0.3;'>", unsafe_allow_html=True)
 
-# 8. BÚSQUEDA Y FILTRO DE ESENCIAS
 col_search, col_filter = st.columns([7.8, 2.2], vertical_alignment="center")
 
 with col_search:
@@ -1750,7 +1734,6 @@ with col_filter:
             label_visibility="collapsed"
         )
 
-# 7. CHIPS DE ENLACE RÁPIDO (5 ACCESOS DIRECTOS)
 st.markdown("<div style='margin-top: 14px;'></div>", unsafe_allow_html=True)
 c_chip0, c_chip1, c_chip2, c_chip3, c_chip4 = st.columns([1.7, 1.6, 2.0, 1.8, 1.8], vertical_alignment="center")
 
@@ -1771,23 +1754,9 @@ with c_chip4:
 
 st.markdown("<div style='margin-top: 24px;'></div>", unsafe_allow_html=True)
 
-# 10. SECCIONES Y CONTENIDOS
 if st.session_state['current_page'] == 'home':
     st.markdown(f"<div style='text-align: center; margin-bottom: 20px; color: {text_color}; letter-spacing: 1.5px; font-weight: 300; font-size: 1.1rem; text-transform: uppercase;'>CATÁLOGO Y TENDENCIAS EN CHILE</div>", unsafe_allow_html=True)
     
-    # =========================================================================
-    # BLOQUE 5: FILTRADO MULTI-FACÉTICO (CATEGORÍAS Y ORDENAMIENTO EN VIVO)
-    # -------------------------------------------------------------------------
-    # ¿QUÉ HACE ESTE BLOQUE?
-    # 1. Filtros por categoría comercial:
-    #    - "Todos": Muestra el catálogo unificado de más de 130 fragancias.
-    #    - "Árabes & Nicho": Filtra fragancias orientales (Lattafa, Armaf, Afnan).
-    #    - "Remates & Ofertas": Filtra solo perfumes con rebajas demostrables.
-    # 2. Selector de ordenamiento:
-    #    - Destacados (id_asc), Precio Ascendente/Descendente, Nombre A-Z.
-    # 3. Al cambiar cualquier filtro, resetea la página a 1 (`catalog_page = 1`)
-    #    y re-ejecuta reactivamente la vista con `st.rerun()`.
-    # =========================================================================
     col_filter_chips, col_sort_select = st.columns([7, 3], vertical_alignment="center")
     
     cur_cat = st.session_state.get('selected_category', 'todos')
@@ -1845,17 +1814,6 @@ if st.session_state['current_page'] == 'home':
     if selected_essences:
         st.markdown(f"<div style='margin: 8px 0 16px 0; font-size: 0.9rem; color: {subtext_color};'><b>Filtro de notas activo:</b> {', '.join(selected_essences)}</div>", unsafe_allow_html=True)
 
-    # =========================================================================
-    # BLOQUE 6: CONSULTA REACTIVA A BD Y PAGINACIÓN DINÁMICA (12 ITEMS/PÁG)
-    # -------------------------------------------------------------------------
-    # ¿QUÉ HACE ESTE BLOQUE?
-    # 1. Invoca `get_cached_catalogo()` combinando texto, esencias y categoría.
-    # 2. Divide el conjunto en páginas de 12 elementos (`items_per_page = 12`).
-    # 3. Calcula `start_idx` y `end_idx` para extraer la porción visible (slice `[start:end]`).
-    # 4. Renderiza los perfumes en una grilla de 3 columnas (`cols_per_row = 3`).
-    # 5. Tarjeta interactiva con hover overlay: revela país de origen, concentración
-    #    y notas completas al posar el cursor, con botón para ir directo a la comparativa.
-    # =========================================================================
     categoria_arg = None if st.session_state['selected_category'] == 'todos' else st.session_state['selected_category']
     catalog_perfumes = get_cached_catalogo(
         busqueda=search_query, 
@@ -1874,7 +1832,6 @@ if st.session_state['current_page'] == 'home':
         items_per_page = st.session_state.get('items_per_page', 12)
         total_pages = max(1, (total_perfumes + items_per_page - 1) // items_per_page)
         
-        # Validar límites de página activa
         if st.session_state['catalog_page'] > total_pages:
             st.session_state['catalog_page'] = total_pages
         elif st.session_state['catalog_page'] < 1:
@@ -1884,7 +1841,6 @@ if st.session_state['current_page'] == 'home':
         start_idx = (cur_page - 1) * items_per_page
         end_idx = min(start_idx + items_per_page, total_perfumes)
         
-        # Indicador de estado y cantidad
         st.markdown(f"<div style='font-size: 0.88rem; color: {subtext_color}; margin: 8px 0 16px 0;'>Mostrando <b>{start_idx + 1}–{end_idx}</b> de <b>{total_perfumes}</b> fragancias en Chile</div>", unsafe_allow_html=True)
 
         page_perfumes = catalog_perfumes[start_idx:end_idx]
@@ -1946,10 +1902,8 @@ if st.session_state['current_page'] == 'home':
                             reset_modals()
                             st.switch_page("pages/compararprecios.py")
 
-        # 8.3 Controles de Paginación y Cargar Más Perfumes
         st.markdown("<div style='margin-top: 32px;'></div>", unsafe_allow_html=True)
         
-        # Botón grande destacado "Ver más perfumes" si no estamos en la última página
         if cur_page < total_pages:
             siguientes_cant = min(items_per_page, total_perfumes - end_idx)
             c_more_l, c_more_mid, c_more_r = st.columns([1, 2, 1])
@@ -1958,7 +1912,6 @@ if st.session_state['current_page'] == 'home':
                     st.session_state['catalog_page'] += 1
                     st.rerun()
 
-        # Barra de paginación detallada
         c_pag_prev, c_pag_info, c_pag_next = st.columns([2, 4, 2], vertical_alignment="center")
         with c_pag_prev:
             if cur_page > 1:
@@ -2141,7 +2094,6 @@ elif st.session_state['current_page'] == 'esencias_page':
     with col_es_2:
         st.markdown("\n".join(html_col2), unsafe_allow_html=True)
 
-# 11. PIE DE PÁGINA (FOOTER)
 st.markdown(f"<hr style='margin: 40px 0 20px 0; border: none; border-bottom: 1px solid {btn_border}; opacity: 0.3;'>", unsafe_allow_html=True)
 st.markdown(f"""
     <div style="text-align: center; padding: 10px 0 20px 0; color: {subtext_color}; font-size: 0.85rem;">
