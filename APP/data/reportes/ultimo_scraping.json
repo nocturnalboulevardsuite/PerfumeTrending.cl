@@ -1,69 +1,75 @@
 {
-  "actualizaciones": 69,
-  "fecha": "2026-10-20 12:30:06",
-  "duracion_segundos": 1368.7,
+  "actualizaciones": 2353,
+  "fecha": "2026-10-21 12:40:35",
+  "duracion_segundos": 10113.91,
   "metadata": {
     "version_etl": "3.0.0",
     "sistema": "PerfumeTrending Professional Anti-Bot ETL",
-    "fecha_ejecucion": "2026-10-20 12:30:06",
-    "duracion_segundos": 1368.7,
+    "fecha_ejecucion": "2026-10-21 12:40:35",
+    "duracion_segundos": 10113.91,
     "estado": "EXITOSO"
   },
   "metricas": {
-    "total_perfumes_catalogo": 153,
-    "total_tiendas_registradas": 8,
-    "precios_actualizados": 69,
-    "exclusiones_marca": 50,
+    "total_perfumes_catalogo": 1000,
+    "total_tiendas_registradas": 9,
+    "precios_actualizados": 2353,
+    "exclusiones_marca": 84,
     "errores_totales": 0
   },
   "estadisticas_tiendas": {
     "Falabella": {
-      "consultas": 153,
-      "exitos_en_vivo": 235,
-      "fallbacks_seguridad": 49,
+      "consultas": 1000,
+      "exitos_en_vivo": 1030,
+      "fallbacks_seguridad": 476,
       "trust_score": 96
     },
     "Paris": {
-      "consultas": 153,
+      "consultas": 1000,
       "exitos_en_vivo": 0,
-      "fallbacks_seguridad": 153,
+      "fallbacks_seguridad": 1000,
       "trust_score": 95
     },
     "Ripley": {
-      "consultas": 153,
+      "consultas": 1000,
       "exitos_en_vivo": 0,
-      "fallbacks_seguridad": 153,
+      "fallbacks_seguridad": 1000,
       "trust_score": 94
     },
     "Silk Perfumes": {
-      "consultas": 143,
-      "exitos_en_vivo": 133,
-      "fallbacks_seguridad": 53,
+      "consultas": 986,
+      "exitos_en_vivo": 874,
+      "fallbacks_seguridad": 358,
       "trust_score": 92
     },
     "Elite Perfumes": {
-      "consultas": 143,
-      "exitos_en_vivo": 79,
-      "fallbacks_seguridad": 87,
+      "consultas": 986,
+      "exitos_en_vivo": 384,
+      "fallbacks_seguridad": 682,
       "trust_score": 89
     },
     "DBS Beauty Store": {
-      "consultas": 143,
+      "consultas": 986,
       "exitos_en_vivo": 0,
-      "fallbacks_seguridad": 143,
+      "fallbacks_seguridad": 986,
       "trust_score": 91
     },
     "Alisha Perfumes": {
-      "consultas": 143,
-      "exitos_en_vivo": 90,
-      "fallbacks_seguridad": 74,
+      "consultas": 986,
+      "exitos_en_vivo": 418,
+      "fallbacks_seguridad": 681,
       "trust_score": 88
     },
     "Yauras Perfumes": {
-      "consultas": 143,
-      "exitos_en_vivo": 109,
-      "fallbacks_seguridad": 72,
+      "consultas": 986,
+      "exitos_en_vivo": 666,
+      "fallbacks_seguridad": 552,
       "trust_score": 88
+    },
+    "Oferta Perfumes": {
+      "consultas": 986,
+      "exitos_en_vivo": 0,
+      "fallbacks_seguridad": 986,
+      "trust_score": 90
     }
   },
   "muestra_capturas": [
