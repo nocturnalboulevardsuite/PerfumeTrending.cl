@@ -1,26 +1,26 @@
 {
-  "actualizaciones": 333,
-  "fecha": "2026-10-22 12:44:32",
-  "duracion_segundos": 10525.67,
+  "actualizaciones": 198,
+  "fecha": "2026-10-23 12:22:19",
+  "duracion_segundos": 7923.93,
   "metadata": {
     "version_etl": "3.0.0",
     "sistema": "PerfumeTrending Professional Anti-Bot ETL",
-    "fecha_ejecucion": "2026-10-22 12:44:32",
-    "duracion_segundos": 10525.67,
+    "fecha_ejecucion": "2026-10-23 12:22:19",
+    "duracion_segundos": 7923.93,
     "estado": "EXITOSO"
   },
   "metricas": {
     "total_perfumes_catalogo": 1000,
     "total_tiendas_registradas": 9,
-    "precios_actualizados": 333,
+    "precios_actualizados": 198,
     "exclusiones_marca": 84,
     "errores_totales": 0
   },
   "estadisticas_tiendas": {
     "Falabella": {
       "consultas": 1000,
-      "exitos_en_vivo": 1008,
-      "fallbacks_seguridad": 481,
+      "exitos_en_vivo": 1054,
+      "fallbacks_seguridad": 456,
       "trust_score": 96
     },
     "Paris": {
@@ -37,14 +37,14 @@
     },
     "Silk Perfumes": {
       "consultas": 986,
-      "exitos_en_vivo": 875,
-      "fallbacks_seguridad": 354,
+      "exitos_en_vivo": 874,
+      "fallbacks_seguridad": 355,
       "trust_score": 92
     },
     "Elite Perfumes": {
       "consultas": 986,
       "exitos_en_vivo": 386,
-      "fallbacks_seguridad": 683,
+      "fallbacks_seguridad": 682,
       "trust_score": 89
     },
     "DBS Beauty Store": {
@@ -61,8 +61,8 @@
     },
     "Yauras Perfumes": {
       "consultas": 986,
-      "exitos_en_vivo": 674,
-      "fallbacks_seguridad": 550,
+      "exitos_en_vivo": 673,
+      "fallbacks_seguridad": 549,
       "trust_score": 88
     },
     "Oferta Perfumes": {
@@ -186,8 +186,8 @@
     {
       "perfume": "YSL Libre",
       "tienda": "Yauras Perfumes",
-      "precio_actual": 107900,
-      "precio_normal": 107900,
+      "precio_actual": 119990,
+      "precio_normal": 119990,
       "tiene_descuento": false,
       "origen": "Shopify Multi-Suggest",
       "volumen_ml": 90,
