@@ -1,26 +1,26 @@
 {
-  "actualizaciones": 254,
-  "fecha": "2026-10-26 13:49:05",
-  "duracion_segundos": 9734.58,
+  "actualizaciones": 161,
+  "fecha": "2026-10-27 12:56:21",
+  "duracion_segundos": 8100.98,
   "metadata": {
     "version_etl": "3.0.0",
     "sistema": "PerfumeTrending Professional Anti-Bot ETL",
-    "fecha_ejecucion": "2026-10-26 13:49:05",
-    "duracion_segundos": 9734.58,
+    "fecha_ejecucion": "2026-10-27 12:56:21",
+    "duracion_segundos": 8100.98,
     "estado": "EXITOSO"
   },
   "metricas": {
     "total_perfumes_catalogo": 1000,
     "total_tiendas_registradas": 9,
-    "precios_actualizados": 254,
+    "precios_actualizados": 161,
     "exclusiones_marca": 84,
     "errores_totales": 0
   },
   "estadisticas_tiendas": {
     "Falabella": {
       "consultas": 1000,
-      "exitos_en_vivo": 1051,
-      "fallbacks_seguridad": 469,
+      "exitos_en_vivo": 1059,
+      "fallbacks_seguridad": 458,
       "trust_score": 96
     },
     "Paris": {
@@ -37,14 +37,14 @@
     },
     "Silk Perfumes": {
       "consultas": 986,
-      "exitos_en_vivo": 873,
-      "fallbacks_seguridad": 361,
+      "exitos_en_vivo": 869,
+      "fallbacks_seguridad": 364,
       "trust_score": 92
     },
     "Elite Perfumes": {
       "consultas": 986,
-      "exitos_en_vivo": 354,
-      "fallbacks_seguridad": 695,
+      "exitos_en_vivo": 353,
+      "fallbacks_seguridad": 696,
       "trust_score": 89
     },
     "DBS Beauty Store": {
@@ -55,13 +55,13 @@
     },
     "Alisha Perfumes": {
       "consultas": 986,
-      "exitos_en_vivo": 410,
-      "fallbacks_seguridad": 685,
+      "exitos_en_vivo": 0,
+      "fallbacks_seguridad": 986,
       "trust_score": 88
     },
     "Yauras Perfumes": {
       "consultas": 986,
-      "exitos_en_vivo": 648,
+      "exitos_en_vivo": 638,
       "fallbacks_seguridad": 559,
       "trust_score": 88
     },
@@ -165,26 +165,6 @@
     },
     {
       "perfume": "YSL Libre",
-      "tienda": "Alisha Perfumes",
-      "precio_actual": 107990,
-      "precio_normal": 139990,
-      "tiene_descuento": true,
-      "origen": "Shopify Multi-Suggest",
-      "volumen_ml": 90,
-      "en_stock": true
-    },
-    {
-      "perfume": "YSL Libre",
-      "tienda": "Alisha Perfumes",
-      "precio_actual": 43990,
-      "precio_normal": 59990,
-      "tiene_descuento": true,
-      "origen": "Shopify Multi-Suggest",
-      "volumen_ml": 30,
-      "en_stock": false
-    },
-    {
-      "perfume": "YSL Libre",
       "tienda": "Yauras Perfumes",
       "precio_actual": 119990,
       "precio_normal": 119990,
@@ -221,6 +201,26 @@
       "tiene_descuento": true,
       "origen": "Falabella Live Variants",
       "volumen_ml": 300,
+      "en_stock": true
+    },
+    {
+      "perfume": "Dior Sauvage",
+      "tienda": "Falabella",
+      "precio_actual": 125000,
+      "precio_normal": 125000,
+      "tiene_descuento": false,
+      "origen": "Falabella Live Variants",
+      "volumen_ml": 30,
+      "en_stock": true
+    },
+    {
+      "perfume": "Dior Sauvage",
+      "tienda": "Falabella",
+      "precio_actual": 292100,
+      "precio_normal": 292100,
+      "tiene_descuento": false,
+      "origen": "Falabella Live Variants",
+      "volumen_ml": 200,
       "en_stock": true
     }
   ],
