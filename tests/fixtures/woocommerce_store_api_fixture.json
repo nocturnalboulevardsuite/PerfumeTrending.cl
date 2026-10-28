@@ -1,0 +1,66 @@
+[
+  {
+    "id": 92001,
+    "name": "Christian Dior Sauvage 100ML EDP Hombre",
+    "slug": "christian-dior-sauvage-100ml-edp-hombre",
+    "permalink": "https://www.chileperfume.cl/producto/christian-dior-sauvage-100ml-edp-hombre/",
+    "is_in_stock": true,
+    "prices": {
+      "price": "159990",
+      "regular_price": "179990",
+      "sale_price": "159990",
+      "currency_code": "CLP",
+      "currency_symbol": "$",
+      "currency_minor_unit": 0
+    },
+    "images": [
+      {
+        "id": 1001,
+        "src": "https://www.chileperfume.cl/wp-content/uploads/sauvage_edp.jpg"
+      }
+    ]
+  },
+  {
+    "id": 92002,
+    "name": "Christian Dior Sauvage 200ML EDP Hombre",
+    "slug": "christian-dior-sauvage-200ml-edp-hombre",
+    "permalink": "https://www.chileperfume.cl/producto/christian-dior-sauvage-200ml-edp-hombre/",
+    "is_in_stock": true,
+    "prices": {
+      "price": "219990",
+      "regular_price": "249990",
+      "sale_price": "219990",
+      "currency_code": "CLP",
+      "currency_symbol": "$",
+      "currency_minor_unit": 0
+    },
+    "images": [
+      {
+        "id": 1002,
+        "src": "https://www.chileperfume.cl/wp-content/uploads/sauvage_edp_200.jpg"
+      }
+    ]
+  },
+  {
+    "id": 92003,
+    "name": "Jean Paul Gaultier Le Beau Le Parfum 125ML EDP Hombre",
+    "slug": "jpg-le-beau-le-parfum-125ml",
+    "permalink": "https://www.chileperfume.cl/producto/jpg-le-beau-le-parfum-125ml/",
+    "is_in_stock": false,
+    "prices": {
+      "price": "119990",
+      "regular_price": "139990",
+      "sale_price": "119990",
+      "currency_code": "CLP",
+      "currency_symbol": "$",
+      "currency_minor_unit": 0
+    },
+    "images": [
+      {
+        "id": 1003,
+        "src": "https://www.chileperfume.cl/wp-content/uploads/le_beau.jpg"
+      }
+    ]
+  }
+]
+

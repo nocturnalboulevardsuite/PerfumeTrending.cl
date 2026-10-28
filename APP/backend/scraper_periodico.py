@@ -218,9 +218,29 @@ TIENDAS_SHOPIFY = {
     "Alisha Perfumes": "alishaperfumes.cl",
     "Yauras Perfumes": "yauras.cl",
     "Oferta Perfumes": "ofertaperfumes.cl",
+    "L'Odoro": "lodoro.cl",
+    "Mundo Aromas": "mundoaromas.cl",
+    "Cosmetic": "cosmetic.cl",
+    "Fragante": "fragante.cl",
+    "ComprarEnChile": "comprarenchile.cl",
 }
 
-_DOMINIOS_SIN_WWW = {"alishaperfumes.cl", "yauras.cl", "ofertaperfumes.cl"}
+TIENDAS_WOOCOMMERCE = {
+    "Chile Perfume": "chileperfume.cl",
+    "Portal del Perfume": "portaldelperfume.cl",
+    "Aromata": "aromata.cl",
+}
+
+_DOMINIOS_SIN_WWW = {
+    "alishaperfumes.cl",
+    "yauras.cl",
+    "ofertaperfumes.cl",
+    "mundoaromas.cl",
+    "cosmetic.cl",
+    "fragante.cl",
+    "comprarenchile.cl",
+    "portaldelperfume.cl",
+}
 
 _SELLERS_OFICIALES_MARKETPLACE = (
     "falabella",
@@ -239,6 +259,15 @@ _SELLERS_OFICIALES_MARKETPLACE = (
     "alisha perfumes",
     "yauras",
     "oferta perfumes",
+    "l'odoro",
+    "lodoro",
+    "mundo aromas",
+    "cosmetic",
+    "chile perfume",
+    "portal del perfume",
+    "fragante",
+    "aromata",
+    "comprarenchile",
 )
 
 _SELLERS_SOSPECHOSOS = (
@@ -315,6 +344,15 @@ def extraer_variedades_shopify(
 
     try:
         res = session.get(url_api, headers=headers, timeout=9)
+        if res.status_code in (403, 429) and curl_requests is not None:
+            try:
+                s_cffi = curl_requests.Session(impersonate="chrome124")
+                res_cffi = s_cffi.get(url_api, headers=headers, timeout=9)
+                if res_cffi.status_code == 200:
+                    res = res_cffi
+            except Exception:
+                pass
+
         if res.status_code in (403, 429):
             if diagnostico is not None:
                 diagnostico["waf_bloqueado"] = True
@@ -388,6 +426,125 @@ def extraer_precio_shopify(
 ) -> Dict[str, Any]:
     """Retrocompatibilidad con pruebas unitarias: retorna la primera variedad o {exito: False}."""
     vars_found = extraer_variedades_shopify(session, dominio, perfume_nombre, marca, volumen_ml)
+    if vars_found:
+        return vars_found[0]
+    return {"exito": False}
+
+
+def extraer_variedades_woocommerce(
+    session: requests.Session,
+    dominio: str,
+    perfume_nombre: str,
+    marca: str = "",
+    volumen_ml_defecto: Optional[int] = None,
+    concentracion: str = "",
+    precio_referencia: Optional[int] = None,
+    diagnostico: Optional[Dict[str, Any]] = None,
+) -> List[Dict[str, Any]]:
+    """
+    Extrae presentaciones y precios reales en tiendas WooCommerce auditadas
+    (Chile Perfume, Portal del Perfume, Aromata) mediante la WooCommerce Store API pública.
+    """
+    query_str = (
+        f"{marca} {perfume_nombre}".strip()
+        if (marca and marca.lower() not in perfume_nombre.lower())
+        else perfume_nombre.strip()
+    )
+    q = urllib.parse.quote(query_str)
+    base_host = f"https://{dominio.strip().rstrip('/')}"
+    url_api = f"{base_host}/wp-json/wc/store/v1/products?search={q}&per_page=10"
+    headers = {
+        "User-Agent": random.choice(USER_AGENTS),
+        "Accept": "application/json, text/plain, */*",
+        "Accept-Language": "es-CL,es;q=0.9,en;q=0.8",
+        "Referer": f"{base_host}/",
+    }
+
+    variedades: List[Dict[str, Any]] = []
+    vols_vistos = set()
+
+    try:
+        res = session.get(url_api, headers=headers, timeout=10)
+        if res.status_code in (403, 429) and curl_requests is not None:
+            try:
+                s_cffi = curl_requests.Session(impersonate="chrome124")
+                res_cffi = s_cffi.get(url_api, headers=headers, timeout=10)
+                if res_cffi.status_code == 200:
+                    res = res_cffi
+            except Exception:
+                pass
+
+        if res.status_code in (403, 429):
+            if diagnostico is not None:
+                diagnostico["waf_bloqueado"] = True
+                diagnostico["http_status"] = res.status_code
+            return variedades
+
+        if res.status_code == 200:
+            productos = res.json()
+            if isinstance(productos, list):
+                for p in productos:
+                    raw_title = p.get("name", "")
+                    if not es_producto_perfume_valido(raw_title, marca=marca or None, volumen_min_ml=25):
+                        continue
+
+                    clean_url = p.get("permalink", "")
+                    prices = p.get("prices", {})
+                    p_act = clean_digits(prices.get("price"))
+                    p_norm = clean_digits(prices.get("regular_price")) or p_act
+                    if not es_precio_valido(p_act):
+                        continue
+
+                    vol_encontrado = extraer_volumen_ml(raw_title) or extraer_volumen_ml(clean_url) or volumen_ml_defecto or 100
+                    if vol_encontrado < 25:
+                        continue
+
+                    res_match = coincide_entidad_detallada(
+                        titulo=raw_title,
+                        perfume_nombre=perfume_nombre,
+                        marca=marca,
+                        concentracion=concentracion,
+                        url=clean_url,
+                        precio_candidato=p_act,
+                        precio_referencia=precio_referencia,
+                    )
+                    if not res_match.coincide:
+                        continue
+
+                    formato_det = res_match.formato_detectado or detectar_formato_oferta(raw_title, clean_url)
+                    clave_var = (vol_encontrado, formato_det)
+                    if clave_var in vols_vistos:
+                        continue
+
+                    vols_vistos.add(clave_var)
+                    en_stock = bool(p.get("is_in_stock", True))
+                    norm_valido = p_norm if (es_precio_valido(p_norm) and p_norm > p_act) else p_act
+
+                    variedades.append({
+                        "exito": True,
+                        "precio_actual": p_act,
+                        "precio_normal": norm_valido,
+                        "url": clean_url,
+                        "en_stock": en_stock,
+                        "volumen_ml": vol_encontrado,
+                        "formato": formato_det,
+                        "metodo": "WooCommerce Store API",
+                    })
+    except Exception as e:
+        logger.debug(f"Aviso consultando WooCommerce {dominio} para '{perfume_nombre}': {e}")
+
+    return variedades
+
+
+def extraer_precio_woocommerce(
+    session: requests.Session,
+    dominio: str,
+    perfume_nombre: str,
+    marca: str,
+    volumen_ml: Optional[int] = None,
+) -> Dict[str, Any]:
+    """Retrocompatibilidad con pruebas unitarias: retorna la primera variedad o {exito: False}."""
+    vars_found = extraer_variedades_woocommerce(session, dominio, perfume_nombre, marca, volumen_ml)
     if vars_found:
         return vars_found[0]
     return {"exito": False}
@@ -1421,6 +1578,18 @@ def ejecutar_ciclo_scraping_y_descubrimiento() -> Dict[str, Any]:
                 if t_nom in TIENDAS_SHOPIFY:
                     dominio = TIENDAS_SHOPIFY[t_nom]
                     lista_variedades = extraer_variedades_shopify(
+                        session=session,
+                        dominio=dominio,
+                        perfume_nombre=p_nom,
+                        marca=p_marca,
+                        volumen_ml_defecto=vol_ml_base,
+                        concentracion=p_tipo,
+                        precio_referencia=p_ref,
+                        diagnostico=diag,
+                    )
+                elif t_nom in TIENDAS_WOOCOMMERCE:
+                    dominio = TIENDAS_WOOCOMMERCE[t_nom]
+                    lista_variedades = extraer_variedades_woocommerce(
                         session=session,
                         dominio=dominio,
                         perfume_nombre=p_nom,

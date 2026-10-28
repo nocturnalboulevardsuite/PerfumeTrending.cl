@@ -1,0 +1,42 @@
+{
+  "resources": {
+    "results": {
+      "products": [
+        {
+          "id": 81001,
+          "title": "Dior Sauvage EDT 100 Ml Hombre",
+          "url": "/products/sauvage-edt-100ml-hombre-dior",
+          "price": "129900",
+          "compare_at_price_min": "149900",
+          "compare_at_price_max": "149900",
+          "vendor": "Dior",
+          "available": true,
+          "image": "https://cdn.shopify.com/s/files/1/0586/test/sauvage.jpg"
+        },
+        {
+          "id": 81002,
+          "title": "Dior Sauvage EDT 200Ml Hombre",
+          "url": "/products/sauvage-edt-200ml-hombre-dior",
+          "price": "179900",
+          "compare_at_price_min": "199900",
+          "compare_at_price_max": "199900",
+          "vendor": "Dior",
+          "available": true,
+          "image": "https://cdn.shopify.com/s/files/1/0586/test/sauvage200.jpg"
+        },
+        {
+          "id": 81003,
+          "title": "Dior Sauvage EDT 100 Ml Tester Hombre",
+          "url": "/products/sauvage-edt-100ml-tester-hombre-dior",
+          "price": "109900",
+          "compare_at_price_min": "129900",
+          "compare_at_price_max": "129900",
+          "vendor": "Dior",
+          "available": false,
+          "image": "https://cdn.shopify.com/s/files/1/0586/test/sauvage_tester.jpg"
+        }
+      ]
+    }
+  }
+}
+

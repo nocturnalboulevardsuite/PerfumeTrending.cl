@@ -181,18 +181,48 @@ CANONICAL_BRAND_MAP: Dict[str, str] = {
     "chloe": "Chloé",
     "marc jacobs": "Marc Jacobs",
     "issey": "Issey Miyake",
+    "argos": "Argos",
+    "bon parfumeur": "Bon Parfumeur",
+    "eight & bob": "Eight & Bob",
+    "eight and bob": "Eight & Bob",
+    "eight bob": "Eight & Bob",
+    "andy tauer": "Tauer Perfumes",
+    "tauer": "Tauer Perfumes",
+    "tauer perfumes": "Tauer Perfumes",
+    "stephane humbert lucas": "Stéphane Humbert Lucas",
+    "stephane humbert lucas 777": "Stéphane Humbert Lucas",
+    "stephane humbert": "Stéphane Humbert Lucas",
+    "ramon monegal": "Ramón Monegal",
+    "jovoy": "Jovoy Paris",
+    "jovoy paris": "Jovoy Paris",
+    "lorenzo pazzaglia": "Lorenzo Pazzaglia",
+    "pastor prive": "Pastor Privé",
+    "pastor fragrances": "Pastor Privé",
+    "m micallef": "M. Micallef",
+    "m. micallef": "M. Micallef",
+    "micallef": "M. Micallef",
+    "thameen": "Thameen",
+    "thameen london": "Thameen",
+    "shakira": "Shakira",
+    "bharara": "Bharara",
+    "rave": "Rave",
+    "rayhaan": "Rayhaan",
+    "just lychee": "Fragrance World",
 }
 
 MARCAS_INVALIDAS_CATALOGO: Set[str] = {
     "", "varios", "perfumero", "generico", "sin marca", "otros",
     "accesorios", "pack", "set", "muestra", "decant", "test", "s/m",
+    "garnier", "vogue", "maybelline", "loreal paris", "l'oreal paris", "l'oréal paris",
+    "nivea", "dove", "pantene", "head & shoulders", "sedal", "etienne", "petrizzio",
+    "disenador", "diseñador", "nicho", "perfume", "perfumes",
 }
 
 # Palabras clave de productos derivados, cosméticos o formatos que NO son frascos individuales de perfume
 PALABRAS_EXCLUSION: List[str] = [
     "desodorante", "deodorant", "body mist", "bodymist", "body spray", "bodyspray",
     "body splash", "bodysplash", "splash", "hair mist", "hairmist", "bruma", "leau brume", "l'eau brume",
-    "body lotion", "crema corporal", "locion corporal", "loción corporal", "locion ", "loción ",
+    "body lotion", "crema", "locion corporal", "loción corporal", "locion ", "loción ",
     "locion para despues", "loción para después", "después del afeitado", "despues del afeitado",
     "shampoo", "champu", "acondicionador", "gel de ducha", "shower gel", "jabon", "jabón", "vela", "candle",
     "after shave", "after-shave", "aftershave", "balsamo", "bálsamo", "neceser", "estuche vacio",
@@ -207,9 +237,11 @@ PALABRAS_EXCLUSION: List[str] = [
     # Imitaciones, clones explícitos y equivalencias
     "inspirado en", "inspirada en", "inspiracion", "inspiración", "tipo ", "dupe",
     "equivalencia", "imitacion", "imitación", "clon", "alternativo",
-    # Artículos ajenos a perfumería (cosméticos, hogar, puericultura)
+    # Artículos ajenos a perfumería (cosméticos, cabello, hogar, puericultura)
     "repelente", "roedores", "extractor", "extractor de leche", "brillo labial", "voluminizador",
     "lip gloss", "suero", "serum", "difusor", "ambientador", "home spray",
+    "tinte", "nutrisse", "maquillaje", "aclarante", "facial", "capilar", "mascarilla",
+    "pestañina", "rubor", "polvo", "iluminador", "base liquida", "base líquida", "esmalte", "uñas",
 ]
 
 RE_PRODUCTO_INVALIDO = re.compile(
@@ -552,6 +584,13 @@ def limpiar_nombre_perfume(titulo: str, marca: str = "") -> str:
 
     # 5. Remover ruido comercial y etiquetas de género genéricas que NO son parte del nombre oficial
     limpio = re.sub(r"\((?:h|m|u|hombre|mujer|unisex|men|women|tester)\)", "", limpio, flags=re.IGNORECASE)
+    # Remover conectores 'de {marca}' o 'para {genero}' antes de ruidos
+    if marca:
+        for m_var in sorted(marcas_a_quitar, key=len, reverse=True):
+            if m_var:
+                limpio = re.sub(rf"\bde\s+{re.escape(m_var)}\b", "", limpio, flags=re.IGNORECASE)
+    limpio = re.sub(r"\bpara\s+(?:hombre|mujer|unisex|caballero|dama|varon|varón)\b", "", limpio, flags=re.IGNORECASE)
+
     ruidos = [
         "tester", "vaporizador", "natural spray", "spray", "nuevo", "nueva coleccion",
         "nueva colección", "original", "oferta", "envio gratis", "despacho", "sellado",
@@ -559,6 +598,9 @@ def limpiar_nombre_perfume(titulo: str, marca: str = "") -> str:
     ]
     for r in ruidos:
         limpio = re.sub(rf"\b{re.escape(r)}\b", "", limpio, flags=re.IGNORECASE)
+
+    # Remover preposiciones sueltas al final (ej. '... De', '... Para')
+    limpio = re.sub(r"\s+\b(?:de|para)\b\s*$", "", limpio, flags=re.IGNORECASE)
 
     # Remover 'men' o 'woman'/'women' sueltos al final salvo cuando forman parte del nombre (ej. '212 Men', '212 VIP Men', 'CH Men')
     if not re.search(r"\b(?:212|ch|solo|boss)\s+(?:vip\s+)?men\b", limpio, flags=re.IGNORECASE):

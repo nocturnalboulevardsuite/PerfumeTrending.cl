@@ -2,218 +2,218 @@
   "metadata": {
     "version": "2.1.0 (Cloud Supabase Multi-Tienda Masivo)",
     "sistema": "PerfumeTrending Autonomous Discovery Crawler",
-    "fecha_ejecucion": "2026-10-20 14:33:30",
-    "duracion_segundos": 23652.93,
+    "fecha_ejecucion": "2026-10-28 16:06:21",
+    "duracion_segundos": 518.65,
     "estado": "EXITOSO",
     "destino": "Supabase PostgreSQL + SQLite"
   },
   "metricas": {
-    "total_productos_analizados": 4663,
-    "descartados_no_perfume": 410,
-    "nuevos_perfumes_descubiertos": 3532,
-    "precios_variantes_registrados": 3191,
+    "total_productos_analizados": 200,
+    "descartados_no_perfume": 44,
+    "nuevos_perfumes_descubiertos": 132,
+    "precios_variantes_registrados": 164,
     "errores_totales": 0
   },
   "muestras_nuevas": [
     {
-      "nombre": "Imperial By Stallion 53 +",
-      "marca": "Emper",
-      "tipo": "Eau de Parfum",
+      "nombre": "La Vie Est Belle L'Elixir",
+      "marca": "Lancôme",
+      "tipo": "Elixir",
       "es_arabe": false,
-      "tienda": "Silk Perfumes",
-      "precio": 20990
+      "tienda": "Fragante",
+      "precio": 85990
     },
     {
-      "nombre": "Blue Stallion By Stallion 53 +",
-      "marca": "Emper",
+      "nombre": "Cheap And Chic",
+      "marca": "Moschino",
       "tipo": "Eau de Parfum",
       "es_arabe": false,
-      "tienda": "Silk Perfumes",
-      "precio": 20990
+      "tienda": "Fragante",
+      "precio": 34990
     },
     {
-      "nombre": "Paradise By Stallion 53 +",
-      "marca": "Emper",
+      "nombre": "My Way Ylang",
+      "marca": "Giorgio Armani",
       "tipo": "Eau de Parfum",
       "es_arabe": false,
-      "tienda": "Silk Perfumes",
-      "precio": 20990
+      "tienda": "Fragante",
+      "precio": 127990
     },
     {
-      "nombre": "Polo Red + Polo 67",
+      "nombre": "Good Girl Bowtastic",
+      "marca": "Carolina Herrera",
+      "tipo": "Eau de Parfum",
+      "es_arabe": false,
+      "tienda": "Fragante",
+      "precio": 110990
+    },
+    {
+      "nombre": "Power Of Seduction",
+      "marca": "Antonio Banderas",
+      "tipo": "Eau de Toilette",
+      "es_arabe": false,
+      "tienda": "Fragante",
+      "precio": 15990
+    },
+    {
+      "nombre": "Look Gold",
+      "marca": "Agatha Ruiz de la Prada",
+      "tipo": "Eau de Toilette",
+      "es_arabe": false,
+      "tienda": "Fragante",
+      "precio": 15990
+    },
+    {
+      "nombre": "Wanted",
+      "marca": "Azzaro",
+      "tipo": "Eau de Parfum",
+      "es_arabe": false,
+      "tienda": "Fragante",
+      "precio": 47990
+    },
+    {
+      "nombre": "Divine",
+      "marca": "Jean Paul Gaultier",
+      "tipo": "Eau de Parfum",
+      "es_arabe": false,
+      "tienda": "Fragante",
+      "precio": 80990
+    },
+    {
+      "nombre": "Le Beau Paradise Garden",
+      "marca": "Jean Paul Gaultier",
+      "tipo": "Eau de Parfum",
+      "es_arabe": false,
+      "tienda": "Fragante",
+      "precio": 89990
+    },
+    {
+      "nombre": "Romance",
       "marca": "Ralph Lauren",
+      "tipo": "Eau de Parfum",
+      "es_arabe": false,
+      "tienda": "Fragante",
+      "precio": 61990
+    },
+    {
+      "nombre": "Pink Fresh Couture",
+      "marca": "Moschino",
       "tipo": "Eau de Toilette",
       "es_arabe": false,
-      "tienda": "Silk Perfumes",
-      "precio": 20990
+      "tienda": "Fragante",
+      "precio": 50990
     },
     {
-      "nombre": "Matcha Made In Heaven",
-      "marca": "Tubbees",
+      "nombre": "Paradox Radical Essence",
+      "marca": "Prada",
       "tipo": "Eau de Parfum",
       "es_arabe": false,
-      "tienda": "Silk Perfumes",
-      "precio": 6990
+      "tienda": "Fragante",
+      "precio": 163990
     },
     {
-      "nombre": "Noir Coutures Achet 1,5G With Box",
-      "marca": "Givenchy",
+      "nombre": "My Way Parfum",
+      "marca": "Giorgio Armani",
+      "tipo": "Parfum",
+      "es_arabe": false,
+      "tienda": "Fragante",
+      "precio": 85990
+    },
+    {
+      "nombre": "Libre",
+      "marca": "Yves Saint Laurent",
       "tipo": "Eau de Parfum",
       "es_arabe": false,
-      "tienda": "Silk Perfumes",
-      "precio": 1000
+      "tienda": "Fragante",
+      "precio": 144990
     },
     {
-      "nombre": "Perfumero Recargable Con Atomizador 5 Ml",
-      "marca": "Varios",
-      "tipo": "Eau de Parfum",
+      "nombre": "Scandal Absolu Parfum",
+      "marca": "Jean Paul Gaultier",
+      "tipo": "Parfum",
       "es_arabe": false,
-      "tienda": "Silk Perfumes",
-      "precio": 1990
+      "tienda": "Fragante",
+      "precio": 115990
     },
     {
-      "nombre": "De Vidrio",
-      "marca": "Perfumero",
-      "tipo": "Eau de Parfum",
-      "es_arabe": false,
-      "tienda": "Silk Perfumes",
-      "precio": 1490
-    },
-    {
-      "nombre": "Agua Brava",
-      "marca": "Puig",
-      "tipo": "Eau de Cologne",
-      "es_arabe": false,
-      "tienda": "Silk Perfumes",
-      "precio": 8490
-    },
-    {
-      "nombre": "Lacoste Pour Homme Tester Edt 100 Ml",
-      "marca": "Lacoste",
-      "tipo": "Eau de Toilette",
-      "es_arabe": false,
-      "tienda": "Silk Perfumes",
-      "precio": 18990
-    },
-    {
-      "nombre": "Deep Red",
-      "marca": "Hugo Boss",
-      "tipo": "Eau de Parfum",
-      "es_arabe": false,
-      "tienda": "Silk Perfumes",
-      "precio": 25990
-    },
-    {
-      "nombre": "Lima Tonka +1.5Ml",
+      "nombre": "Verbena Masculino",
       "marca": "Adolfo Domínguez",
       "tipo": "Eau de Toilette",
       "es_arabe": false,
-      "tienda": "Silk Perfumes",
-      "precio": 18990
+      "tienda": "Fragante",
+      "precio": 14990
     },
     {
-      "nombre": "Euphoria",
-      "marca": "Calvin Klein",
+      "nombre": "212 Heroes Forever Young",
+      "marca": "Carolina Herrera",
+      "tipo": "Eau de Toilette",
+      "es_arabe": false,
+      "tienda": "Fragante",
+      "precio": 84990
+    },
+    {
+      "nombre": "212 VIP",
+      "marca": "Carolina Herrera",
       "tipo": "Eau de Parfum",
       "es_arabe": false,
-      "tienda": "Silk Perfumes",
-      "precio": 36990
+      "tienda": "Fragante",
+      "precio": 68990
     },
     {
-      "nombre": "Colors Purple",
-      "marca": "Benetton",
-      "tipo": "Eau de Toilette",
-      "es_arabe": false,
-      "tienda": "Silk Perfumes",
-      "precio": 7490
-    },
-    {
-      "nombre": "The Secret",
-      "marca": "Antonio Banderas",
-      "tipo": "Eau de Toilette",
-      "es_arabe": false,
-      "tienda": "Silk Perfumes",
-      "precio": 9990
-    },
-    {
-      "nombre": "My 5Th Avenue",
-      "marca": "Elizabeth Arden",
+      "nombre": "Good Girl Légère",
+      "marca": "Carolina Herrera",
       "tipo": "Eau de Parfum",
       "es_arabe": false,
-      "tienda": "Silk Perfumes",
-      "precio": 23990
+      "tienda": "Fragante",
+      "precio": 56990
     },
     {
-      "nombre": "Wild Attraction The Secret Temptation + Mini",
-      "marca": "Antonio Banderas",
+      "nombre": "In Love With You",
+      "marca": "Giorgio Armani",
+      "tipo": "Eau de Parfum",
+      "es_arabe": false,
+      "tienda": "Fragante",
+      "precio": 55990
+    },
+    {
+      "nombre": "Emporio Armani Stronger With You",
+      "marca": "Giorgio Armani",
       "tipo": "Eau de Toilette",
       "es_arabe": false,
-      "tienda": "Silk Perfumes",
-      "precio": 12990
+      "tienda": "Fragante",
+      "precio": 53990
     },
     {
-      "nombre": "Wings Extraordinary",
-      "marca": "Giorgio Beverly Hills",
+      "nombre": "Aerin Lilac Path",
+      "marca": "Estée Lauder",
+      "tipo": "Eau de Parfum",
+      "es_arabe": false,
+      "tienda": "Fragante",
+      "precio": 89990
+    },
+    {
+      "nombre": "Gentleman Only",
+      "marca": "Givenchy",
       "tipo": "Eau de Toilette",
       "es_arabe": false,
-      "tienda": "Silk Perfumes",
-      "precio": 10990
+      "tienda": "Fragante",
+      "precio": 65990
     },
     {
-      "nombre": "Ck Be",
-      "marca": "Calvin Klein",
-      "tipo": "Eau de Toilette",
-      "es_arabe": false,
-      "tienda": "Silk Perfumes",
-      "precio": 21490
-    },
-    {
-      "nombre": "Now",
+      "nombre": "Boss Bottled Night",
       "marca": "Hugo Boss",
       "tipo": "Eau de Toilette",
       "es_arabe": false,
-      "tienda": "Silk Perfumes",
-      "precio": 29990
+      "tienda": "Fragante",
+      "precio": 105990
     },
     {
-      "nombre": "White Diamonds",
-      "marca": "Elizabeth Arden",
-      "tipo": "Eau de Toilette",
-      "es_arabe": false,
-      "tienda": "Silk Perfumes",
-      "precio": 18990
-    },
-    {
-      "nombre": "Light Blue ++Crema",
-      "marca": "Dolce & Gabbana",
-      "tipo": "Eau de Toilette",
-      "es_arabe": false,
-      "tienda": "Silk Perfumes",
-      "precio": 64990
-    },
-    {
-      "nombre": "Be Tempted Eau So Blush",
-      "marca": "Dkny",
-      "tipo": "Eau de Parfum",
-      "es_arabe": false,
-      "tienda": "Silk Perfumes",
-      "precio": 22990
-    },
-    {
-      "nombre": "Plus Plus Masculine",
-      "marca": "Diesel",
-      "tipo": "Eau de Toilette",
-      "es_arabe": false,
-      "tienda": "Silk Perfumes",
-      "precio": 7990
-    },
-    {
-      "nombre": "Sauvage",
-      "marca": "Dior",
+      "nombre": "Le Beau Le Parfum Intense",
+      "marca": "Jean Paul Gaultier",
       "tipo": "Parfum",
       "es_arabe": false,
-      "tienda": "Silk Perfumes",
-      "precio": 174990
+      "tienda": "Fragante",
+      "precio": 139990
     }
   ],
   "errores": []
