@@ -82,8 +82,10 @@ try:
         is_supabase_disponible,
     )
     from backend.normalizador import (
+        _GENERO_ESPERADO_CTX,
         coincide_con_perfume,
         coincide_entidad_detallada,
+        contexto_genero_esperado,
         detectar_formato_oferta,
         es_arabe,
         es_precio_valido,
@@ -107,8 +109,10 @@ except ImportError:
         is_supabase_disponible,
     )
     from normalizador import (
+        _GENERO_ESPERADO_CTX,
         coincide_con_perfume,
         coincide_entidad_detallada,
+        contexto_genero_esperado,
         detectar_formato_oferta,
         es_arabe,
         es_precio_valido,
@@ -1272,7 +1276,7 @@ def ejecutar_ciclo_scraping_y_descubrimiento() -> Dict[str, Any]:
             perfumes_db = _fetch_all_rows(
                 lambda off, lim: (
                     sb.table("perfumes")
-                    .select("id, nombre, marca, tipo, precio_referencia, es_arabe")
+                    .select("id, nombre, marca, genero, tipo, precio_referencia, es_arabe")
                     .order("id", desc=False)
                     .range(off, off + lim - 1)
                 ),
@@ -1330,7 +1334,7 @@ def ejecutar_ciclo_scraping_y_descubrimiento() -> Dict[str, Any]:
         init_db()
         conn = get_connection()
         cursor = conn.cursor()
-        cursor.execute("SELECT id, nombre, marca, tipo, precio_referencia, es_arabe FROM perfumes ORDER BY id ASC;")
+        cursor.execute("SELECT id, nombre, marca, genero, tipo, precio_referencia, es_arabe FROM perfumes ORDER BY id ASC;")
         perfumes_db = [dict(r) for r in cursor.fetchall()]
         cursor.execute("SELECT id, nombre, url_base, trust_score FROM tiendas ORDER BY id ASC;")
         tiendas_db = [dict(r) for r in cursor.fetchall()]
@@ -1382,10 +1386,12 @@ def ejecutar_ciclo_scraping_y_descubrimiento() -> Dict[str, Any]:
         p_id = p["id"]
         p_nom = p["nombre"]
         p_marca = p["marca"]
+        p_genero = p.get("genero") or "Unisex"
         p_tipo = p.get("tipo") or ""
         p_ref = p.get("precio_referencia")
 
-        logger.info(f"Auditando fragancia: {p_nom} ({p_marca}) [{p_tipo or 'N/A'}]")
+        logger.info(f"Auditando fragancia: {p_nom} ({p_marca}) [{p_tipo or 'N/A'} · {p_genero}]")
+        _GENERO_ESPERADO_CTX.set(p_genero)
 
         for tienda in tiendas_db:
             t_id = tienda["id"]

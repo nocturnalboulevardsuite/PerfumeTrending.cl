@@ -83,7 +83,7 @@ SEED_PATH = resolver_ruta("database/seed_catalogo.json")
 _SEED_CACHE: Optional[Dict[str, Any]] = None
 _INITIALIZED_DB_PATHS: Set[str] = set()
 _CATALOGO_CACHE: Dict[Tuple[Any, ...], Tuple[float, List[Dict[str, Any]]]] = {}
-CATALOGO_CACHE_TTL_SECONDS = 30.0
+CATALOGO_CACHE_TTL_SECONDS = 300.0
 
 
 def limpiar_cache_catalogo() -> None:

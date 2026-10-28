@@ -9,10 +9,27 @@ para la estandarización y validación estricta de perfumes y ofertas en e-comme
 - Motor determinista de resolución de entidades en 12 capas contra clones, keyword stuffing y cruces de flankers.
 """
 
+from contextlib import contextmanager
+from contextvars import ContextVar
 from dataclasses import dataclass
 import re
 import unicodedata
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Dict, Iterator, List, Optional, Set, Tuple
+
+# Género esperado del perfume que se está auditando en el hilo/tarea actual.
+# Permite que los scrapers propaguen el género a TODAS las validaciones internas
+# (15+ llamadas a `coincide_entidad_detallada`) sin modificar cada firma intermedia.
+_GENERO_ESPERADO_CTX: ContextVar[Optional[str]] = ContextVar("genero_esperado_perfume", default=None)
+
+
+@contextmanager
+def contexto_genero_esperado(genero: Optional[str]) -> Iterator[None]:
+    """Establece temporalmente el género esperado para las validaciones de entidad del bloque."""
+    token = _GENERO_ESPERADO_CTX.set(genero)
+    try:
+        yield
+    finally:
+        _GENERO_ESPERADO_CTX.reset(token)
 
 # =============================================================================
 # 1. CONSTANTES DE DOMINIO Y NORMALIZACIÓN CANÓNICA DE MARCAS
@@ -308,16 +325,79 @@ def extraer_concentracion(texto: str) -> str:
     return "Eau de Parfum"
 
 
+# Marcadores de género evaluados SIEMPRE por palabra completa (\b...\b).
+# Antes se buscaban como subcadena, lo que clasificaba 'Romance', 'Armani' o 'Mancera'
+# como masculinos por contener 'man', y 'Hermès' como femenino por contener 'her'.
+MARCADORES_GENERO_FEMENINO: Tuple[str, ...] = (
+    "pour femme", "femme", "mujer", "mujeres", "women", "woman", "for her", "donna",
+    "dama", "damas", "femenino", "femenina", "lady", "girl",
+)
+MARCADORES_GENERO_MASCULINO: Tuple[str, ...] = (
+    "pour homme", "homme", "hombre", "hombres", "men", "man", "for him", "uomo",
+    "caballero", "caballeros", "masculino", "varon", "male", "boy",
+)
+_RE_FEMENINO = re.compile(r"\b(?:" + "|".join(re.escape(k) for k in MARCADORES_GENERO_FEMENINO) + r")\b")
+_RE_MASCULINO = re.compile(r"\b(?:" + "|".join(re.escape(k) for k in MARCADORES_GENERO_MASCULINO) + r")\b")
+
+
+def detectar_marcadores_genero(texto: str) -> Tuple[bool, bool]:
+    """Retorna `(tiene_marcador_femenino, tiene_marcador_masculino)` evaluando palabras completas."""
+    t = _norm_ascii(texto)
+    if not t:
+        return False, False
+    return bool(_RE_FEMENINO.search(t)), bool(_RE_MASCULINO.search(t))
+
+
+def detectar_genero_explicito(texto: str) -> Optional[str]:
+    """
+    Retorna 'Mujer' u 'Hombre' solo cuando el texto declara un único género de forma inequívoca.
+    Retorna None si no hay marcadores o si aparecen marcadores de ambos géneros.
+    """
+    fem, masc = detectar_marcadores_genero(texto)
+    if fem and not masc:
+        return "Mujer"
+    if masc and not fem:
+        return "Hombre"
+    return None
+
+
+def normalizar_genero(genero: Optional[str]) -> Optional[str]:
+    """Normaliza etiquetas de género heterogéneas a 'Mujer', 'Hombre', 'Unisex' o None."""
+    g = _norm_ascii(genero or "")
+    if not g:
+        return None
+    if g in ("mujer", "femenino", "female", "women", "woman", "dama", "f"):
+        return "Mujer"
+    if g in ("hombre", "masculino", "male", "men", "man", "caballero", "h"):
+        return "Hombre"
+    if g in ("unisex", "u", "ambos"):
+        return "Unisex"
+    return None
+
+
 def extraer_genero(texto: str) -> str:
     """Determina el género objetivo del perfume ('Mujer', 'Hombre' o 'Unisex')."""
-    t = (texto or "").lower()
-    if any(k in t for k in ["pour femme", "mujer", "women", "woman", "dama", "femenino", "for her", "(m)"]):
+    t_raw = (texto or "").lower()
+    fem, masc = detectar_marcadores_genero(t_raw)
+    if re.search(r"\(\s*m\s*\)", t_raw):
+        fem = True
+    if re.search(r"\(\s*h\s*\)", t_raw):
+        masc = True
+    if fem and not masc:
         return "Mujer"
-    if any(k in t for k in ["pour homme", "hombre", "men", "man", "caballero", "masculino", "for him", "(h)"]):
+    if masc and not fem:
         return "Hombre"
-    if re.search(r"\s+m\s*$", t):
+    if fem and masc:
+        # Ambos marcadores: priorizar el identificador más específico del nombre comercial
+        t = _norm_ascii(t_raw)
+        if re.search(r"\b(?:pour femme|femme|woman|for her)\b", t):
+            return "Mujer"
+        if re.search(r"\b(?:pour homme|homme|for him|uomo)\b", t):
+            return "Hombre"
+        return "Unisex"
+    if re.search(r"\s+m\s*$", t_raw):
         return "Mujer"
-    if re.search(r"\s+h\s*$", t):
+    if re.search(r"\s+h\s*$", t_raw):
         return "Hombre"
     return "Unisex"
 
@@ -390,6 +470,30 @@ def es_producto_perfume_valido(
                 return False
 
     return True
+
+
+PALABRAS_REPETIDAS_LEGITIMAS = {
+    "anais", "amor", "can", "plus", "ricci", "love", "yum", "pyar", "ella"
+}
+
+
+def eliminar_palabras_duplicadas(texto: str) -> str:
+    """
+    Elimina palabras repetidas de forma consecutiva sin distinguir mayúsculas ni acentos.
+    Ej: 'Good Girl Jasmine Absolute Absolute' -> 'Good Girl Jasmine Absolute'.
+    Preserva nombres legítimos repetidos como 'Anais Anais', 'Amor Amor', 'Can Can', 'Plus Plus'.
+    """
+    if not texto:
+        return ""
+    palabras = str(texto).split()
+    resultado: List[str] = []
+    for w in palabras:
+        norm_w = _norm_ascii(w)
+        if resultado and _norm_ascii(resultado[-1]) == norm_w and norm_w:
+            if norm_w not in PALABRAS_REPETIDAS_LEGITIMAS:
+                continue
+        resultado.append(w)
+    return " ".join(resultado)
 
 
 def limpiar_nombre_perfume(titulo: str, marca: str = "") -> str:
@@ -466,6 +570,9 @@ def limpiar_nombre_perfume(titulo: str, marca: str = "") -> str:
     # 7. Limpiar signos residuales respetando apóstrofes y '&' dentro de nombres (ej. J'adore, D&G, Bade'e)
     limpio = re.sub(r"[-–—/|()\[\]:+]+", " ", limpio)
     limpio = re.sub(r"\s+", " ", limpio).strip()
+
+    # 8. Eliminar palabras consecutivas repetidas (ej. 'Good Girl Jasmine Absolute Absolute')
+    limpio = eliminar_palabras_duplicadas(limpio)
 
     if len(limpio) < 2:
         limpio = titulo.split("-")[0].strip()
@@ -642,6 +749,7 @@ FLANKERS_EXCLUSIVOS: Set[str] = {
     "cherry", "peach", "vanilla", "vanille", "rose", "musk", "leather",
     "urban", "untold", "sillage", "milestone", "iconic", "precieux", "précieux",
     "ice", "fire", "tropical", "malibu", "glacial", "komodo",
+    "nuit", "night", "beyond", "sheer", "summer",
 }
 
 PALABRAS_GENERICAS_NOMBRE: Set[str] = {
@@ -684,14 +792,21 @@ def coincide_entidad_detallada(
     precio_referencia: Optional[int] = None,
     formato_esperado: Optional[str] = None,
     vendedor: str = "",
+    genero_esperado: Optional[str] = None,
 ) -> ResultadoCoincidencia:
     """
     Evalúa determinísticamente en 12 capas si una oferta candidata corresponde exactamente
     al perfume buscado, bloqueando clones, keyword stuffing, formatos inválidos, decants,
     vendedores terceros sospechosos, cruces de género/flankers y anomalías de precio.
+
+    `genero_esperado` ('Mujer' | 'Hombre' | 'Unisex'): si no se entrega explícitamente,
+    se toma del contexto activo (`contexto_genero_esperado`) establecido por el scraper.
     """
     if not titulo or not perfume_nombre:
         return ResultadoCoincidencia(coincide=False, confianza=0.0, motivo="Título o nombre vacío")
+
+    if genero_esperado is None:
+        genero_esperado = _GENERO_ESPERADO_CTX.get()
 
     tit_raw = str(titulo)
     url_raw = str(url or "")
@@ -905,16 +1020,12 @@ def coincide_entidad_detallada(
                 )
 
     # 7. Guardia de Cruce de Género y Líneas Homónimas (ej. Eros vs Eros Pour Femme; Scandal Pour Homme vs Scandal Woman; YSL Libre vs MYSLF/Y)
-    es_femenino_cand = any(
-        re.search(rf"\b{k}\b", tit)
-        for k in ["pour femme", "femme", "woman", "women", "mujer", "for her", "dama"]
-    )
-    es_masculino_cand = any(
-        re.search(rf"\b{k}\b", tit)
-        for k in ["pour homme", "homme", "men", "man", "hombre", "for him", "caballero"]
-    )
-    p_pide_hombre = any(k in p_norm for k in ["homme", "men", "man", "hombre", "boy", "male"])
-    p_pide_mujer = any(k in p_norm for k in ["femme", "woman", "women", "mujer", "girl", "her", "lady", "mademoiselle"])
+    #    Todas las comparaciones usan palabra completa para no confundir 'Romance'/'Armani' con 'man'
+    #    ni 'Hermès' con 'her'.
+    es_femenino_cand, es_masculino_cand = detectar_marcadores_genero(combo_text)
+    p_pide_mujer, p_pide_hombre = detectar_marcadores_genero(p_norm)
+    if not p_pide_mujer and re.search(r"\b(?:her|elle|mademoiselle)\b", p_norm):
+        p_pide_mujer = True
 
     if p_pide_hombre and es_femenino_cand and not es_masculino_cand:
         return ResultadoCoincidencia(
@@ -930,11 +1041,37 @@ def coincide_entidad_detallada(
             motivo=f"Conflicto de género: '{perfume_nombre}' es femenino pero candidato es masculino",
             formato_detectado=formato_det,
         )
-    if "eros" in p_norm and not p_pide_mujer and es_femenino_cand:
+    if "eros" in p_norm.split() and not p_pide_mujer and re.search(r"\b(?:pour femme|femme|woman|mujer)\b", combo_text):
         return ResultadoCoincidencia(
             coincide=False,
             confianza=0.0,
             motivo="Eros Woman/Pour Femme no coincide con Eros masculino",
+            formato_detectado=formato_det,
+        )
+
+    # 7b. Guardia de género esperado de la ficha (columna `perfumes.genero`).
+    #     El nombre comercial tiene prioridad (ej. 'Light Blue Pour Homme' siempre es masculino);
+    #     si el nombre no declara género, se usa el género almacenado de la ficha.
+    genero_ficha = None
+    if p_pide_mujer and not p_pide_hombre:
+        genero_ficha = "Mujer"
+    elif p_pide_hombre and not p_pide_mujer:
+        genero_ficha = "Hombre"
+    else:
+        genero_ficha = normalizar_genero(genero_esperado)
+
+    if genero_ficha == "Mujer" and es_masculino_cand and not es_femenino_cand:
+        return ResultadoCoincidencia(
+            coincide=False,
+            confianza=0.0,
+            motivo=f"Conflicto de género: ficha '{perfume_nombre}' es de Mujer pero candidato declara Hombre",
+            formato_detectado=formato_det,
+        )
+    if genero_ficha == "Hombre" and es_femenino_cand and not es_masculino_cand:
+        return ResultadoCoincidencia(
+            coincide=False,
+            confianza=0.0,
+            motivo=f"Conflicto de género: ficha '{perfume_nombre}' es de Hombre pero candidato declara Mujer",
             formato_detectado=formato_det,
         )
 
@@ -988,6 +1125,49 @@ def coincide_entidad_detallada(
                 coincide=False,
                 confianza=0.0,
                 motivo="Incompatibilidad de concentración: candidato es Eau de Cologne (EDC)",
+                formato_detectado=formato_det,
+            )
+
+        # Parfum puro / Extrait vs EDP-EDT (ej. 'Sauvage Parfum' nunca es 'Sauvage Eau de Parfum')
+        texto_sin_compuestos = re.sub(
+            r"\b(?:eau de parfum|extrait de parfum|le parfum|parfums?\s+de\s+\w+)\b", " ", combo_text
+        )
+        es_parfum_puro_t = bool(re.search(r"\bparfum\b", texto_sin_compuestos)) and not bool(
+            re.search(r"\b(?:eau de parfum|edp|eau de toilette|edt)\b", combo_text)
+        )
+        es_parfum_puro_p = (
+            bool(re.search(r"\b(?:parfum|extrait)\b", c_norm))
+            and "eau de" not in c_norm
+            and not es_elixir_p
+        )
+        if es_parfum_puro_p and (es_edp_t or es_edt_t):
+            return ResultadoCoincidencia(
+                coincide=False,
+                confianza=0.0,
+                motivo="Incompatibilidad de concentración: esperado Parfum/Extrait, candidato es EDP/EDT",
+                formato_detectado=formato_det,
+            )
+        if (es_edp_p or es_edt_p) and es_parfum_puro_t and "parfum" not in p_norm:
+            return ResultadoCoincidencia(
+                coincide=False,
+                confianza=0.0,
+                motivo="Incompatibilidad de concentración: candidato es Parfum puro, esperado EDP/EDT",
+                formato_detectado=formato_det,
+            )
+
+        # Elixir / Intense exigidos por la concentración de la ficha deben estar en el candidato
+        if es_elixir_p and not re.search(r"\belixir\b", combo_text):
+            return ResultadoCoincidencia(
+                coincide=False,
+                confianza=0.0,
+                motivo="Incompatibilidad de concentración: esperado Elixir, candidato no lo declara",
+                formato_detectado=formato_det,
+            )
+        if "intense" in c_norm and not re.search(r"\b(?:intense|intenso)\b", combo_text):
+            return ResultadoCoincidencia(
+                coincide=False,
+                confianza=0.0,
+                motivo="Incompatibilidad de concentración: esperado versión Intense, candidato no lo declara",
                 formato_detectado=formato_det,
             )
 
@@ -1055,6 +1235,7 @@ def coincide_con_perfume(
     precio_referencia: Optional[int] = None,
     formato_esperado: Optional[str] = None,
     vendedor: str = "",
+    genero_esperado: Optional[str] = None,
 ) -> bool:
     """Wrapper retrocompatible que devuelve un booleano para los scrapers y vistas."""
     return coincide_entidad_detallada(
@@ -1068,4 +1249,5 @@ def coincide_con_perfume(
         precio_referencia=precio_referencia,
         formato_esperado=formato_esperado,
         vendedor=vendedor,
+        genero_esperado=genero_esperado,
     ).coincide

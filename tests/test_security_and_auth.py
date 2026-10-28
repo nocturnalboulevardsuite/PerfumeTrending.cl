@@ -15,6 +15,7 @@ import backend.database as db
 from backend.normalizador import (
     coincide_entidad_detallada,
     detectar_formato_oferta,
+    eliminar_palabras_duplicadas,
     es_producto_perfume_valido,
     limpiar_nombre_perfume,
     normalizar_marca_canonica,
@@ -24,6 +25,7 @@ from ui.security import (
     DEFAULT_AVATAR_SVG,
     DEFAULT_PERFUME_IMAGE,
     escape_html,
+    formatear_nombre_especifico,
     get_image_src,
     is_valid_https_image_url,
     resolver_url_oferta,
@@ -379,6 +381,68 @@ class TestEntityResolutionProductionRegressions(unittest.TestCase):
             volumen_esperado=100,
         )
         self.assertFalse(r2.coincide)
+
+    def test_formatear_nombre_especifico(self):
+        # Caso Romance: nombre corto genérico 'Romance', marca Ralph Lauren, Mujer, Eau de Parfum
+        p_romance = {"nombre": "Romance", "marca": "Ralph Lauren", "genero": "Mujer", "tipo": "Eau de Parfum"}
+        self.assertEqual(formatear_nombre_especifico(p_romance), "Romance Mujer EDP")
+
+        # Caso Eros Mujer: nombre 'Eros', Versace, Mujer, Eau de Parfum
+        p_eros_m = {"nombre": "Eros", "marca": "Versace", "genero": "Mujer", "tipo": "Eau de Parfum"}
+        self.assertEqual(formatear_nombre_especifico(p_eros_m), "Eros Mujer EDP")
+
+        # Caso Eros Hombre: nombre 'Eros', Versace, Hombre, Eau de Toilette
+        p_eros_h = {"nombre": "Eros", "marca": "Versace", "genero": "Hombre", "tipo": "Eau de Toilette"}
+        self.assertEqual(formatear_nombre_especifico(p_eros_h), "Eros Hombre EDT")
+
+        # Caso con género explícito en el nombre: no debe redundar
+        p_pour_homme = {"nombre": "Sauvage Pour Homme", "marca": "Dior", "genero": "Hombre", "tipo": "Eau de Toilette"}
+        self.assertEqual(formatear_nombre_especifico(p_pour_homme), "Sauvage Pour Homme EDT")
+
+        # Caso corto sin género explícito: debe incluir género
+        p_sauvage = {"nombre": "Sauvage Elixir", "marca": "Dior", "genero": "Hombre", "tipo": "Elixir"}
+        self.assertEqual(formatear_nombre_especifico(p_sauvage), "Sauvage Elixir Hombre")
+
+    def test_eliminar_palabras_duplicadas(self):
+        # Caso duplicado técnico por scrapers
+        self.assertEqual(
+            eliminar_palabras_duplicadas("Good Girl Jasmine Absolute Absolute"),
+            "Good Girl Jasmine Absolute"
+        )
+        self.assertEqual(
+            eliminar_palabras_duplicadas("Oud Candy Extrait Extrait De"),
+            "Oud Candy Extrait De"
+        )
+        # Nombres comerciales legítimos con repetición deben preservarse
+        self.assertEqual(eliminar_palabras_duplicadas("Anais Anais"), "Anais Anais")
+        self.assertEqual(eliminar_palabras_duplicadas("Amor Amor"), "Amor Amor")
+        self.assertEqual(eliminar_palabras_duplicadas("Can Can"), "Can Can")
+        self.assertEqual(eliminar_palabras_duplicadas("Plus Plus"), "Plus Plus")
+
+    def test_coincide_entidad_rechazo_genero_cruzado(self):
+        # Oferta masculina intentando asociarse a perfume femenino
+        r_fem = coincide_entidad_detallada(
+            titulo="Versace Eros Pour Homme EDT 200 ml",
+            perfume_nombre="Eros",
+            marca="Versace",
+            concentracion="Eau de Parfum",
+            volumen_esperado=200,
+            genero_esperado="Mujer"
+        )
+        self.assertFalse(r_fem.coincide)
+        self.assertIn("Conflicto de género", r_fem.motivo)
+
+        # Oferta femenina intentando asociarse a perfume masculino
+        r_masc = coincide_entidad_detallada(
+            titulo="Perfume Mujer Romance EDP 100ml Polo Ralph Lauren",
+            perfume_nombre="Romance",
+            marca="Ralph Lauren",
+            concentracion="Eau de Toilette",
+            volumen_esperado=100,
+            genero_esperado="Hombre"
+        )
+        self.assertFalse(r_masc.coincide)
+        self.assertIn("Conflicto de género", r_masc.motivo)
 
 
 if __name__ == "__main__":

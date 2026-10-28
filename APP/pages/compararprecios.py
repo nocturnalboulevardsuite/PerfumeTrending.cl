@@ -45,6 +45,7 @@ from ui import (
     cerrar_sesion_usuario,
     clean_html as _shared_clean_html,
     escape_html,
+    formatear_nombre_especifico,
     get_image_src,
     get_theme_palette,
     init_common_session_state,
@@ -63,9 +64,9 @@ def clean_html(html_str: str) -> str:
 # =============================================================================
 # BLOQUE 1: CACHÉ EN MEMORIA DE ALTO RENDIMIENTO (STREAMLIT CACHE DATA)
 # =============================================================================
-@st.cache_data(ttl=120, show_spinner=False)
+@st.cache_data(ttl=600, show_spinner=False)
 def get_cached_catalogo():
-    """Retorna el catálogo consolidado desde la capa de datos con caché de 2 minutos."""
+    """Retorna el catálogo consolidado desde la capa de datos con caché de 10 minutos."""
     return obtener_catalogo()
 
 
@@ -684,12 +685,13 @@ if not catalogo:
     st.warning("No hay perfumes disponibles en el catálogo en este momento.")
     st.stop()
 
-# Diccionario de mapeo rápido sin colisiones entre concentraciones (EDT/EDP/Parfum) ni géneros (Hombre/Mujer)
+# Diccionario de mapeo rápido con nombre específico sin colisiones entre concentraciones ni géneros
 opciones_perfumes = {}
 for p in catalogo:
     tipo_lbl = (p.get("tipo") or "Eau de Parfum").strip()
     gen_lbl = (p.get("genero") or "Unisex").strip()
-    base_lbl = f"{p['nombre']} — {p['marca']} ({tipo_lbl} · {gen_lbl})"
+    nom_esp = formatear_nombre_especifico(p) or p["nombre"]
+    base_lbl = f"{nom_esp} — {p['marca']} ({tipo_lbl} · {gen_lbl})"
     lbl_final = base_lbl if base_lbl not in opciones_perfumes else f"{base_lbl} [#{p['id']}]"
     opciones_perfumes[lbl_final] = p
 
@@ -733,9 +735,10 @@ except Exception:
 # Obtener detalle enriquecido desde caché
 detalle = get_cached_detalle(selected_id) or perfume
 
-# Mostrar ficha cabecera del perfume con packshot de alta resolución y sanitización XSS
+# Mostrar ficha cabecera del perfume con packshot de alta resolución y nombre específico inequívoco
 img_src = get_image_src(detalle.get('imagen_url'))
-nombre_safe = escape_html(detalle.get('nombre', ''))
+nombre_especifico_det = formatear_nombre_especifico(detalle) or detalle.get('nombre', '')
+nombre_safe = escape_html(nombre_especifico_det)
 marca_safe = escape_html(detalle.get('marca', ''))
 notas_safe = escape_html(detalle.get('notas') or 'Notas olfativas exclusivas')
 genero_safe = escape_html(detalle.get('genero') or 'Unisex')
@@ -851,7 +854,14 @@ else:
     if vols_disponibles:
         opciones_vol = ["Todos"] + [f"{v} ML" for v in vols_disponibles]
         
-        sel_guardada = st.session_state.get(key_filtro, "Todos")
+        if key_filtro not in st.session_state:
+            hay_100ml_en_stock = "100 ML" in opciones_vol and any(
+                extraer_volumen(t) == 100 and esta_en_stock(t) for t in tiendas_db
+            )
+            sel_guardada = "100 ML" if hay_100ml_en_stock else "Todos"
+        else:
+            sel_guardada = st.session_state.get(key_filtro, "Todos")
+            
         default_val = sel_guardada if sel_guardada in opciones_vol else "Todos"
 
         # Pre-filtrar temporalmente para obtener métricas de stock antes de renderizar el selector
@@ -930,7 +940,7 @@ else:
         )
     )
 
-    # 4. Identificar el mejor precio priorizando botellas selladas ('regular') cuando existe stock regular
+    # 4. Identificar el mejor precio y el mejor valor por ml priorizando botellas selladas ('regular')
     precios_regular_stock = [
         t['precio_actual']
         for t in tiendas_filtradas
@@ -943,6 +953,17 @@ else:
     ]
     hay_regular_en_stock = len(precios_regular_stock) > 0
     min_precio = min(precios_regular_stock) if hay_regular_en_stock else (min(precios_validos) if precios_validos else 0)
+
+    # Calcular mejor costo por mililitro ($/ml) cuando se comparan múltiples volúmenes ('Todos')
+    min_precio_ml = 0.0
+    if len({extraer_volumen(t) for t in tiendas_filtradas if esta_en_stock(t)}) > 1:
+        candidatos_ml = [
+            t['precio_actual'] / max(1, extraer_volumen(t))
+            for t in tiendas_filtradas
+            if t.get('precio_actual', 0) > 0 and esta_en_stock(t) and (not es_tester_item(t) if hay_regular_en_stock else True)
+        ]
+        if candidatos_ml:
+            min_precio_ml = min(candidatos_ml)
 
     total_agotados = len([t for t in tiendas_ordenadas if not esta_en_stock(t)])
     total_disponibles = len(tiendas_ordenadas) - total_agotados
@@ -999,7 +1020,16 @@ else:
         elif not en_stock:
             status_badge = f"<span style='background: {'rgba(239, 68, 68, 0.15)' if is_dark else '#fee2e2'}; color: {'#f87171' if is_dark else '#dc2626'}; border: 1px solid {'rgba(248, 113, 113, 0.35)' if is_dark else 'rgba(220, 38, 38, 0.3)'}; font-weight: 700; margin-left: 8px; font-size: 0.72rem; padding: 2px 8px; border-radius: 4px; letter-spacing: 0.5px;'>AGOTADO</span>"
         else:
-            status_badge = ""
+            is_best_ml = (
+                min_precio_ml > 0
+                and en_stock
+                and (not es_tester if hay_regular_en_stock else True)
+                and abs((p_act / max(1, vol_ml)) - min_precio_ml) < 0.5
+            )
+            if is_best_ml:
+                status_badge = f"<span style='background: {'rgba(59, 130, 246, 0.16)' if is_dark else '#dbeafe'}; color: {'#60a5fa' if is_dark else '#1d4ed8'}; border: 1px solid {'rgba(96, 165, 250, 0.4)' if is_dark else 'rgba(29, 78, 216, 0.3)'}; font-weight: 700; margin-left: 8px; font-size: 0.72rem; padding: 2px 8px; border-radius: 4px; letter-spacing: 0.5px;'>MEJOR VALOR / ML</span>"
+            else:
+                status_badge = ""
 
         badge_tester = (
             f"<span title='Unidad Tester de demostración comercial (puede venir en caja neutra o sin celofán)' "

@@ -9,10 +9,12 @@ Centraliza las defensas contra vulnerabilidades web en el portal Streamlit:
 """
 
 import base64
+import functools
 import html
+import re
 import urllib.parse
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Dict, Optional
 
 APP_DIR = Path(__file__).resolve().parent.parent
 ALLOWED_ASSETS_DIR = (APP_DIR / "assets").resolve()
@@ -35,6 +37,105 @@ SAFE_DATA_IMAGE_PREFIXES = (
     "data:image/gif;base64,",
     "data:image/svg+xml;utf8,",
 )
+
+
+@functools.lru_cache(maxsize=512)
+def _read_local_asset_data_uri(resolved_str: str) -> Optional[str]:
+    """Codifica y cachea en RAM imágenes locales dentro de APP/assets/ para evitar lecturas de disco repetidas."""
+    try:
+        resolved = Path(resolved_str)
+        ext = resolved.suffix.lower()
+        mime_map = {
+            ".png": "image/png",
+            ".webp": "image/webp",
+            ".gif": "image/gif",
+            ".svg": "image/svg+xml",
+            ".jpg": "image/jpeg",
+            ".jpeg": "image/jpeg",
+        }
+        mime = mime_map.get(ext, "image/jpeg")
+        b64 = base64.b64encode(resolved.read_bytes()).decode("ascii")
+        return f"data:{mime};base64,{b64}"
+    except Exception:
+        return None
+
+
+def formatear_nombre_especifico(perfume: Optional[Dict[str, Any]]) -> str:
+    """
+    Construye un título comercial específico e inequívoco para cada fragancia
+    (ej. 'Romance Mujer EDP', 'Eros Pour Femme EDP', 'Eros Hombre EDT') para que
+    ninguna ficha se muestre como una palabra suelta ambigua.
+    """
+    if not perfume or not isinstance(perfume, dict):
+        return ""
+    raw_name = str(perfume.get("nombre") or "").strip()
+    if not raw_name:
+        return ""
+
+    # Eliminar palabras consecutivas repetidas (ej. 'Absolute Absolute')
+    words = raw_name.split()
+    dedup_words = []
+    for w in words:
+        if dedup_words and dedup_words[-1].lower() == w.lower():
+            continue
+        dedup_words.append(w)
+    nombre = " ".join(dedup_words)
+    nom_low = nombre.lower()
+
+    genero = str(perfume.get("genero") or "").strip()
+    tipo = str(perfume.get("tipo") or "").strip()
+    tipo_low = tipo.lower()
+
+    # Verificar si el nombre ya declara explícitamente género
+    tiene_genero_en_nombre = bool(
+        re.search(
+            r"\b(?:pour femme|pour homme|l'homme|la femme|femme|homme|for her|for him|for women|for men|"
+            r"woman|women|man|men|mujer|hombre|uomo|donna|girl|boy|lady|mademoiselle|her|elle)\b",
+            nom_low,
+        )
+    )
+
+    sufijos = []
+    if not tiene_genero_en_nombre and genero in ("Mujer", "Hombre"):
+        # Agregar género explícito en nombres cortos/ambiguos (<= 2 palabras) o líneas compartidas Hom/Muj
+        lineas_compartidas = {
+            "eros", "romance", "light blue", "the one", "one", "obsession", "eternity",
+            "euphoria", "acqua di gio", "acqua di giò", "code", "scandal", "guilty",
+            "le male", "classique", "9 pm", "9pm", "fakhar", "qimmah", "the kingdom",
+            "yara", "asad", "cool water", "boss orange", "212", "212 vip", "ch",
+            "individuel", "presence", "legend", "emblem", "starwalker",
+        }
+        if len(dedup_words) <= 2 or nom_low in lineas_compartidas:
+            sufijos.append(genero)
+
+    # Abreviatura de concentración si no está ya en el nombre
+    abrev_conc = ""
+    if "elixir" in tipo_low and "elixir" not in nom_low:
+        abrev_conc = "Elixir"
+    elif "extrait" in tipo_low and "extrait" not in nom_low:
+        abrev_conc = "Extrait"
+    elif "eau de parfum intense" in tipo_low:
+        abrev_conc = "EDP Intense" if "intense" not in nom_low else "EDP"
+    elif "eau de toilette intense" in tipo_low:
+        abrev_conc = "EDT Intense" if "intense" not in nom_low else "EDT"
+    elif "eau de parfum" in tipo_low or tipo_low == "edp":
+        if not re.search(r"\b(?:edp|eau de parfum)\b", nom_low):
+            abrev_conc = "EDP"
+    elif "eau de toilette" in tipo_low or tipo_low == "edt":
+        if not re.search(r"\b(?:edt|eau de toilette)\b", nom_low):
+            abrev_conc = "EDT"
+    elif "eau de cologne" in tipo_low or tipo_low == "edc":
+        if not re.search(r"\b(?:edc|cologne|colonia)\b", nom_low):
+            abrev_conc = "EDC"
+    elif tipo_low == "parfum" and "parfum" not in nom_low:
+        abrev_conc = "Parfum"
+
+    if abrev_conc:
+        sufijos.append(abrev_conc)
+
+    if sufijos:
+        return f"{nombre} {' '.join(sufijos)}"
+    return nombre
 
 
 def escape_html(value: Any) -> str:
@@ -161,18 +262,9 @@ def get_image_src(
             if resolved.suffix.lower() not in ALLOWED_IMAGE_EXTENSIONS:
                 continue
             if resolved.is_file():
-                ext = resolved.suffix.lower()
-                mime_map = {
-                    ".png": "image/png",
-                    ".webp": "image/webp",
-                    ".gif": "image/gif",
-                    ".svg": "image/svg+xml",
-                    ".jpg": "image/jpeg",
-                    ".jpeg": "image/jpeg",
-                }
-                mime = mime_map.get(ext, "image/jpeg")
-                b64 = base64.b64encode(resolved.read_bytes()).decode("ascii")
-                return f"data:{mime};base64,{b64}"
+                uri = _read_local_asset_data_uri(str(resolved))
+                if uri:
+                    return uri
         except Exception:
             continue
 

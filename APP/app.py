@@ -45,6 +45,7 @@ from ui import (
     cerrar_sesion_usuario,
     clean_html,
     escape_html,
+    formatear_nombre_especifico,
     get_image_src,
     get_theme_palette,
     init_common_session_state,
@@ -56,7 +57,7 @@ from ui import (
 # =============================================================================
 # BLOQUE 1: CACHÉ EN MEMORIA DE ALTO RENDIMIENTO (STREAMLIT CACHE DATA)
 # =============================================================================
-@st.cache_data(ttl=60, show_spinner=False)
+@st.cache_data(ttl=600, show_spinner=False)
 def get_cached_catalogo(busqueda=None, esencias_tuple=None, categoria=None, orden="id_asc"):
     """Consulta el catálogo consolidado calculando el mejor precio en vivo con invalidación TTL."""
     esencias = list(esencias_tuple) if esencias_tuple else None
@@ -378,7 +379,10 @@ js_color_script = f"""
 </script>
 """
 
-components.html(js_color_script, height=0, width=0)
+try:
+    st.html(js_color_script, unsafe_allow_javascript=True)
+except Exception:
+    components.html(js_color_script, height=0, width=0)
 
 # 5. CSS ADAPTABLE Y ESTILOS
 st.markdown(f"""
@@ -1641,44 +1645,87 @@ if st.session_state['current_page'] == 'home':
         orden=st.session_state.get('selected_order', 'id_asc')
     )
 
-    if not catalog_perfumes:
-        st.info("No se encontraron perfumes que coincidan con la búsqueda o notas seleccionadas.")
-        if st.button("Restablecer filtros", key="btn_reset_filters"):
-            reset_to_home()
-            st.rerun()
-    else:
-        total_perfumes = len(catalog_perfumes)
-        items_per_page = st.session_state.get('items_per_page', 12)
+    @st.fragment
+    def render_catalogo_paginado(catalog_list):
+        if not catalog_list:
+            st.info("No se encontraron perfumes que coincidan con la búsqueda o notas seleccionadas.")
+            if st.button("Restablecer filtros", key="btn_reset_filters"):
+                reset_to_home()
+                st.rerun()
+            return
+
+        total_perfumes = len(catalog_list)
+        opciones_por_pag = [12, 24, 48, 96]
+        items_per_page = int(st.session_state.get('items_per_page', 12))
+        if items_per_page not in opciones_por_pag:
+            items_per_page = 12
         total_pages = max(1, (total_perfumes + items_per_page - 1) // items_per_page)
-        
-        # Validar límites de página activa
+
         if st.session_state['catalog_page'] > total_pages:
             st.session_state['catalog_page'] = total_pages
         elif st.session_state['catalog_page'] < 1:
             st.session_state['catalog_page'] = 1
-            
-        cur_page = st.session_state['catalog_page']
-        start_idx = (cur_page - 1) * items_per_page
-        end_idx = min(start_idx + items_per_page, total_perfumes)
-        
-        # Indicador de estado y cantidad
-        st.markdown(f"<div style='font-size: 0.88rem; color: {subtext_color}; margin: 8px 0 16px 0;'>Mostrando <b>{start_idx + 1}–{end_idx}</b> de <b>{total_perfumes}</b> fragancias en Chile</div>", unsafe_allow_html=True)
 
-        page_perfumes = catalog_perfumes[start_idx:end_idx]
+        cur_page = int(st.session_state['catalog_page'])
+        extra_rows = int(st.session_state.get('catalog_extra_items', 0))
+        start_idx = (cur_page - 1) * items_per_page
+        end_idx = min(start_idx + items_per_page + extra_rows, total_perfumes)
+
+        col_stat_txt, col_per_page, col_jump_top = st.columns([5.2, 2.4, 2.4], vertical_alignment="center")
+        with col_stat_txt:
+            st.markdown(
+                f"<div style='font-size: 0.88rem; color: {subtext_color}; margin: 4px 0;'>"
+                f"Mostrando <b>{start_idx + 1}–{end_idx}</b> de <b>{total_perfumes}</b> fragancias "
+                f"&bull; Página <b>{cur_page}</b> de <b>{total_pages}</b></div>",
+                unsafe_allow_html=True,
+            )
+        with col_per_page:
+            sel_pp = st.selectbox(
+                "Perfumes por página",
+                options=opciones_por_pag,
+                index=opciones_por_pag.index(items_per_page),
+                format_func=lambda n: f"Mostrar {n} por pág.",
+                key="sel_items_per_page_top",
+                label_visibility="collapsed",
+            )
+            if sel_pp != items_per_page:
+                st.session_state['items_per_page'] = sel_pp
+                st.session_state['catalog_page'] = 1
+                st.session_state['catalog_extra_items'] = 0
+                st.rerun(scope="fragment")
+        with col_jump_top:
+            sel_jump = st.selectbox(
+                "Ir a página",
+                options=list(range(1, total_pages + 1)),
+                index=cur_page - 1,
+                format_func=lambda p_num: f"Ir a página {p_num} de {total_pages}",
+                key="sel_jump_page_top",
+                label_visibility="collapsed",
+            )
+            if sel_jump != cur_page:
+                st.session_state['catalog_page'] = int(sel_jump)
+                st.session_state['catalog_extra_items'] = 0
+                st.rerun(scope="fragment")
+
+        st.markdown("<div style='margin-top: 8px;'></div>", unsafe_allow_html=True)
+
+        page_perfumes = catalog_list[start_idx:end_idx]
         cols_per_row = 3
         for i in range(0, len(page_perfumes), cols_per_row):
             cols = st.columns(cols_per_row, gap="medium")
             for j in range(cols_per_row):
                 if i + j < len(page_perfumes):
                     p = page_perfumes[i + j]
-                    
+
                     pais_origen = "Emiratos Árabes" if p.get('es_arabe') else "Francia" if p.get('marca') in ['Chanel', 'Dior', 'Yves Saint Laurent', 'Jean Paul Gaultier', 'Kilian', 'Maison Francis Kurkdjian'] else "Italia" if p.get('marca') in ['Giorgio Armani', 'Versace'] else "Estados Unidos" if p.get('marca') in ['Tom Ford'] else "Internacional"
-                    nombre_safe = escape_html(p.get('nombre', ''))
+                    nombre_especifico = formatear_nombre_especifico(p) or p.get('nombre', '')
+                    nombre_safe = escape_html(nombre_especifico)
                     marca_safe = escape_html(p.get('marca', ''))
+                    genero_safe = escape_html(p.get('genero') or 'Unisex')
                     notas_safe = escape_html(p.get('notas') or 'Notas aromáticas selectas')
                     tipo_safe = escape_html(p.get('tipo') or 'Eau de Parfum')
                     img_src = get_image_src(p.get('imagen_url'))
-                    
+
                     mejor_p = p.get('mejor_precio')
                     es_solo_tester = bool(p.get('mejor_precio_es_tester'))
                     if mejor_p and mejor_p > 0:
@@ -1702,10 +1749,10 @@ if st.session_state['current_page'] == 'home':
                     card_html = f"""
                     <div class="catalog-card">
                         <div class="square-img-box">
-                            <img src="{img_src}" alt="{nombre_safe}" loading="lazy">
+                            <img src="{img_src}" alt="{nombre_safe}" loading="lazy" decoding="async">
                             <div class="card-hover-overlay">
                                 <div class="overlay-title">{nombre_safe}</div>
-                                <div class="overlay-info"><b>Marca:</b> {marca_safe} ({tipo_safe})</div>
+                                <div class="overlay-info"><b>Marca:</b> {marca_safe} ({tipo_safe} &bull; {genero_safe})</div>
                                 <div class="overlay-info"><b>Origen:</b> {pais_origen}</div>
                                 <div class="overlay-info overlay-notes" style="margin-top: 4px;"><b>Notas:</b> {notas_safe}</div>
                                 {overlay_badge_html}
@@ -1714,7 +1761,7 @@ if st.session_state['current_page'] == 'home':
                         <div class="card-footer-info">
                             <div>
                                 <div class="card-perfume-name" title="{nombre_safe}">{nombre_safe}</div>
-                                <div class="card-perfume-brand">{marca_safe}</div>
+                                <div class="card-perfume-brand">{marca_safe} &bull; {genero_safe}</div>
                             </div>
                             {precio_html}
                         </div>
@@ -1727,32 +1774,63 @@ if st.session_state['current_page'] == 'home':
                             reset_modals()
                             st.switch_page("pages/compararprecios.py")
 
-        # 8.3 Controles de Paginación y Cargar Más Perfumes
-        st.markdown("<div style='margin-top: 32px;'></div>", unsafe_allow_html=True)
-        
-        # Botón grande destacado "Ver más perfumes" si no estamos en la última página
-        if cur_page < total_pages:
+        st.markdown("<div style='margin-top: 28px;'></div>", unsafe_allow_html=True)
+
+        # Botón "Ver más perfumes" acumulativo (carga más tarjetas en la misma vista sin recargar toda la app)
+        if end_idx < total_perfumes:
             siguientes_cant = min(items_per_page, total_perfumes - end_idx)
-            c_more_l, c_more_mid, c_more_r = st.columns([1, 2, 1])
+            _, c_more_mid, _ = st.columns([1, 2, 1])
             with c_more_mid:
                 if st.button(f"Ver más perfumes (+{siguientes_cant} fragancias) ↓", key="btn_load_more", use_container_width=True):
-                    st.session_state['catalog_page'] += 1
-                    st.rerun()
+                    st.session_state['catalog_extra_items'] = extra_rows + items_per_page
+                    st.rerun(scope="fragment")
 
-        # Barra de paginación detallada
-        c_pag_prev, c_pag_info, c_pag_next = st.columns([2, 4, 2], vertical_alignment="center")
-        with c_pag_prev:
-            if cur_page > 1:
-                if st.button("← Anterior", key="btn_pag_prev", use_container_width=True):
-                    st.session_state['catalog_page'] -= 1
-                    st.rerun()
-        with c_pag_info:
-            st.markdown(f"<div style='text-align: center; color: {text_color}; font-size: 0.92rem; font-weight: 500;'>Página <b>{cur_page}</b> de <b>{total_pages}</b> &bull; ({total_perfumes} perfumes)</div>", unsafe_allow_html=True)
-        with c_pag_next:
-            if cur_page < total_pages:
-                if st.button("Siguiente →", key="btn_pag_next", use_container_width=True):
-                    st.session_state['catalog_page'] += 1
-                    st.rerun()
+        # Barra de paginación multi-página con ventana numérica clicable + Primera/Última
+        win_start = max(1, cur_page - 2)
+        win_end = min(total_pages, win_start + 4)
+        win_start = max(1, win_end - 4)
+        paginas_ventana = list(range(win_start, win_end + 1))
+
+        nav_cols_spec = [1.1, 1.3] + [0.9] * len(paginas_ventana) + [1.3, 1.1]
+        pag_cols = st.columns(nav_cols_spec, vertical_alignment="center")
+
+        with pag_cols[0]:
+            if st.button("« 1", key="btn_pag_first", disabled=(cur_page <= 1), use_container_width=True):
+                st.session_state['catalog_page'] = 1
+                st.session_state['catalog_extra_items'] = 0
+                st.rerun(scope="fragment")
+        with pag_cols[1]:
+            if st.button("← Ant.", key="btn_pag_prev", disabled=(cur_page <= 1), use_container_width=True):
+                st.session_state['catalog_page'] = max(1, cur_page - 1)
+                st.session_state['catalog_extra_items'] = 0
+                st.rerun(scope="fragment")
+
+        for idx_p, p_num in enumerate(paginas_ventana):
+            with pag_cols[2 + idx_p]:
+                lbl_p = f"[{p_num}]" if p_num == cur_page else str(p_num)
+                if st.button(lbl_p, key=f"btn_pag_num_{p_num}", disabled=(p_num == cur_page), use_container_width=True):
+                    st.session_state['catalog_page'] = p_num
+                    st.session_state['catalog_extra_items'] = 0
+                    st.rerun(scope="fragment")
+
+        with pag_cols[2 + len(paginas_ventana)]:
+            if st.button("Sig. →", key="btn_pag_next", disabled=(cur_page >= total_pages), use_container_width=True):
+                st.session_state['catalog_page'] = min(total_pages, cur_page + 1)
+                st.session_state['catalog_extra_items'] = 0
+                st.rerun(scope="fragment")
+        with pag_cols[3 + len(paginas_ventana)]:
+            if st.button(f"{total_pages} »", key="btn_pag_last", disabled=(cur_page >= total_pages), use_container_width=True):
+                st.session_state['catalog_page'] = total_pages
+                st.session_state['catalog_extra_items'] = 0
+                st.rerun(scope="fragment")
+
+        st.markdown(
+            f"<div style='text-align: center; color: {subtext_color}; font-size: 0.85rem; margin-top: 8px;'>"
+            f"Página <b>{cur_page}</b> de <b>{total_pages}</b> &bull; Total catálogo activo: <b>{total_perfumes}</b> fragancias</div>",
+            unsafe_allow_html=True,
+        )
+
+    render_catalogo_paginado(catalog_perfumes)
 
 elif st.session_state['current_page'] == 'esencias_page':
     col_dict_title, col_dict_mute = st.columns([9, 1])

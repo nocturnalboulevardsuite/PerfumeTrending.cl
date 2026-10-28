@@ -154,7 +154,10 @@ js_color_script = f"""
 </script>
 """
 
-components.html(js_color_script, height=0, width=0)
+try:
+    st.html(js_color_script, unsafe_allow_javascript=True)
+except Exception:
+    components.html(js_color_script, height=0, width=0)
 
 # 3. CSS ADAPTABLE, BOTONES Y SWITCH DE TEMA (SIN AFECTAR LOS BOTONES DE POPOVER)
 st.markdown(f"""
