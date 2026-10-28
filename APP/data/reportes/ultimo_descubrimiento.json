@@ -2,218 +2,218 @@
   "metadata": {
     "version": "2.1.0 (Cloud Supabase Multi-Tienda Masivo)",
     "sistema": "PerfumeTrending Autonomous Discovery Crawler",
-    "fecha_ejecucion": "2026-10-28 16:06:21",
-    "duracion_segundos": 518.65,
+    "fecha_ejecucion": "2026-10-28 16:33:04",
+    "duracion_segundos": 2487.35,
     "estado": "EXITOSO",
     "destino": "Supabase PostgreSQL + SQLite"
   },
   "metricas": {
-    "total_productos_analizados": 200,
-    "descartados_no_perfume": 44,
-    "nuevos_perfumes_descubiertos": 132,
-    "precios_variantes_registrados": 164,
+    "total_productos_analizados": 1500,
+    "descartados_no_perfume": 327,
+    "nuevos_perfumes_descubiertos": 706,
+    "precios_variantes_registrados": 1171,
     "errores_totales": 0
   },
   "muestras_nuevas": [
     {
-      "nombre": "La Vie Est Belle L'Elixir",
-      "marca": "Lancôme",
-      "tipo": "Elixir",
-      "es_arabe": false,
-      "tienda": "Fragante",
-      "precio": 85990
-    },
-    {
-      "nombre": "Cheap And Chic",
-      "marca": "Moschino",
+      "nombre": "Fakhar Perfume Mist",
+      "marca": "Lattafa",
       "tipo": "Eau de Parfum",
-      "es_arabe": false,
-      "tienda": "Fragante",
-      "precio": 34990
+      "es_arabe": true,
+      "tienda": "Silk Perfumes",
+      "precio": 6990
     },
     {
-      "nombre": "My Way Ylang",
-      "marca": "Giorgio Armani",
+      "nombre": "Yara Tous Perfume Mist",
+      "marca": "Lattafa",
       "tipo": "Eau de Parfum",
-      "es_arabe": false,
-      "tienda": "Fragante",
-      "precio": 127990
+      "es_arabe": true,
+      "tienda": "Silk Perfumes",
+      "precio": 6990
     },
     {
-      "nombre": "Good Girl Bowtastic",
-      "marca": "Carolina Herrera",
+      "nombre": "Mayar Natural Intense Perfume Mist",
+      "marca": "Lattafa",
       "tipo": "Eau de Parfum",
-      "es_arabe": false,
-      "tienda": "Fragante",
-      "precio": 110990
+      "es_arabe": true,
+      "tienda": "Silk Perfumes",
+      "precio": 6990
     },
     {
-      "nombre": "Power Of Seduction",
-      "marca": "Antonio Banderas",
-      "tipo": "Eau de Toilette",
-      "es_arabe": false,
-      "tienda": "Fragante",
-      "precio": 15990
-    },
-    {
-      "nombre": "Look Gold",
-      "marca": "Agatha Ruiz de la Prada",
-      "tipo": "Eau de Toilette",
-      "es_arabe": false,
-      "tienda": "Fragante",
-      "precio": 15990
-    },
-    {
-      "nombre": "Wanted",
-      "marca": "Azzaro",
+      "nombre": "Sehr Perfume Mist",
+      "marca": "Lattafa",
       "tipo": "Eau de Parfum",
-      "es_arabe": false,
-      "tienda": "Fragante",
-      "precio": 47990
+      "es_arabe": true,
+      "tienda": "Silk Perfumes",
+      "precio": 6990
     },
     {
-      "nombre": "Divine",
-      "marca": "Jean Paul Gaultier",
+      "nombre": "Teriaq Perfume Mist",
+      "marca": "Lattafa",
       "tipo": "Eau de Parfum",
-      "es_arabe": false,
-      "tienda": "Fragante",
-      "precio": 80990
+      "es_arabe": true,
+      "tienda": "Silk Perfumes",
+      "precio": 6990
     },
     {
-      "nombre": "Le Beau Paradise Garden",
-      "marca": "Jean Paul Gaultier",
+      "nombre": "Yara Perfume Mist",
+      "marca": "Lattafa",
       "tipo": "Eau de Parfum",
-      "es_arabe": false,
-      "tienda": "Fragante",
-      "precio": 89990
+      "es_arabe": true,
+      "tienda": "Silk Perfumes",
+      "precio": 6990
     },
     {
-      "nombre": "Romance",
-      "marca": "Ralph Lauren",
+      "nombre": "Mayar Cherry Intense Perfume Mist",
+      "marca": "Lattafa",
       "tipo": "Eau de Parfum",
-      "es_arabe": false,
-      "tienda": "Fragante",
-      "precio": 61990
+      "es_arabe": true,
+      "tienda": "Silk Perfumes",
+      "precio": 6990
     },
     {
-      "nombre": "Pink Fresh Couture",
-      "marca": "Moschino",
-      "tipo": "Eau de Toilette",
-      "es_arabe": false,
-      "tienda": "Fragante",
-      "precio": 50990
-    },
-    {
-      "nombre": "Paradox Radical Essence",
-      "marca": "Prada",
+      "nombre": "Haya Perfume Mist",
+      "marca": "Lattafa",
       "tipo": "Eau de Parfum",
-      "es_arabe": false,
-      "tienda": "Fragante",
-      "precio": 163990
+      "es_arabe": true,
+      "tienda": "Silk Perfumes",
+      "precio": 6990
     },
     {
-      "nombre": "My Way Parfum",
-      "marca": "Giorgio Armani",
-      "tipo": "Parfum",
-      "es_arabe": false,
-      "tienda": "Fragante",
-      "precio": 85990
+      "nombre": "Eclaire Perfume Mist",
+      "marca": "Lattafa",
+      "tipo": "Eau de Parfum",
+      "es_arabe": true,
+      "tienda": "Silk Perfumes",
+      "precio": 6990
     },
     {
-      "nombre": "Libre",
+      "nombre": "Badee Al Oud Noble Blush Perfume Mist",
+      "marca": "Lattafa",
+      "tipo": "Eau de Parfum",
+      "es_arabe": true,
+      "tienda": "Silk Perfumes",
+      "precio": 6990
+    },
+    {
+      "nombre": "YSL Y",
       "marca": "Yves Saint Laurent",
       "tipo": "Eau de Parfum",
       "es_arabe": false,
-      "tienda": "Fragante",
-      "precio": 144990
+      "tienda": "Silk Perfumes",
+      "precio": 83990
     },
     {
-      "nombre": "Scandal Absolu Parfum",
-      "marca": "Jean Paul Gaultier",
-      "tipo": "Parfum",
+      "nombre": "Invictus Parfum Elixir",
+      "marca": "Paco Rabanne",
+      "tipo": "Elixir",
       "es_arabe": false,
-      "tienda": "Fragante",
-      "precio": 115990
+      "tienda": "Silk Perfumes",
+      "precio": 154990
     },
     {
-      "nombre": "Verbena Masculino",
-      "marca": "Adolfo Domínguez",
-      "tipo": "Eau de Toilette",
+      "nombre": "One Million Gold Intense",
+      "marca": "Paco Rabanne",
+      "tipo": "Eau de Parfum Intense",
       "es_arabe": false,
-      "tienda": "Fragante",
-      "precio": 14990
+      "tienda": "Silk Perfumes",
+      "precio": 63990
     },
     {
-      "nombre": "212 Heroes Forever Young",
-      "marca": "Carolina Herrera",
-      "tipo": "Eau de Toilette",
-      "es_arabe": false,
-      "tienda": "Fragante",
-      "precio": 84990
-    },
-    {
-      "nombre": "212 VIP",
-      "marca": "Carolina Herrera",
-      "tipo": "Eau de Parfum",
-      "es_arabe": false,
-      "tienda": "Fragante",
-      "precio": 68990
-    },
-    {
-      "nombre": "Good Girl Légère",
-      "marca": "Carolina Herrera",
-      "tipo": "Eau de Parfum",
-      "es_arabe": false,
-      "tienda": "Fragante",
-      "precio": 56990
-    },
-    {
-      "nombre": "In Love With You",
-      "marca": "Giorgio Armani",
-      "tipo": "Eau de Parfum",
-      "es_arabe": false,
-      "tienda": "Fragante",
-      "precio": 55990
-    },
-    {
-      "nombre": "Emporio Armani Stronger With You",
-      "marca": "Giorgio Armani",
-      "tipo": "Eau de Toilette",
-      "es_arabe": false,
-      "tienda": "Fragante",
-      "precio": 53990
-    },
-    {
-      "nombre": "Aerin Lilac Path",
-      "marca": "Estée Lauder",
-      "tipo": "Eau de Parfum",
-      "es_arabe": false,
-      "tienda": "Fragante",
-      "precio": 89990
-    },
-    {
-      "nombre": "Gentleman Only",
+      "nombre": "Very Irresistible",
       "marca": "Givenchy",
       "tipo": "Eau de Toilette",
       "es_arabe": false,
-      "tienda": "Fragante",
-      "precio": 65990
+      "tienda": "Silk Perfumes",
+      "precio": 64990
     },
     {
-      "nombre": "Boss Bottled Night",
-      "marca": "Hugo Boss",
+      "nombre": "YSL Libre Berry Crush Fruitée",
+      "marca": "Yves Saint Laurent",
+      "tipo": "Eau de Parfum",
+      "es_arabe": false,
+      "tienda": "Silk Perfumes",
+      "precio": 139990
+    },
+    {
+      "nombre": "Ô Oui",
+      "marca": "Lancôme",
       "tipo": "Eau de Toilette",
       "es_arabe": false,
-      "tienda": "Fragante",
-      "precio": 105990
+      "tienda": "Silk Perfumes",
+      "precio": 59990
     },
     {
-      "nombre": "Le Beau Le Parfum Intense",
-      "marca": "Jean Paul Gaultier",
+      "nombre": "Idôle Peach'N Roses Fruitée",
+      "marca": "Lancôme",
+      "tipo": "Eau de Parfum",
+      "es_arabe": false,
+      "tienda": "Silk Perfumes",
+      "precio": 68990
+    },
+    {
+      "nombre": "Armani Acqua Di Gio Intense",
+      "marca": "Giorgio Armani",
+      "tipo": "Eau de Parfum",
+      "es_arabe": false,
+      "tienda": "Silk Perfumes",
+      "precio": 83990
+    },
+    {
+      "nombre": "Club De Nuit Intenso Fuego",
+      "marca": "Armaf",
+      "tipo": "Eau de Parfum",
+      "es_arabe": true,
+      "tienda": "Silk Perfumes",
+      "precio": 49990
+    },
+    {
+      "nombre": "Freeze",
+      "marca": "Riiffs",
+      "tipo": "Extrait de Parfum",
+      "es_arabe": true,
+      "tienda": "Silk Perfumes",
+      "precio": 29990
+    },
+    {
+      "nombre": "Armani Si Passione",
+      "marca": "Giorgio Armani",
+      "tipo": "Eau de Parfum",
+      "es_arabe": false,
+      "tienda": "Silk Perfumes",
+      "precio": 57990
+    },
+    {
+      "nombre": "Agua Brava",
+      "marca": "Puig",
+      "tipo": "Eau de Cologne",
+      "es_arabe": false,
+      "tienda": "Silk Perfumes",
+      "precio": 8490
+    },
+    {
+      "nombre": "Euphoria Intense",
+      "marca": "Calvin Klein",
+      "tipo": "Eau de Parfum",
+      "es_arabe": false,
+      "tienda": "Silk Perfumes",
+      "precio": 36990
+    },
+    {
+      "nombre": "Sauvage Parfum",
+      "marca": "Dior",
       "tipo": "Parfum",
       "es_arabe": false,
-      "tienda": "Fragante",
-      "precio": 139990
+      "tienda": "Silk Perfumes",
+      "precio": 174990
+    },
+    {
+      "nombre": "Victoria Secret Colonia Love Spell Cashmere",
+      "marca": "Victoria's Secret",
+      "tipo": "Eau de Cologne",
+      "es_arabe": false,
+      "tienda": "Silk Perfumes",
+      "precio": 13990
     }
   ],
   "errores": []

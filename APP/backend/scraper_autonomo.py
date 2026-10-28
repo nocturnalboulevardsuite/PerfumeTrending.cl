@@ -79,6 +79,7 @@ try:
     )
     from backend.normalizador import (
         CANONICAL_BRAND_MAP,
+        MARCAS_INVALIDAS_CATALOGO,
         detectar_formato_oferta,
         es_arabe,
         es_precio_valido,
@@ -102,6 +103,7 @@ except ImportError:
     )
     from normalizador import (
         CANONICAL_BRAND_MAP,
+        MARCAS_INVALIDAS_CATALOGO,
         detectar_formato_oferta,
         es_arabe,
         es_precio_valido,
