@@ -685,20 +685,7 @@ if not catalogo:
     st.warning("No hay perfumes disponibles en el catálogo en este momento.")
     st.stop()
 
-# Diccionario de mapeo rápido con nombre específico sin colisiones entre concentraciones ni géneros
-opciones_perfumes = {}
-for p in catalogo:
-    tipo_lbl = (p.get("tipo") or "Eau de Parfum").strip()
-    gen_lbl = (p.get("genero") or "Unisex").strip()
-    nom_esp = formatear_nombre_especifico(p) or p["nombre"]
-    base_lbl = f"{nom_esp} — {p['marca']} ({tipo_lbl} · {gen_lbl})"
-    lbl_final = base_lbl if base_lbl not in opciones_perfumes else f"{base_lbl} [#{p['id']}]"
-    opciones_perfumes[lbl_final] = p
-
-lista_nombres = list(opciones_perfumes.keys())
-
 # Determinar perfume pre-seleccionado desde sesión (dict, id o nombre) o desde query param compartible (?id=)
-default_index = 0
 selected_session = st.session_state.get("selected_perfume")
 qp_id = st.query_params.get("id")
 
@@ -709,6 +696,61 @@ elif selected_session is not None and str(selected_session).isdigit():
     target_id = str(selected_session)
 elif qp_id and str(qp_id).isdigit():
     target_id = str(qp_id)
+
+p_target = next((p for p in catalogo if str(p["id"]) == target_id), None) if target_id else None
+
+# Filtros rápidos opcionales por Marca y Género para acotar el catálogo instantáneamente
+marcas_disponibles = sorted(list({(p.get("marca") or "").strip() for p in catalogo if p.get("marca")}))
+opciones_marcas = ["Todas las marcas"] + marcas_disponibles
+opciones_generos = ["Todos", "Hombre", "Mujer", "Unisex"]
+
+# Si se solicitó un perfume específico por id o sesión, verificar que los filtros no lo oculten
+if p_target:
+    guardada_marca = st.session_state.get("filtro_marca_comp")
+    if guardada_marca and guardada_marca != "Todas las marcas" and guardada_marca != p_target.get("marca"):
+        st.session_state["filtro_marca_comp"] = "Todas las marcas"
+    guardado_gen = st.session_state.get("filtro_gen_comp")
+    if guardado_gen and guardado_gen != "Todos" and guardado_gen.lower() != str(p_target.get("genero") or "").lower():
+        st.session_state["filtro_gen_comp"] = "Todos"
+
+col_f_marca, col_f_genero = st.columns([1.5, 1], vertical_alignment="bottom")
+with col_f_marca:
+    marca_filtro = st.selectbox(
+        "Filtrar por Marca:",
+        opciones_marcas,
+        index=0,
+        key="filtro_marca_comp"
+    )
+with col_f_genero:
+    genero_filtro = st.pills(
+        "Género:",
+        opciones_generos,
+        default="Todos",
+        key="filtro_gen_comp"
+    )
+
+catalogo_filtrado = catalogo
+if marca_filtro != "Todas las marcas":
+    catalogo_filtrado = [p for p in catalogo_filtrado if (p.get("marca") or "").strip() == marca_filtro]
+if genero_filtro and genero_filtro != "Todos":
+    catalogo_filtrado = [p for p in catalogo_filtrado if (p.get("genero") or "").strip().lower() == genero_filtro.lower()]
+
+# Si el perfume objetivo quedó fuera del filtro por alguna razón, restaurar catálogo completo
+if p_target and p_target not in catalogo_filtrado:
+    catalogo_filtrado = catalogo
+
+# Diccionario de mapeo rápido con nombre específico sin colisiones entre concentraciones ni géneros
+opciones_perfumes = {}
+for p in catalogo_filtrado:
+    tipo_lbl = (p.get("tipo") or "Eau de Parfum").strip()
+    gen_lbl = (p.get("genero") or "Unisex").strip()
+    nom_esp = formatear_nombre_especifico(p) or p["nombre"]
+    base_lbl = f"{nom_esp} — {p['marca']} ({tipo_lbl} · {gen_lbl})"
+    lbl_final = base_lbl if base_lbl not in opciones_perfumes else f"{base_lbl} [#{p['id']}]"
+    opciones_perfumes[lbl_final] = p
+
+lista_nombres = list(opciones_perfumes.keys())
+default_index = 0
 
 if target_id is not None:
     for idx, (_, p) in enumerate(opciones_perfumes.items()):
@@ -783,10 +825,15 @@ with col_info:
             st.session_state['favoritos'] = favs_actuales
 
     ya_es_favorito = int(selected_id) in [int(x) for x in favs_actuales if str(x).isdigit()]
-    col_fav_btn, _ = st.columns([1.8, 3.2])
+    
+    url_directa = f"https://perfumetrending-cl.streamlit.app/compararprecios?id={selected_id}"
+    texto_wa = f"¡Mira esta comparativa de {nombre_safe} ({marca_safe}) en PerfumeTrending.cl! Revisa tiendas y precios aquí: {url_directa}"
+    wa_href = f"https://api.whatsapp.com/send?text={urllib.parse.quote(texto_wa)}"
+
+    col_fav_btn, col_wa_btn, col_share_btn = st.columns([1.8, 1.2, 1.2], gap="small")
     with col_fav_btn:
         st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
-        lbl_fav = "★ En tu Seguimiento (Quitar)" if ya_es_favorito else "☆ Guardar y Monitorear Baja de Precio"
+        lbl_fav = "★ En Seguimiento" if ya_es_favorito else "☆ Monitorear Precio"
         if st.button(lbl_fav, key=f"btn_toggle_fav_{selected_id}", use_container_width=True):
             if not st.session_state.get('logged_in') or not st.session_state.get('user_info'):
                 st.session_state['show_login_modal'] = True
@@ -802,6 +849,15 @@ with col_info:
                     st.session_state['favoritos'] = list(set(favs_actuales + [int(selected_id)]))
                     st.toast("Fragancia guardada en tu seguimiento de precios.", icon="⭐")
                 st.rerun()
+
+    with col_wa_btn:
+        st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
+        st.link_button("💬 WhatsApp", wa_href, use_container_width=True)
+
+    with col_share_btn:
+        st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
+        if st.button("🔗 Enlace", key=f"btn_copy_link_{selected_id}", use_container_width=True):
+            st.toast(f"Enlace listo para compartir: {url_directa}", icon="📋")
 
 st.markdown("<div style='margin-top: 24px;'></div>", unsafe_allow_html=True)
 st.markdown(f"<h3 style='font-size: 1.15rem; color: {text_color}; font-weight: 600; margin-bottom: 16px;'>Ofertas en tiendas chilenas verificadas</h3>", unsafe_allow_html=True)
@@ -1137,3 +1193,77 @@ with st.expander(titulo_hist):
             st.dataframe(df_hist, use_container_width=True)
     else:
         st.caption("Recopilando observaciones históricas verificadas en comercios chilenos para esta presentación.")
+
+# =============================================================================
+# BLOQUE 7: FRAGANCIAS RELACIONADAS DE LA MISMA MARCA O FAMILIA
+# =============================================================================
+p_marca_actual = str(detalle.get("marca") or "").strip().lower()
+p_gen_actual = str(detalle.get("genero") or "").strip().lower()
+
+relacionados = [
+    p for p in catalogo
+    if p["id"] != selected_id
+    and (p.get("marca") or "").strip().lower() == p_marca_actual
+]
+
+# Priorizar fragancias del mismo género
+mismo_gen = [p for p in relacionados if str(p.get("genero") or "").strip().lower() == p_gen_actual]
+otros_gen = [p for p in relacionados if str(p.get("genero") or "").strip().lower() != p_gen_actual]
+rel_final = (mismo_gen + otros_gen)[:4]
+
+# Si la marca tiene pocas opciones, completar con perfumes en tendencia del mismo género
+if len(rel_final) < 4:
+    tendencias = [
+        p for p in catalogo
+        if p["id"] != selected_id
+        and p["id"] not in [r["id"] for r in rel_final]
+        and str(p.get("genero") or "").strip().lower() == p_gen_actual
+        and p.get("en_tendencia")
+    ]
+    rel_final = (rel_final + tendencias)[:4]
+
+if rel_final:
+    st.markdown("<div style='margin-top: 36px;'></div>", unsafe_allow_html=True)
+    st.markdown(
+        f"""
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 8px;">
+            <h3 style="font-size: 1.15rem; color: {text_color}; font-weight: 700; margin: 0;">
+                Fragancias recomendadas de {marca_safe}
+            </h3>
+            <span style="font-size: 0.8rem; color: {subtext_color};">Misma marca &bull; {genero_safe}</span>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    cols_rel = st.columns(len(rel_final), gap="small")
+    for idx_rel, p_rel in enumerate(rel_final):
+        with cols_rel[idx_rel]:
+            img_rel = get_image_src(p_rel.get("imagen_url"))
+            nom_rel = formatear_nombre_especifico(p_rel) or p_rel.get("nombre", "")
+            nom_rel_safe = escape_html(nom_rel)
+            marca_rel_safe = escape_html(p_rel.get("marca", ""))
+            tipo_rel_safe = escape_html(p_rel.get("tipo", "EDP"))
+            ref_val = p_rel.get("precio_referencia")
+            ref_txt = f"${ref_val:,.0f} CLP".replace(",", ".") if es_precio_valido(ref_val) else "Ver ofertas"
+
+            st.markdown(
+                f"""
+                <div style="background: {'#18181b' if is_dark else '#ffffff'}; border: 1px solid {btn_border}; border-radius: 10px; padding: 12px; display: flex; flex-direction: column; align-items: center; text-align: center; height: 100%; box-shadow: 0 2px 4px rgba(0,0,0,0.04);">
+                    <div style="background: #ffffff; border-radius: 8px; padding: 8px; width: 100%; display: flex; align-items: center; justify-content: center; margin-bottom: 8px; height: 110px;">
+                        <img src="{img_rel}" alt="{nom_rel_safe}" style="max-height: 95px; max-width: 100%; object-fit: contain;">
+                    </div>
+                    <div style="font-size: 0.72rem; color: {subtext_color}; text-transform: uppercase; letter-spacing: 0.5px;">{marca_rel_safe} &bull; {tipo_rel_safe}</div>
+                    <div style="font-weight: 700; font-size: 0.85rem; color: {text_color}; margin: 4px 0 6px 0; line-height: 1.25; min-height: 2.2em; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">{nom_rel_safe}</div>
+                    <div style="font-size: 0.82rem; font-weight: 700; color: #10b981; margin-bottom: 8px;">{ref_txt}</div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+            if st.button("Comparar", key=f"btn_ir_rel_{p_rel['id']}", use_container_width=True):
+                st.session_state["selected_perfume"] = p_rel["id"]
+                try:
+                    st.query_params["id"] = str(p_rel["id"])
+                except Exception:
+                    pass
+                st.rerun()
