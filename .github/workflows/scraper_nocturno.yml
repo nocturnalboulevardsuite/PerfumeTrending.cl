@@ -9,9 +9,14 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: scraper-nocturno-precios
+  cancel-in-progress: false
+
 jobs:
   actualizar-precios:
     runs-on: ubuntu-latest
+    timeout-minutes: 120
     steps:
       - name: Descargar codigo del repositorio
         uses: actions/checkout@v4
@@ -37,15 +42,16 @@ jobs:
         run: |
           python APP/backend/scraper_periodico.py
 
-      - name: Sincronizar cambios en GitHub si hubo variacion de precios
+      - name: Sincronizar reporte de auditoria en GitHub si hubo cambios
         run: |
           git config --global user.name "PerfumeTrending Bot"
           git config --global user.email "bot@perfumetrending.cl"
-          git add APP/data/
+          git add APP/data/reportes/
           if git diff --staged --quiet; then
-            echo "No se registraron cambios de precio en esta ejecucion."
+            echo "No se registraron cambios de reporte en esta ejecucion."
           else
-            git commit -m "Actualizacion automatica de precios y stock"
+            git commit -m "chore(etl): actualizacion automatica de precios y stock"
+            git pull --rebase origin main
             git push origin main
-            echo "Nuevos precios sincronizados exitosamente con produccion."
+            echo "Reporte sincronizado exitosamente con el repositorio."
           fi

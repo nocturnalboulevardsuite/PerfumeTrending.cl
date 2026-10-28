@@ -26,267 +26,74 @@ if BASE_DIR not in sys.path:
 if APP_DIR not in sys.path:
     sys.path.append(APP_DIR)
 
-try:
-    from backend.database import (
-        obtener_catalogo,
-        obtener_precios_actuales,
-        obtener_detalle_perfume,
-        crear_usuario,
-        verificar_usuario
-    )
-except ImportError:
-    from backend.database import obtener_catalogo
-    obtener_precios_actuales = None
-    obtener_detalle_perfume = None
-    crear_usuario = None
-    verificar_usuario = None
+from backend.database import (
+    obtener_catalogo,
+    obtener_remates_reales,
+    obtener_tiendas,
+)
+from ui import (
+    FLAME_RED_SVG as flame_red_svg,
+    HOME_RED_SVG as home_red_svg,
+    PERFUME_SVG_FAVICON,
+    SHIELD_RED_SVG as shield_red_svg,
+    TAG_RED_SVG as tag_red_svg,
+    TREND_RED_SVG as trend_red_svg,
+    cerrar_sesion_usuario,
+    clean_html as _shared_clean_html,
+    escape_html,
+    get_image_src,
+    get_theme_palette,
+    init_common_session_state,
+    modal_autenticacion,
+    resolver_url_oferta,
+    sanitize_external_url,
+    toggle_theme,
+)
 
-@st.cache_data(ttl=300, show_spinner=False)
-def get_cached_catalogo():
-    return obtener_catalogo()
 
 def clean_html(html_str: str) -> str:
-    """Limpia espacios iniciales y elimina saltos de línea para evitar que Streamlit interprete HTML como código."""
-    return " ".join(line.strip() for line in html_str.splitlines() if line.strip())
+    """Limpia espacios iniciales y elimina saltos de línea para evitar bloques de código accidentales."""
+    return _shared_clean_html(html_str, join_char=" ")
 
-def resolver_url_oferta(tienda_nombre: str, perfume_nombre: str, url_prod: str = "", url_base: str = "") -> str:
-    """Retorna la URL directa a la oferta o realiza la búsqueda directa en la tienda."""
-    t = (tienda_nombre or "").lower()
-    q = urllib.parse.quote(perfume_nombre.strip())
 
-    if "paris" in t or ("paris.cl" in (url_prod or "").lower()):
-        if not url_prod or url_prod == "#" or any(dead in url_prod for dead in ["916524999", "construccion", "experiencia"]):
-            return f"https://www.paris.cl/search?q={q}"
-        return url_prod
+@st.cache_data(ttl=120, show_spinner=False)
+def get_cached_remates():
+    return obtener_remates_reales(limite=60, descuento_min_pct=12)
 
-    if url_prod and url_prod.startswith("http") and url_prod != "#":
-        return url_prod
 
-    if "falabella" in t:
-        return f"https://www.falabella.com/falabella-cl/search?Ntt={q}"
-    elif "paris" in t:
-        return f"https://www.paris.cl/search?q={q}"
-    elif "ripley" in t:
-        return f"https://simple.ripley.cl/search/{q}"
-    elif "silk" in t:
-        return f"https://www.silkperfumes.cl/search?q={q}"
-    elif "elite" in t:
-        return f"https://www.eliteperfumes.cl/search?q={q}"
-    elif "alisha" in t:
-        return f"https://www.alisha.cl/search?q={q}"
-    elif "dbs" in t:
-        return f"https://www.dbs.cl/search?q={q}"
+# 1. CONFIGURACIÓN DE LA PÁGINA Y ESTADO COMPARTIDO
+st.set_page_config(
+    page_title="Remates y Liquidaciones Reales - PerfumeTrending",
+    page_icon=PERFUME_SVG_FAVICON,
+    layout="wide",
+    initial_sidebar_state="collapsed",
+)
 
-    return url_base or "#"
-
-def get_image_src(img_path_or_url):
-    """Retorna URL remota o data URI en base64 para imágenes locales."""
-    if not img_path_or_url:
-        return "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=500&q=80"
-    
-    if img_path_or_url.startswith("http://") or img_path_or_url.startswith("https://") or img_path_or_url.startswith("data:"):
-        return img_path_or_url
-
-    local_path = img_path_or_url
-    if not os.path.isabs(local_path):
-        cand1 = os.path.join(BASE_DIR, local_path)
-        cand2 = os.path.join(BASE_DIR, "APP", local_path)
-        if os.path.exists(cand1):
-            local_path = cand1
-        elif os.path.exists(cand2):
-            local_path = cand2
-
-    if os.path.exists(local_path):
-        ext = os.path.splitext(local_path)[1].lower().replace(".", "")
-        mime = "image/png" if ext == "png" else "image/jpeg"
-        try:
-            with open(local_path, "rb") as f:
-                b64 = base64.b64encode(f.read()).decode("utf-8")
-                return f"data:{mime};base64,{b64}"
-        except Exception:
-            pass
-
-    return img_path_or_url
-
-# 1. CONFIGURACIÓN DE LA PÁGINA Y ESTADO
-st.set_page_config(page_title="Remates de Último Minuto - PerfumeTrending", layout="wide", initial_sidebar_state="collapsed")
-
-if 'theme' not in st.session_state:
-    st.session_state['theme'] = 'dark'
-
-# ESTADOS DE AUTENTICACIÓN Y CONTROL DE MODAL
-if 'logged_in' not in st.session_state:
-    st.session_state['logged_in'] = False
-if 'user_info' not in st.session_state:
-    st.session_state['user_info'] = None
-if 'show_login_modal' not in st.session_state:
-    st.session_state['show_login_modal'] = False
-
-# ESTADOS PARA INICIO POR CÓDIGO (OTP)
-if 'otp_code_sent' not in st.session_state:
-    st.session_state['otp_code_sent'] = False
-if 'otp_contact' not in st.session_state:
-    st.session_state['otp_contact'] = ""
-if 'otp_secret' not in st.session_state:
-    st.session_state['otp_secret'] = ""
-
+init_common_session_state()
 if 'selected_perfume' not in st.session_state:
     st.session_state['selected_perfume'] = None
 
-def toggle_theme():
-    st.session_state['theme'] = 'dark' if st.session_state['theme'] == 'light' else 'light'
-
-# MODAL FLOTANTE DE INICIO DE SESIÓN Y REGISTRO
-@st.dialog("Acceso a PerfumeTrending")
-def modal_autenticacion():
-    tab_codigo, tab_login, tab_registro = st.tabs(["Inicio por Código", "Iniciar Sesión", "Registrarse"])
-    
-    # OPCIÓN PREDETERMINADA: INICIO POR CÓDIGO
-    with tab_codigo:
-        st.markdown("#### Ingresa con tu Correo o Teléfono")
-        
-        if not st.session_state['otp_code_sent']:
-            with st.form("form_send_otp", clear_on_submit=False):
-                contact_input = st.text_input("Correo electrónico o número de teléfono", key="otp_contact_input", placeholder="ejemplo@correo.cl o +56912345678")
-                btn_send = st.form_submit_button("Enviar código de verificación", use_container_width=True)
-                
-                if btn_send:
-                    if not contact_input.strip():
-                        st.error("Por favor ingresa un correo electrónico o teléfono válido.")
-                    else:
-                        code = str(random.randint(100000, 999999))
-                        st.session_state['otp_code_sent'] = True
-                        st.session_state['otp_contact'] = contact_input.strip()
-                        st.session_state['otp_secret'] = code
-                        st.rerun()
-        else:
-            st.info(f"Un código de verificación ha sido enviado a **{st.session_state['otp_contact']}**")
-            st.caption(f"*(Código de prueba rápido: **{st.session_state['otp_secret']}**)*")
-            
-            with st.form("form_verify_otp", clear_on_submit=False):
-                input_code = st.text_input("Ingresa el código de 6 dígitos", key="otp_code_input", placeholder="123456", max_chars=6)
-                btn_verify = st.form_submit_button("Verificar e Ingresar", use_container_width=True)
-                
-                if btn_verify:
-                    if input_code.strip() == st.session_state['otp_secret']:
-                        contact_str = st.session_state['otp_contact']
-                        
-                        st.session_state['logged_in'] = True
-                        st.session_state['user_info'] = {
-                            'nombre': contact_str.split('@')[0] if '@' in contact_str else contact_str,
-                            'email': contact_str if '@' in contact_str else f"{contact_str}@usuario.cl",
-                            'telefono': contact_str if '@' not in contact_str else '+56 9 1234 5678'
-                        }
-                        
-                        # Resetear estados de login y cerrar modal
-                        st.session_state['otp_code_sent'] = False
-                        st.session_state['otp_contact'] = ""
-                        st.session_state['otp_secret'] = ""
-                        st.session_state['show_login_modal'] = False
-                        st.rerun()
-                    else:
-                        st.error("Código incorrecto. Revisa e intenta nuevamente.")
-                        
-            if st.button("Cambiar correo/teléfono", key="btn_reset_otp", use_container_width=True):
-                st.session_state['otp_code_sent'] = False
-                st.session_state['otp_contact'] = ""
-                st.session_state['otp_secret'] = ""
-                st.rerun()
-
-    # OPCIÓN 2: CON TRADICIONAL CORREO / CONTRASEÑA
-    with tab_login:
-        st.markdown("#### Ingresa a tu cuenta")
-        with st.form("form_login_pass", clear_on_submit=False):
-            login_email = st.text_input("Correo Electrónico", key="login_email_input", placeholder="usuario@correo.cl")
-            login_pass = st.text_input("Contraseña", type="password", key="login_pass_input", placeholder="••••••••")
-            btn_login = st.form_submit_button("Ingresar a la plataforma", use_container_width=True)
-            
-            if btn_login:
-                if not login_email or not login_pass:
-                    st.error("Por favor ingresa tu correo y contraseña.")
-                elif verificar_usuario:
-                    exito, usuario_data = verificar_usuario(login_email, login_pass)
-                    if exito:
-                        st.session_state['logged_in'] = True
-                        st.session_state['user_info'] = usuario_data
-                        st.session_state['show_login_modal'] = False
-                        st.rerun()
-                    else:
-                        st.error("Correo o contraseña incorrectos.")
-                else:
-                    st.info("Función de backend en proceso de actualización.")
-
-    # OPCIÓN 3: REGISTRO NUEVO USUARIO
-    with tab_registro:
-        st.markdown("#### Crea una cuenta nueva")
-        with st.form("form_reg_user", clear_on_submit=False):
-            reg_nombre = st.text_input("Nombre completo", key="reg_nombre_input", placeholder="Juan Pérez")
-            reg_email = st.text_input("Correo Electrónico", key="reg_email_input", placeholder="usuario@correo.cl")
-            reg_pass1 = st.text_input("Contraseña", type="password", key="reg_pass1_input", placeholder="••••••••")
-            reg_pass2 = st.text_input("Confirmar Contraseña", type="password", key="reg_pass2_input", placeholder="••••••••")
-            btn_reg = st.form_submit_button("Crear mi cuenta", use_container_width=True)
-            
-            if btn_reg:
-                if not reg_nombre or not reg_email or not reg_pass1:
-                    st.error("Todos los campos son obligatorios.")
-                elif reg_pass1 != reg_pass2:
-                    st.error("Las contraseñas no coinciden.")
-                elif len(reg_pass1) < 6:
-                    st.warning("La contraseña debe tener al menos 6 caracteres.")
-                elif crear_usuario:
-                    exito, msg = crear_usuario(reg_nombre, reg_email, reg_pass1)
-                    if exito:
-                        st.success("¡Cuenta creada con éxito! Ya puedes iniciar sesión.")
-                    else:
-                        st.error(msg)
-                else:
-                    st.info("Función de backend en proceso de actualización.")
-
-is_dark = st.session_state['theme'] == 'dark'
-
-# Colores dinámicos adaptables por tema
-app_bg = "#0c0e12" if is_dark else "#f9f9fb"
-app_bg_css = f"background-color: {app_bg} !important;"
-
-card_bg = "#14171d" if is_dark else "#ffffff"
-border_color = "#2a2e39" if is_dark else "#e4e4e7"
-text_color = "#f0f0f0" if is_dark else "#18181b"
-subtext_color = "#888890" if is_dark else "#666670"
-
-btn_bg = "#181c24" if is_dark else "#ffffff"
-btn_text = "#ffffff" if is_dark else "#18181b"
-btn_border = "#2a2e39" if is_dark else "#d1d5db"
-
-input_bg = "#14171d" if is_dark else "#ffffff"
-input_text = "#f0f0f0" if is_dark else "#18181b"
-input_border = "#2a2e39" if is_dark else "#d1d5db"
-
-# SWITCH DE TEMA - POSICIONAMIENTO Y SVGS
-bottle_left_pos = "42px" if is_dark else "-2px"
-static_icon_pos = "12px center" if is_dark else "calc(100% - 12px) center"
-
-static_icon_svg = (
-    "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='4'/><line x1='12' y1='1' x2='12' y2='3'/><line x1='12' y1='21' x2='12' y2='23'/><line x1='4.22' y1='4.22' x2='5.64' y2='5.64'/><line x1='18.36' y1='18.36' x2='19.78' y2='19.78'/><line x1='1' y1='12' x2='3' y2='12'/><line x1='21' y1='12' x2='23' y2='12'/><line x1='4.22' y1='19.78' x2='5.64' y2='18.36'/><line x1='18.36' y1='5.64' x2='19.78' y2='4.22'/></svg>"
-    if is_dark else
-    "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M21 12.79A9 9 0 0 1 11.21 3 7 7 0 0 0 21 12.79z'/></svg>"
-)
-
-bottle_svg = (
-    "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 58'><rect x='18' y='2' width='14' height='7' rx='2' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><rect x='21' y='9' width='8' height='5' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='19' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><path d='M21 28a8 8 0 0 0 9 10.5 8.5 8.5 0 0 1-9-10.5z' fill='none' stroke='%23111111' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/></svg>"
-    if is_dark else
-    "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 58'><rect x='18' y='2' width='14' height='7' rx='2' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><rect x='21' y='9' width='8' height='5' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='19' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='5' fill='none' stroke='%23111111' stroke-width='2'/><line x1='25' y1='23' x2='25' y2='26' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='25' y1='42' x2='25' y2='45' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='14' y1='34' x2='17' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='33' y1='34' x2='36' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='17' y1='26' x2='19' y2='28' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='31' y1='40' x2='33' y2='42' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='17' y1='42' x2='19' y2='40' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='31' y1='28' x2='33' y2='26' stroke='%23111111' stroke-width='2' stroke-linecap='round'/></svg>"
-)
-
-user_icon_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23{btn_text[1:]}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2'/><circle cx='12' cy='7' r='4'/></svg>"
-settings_icon_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23{btn_text[1:]}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z'/><circle cx='12' cy='12' r='3'/></svg>"
-logout_icon_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23{btn_text[1:]}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4'/><polyline points='16 17 21 12 16 7'/><line x1='21' y1='12' x2='9' y2='12'/></svg>"
-
-# ICONOS VECTORIALES DE NAVEGACIÓN
-trend_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d83737' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='23 6 13.5 15.5 8.5 10.5 1 18'/><polyline points='17 6 23 6 23 12'/></svg>"
-shield_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d83737' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/><polyline points='9 12 11 14 15 10'/></svg>"
-tag_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d83737' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z'/><circle cx='7' cy='7' r='1.5' fill='%23d83737'/></svg>"
-home_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d83737' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z'/><polyline points='9 22 9 12 15 12 15 22'/></svg>"
-flame_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d83737' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 3.5z'/></svg>"
+pal = get_theme_palette()
+is_dark = pal.is_dark
+app_bg = pal.app_bg
+app_bg_css = pal.app_bg_css
+card_bg = pal.card_bg
+border_color = pal.border_color
+text_color = pal.text_color
+subtext_color = pal.subtext_color
+btn_bg = pal.btn_bg
+btn_text = pal.btn_text
+btn_border = pal.btn_border
+input_bg = pal.input_bg
+input_text = pal.input_text
+input_border = pal.input_border
+bottle_left_pos = pal.bottle_left_pos
+static_icon_pos = pal.static_icon_pos
+static_icon_svg = pal.static_icon_svg
+bottle_svg = pal.bottle_svg
+user_icon_svg = pal.user_icon_svg
+settings_icon_svg = pal.settings_icon_svg
+logout_icon_svg = pal.logout_icon_svg
 
 # 2. CSS ADAPTABLE Y ESTILOS DE LA PÁGINA
 st.markdown(f"""
@@ -788,19 +595,20 @@ with btn_col1:
                 st.switch_page("pages/perfil.py")
                 
             if st.button("Cerrar Sesión", key="btn_logout", use_container_width=True):
-                st.session_state['logged_in'] = False
-                st.session_state['user_info'] = None
+                cerrar_sesion_usuario()
                 st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
     else:
         if st.button("Ingresar", key="login_btn", use_container_width=True):
             st.session_state['show_login_modal'] = True
+            st.rerun()
 
 with btn_col2:
     st.button(" ", key="theme_toggle", on_click=toggle_theme)
 
 # MONITOREO Y RENDERIZADO PERSISTENTE DEL MODAL
 if st.session_state.get('show_login_modal', False):
+    st.session_state['show_login_modal'] = False
     modal_autenticacion()
 
 st.markdown("<div style='margin-top: 14px;'></div>", unsafe_allow_html=True)
@@ -853,142 +661,55 @@ st.markdown("<div style='margin-top: 18px;'></div>", unsafe_allow_html=True)
 #    - "Mayor Precio": Perfumes de nicho o lujo con descuento.
 # 3. Selector de comercio: Permite auditar ofertas por tienda específica (Falabella, Paris, Silk, etc.).
 # =============================================================================
+remates_data = get_cached_remates() or []
+
+tiendas_unicas = sorted({str(r.get("tienda") or "").strip() for r in remates_data if r.get("tienda")})
+if not tiendas_unicas:
+    tiendas_unicas = [t["nombre"] for t in (obtener_tiendas() or []) if t.get("nombre")]
+
 col_search, col_order, col_tienda = st.columns([4, 3, 3], gap="small", vertical_alignment="center")
 
 with col_search:
-    search_remate = st.text_input("Buscar remates...", placeholder="Filtrar por perfume o tienda...", label_visibility="collapsed")
+    search_remate = st.text_input("Buscar remates...", placeholder="Filtrar por perfume, marca o tienda...", label_visibility="collapsed")
 
 with col_order:
-    orden_opt = st.selectbox("Ordenar por:", ["Mayor % Descuento", "Menor Precio", "Mayor Precio"], label_visibility="collapsed")
+    orden_opt = st.selectbox("Ordenar por:", ["Mayor % Descuento", "Mayor Ahorro ($ CLP)", "Menor Precio", "Mayor Precio"], label_visibility="collapsed")
 
 with col_tienda:
-    tienda_opt = st.selectbox("Tienda:", ["Todas las tiendas", "Falabella", "Paris", "Silk Perfumes", "Elite Perfumes", "Alisha Perfumes"], label_visibility="collapsed")
+    tienda_opt = st.selectbox("Tienda:", ["Todas las tiendas"] + tiendas_unicas, label_visibility="collapsed")
 
 st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
 
-
-# =============================================================================
-# BLOQUE 4: ALGORITMO DE AUDITORÍA DE REMATES Y DESCUENTO REAL DEMOSTRABLE
-# -----------------------------------------------------------------------------
-# ¿QUÉ HACE ESTE BLOQUE?
-# 1. Monitorea ofertas con descuentos certificados:
-#    - `precio_normal`: Precio histórico consolidado sin oferta.
-#    - `precio_remate`: Precio de oportunidad actual verificado.
-#    - `descuento`: `((precio_normal - precio_remate) / precio_normal) * 100`.
-# 2. Filtro anti-falsas rebajas: Garantiza que el precio normal sea estrictamente superior
-#    al precio de remate, evitando promociones engañosas comunes en el e-commerce chileno.
-# 3. Indicador de escasez y urgencia (`timer` y `stock` disponible) reportado por la tienda.
-# =============================================================================
-remates_data = [
-    {
-        "id": 1,
-        "nombre": "Bleu de Chanel EDP 100ml",
-        "marca": "Chanel",
-        "tienda": "Falabella",
-        "descuento": "-32% OFF",
-        "precio_normal": 165990,
-        "precio_remate": 112990,
-        "timer": "01h 45m",
-        "stock": "¡Últimas 2 unidades!",
-        "img": get_image_src("APP/assets/perfumes/bleu_de_chanel.jpg"),
-        "url": "https://www.falabella.com/falabella-cl/search?Ntt=Bleu+de+Chanel"
-    },
-    {
-        "id": 2,
-        "nombre": "YSL Libre Intense 90ml",
-        "marca": "Yves Saint Laurent",
-        "tienda": "Paris",
-        "descuento": "-38% OFF",
-        "precio_normal": 149990,
-        "precio_remate": 92990,
-        "timer": "00h 32m",
-        "stock": "¡Queda 1 sola unidad!",
-        "img": get_image_src("APP/assets/perfumes/ysl_libre.jpg"),
-        "url": "https://www.paris.cl/search?q=YSL+Libre"
-    },
-    {
-        "id": 5,
-        "nombre": "Lattafa Khamrah 100ml",
-        "marca": "Lattafa",
-        "tienda": "Elite Perfumes",
-        "descuento": "-42% OFF",
-        "precio_normal": 49990,
-        "precio_remate": 28990,
-        "timer": "03h 15m",
-        "stock": "¡Quedan 5 unidades!",
-        "img": get_image_src("APP/assets/perfumes/lattafa_khamrah.jpg"),
-        "url": "https://www.eliteperfumes.cl/search?q=Khamrah"
-    },
-    {
-        "id": 4,
-        "nombre": "Club de Nuit Intense 105ml",
-        "marca": "Armaf",
-        "tienda": "Alisha Perfumes",
-        "descuento": "-40% OFF",
-        "precio_normal": 54990,
-        "precio_remate": 32990,
-        "timer": "02h 10m",
-        "stock": "¡Últimas 3 unidades!",
-        "img": get_image_src("APP/assets/perfumes/club_de_nuit.jpg"),
-        "url": "https://www.alisha.cl/search?q=Club+de+Nuit"
-    },
-    {
-        "id": 3,
-        "nombre": "Dior Sauvage Elixir 60ml",
-        "marca": "Dior",
-        "tienda": "Silk Perfumes",
-        "descuento": "-28% OFF",
-        "precio_normal": 179990,
-        "precio_remate": 129990,
-        "timer": "05h 40m",
-        "stock": "¡Quedan 4 unidades!",
-        "img": get_image_src("APP/assets/perfumes/dior_sauvage.jpg"),
-        "url": "https://www.silkperfumes.cl/search?q=Dior+Sauvage"
-    },
-    {
-        "id": 6,
-        "nombre": "Baccarat Rouge 540 EDP 70ml",
-        "marca": "Maison Francis Kurkdjian",
-        "tienda": "Falabella",
-        "descuento": "-25% OFF",
-        "precio_normal": 385000,
-        "precio_remate": 288990,
-        "timer": "00h 18m",
-        "stock": "¡Queda 1 unidad!",
-        "img": get_image_src("APP/assets/perfumes/baccarat_rouge.jpg"),
-        "url": "https://www.falabella.com/falabella-cl/search?Ntt=Baccarat+Rouge"
-    }
-]
-
-# Filtrado reactivo en memoria
 items_filtrados = []
+q_lower = (search_remate or "").strip().lower()
 for item in remates_data:
-    match_search = (search_remate.lower() in item['nombre'].lower() or search_remate.lower() in item['marca'].lower() or search_remate.lower() in item['tienda'].lower()) if search_remate else True
-    match_tienda = (tienda_opt == "Todas las tiendas" or tienda_opt.lower() in item['tienda'].lower())
+    match_search = (
+        not q_lower
+        or q_lower in str(item.get("nombre") or "").lower()
+        or q_lower in str(item.get("marca") or "").lower()
+        or q_lower in str(item.get("tienda") or "").lower()
+    )
+    match_tienda = (tienda_opt == "Todas las tiendas" or tienda_opt.lower() == str(item.get("tienda") or "").lower())
     if match_search and match_tienda:
         items_filtrados.append(item)
 
-# Ordenamiento dinámico según la opción seleccionada
 if orden_opt == "Mayor % Descuento":
-    items_filtrados.sort(key=lambda x: int(x['descuento'].replace('-', '').replace('% OFF', '')), reverse=True)
+    items_filtrados.sort(key=lambda x: (-int(x.get("descuento_pct") or 0), -int(x.get("ahorro_clp") or 0)))
+elif orden_opt == "Mayor Ahorro ($ CLP)":
+    items_filtrados.sort(key=lambda x: (-int(x.get("ahorro_clp") or 0), -int(x.get("descuento_pct") or 0)))
 elif orden_opt == "Menor Precio":
-    items_filtrados.sort(key=lambda x: x['precio_remate'])
+    items_filtrados.sort(key=lambda x: int(x.get("precio_remate") or 999999999))
 elif orden_opt == "Mayor Precio":
-    items_filtrados.sort(key=lambda x: x['precio_remate'], reverse=True)
+    items_filtrados.sort(key=lambda x: -int(x.get("precio_remate") or 0))
 
-
-# =============================================================================
-# BLOQUE 5: RENDERIZADO EN GRID RESPONSIVO (3 COLUMNAS) Y COMPRA DIRECTA
-# -----------------------------------------------------------------------------
-# ¿QUÉ HACE ESTE BLOQUE?
-# 1. Agrupa los productos filtrados en filas de 3 columnas mediante `st.columns(3)`.
-# 2. Renderiza la tarjeta con distintivo de descuento rojo brillante (`badge-discount`),
-#    temporizador regresivo (`badge-timer`), packshot optimizado y aviso de stock.
-# 3. Incluye el botón directo de redirección para concretar la compra en el comercio oficial.
-# =============================================================================
 if not items_filtrados:
-    st.info("No hay ofertas de remate relámpago que coincidan con los filtros seleccionados.")
+    st.info("No se encontraron ofertas con descuento real verificado para los filtros actuales.")
 else:
+    st.markdown(
+        f"<div style='font-size: 0.88rem; color: {subtext_color}; margin-bottom: 14px;'>"
+        f"Mostrando <b>{len(items_filtrados)}</b> liquidaciones reales en stock verificadas sobre botellas selladas (&ge; 25 ml)</div>",
+        unsafe_allow_html=True,
+    )
     cols_per_row = 3
     for row in range(0, len(items_filtrados), cols_per_row):
         cols = st.columns(cols_per_row, gap="medium")
@@ -996,32 +717,52 @@ else:
             idx = row + i
             if idx < len(items_filtrados):
                 item = items_filtrados[idx]
-                p_norm_str = f"${item['precio_normal']:,.0f}".replace(",", ".")
-                p_rem_str = f"${item['precio_remate']:,.0f}".replace(",", ".")
-                
+                p_norm_str = f"${int(item['precio_normal']):,.0f}".replace(",", ".")
+                p_rem_str = f"${int(item['precio_remate']):,.0f}".replace(",", ".")
+                ahorro_str = f"${int(item.get('ahorro_clp') or 0):,.0f}".replace(",", ".")
+                pct_val = int(item.get("descuento_pct") or 0)
+                vol_ml = int(item.get("volumen_ml") or 100)
+
+                nombre_safe = escape_html(item.get("nombre", ""))
+                marca_safe = escape_html(item.get("marca", ""))
+                tienda_safe = escape_html(item.get("tienda", "Tienda Oficial"))
+                img_safe = get_image_src(item.get("imagen_url"))
+                safe_url = sanitize_external_url(
+                    resolver_url_oferta(
+                        tienda_nombre=str(item.get("tienda") or ""),
+                        perfume_nombre=str(item.get("nombre") or ""),
+                        url_prod=str(item.get("url") or ""),
+                        url_base=str(item.get("url_base") or ""),
+                        marca=str(item.get("marca") or ""),
+                    )
+                )
+
                 with cols[i]:
                     html_card = f"""
                     <div class="remate-card">
-                        <div class="badge-discount">{item['descuento']}</div>
-                        <div class="badge-timer"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align: -1px; margin-right: 3px;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>{item['timer']}</div>
+                        <div class="badge-discount">-{pct_val}% OFF</div>
+                        <div class="badge-timer">{vol_ml} ML</div>
                         <div class="remate-img-box">
-                            <img src="{item['img']}" alt="{item['nombre']}">
+                            <img src="{img_safe}" alt="{nombre_safe}" loading="lazy">
                         </div>
-                        <div class="remate-title">{item['nombre']}</div>
-                        <div class="remate-brand">{item['marca']}</div>
+                        <div class="remate-title" title="{nombre_safe}">{nombre_safe}</div>
+                        <div class="remate-brand">{marca_safe}</div>
                         <div class="remate-store-row">
-                            <span>Vendido por: <b>{item['tienda']}</b></span>
-                            <span style="color: #4ade80; font-weight: 700;">Verificado</span>
+                            <span>Vendido por: <b>{tienda_safe}</b></span>
+                            <span style="color: #4ade80; font-weight: 700;">Stock Activo</span>
                         </div>
-                        <div class="stock-badge">{item['stock']}</div>
+                        <div class="stock-badge">Ahorro real verificado: {ahorro_str} CLP</div>
                         <div class="price-box">
                             <span class="old-price-line">{p_norm_str} CLP</span>
                             <span class="deal-price">{p_rem_str} CLP</span>
                         </div>
+                        <a href="{safe_url}" target="_blank" rel="noopener noreferrer"
+                           style="display:block; margin-top:10px; text-align:center; background:#d83737; color:#ffffff !important; font-weight:700; font-size:0.9rem; padding:10px 14px; border-radius:8px; text-decoration:none;">
+                           Ir a la Oferta en {tienda_safe} ↗
+                        </a>
                     </div>
                     """
                     st.markdown(clean_html(html_card), unsafe_allow_html=True)
-                    
-                    # Botón exclusivo para ir directo a la oferta del comercio
-                    if st.button("Ir al Remate ↗", key=f"btn_remate_{idx}", use_container_width=True):
-                        st.markdown(f'<script>window.open("{item["url"]}", "_blank");</script>', unsafe_allow_html=True)
+                    if st.button("Comparar en todas las tiendas", key=f"btn_remate_comp_{item['perfume_id']}_{idx}", use_container_width=True):
+                        st.session_state['selected_perfume'] = item['perfume_id']
+                        st.switch_page("pages/compararprecios.py")

@@ -27,7 +27,12 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if BASE_DIR not in sys.path:
     sys.path.insert(0, BASE_DIR)
 
-from backend.database import get_supabase, is_supabase_disponible, get_supabase_credentials
+from backend.database import (
+    _fetch_all_rows,
+    get_supabase,
+    get_supabase_credentials,
+    is_supabase_disponible,
+)
 
 BUCKET_NAME = "IMG_perfumes"
 ASSETS_DIR = os.path.join(BASE_DIR, "assets", "perfumes")
@@ -91,11 +96,18 @@ def subir_imagenes():
         print("!" * 65)
         return
 
-    # 2. Actualizar las URLs en la tabla perfumes para los que usan assets locales
+    # 2. Actualizar las URLs en la tabla perfumes para los que usan assets locales (paginado >1.000 filas)
     print("\n🔄 Sincronizando URLs en la tabla 'perfumes' de Supabase...")
     try:
-        resp = sb.table("perfumes").select("id, nombre, imagen_url").execute()
-        perfumes = resp.data or []
+        perfumes = _fetch_all_rows(
+            lambda off, lim: (
+                sb.table("perfumes")
+                .select("id, nombre, imagen_url")
+                .order("id", desc=False)
+                .range(off, off + lim - 1)
+            ),
+            page_size=1000,
+        )
         actualizados = 0
 
         for p in perfumes:

@@ -56,7 +56,7 @@ CREATE TABLE IF NOT EXISTS variantes_perfume (
     activa BOOLEAN NOT NULL DEFAULT 1,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (perfume_id) REFERENCES perfumes (id) ON DELETE RESTRICT
+    FOREIGN KEY (perfume_id) REFERENCES perfumes (id) ON DELETE CASCADE
 );
 
 -- 4. Ofertas Actuales Vivas (Snapshot de Precios y Stock por Comercio)
@@ -77,8 +77,8 @@ CREATE TABLE IF NOT EXISTS ofertas_actuales (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (variante_id, tienda_id),
-    FOREIGN KEY (variante_id) REFERENCES variantes_perfume (id) ON DELETE RESTRICT,
-    FOREIGN KEY (tienda_id) REFERENCES tiendas (id) ON DELETE RESTRICT
+    FOREIGN KEY (variante_id) REFERENCES variantes_perfume (id) ON DELETE CASCADE,
+    FOREIGN KEY (tienda_id) REFERENCES tiendas (id) ON DELETE CASCADE
 );
 
 -- 5. Auditoría de Ejecuciones ETL (scraping_runs)
@@ -105,7 +105,7 @@ CREATE TABLE IF NOT EXISTS precios_registro (
     perfume_id INTEGER NOT NULL,
     tienda_id INTEGER NOT NULL,
     precio_actual INTEGER NOT NULL,
-    precio_normal INTEGER NOT NULL,
+    precio_normal INTEGER,
     en_stock BOOLEAN DEFAULT 1,
     volumen_ml INTEGER DEFAULT 100,
     url_producto TEXT NOT NULL,
@@ -117,20 +117,23 @@ CREATE TABLE IF NOT EXISTS precios_registro (
     scraping_run_id INTEGER,
     FOREIGN KEY (perfume_id) REFERENCES perfumes (id) ON DELETE CASCADE,
     FOREIGN KEY (tienda_id) REFERENCES tiendas (id) ON DELETE CASCADE,
-    FOREIGN KEY (variante_id) REFERENCES variantes_perfume (id) ON DELETE RESTRICT,
-    FOREIGN KEY (scraping_run_id) REFERENCES scraping_runs (id) ON DELETE RESTRICT
+    FOREIGN KEY (variante_id) REFERENCES variantes_perfume (id) ON DELETE SET NULL,
+    FOREIGN KEY (scraping_run_id) REFERENCES scraping_runs (id) ON DELETE SET NULL
 );
 
--- 7. Usuarios Registrados y Autenticación
+-- 7. Usuarios Registrados y Autenticación (Respaldo Local con PBKDF2-HMAC-SHA256)
 CREATE TABLE IF NOT EXISTS usuarios (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     nombre TEXT NOT NULL,
     email TEXT NOT NULL UNIQUE,
     password_hash TEXT NOT NULL,
     telefono TEXT DEFAULT '',
+    ubicacion TEXT DEFAULT 'Santiago, Chile',
     bio TEXT DEFAULT '',
     foto_perfil TEXT DEFAULT '',
     alerta_email BOOLEAN DEFAULT 1,
+    notif_stock BOOLEAN DEFAULT 1,
+    notif_resumen BOOLEAN DEFAULT 0,
     umbral_descuento INTEGER DEFAULT 10,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -154,6 +157,7 @@ CREATE INDEX IF NOT EXISTS idx_precios_fecha ON precios_registro(fecha_registro)
 CREATE INDEX IF NOT EXISTS idx_precios_volumen ON precios_registro(perfume_id, volumen_ml);
 CREATE INDEX IF NOT EXISTS idx_precios_stock_act ON precios_registro(en_stock, precio_actual);
 CREATE INDEX IF NOT EXISTS idx_precios_variante ON precios_registro(variante_id);
+CREATE INDEX IF NOT EXISTS idx_variantes_lookup ON variantes_perfume(perfume_id, volumen_ml, formato);
 CREATE INDEX IF NOT EXISTS idx_perfumes_marca ON perfumes(marca);
 CREATE INDEX IF NOT EXISTS idx_perfumes_genero ON perfumes(genero);
 CREATE INDEX IF NOT EXISTS idx_perfumes_arabe ON perfumes(es_arabe);

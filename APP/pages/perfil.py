@@ -25,285 +25,80 @@ if BASE_DIR not in sys.path:
 if APP_DIR not in sys.path:
     sys.path.append(APP_DIR)
 
-try:
-    from backend.database import (
-        obtener_catalogo,
-        obtener_precios_actuales,
-        obtener_detalle_perfume,
-        crear_usuario,
-        verificar_usuario
-    )
-except ImportError:
-    from backend.database import (
-        obtener_catalogo,
-        obtener_precios_actuales,
-        obtener_detalle_perfume
-    )
-    crear_usuario = None
-    verificar_usuario = None
+import hashlib
 
-@st.cache_data(ttl=300, show_spinner=False)
+from backend.database import (
+    actualizar_perfil_usuario,
+    actualizar_preferencias_notificacion,
+    eliminar_favorito,
+    obtener_catalogo,
+    obtener_detalle_perfume,
+    obtener_favoritos_usuario,
+    obtener_perfil_usuario,
+    obtener_precios_actuales,
+    subir_avatar_usuario,
+)
+from ui import (
+    DEFAULT_AVATAR_SVG,
+    HOME_RED_SVG as home_red_svg,
+    PERFUME_SVG_FAVICON,
+    SHIELD_RED_SVG as shield_red_svg,
+    TAG_RED_SVG as tag_red_svg,
+    TREND_RED_SVG as trend_red_svg,
+    cerrar_sesion_usuario,
+    clean_html as _shared_clean_html,
+    escape_html,
+    get_image_src,
+    get_theme_palette,
+    init_common_session_state,
+    is_valid_https_image_url,
+    modal_autenticacion,
+    toggle_theme,
+)
+
+
+def clean_html(html_str: str) -> str:
+    """Limpia espacios iniciales y saltos de línea para evitar bloques de código accidentales."""
+    return _shared_clean_html(html_str, join_char=" ")
+
+
+@st.cache_data(ttl=120, show_spinner=False)
 def get_cached_catalogo():
     return obtener_catalogo()
 
-@st.cache_data(ttl=300, show_spinner=False)
+
+@st.cache_data(ttl=120, show_spinner=False)
 def get_cached_precios(perfume_id):
     return obtener_precios_actuales(perfume_id)
 
-def clean_html(html_str: str) -> str:
-    """Limpia espacios iniciales y elimina saltos de línea para evitar que Streamlit interprete HTML como código."""
-    return " ".join(line.strip() for line in html_str.splitlines() if line.strip())
 
-def get_image_src(img_path_or_url):
-    """Retorna URL remota o data URI en base64 para imágenes y GIFs locales."""
-    if not img_path_or_url:
-        return ""
-    
-    if img_path_or_url.startswith("http://") or img_path_or_url.startswith("https://") or img_path_or_url.startswith("data:"):
-        return img_path_or_url
-
-    local_path = img_path_or_url
-    if not os.path.isabs(local_path):
-        cand1 = os.path.join(BASE_DIR, local_path)
-        cand2 = os.path.join(BASE_DIR, "APP", local_path)
-        if os.path.exists(cand1):
-            local_path = cand1
-        elif os.path.exists(cand2):
-            local_path = cand2
-
-    if os.path.exists(local_path):
-        ext = os.path.splitext(local_path)[1].lower().replace(".", "")
-        mime = f"image/{ext}" if ext in ["png", "jpg", "jpeg", "gif", "webp"] else "image/png"
-        try:
-            with open(local_path, "rb") as f:
-                b64 = base64.b64encode(f.read()).decode("utf-8")
-                return f"data:{mime};base64,{b64}"
-        except Exception:
-            pass
-
-    return img_path_or_url
-
-# 1. CONFIGURACIÓN DE LA PÁGINA Y ESTADO
-st.set_page_config(page_title="Mi Perfil - PerfumeTrending", layout="wide", initial_sidebar_state="collapsed")
-
-if 'theme' not in st.session_state:
-    st.session_state['theme'] = 'dark'
-
-# ESTADOS DE AUTENTICACIÓN Y CONTROL DE MODAL
-if 'logged_in' not in st.session_state:
-    st.session_state['logged_in'] = False
-
-if 'user_info' not in st.session_state:
-    st.session_state['user_info'] = None
-
-if 'show_login_modal' not in st.session_state:
-    st.session_state['show_login_modal'] = False
-
-# LISTA DE FAVORITOS MONITOREADOS (IDs DE PERFUMES)
-if 'favoritos' not in st.session_state:
-    st.session_state['favoritos'] = [1, 2, 4]
-
-# ESTADOS PARA INICIO POR CÓDIGO (OTP)
-if 'otp_code_sent' not in st.session_state:
-    st.session_state['otp_code_sent'] = False
-if 'otp_contact' not in st.session_state:
-    st.session_state['otp_contact'] = ""
-if 'otp_secret' not in st.session_state:
-    st.session_state['otp_secret'] = ""
-
-def toggle_theme():
-    st.session_state['theme'] = 'dark' if st.session_state['theme'] == 'light' else 'light'
-
-# MODAL FLOTANTE DE INICIO DE SESIÓN Y REGISTRO
-@st.dialog("Acceso a PerfumeTrending")
-def modal_autenticacion():
-    tab_codigo, tab_login, tab_registro = st.tabs(["Inicio por Código", "Iniciar Sesión", "Registrarse"])
-    
-    with tab_codigo:
-        st.markdown("#### Ingresa con tu Correo o Teléfono")
-        
-        if not st.session_state['otp_code_sent']:
-            with st.form("form_send_otp", clear_on_submit=False):
-                contact_input = st.text_input("Correo electrónico o número de teléfono", key="otp_contact_input", placeholder="ejemplo@correo.cl o +56912345678")
-                btn_send = st.form_submit_button("Enviar código de verificación", use_container_width=True)
-                
-                if btn_send:
-                    if not contact_input.strip():
-                        st.error("Por favor ingresa un correo electrónico o teléfono válido.")
-                    else:
-                        code = str(random.randint(100000, 999999))
-                        st.session_state['otp_code_sent'] = True
-                        st.session_state['otp_contact'] = contact_input.strip()
-                        st.session_state['otp_secret'] = code
-                        st.rerun()
-        else:
-            st.info(f"Un código de verificación ha sido enviado a **{st.session_state['otp_contact']}**")
-            st.caption(f"*(Código de prueba rápido: **{st.session_state['otp_secret']}**)*")
-            
-            with st.form("form_verify_otp", clear_on_submit=False):
-                input_code = st.text_input("Ingresa el código de 6 dígitos", key="otp_code_input", placeholder="123456", max_chars=6)
-                btn_verify = st.form_submit_button("Verificar e Ingresar", use_container_width=True)
-                
-                if btn_verify:
-                    if input_code.strip() == st.session_state['otp_secret']:
-                        contact_str = st.session_state['otp_contact'].strip()
-                        st.session_state['logged_in'] = True
-                        
-                        is_email = "@" in contact_str
-                        st.session_state['user_info'] = {
-                            'nombre': '',
-                            'email': contact_str if is_email else '',
-                            'telefono': contact_str if not is_email else '',
-                            'bio': '',
-                            'foto_perfil': '',
-                            'alerta_email': is_email,
-                            'umbral_descuento': 10
-                        }
-                        
-                        st.session_state['otp_code_sent'] = False
-                        st.session_state['otp_contact'] = ""
-                        st.session_state['otp_secret'] = ""
-                        st.session_state['show_login_modal'] = False
-                        st.rerun()
-                    else:
-                        st.error("Código incorrecto. Revisa e intenta nuevamente.")
-                        
-            if st.button("Cambiar correo/teléfono", key="btn_reset_otp", use_container_width=True):
-                st.session_state['otp_code_sent'] = False
-                st.session_state['otp_contact'] = ""
-                st.session_state['otp_secret'] = ""
-                st.rerun()
-
-    with tab_login:
-        st.markdown("#### Ingresa a tu cuenta")
-        with st.form("form_login_pass", clear_on_submit=False):
-            login_email = st.text_input("Correo Electrónico", key="login_email_input", placeholder="usuario@correo.cl")
-            login_pass = st.text_input("Contraseña", type="password", key="login_pass_input", placeholder="••••••••")
-            btn_login = st.form_submit_button("Ingresar a la plataforma", use_container_width=True)
-            
-            if btn_login:
-                if not login_email or not login_pass:
-                    st.error("Por favor ingresa tu correo y contraseña.")
-                elif verificar_usuario:
-                    exito, usuario_data = verificar_usuario(login_email, login_pass)
-                    if exito:
-                        st.session_state['logged_in'] = True
-                        st.session_state['user_info'] = {
-                            'nombre': usuario_data.get('nombre', ''),
-                            'email': usuario_data.get('email', login_email),
-                            'telefono': usuario_data.get('telefono', ''),
-                            'bio': usuario_data.get('bio', ''),
-                            'foto_perfil': usuario_data.get('foto_perfil', ''),
-                            'alerta_email': True,
-                            'umbral_descuento': 10
-                        }
-                        st.session_state['show_login_modal'] = False
-                        st.rerun()
-                    else:
-                        st.error("Correo o contraseña incorrectos.")
-                else:
-                    st.session_state['logged_in'] = True
-                    st.session_state['user_info'] = {
-                        'nombre': '',
-                        'email': login_email,
-                        'telefono': '',
-                        'bio': '',
-                        'foto_perfil': '',
-                        'alerta_email': True,
-                        'umbral_descuento': 10
-                    }
-                    st.session_state['show_login_modal'] = False
-                    st.rerun()
-
-    with tab_registro:
-        st.markdown("#### Crea una cuenta nueva")
-        with st.form("form_reg_user", clear_on_submit=False):
-            reg_nombre = st.text_input("Nombre completo", key="reg_nombre_input", placeholder="Juan Pérez")
-            reg_email = st.text_input("Correo Electrónico", key="reg_email_input", placeholder="usuario@correo.cl")
-            reg_pass1 = st.text_input("Contraseña", type="password", key="reg_pass1_input", placeholder="••••••••")
-            reg_pass2 = st.text_input("Confirmar Contraseña", type="password", key="reg_pass2_input", placeholder="••••••••")
-            btn_reg = st.form_submit_button("Crear mi cuenta", use_container_width=True)
-            
-            if btn_reg:
-                if not reg_nombre or not reg_email or not reg_pass1:
-                    st.error("Todos los campos son obligatorios.")
-                elif reg_pass1 != reg_pass2:
-                    st.error("Las contraseñas no coinciden.")
-                elif len(reg_pass1) < 6:
-                    st.warning("La contraseña debe tener al menos 6 caracteres.")
-                elif crear_usuario:
-                    exito, msg = crear_usuario(reg_nombre, reg_email, reg_pass1)
-                    if exito:
-                        st.session_state['logged_in'] = True
-                        st.session_state['user_info'] = {
-                            'nombre': reg_nombre,
-                            'email': reg_email,
-                            'telefono': '',
-                            'bio': '',
-                            'foto_perfil': '',
-                            'alerta_email': True,
-                            'umbral_descuento': 10
-                        }
-                        st.session_state['show_login_modal'] = False
-                        st.success("¡Cuenta creada con éxito!")
-                        st.rerun()
-                    else:
-                        st.error(msg)
-                else:
-                    st.session_state['logged_in'] = True
-                    st.session_state['user_info'] = {
-                        'nombre': reg_nombre,
-                        'email': reg_email,
-                        'telefono': '',
-                        'bio': '',
-                        'foto_perfil': '',
-                        'alerta_email': True,
-                        'umbral_descuento': 10
-                    }
-                    st.session_state['show_login_modal'] = False
-                    st.success("¡Cuenta creada con éxito!")
-                    st.rerun()
-
-is_dark = st.session_state['theme'] == 'dark'
-
-# Colores dinámicos adaptables por tema
-app_bg = "#0c0e12" if is_dark else "#f9f9fb"
-app_bg_css = f"background-color: {app_bg} !important;"
-
-text_color = "#f0f0f0" if is_dark else "#18181b"
-subtext_color = "#888890" if is_dark else "#666670"
-
-btn_bg = "#181c24" if is_dark else "#ffffff"
-btn_text = "#ffffff" if is_dark else "#18181b"
-btn_border = "#2a2e39" if is_dark else "#d1d5db"
-
-input_bg = "#14171d" if is_dark else "#ffffff"
-input_text = "#f0f0f0" if is_dark else "#18181b"
-input_border = "#2a2e39" if is_dark else "#d1d5db"
-
-# SWITCH DE TEMA - POSICIONAMIENTO Y SVGS
-bottle_left_pos = "42px" if is_dark else "-2px"
-static_icon_pos = "12px center" if is_dark else "calc(100% - 12px) center"
-
-static_icon_svg = (
-    "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='4'/><line x1='12' y1='1' x2='12' y2='3'/><line x1='12' y1='21' x2='12' y2='23'/><line x1='4.22' y1='4.22' x2='5.64' y2='5.64'/><line x1='18.36' y1='18.36' x2='19.78' y2='19.78'/><line x1='1' y1='12' x2='3' y2='12'/><line x1='21' y1='12' x2='23' y2='12'/><line x1='4.22' y1='19.78' x2='5.64' y2='18.36'/><line x1='18.36' y1='5.64' x2='19.78' y2='4.22'/></svg>"
-    if is_dark else
-    "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M21 12.79A9 9 0 0 1 11.21 3 7 7 0 0 0 21 12.79z'/></svg>"
+# 1. CONFIGURACIÓN DE LA PÁGINA Y ESTADO SEGURO (SIN FAVORITOS HARDCODEADOS NI BYPASS)
+st.set_page_config(
+    page_title="Mi Perfil - PerfumeTrending",
+    page_icon=PERFUME_SVG_FAVICON,
+    layout="wide",
+    initial_sidebar_state="collapsed",
 )
 
-bottle_svg = (
-    "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 58'><rect x='18' y='2' width='14' height='7' rx='2' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><rect x='21' y='9' width='8' height='5' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='19' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><path d='M21 28a8 8 0 0 0 9 10.5 8.5 8.5 0 0 1-9-10.5z' fill='none' stroke='%23111111' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/></svg>"
-    if is_dark else
-    "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 58'><rect x='18' y='2' width='14' height='7' rx='2' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><rect x='21' y='9' width='8' height='5' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='19' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='5' fill='none' stroke='%23111111' stroke-width='2'/><line x1='25' y1='23' x2='25' y2='26' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='25' y1='42' x2='25' y2='45' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='14' y1='34' x2='17' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='33' y1='34' x2='36' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='17' y1='26' x2='19' y2='28' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='31' y1='40' x2='33' y2='42' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='17' y1='42' x2='19' y2='40' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='31' y1='28' x2='33' y2='26' stroke='%23111111' stroke-width='2' stroke-linecap='round'/></svg>"
-)
+init_common_session_state()
 
-user_icon_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23{btn_text[1:]}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2'/><circle cx='12' cy='7' r='4'/></svg>"
-
-# ICONOS VECTORIALES DE ALTA PRECISIÓN
-trend_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d83737' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='23 6 13.5 15.5 8.5 10.5 1 18'/><polyline points='17 6 23 6 23 12'/></svg>"
-shield_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d83737' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/><polyline points='9 12 11 14 15 10'/></svg>"
-tag_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d83737' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z'/><circle cx='7' cy='7' r='1.5' fill='%23d83737'/></svg>"
-home_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d83737' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z'/><polyline points='9 22 9 12 15 12 15 22'/></svg>"
+pal = get_theme_palette()
+is_dark = pal.is_dark
+app_bg = pal.app_bg
+app_bg_css = pal.app_bg_css
+text_color = pal.text_color
+subtext_color = pal.subtext_color
+btn_bg = pal.btn_bg
+btn_text = pal.btn_text
+btn_border = pal.btn_border
+input_bg = pal.input_bg
+input_text = pal.input_text
+input_border = pal.input_border
+bottle_left_pos = pal.bottle_left_pos
+static_icon_pos = pal.static_icon_pos
+static_icon_svg = pal.static_icon_svg
+bottle_svg = pal.bottle_svg
+user_icon_svg = pal.user_icon_svg
 
 # COMPONENTES VECTORIALES INLINE SVG PARA REEMPLAZO DE EMOJIS
 svg_mail = f'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="{subtext_color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px; margin-right: 4px;"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>'
@@ -708,18 +503,19 @@ with btn_col1:
             st.write(f"**Conectado como:**")
             st.write(st.session_state['user_info'].get('email') or st.session_state['user_info'].get('telefono') or 'Usuario')
             if st.button("Cerrar Sesión", key="btn_logout", use_container_width=True):
-                st.session_state['logged_in'] = False
-                st.session_state['user_info'] = None
+                cerrar_sesion_usuario()
                 st.rerun()
     else:
         if st.button("Ingresar", key="login_btn", use_container_width=True):
             st.session_state['show_login_modal'] = True
+            st.rerun()
 
 with btn_col2:
     st.button(" ", key="theme_toggle", on_click=toggle_theme)
 
 # MONITOREO Y RENDERIZADO PERSISTENTE DEL MODAL
 if st.session_state.get('show_login_modal', False):
+    st.session_state['show_login_modal'] = False
     modal_autenticacion()
 
 st.markdown("<div style='margin-top: 14px;'></div>", unsafe_allow_html=True)
@@ -764,28 +560,43 @@ if not st.session_state['logged_in'] or not st.session_state.get('user_info'):
         st.rerun()
     st.stop()
 
-# Extraer los datos reales registrados en la sesión activa del usuario
+# Sincronizar el perfil real desde Supabase Auth / SQLite cuando existe sesión activa
 u_info = st.session_state['user_info']
-u_nombre = u_info.get('nombre', '').strip()
-u_email = u_info.get('email', '').strip()
-u_telefono = u_info.get('telefono', '').strip()
-u_bio = u_info.get('bio', '').strip()
-u_foto = u_info.get('foto_perfil', '').strip()
-u_alerta = u_info.get('alerta_email', False)
+u_ident = u_info.get('id') or u_info.get('email')
+if u_ident and not st.session_state.get('_perfil_cloud_synced'):
+    perfil_remoto = obtener_perfil_usuario(u_ident)
+    if perfil_remoto:
+        st.session_state['user_info'].update(perfil_remoto)
+        u_info = st.session_state['user_info']
+    st.session_state['_perfil_cloud_synced'] = True
 
-# Silueta vectorial predeterminada o imagen/GIF en Base64 cargado por el usuario
-default_avatar_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238c7b6d' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'><path d='M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2'/><circle cx='12' cy='7' r='4'/></svg>"
-avatar_src = get_image_src(u_foto) if u_foto else default_avatar_svg
+u_nombre = (u_info.get('nombre') or '').strip()
+u_email = (u_info.get('email') or '').strip()
+u_telefono = (u_info.get('telefono') or '').strip()
+u_ubicacion = (u_info.get('ubicacion') or 'Santiago, Chile').strip()
+u_bio = (u_info.get('bio') or '').strip()
+u_foto = (u_info.get('foto_perfil') or '').strip()
+u_alerta = bool(u_info.get('alerta_email', True))
+u_umbral = int(u_info.get('umbral_descuento') or 10)
+u_notif_stock = bool(u_info.get('notif_stock', True))
+u_notif_resumen = bool(u_info.get('notif_resumen', False))
 
-# Formateo dinámico de datos de contacto
-u_nombre_display = u_nombre if u_nombre else "Usuario Registrado"
-u_email_display = u_email if u_email else "<i style='opacity:0.6;'>Sin correo registrado</i>"
-u_telefono_display = u_telefono if u_telefono else "<i style='opacity:0.6;'>Sin teléfono registrado</i>"
-u_bio_display = u_bio if u_bio else "<i style='opacity:0.7;'>Aún no has agregado una biografía. Completa tus datos personales más abajo en la pestaña 'Editar Datos Personales'.</i>"
+# Cierre total de LFI: jamás se permite leer rutas locales del servidor desde avatares (`allow_local=False`)
+avatar_src = get_image_src(u_foto, allow_local=False, default_src=DEFAULT_AVATAR_SVG)
 
-# Indicador visual del estado de alertas por correo
+# Sanitización XSS estricta en todos los campos editables por el usuario
+u_nombre_safe = escape_html(u_nombre) if u_nombre else "Usuario Registrado"
+u_email_display = escape_html(u_email) if u_email else "<i style='opacity:0.6;'>Sin correo registrado</i>"
+u_telefono_display = escape_html(u_telefono) if u_telefono else "<i style='opacity:0.6;'>Sin teléfono registrado</i>"
+u_ubicacion_safe = escape_html(u_ubicacion)
+u_bio_display = (
+    escape_html(u_bio)
+    if u_bio
+    else "<i style='opacity:0.7;'>Aún no has agregado una biografía. Completa tus datos personales en la pestaña 'Editar Datos Personales'.</i>"
+)
+
 if u_email and u_alerta:
-    badge_alerta = f"<span style='background: {'rgba(34, 197, 94, 0.15)' if is_dark else '#e8f5e9'}; color: {'#4ade80' if is_dark else '#2e7d32'}; border: 1px solid {'rgba(74, 222, 128, 0.35)' if is_dark else 'rgba(46, 125, 50, 0.3)'}; font-size: 0.78rem; font-weight: 700; padding: 5px 12px; border-radius: 6px;'>{svg_bell_active} ALERTAS GMAIL ACTIVADAS</span>"
+    badge_alerta = f"<span style='background: {'rgba(34, 197, 94, 0.15)' if is_dark else '#e8f5e9'}; color: {'#4ade80' if is_dark else '#2e7d32'}; border: 1px solid {'rgba(74, 222, 128, 0.35)' if is_dark else 'rgba(46, 125, 50, 0.3)'}; font-size: 0.78rem; font-weight: 700; padding: 5px 12px; border-radius: 6px;'>{svg_bell_active} ALERTAS ACTIVADAS ({u_umbral}%)</span>"
 elif u_email and not u_alerta:
     badge_alerta = f"<span style='background: {btn_border}; color: {subtext_color}; font-size: 0.78rem; font-weight: 600; padding: 5px 12px; border-radius: 6px;'>{svg_bell_off} ALERTAS DESACTIVADAS</span>"
 else:
@@ -793,12 +604,7 @@ else:
 
 
 # =============================================================================
-# BLOQUE 4: TARJETA DE PERFIL Y SUBIDA DE AVATAR / GIF (DATA URI EN BASE64)
-# -----------------------------------------------------------------------------
-# ¿QUÉ HACE ESTE BLOQUE?
-# 1. Permite cambiar la foto de perfil o GIF animado directamente con un botón `file_uploader`.
-# 2. Codifica los bytes del archivo a una Data URI en base64 (`data:image/png;base64,...`),
-#    almacenándola en la sesión y persistiendo en la base de datos sin necesidad de hosting adicional.
+# BLOQUE 4: TARJETA DE PERFIL Y SUBIDA SEGURA DE AVATAR EN LA NUBE
 # =============================================================================
 st.markdown('<div class="profile-card-container">', unsafe_allow_html=True)
 col_av, col_details = st.columns([1.5, 8.5], vertical_alignment="center")
@@ -806,37 +612,54 @@ col_av, col_details = st.columns([1.5, 8.5], vertical_alignment="center")
 with col_av:
     st.markdown(clean_html(f'''
     <div class="avatar-click-zone" title="Haz clic aquí para seleccionar y cambiar tu foto de perfil o GIF desde tu PC">
-        <img src="{avatar_src}" class="profile-avatar-img" alt="{u_nombre_display}">
+        <img src="{avatar_src}" class="profile-avatar-img" alt="{u_nombre_safe}">
         <div class="avatar-overlay-badge">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
             <span style="font-size: 0.7rem; font-weight: 700; margin-top: 2px;">Cambiar</span>
         </div>
     </div>
     '''), unsafe_allow_html=True)
-    
-    # Cargar foto o GIF directamente
+
     quick_file = st.file_uploader(
-        "Subir Foto", 
-        type=["png", "jpg", "jpeg", "gif", "webp"], 
-        key="avatar_quick_uploader", 
-        label_visibility="collapsed"
+        "Subir Foto",
+        type=["png", "jpg", "jpeg", "gif", "webp"],
+        key="avatar_quick_uploader",
+        label_visibility="collapsed",
     )
-    
+
     if quick_file is not None:
         bytes_data = quick_file.getvalue()
-        b64 = base64.b64encode(bytes_data).decode('utf-8')
-        mime = quick_file.type or "image/png"
-        st.session_state['user_info']['foto_perfil'] = f"data:{mime};base64,{b64}"
-        st.toast("¡Foto de perfil actualizada correctamente!")
-        st.rerun()
+        file_digest = hashlib.sha256(bytes_data).hexdigest()
+        if st.session_state.get("_last_quick_avatar_digest") != file_digest:
+            st.session_state["_last_quick_avatar_digest"] = file_digest
+            ok_up, url_or_err = subir_avatar_usuario(u_ident, bytes_data, quick_file.type or "")
+            if ok_up:
+                ok_db, msg_db = actualizar_perfil_usuario(
+                    u_ident,
+                    nombre=u_nombre or "Usuario",
+                    email=u_email,
+                    telefono=u_telefono,
+                    bio=u_bio,
+                    foto_perfil=url_or_err,
+                    ubicacion=u_ubicacion,
+                )
+                if ok_db:
+                    st.session_state['user_info']['foto_perfil'] = url_or_err
+                    st.toast("¡Foto de perfil guardada de forma persistente!", icon="✅")
+                    st.rerun()
+                else:
+                    st.error(msg_db)
+            else:
+                st.error(url_or_err)
 
 with col_details:
     st.markdown(clean_html(f'''
     <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px;">
         <div>
-            <h2 style="margin: 0 0 4px 0; color: {text_color}; font-size: 1.5rem; font-weight: 700;">{u_nombre_display}</h2>
+            <h2 style="margin: 0 0 4px 0; color: {text_color}; font-size: 1.5rem; font-weight: 700;">{u_nombre_safe}</h2>
             <div style="color: {subtext_color}; font-size: 0.9rem; margin-bottom: 8px; display: flex; align-items: center; flex-wrap: wrap;">
                 {svg_mail} <span>{u_email_display}</span> &nbsp;&bull;&nbsp; {svg_phone} <span>{u_telefono_display}</span>
+                &nbsp;&bull;&nbsp; <span style="margin-left: 4px;">📍 {u_ubicacion_safe}</span>
             </div>
         </div>
         <div>{badge_alerta}</div>
@@ -850,56 +673,56 @@ st.markdown('</div>', unsafe_allow_html=True)
 
 
 # =============================================================================
-# BLOQUE 5: GESTIÓN DE FRAGANCIAS FAVORITAS Y ALGORITMO DE DETECCIÓN DE REBAJAS
-# -----------------------------------------------------------------------------
-# ¿QUÉ HACE ESTE BLOQUE?
-# En la pestaña "Fragancias Monitoreadas":
-# 1. Recupera la lista de IDs guardados en `st.session_state['favoritos']`.
-# 2. Por cada perfume, consulta los precios en vivo con `get_cached_precios(p_id)`.
-# 3. Compara el mejor precio actual (`p_min`) contra el precio guardado/referencia (`p_ref`).
-# 4. Si `p_min < p_ref`, activa la insignia verde con animación de flecha hacia abajo
-#    indicando que hubo una baja de precio real en el mercado chileno.
+# BLOQUE 5: GESTIÓN PERSISTENTE DE FAVORITOS, PERFIL Y ALERTAS EN LA NUBE
 # =============================================================================
 tab_favs, tab_edit, tab_notif = st.tabs([
-    "Fragancias Monitoreadas", 
-    "Editar Datos Personales", 
-    "Configuración de Alertas"
+    "Fragancias Monitoreadas",
+    "Editar Datos Personales",
+    "Configuración de Alertas",
 ])
 
-# --- TAB 1: FRAGANCIAS FAVORITAS ---
+# --- TAB 1: FRAGANCIAS FAVORITAS PERSISTENTES ---
 with tab_favs:
     svg_heart_header = f'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d83737" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -3px; margin-right: 8px;"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>'
     st.markdown(f"<h3 style='display: flex; align-items: center;'>{svg_heart_header} Mis Fragancias Favoritas</h3>", unsafe_allow_html=True)
-    st.caption("Las fragancias agregadas a tus favoritos se monitorean en tiempo real. Si activas las alertas por correo, te avisaremos automáticamente cuando detectemos una baja de precio.")
-    
-    catalogo = get_cached_catalogo() or []
-    fav_ids = st.session_state.get('favoritos', [])
-    
-    fav_items = [p for p in catalogo if p['id'] in fav_ids]
-    
+    st.caption("Tus fragancias guardadas se sincronizan con tu cuenta y comparan el mejor precio vigente en Chile frente al valor que tenían cuando iniciaste el seguimiento.")
+
+    fav_items = obtener_favoritos_usuario(u_ident) if u_ident else []
+    st.session_state['favoritos'] = [int(it['id']) for it in fav_items if it.get('id')]
+
     if not fav_items:
-        st.info("Aún no tienes fragancias guardadas en tus favoritos. Navega por el catálogo y agrega tus perfumes preferidos.")
+        st.info("Aún no tienes fragancias guardadas en tu seguimiento. Explora el catálogo o el comparador y pulsa 'Guardar y Monitorear Baja de Precio'.")
         if st.button("Ir al Catálogo de Perfumes", key="btn_go_catalog"):
             st.switch_page("app.py")
     else:
         for item in fav_items:
-            p_id = item['id']
-            p_nombre = item.get('nombre', 'Perfume')
-            p_marca = item.get('marca', 'Marca')
-            
-            # Obtener ofertas actuales
-            precios = get_cached_precios(p_id) or []
-            precios_val = [t['precio_actual'] for t in precios if t.get('precio_actual', 0) > 0]
-            
-            p_min = min(precios_val) if precios_val else item.get('precio_referencia', 0)
-            p_ref = item.get('precio_referencia', p_min)
-            
-            baja_detectada = (p_min < p_ref) and p_min > 0
-            badge_precio = f"<span style='color: {'#4ade80' if is_dark else '#2e7d32'}; font-weight: 700;'>{svg_trend_down} ¡Baja de precio! ${p_min:,.0f} CLP</span>".replace(",", ".") if baja_detectada else f"<span style='color: {text_color}; font-weight: 600;'>Mejor precio: ${p_min:,.0f} CLP</span>".replace(",", ".")
-            
+            p_id = int(item['id'])
+            p_nombre_safe = escape_html(item.get('nombre', 'Perfume'))
+            p_marca_safe = escape_html(item.get('marca', 'Marca'))
+            p_min = item.get('mejor_precio_actual') or item.get('mejor_precio')
+            p_guardado = int(item.get('precio_guardado') or 0)
+            baja_detectada = bool(item.get('baja_detectada'))
+            pct_desc = float(item.get('porcentaje_descuento') or 0.0)
+
+            if p_min and p_min > 0:
+                if baja_detectada and pct_desc > 0:
+                    badge_precio = (
+                        f"<span style='color: {'#4ade80' if is_dark else '#2e7d32'}; font-weight: 700;'>"
+                        f"{svg_trend_down} ¡Bajó {pct_desc:.0f}%! ${p_min:,.0f} CLP</span>"
+                        f"<br><span style='font-size:0.78rem; color:{subtext_color};'>Guardado en ${p_guardado:,.0f} CLP</span>"
+                    ).replace(",", ".")
+                else:
+                    sub_guardado = (
+                        f"<br><span style='font-size:0.78rem; color:{subtext_color};'>Base monitoreada: ${p_guardado:,.0f} CLP</span>".replace(",", ".")
+                        if p_guardado > 0 else ""
+                    )
+                    badge_precio = f"<span style='color: {text_color}; font-weight: 600;'>Mejor precio: ${p_min:,.0f} CLP</span>".replace(",", ".") + sub_guardado
+            else:
+                badge_precio = f"<span style='color: {subtext_color}; font-weight: 600;'>Temporalmente agotado en tiendas</span>"
+
             col_f1, col_f2, col_f3, col_f4 = st.columns([3, 2.5, 2, 1.5], vertical_alignment="center")
             with col_f1:
-                st.markdown(f"**{p_nombre}**  \n<span style='color:{subtext_color}; font-size:0.85rem;'>{p_marca}</span>", unsafe_allow_html=True)
+                st.markdown(f"**{p_nombre_safe}**  \n<span style='color:{subtext_color}; font-size:0.85rem;'>{p_marca_safe}</span>", unsafe_allow_html=True)
             with col_f2:
                 st.markdown(badge_precio, unsafe_allow_html=True)
             with col_f3:
@@ -907,91 +730,150 @@ with tab_favs:
                     st.session_state['selected_perfume'] = p_id
                     st.switch_page("pages/compararprecios.py")
             with col_f4:
-                if st.button("Quitar de Favoritos", key=f"btn_rem_fav_{p_id}", use_container_width=True):
-                    st.session_state['favoritos'].remove(p_id)
-                    st.toast(f"Se quitó {p_nombre} de tus favoritos.")
+                if st.button("Quitar", key=f"btn_rem_fav_{p_id}", use_container_width=True):
+                    eliminar_favorito(u_ident, p_id)
+                    st.session_state['favoritos'] = [fid for fid in st.session_state.get('favoritos', []) if fid != p_id]
+                    st.toast("Fragancia retirada de tus favoritos.", icon="🗑️")
                     st.rerun()
 
 # --- TAB 2: EDITAR PERFIL Y SUBIR FOTO/GIF ---
 with tab_edit:
     svg_edit_header = f'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="{text_color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -3px; margin-right: 8px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>'
     st.markdown(f"<h3 style='display: flex; align-items: center;'>{svg_edit_header} Completar y Modificar Datos Personales</h3>", unsafe_allow_html=True)
-    
+
     with st.form("form_edit_user_profile"):
         col_e1, col_e2 = st.columns(2, gap="medium")
-        
+
         with col_e1:
-            e_nombre = st.text_input("Nombre completo / Nickname", value=u_nombre, placeholder="Ej: Carlos Mendoza")
-            e_email = st.text_input("Correo Electrónico", value=u_email, placeholder="ejemplo@correo.cl")
-            e_telefono = st.text_input("Número de Teléfono", value=u_telefono, placeholder="+56 9 1234 5678")
-            
+            e_nombre = st.text_input("Nombre completo / Nickname", value=u_nombre, placeholder="Ej: Carlos Mendoza", max_chars=80)
+            e_email = st.text_input("Correo Electrónico", value=u_email, placeholder="ejemplo@correo.cl", max_chars=120)
+            e_telefono = st.text_input("Número de Teléfono", value=u_telefono, placeholder="+56 9 1234 5678", max_chars=30)
+            e_ubicacion = st.text_input("Ciudad / Región", value=u_ubicacion, placeholder="Santiago, Chile", max_chars=80)
+
         with col_e2:
-            uploaded_file = st.file_uploader("Seleccionar foto o GIF desde PC", type=["png", "jpg", "jpeg", "gif", "webp"], help="Selecciona una imagen o GIF animado desde tu computadora")
-            e_foto_url = st.text_input("O ingresar URL de imagen/GIF", value=u_foto if u_foto.startswith("http") else "", placeholder="https://sitio.com/mi-foto.gif", help="Pega un enlace directo si la imagen está en web")
-            e_bio = st.text_area("Biografía / Descripción", value=u_bio, placeholder="Escribe un breve resumen sobre ti o tus gustos olfativos...", max_chars=280, height=100)
-            
+            uploaded_file = st.file_uploader(
+                "Seleccionar foto o GIF desde PC (máx. 2 MB)",
+                type=["png", "jpg", "jpeg", "gif", "webp"],
+                help="Se valida y almacena de forma segura en la nube",
+            )
+            e_foto_url = st.text_input(
+                "O ingresar URL pública HTTPS de imagen/GIF",
+                value=u_foto if u_foto.startswith("https://") else "",
+                placeholder="https://sitio.com/mi-foto.jpg",
+                help="Por seguridad solo se aceptan enlaces externos con HTTPS",
+            )
+            e_bio = st.text_area(
+                "Biografía / Notas Olfativas Preferidas",
+                value=u_bio,
+                placeholder="Escribe un breve resumen sobre ti o tus familias olfativas favoritas...",
+                max_chars=280,
+                height=100,
+            )
+
         btn_save = st.form_submit_button("Guardar Cambios de Perfil", use_container_width=True)
-        
+
         if btn_save:
-            if not st.session_state.get('user_info'):
-                st.session_state['user_info'] = {}
-                
-            st.session_state['user_info']['nombre'] = e_nombre.strip()
-            st.session_state['user_info']['email'] = e_email.strip()
-            st.session_state['user_info']['telefono'] = e_telefono.strip()
-            st.session_state['user_info']['bio'] = e_bio.strip()
-            
-            # Procesar foto o GIF subido desde archivo o URL
+            nueva_foto = u_foto
+            error_validacion = None
+
             if uploaded_file is not None:
-                bytes_data = uploaded_file.getvalue()
-                b64 = base64.b64encode(bytes_data).decode('utf-8')
-                mime = uploaded_file.type or "image/png"
-                st.session_state['user_info']['foto_perfil'] = f"data:{mime};base64,{b64}"
+                ok_up, res_up = subir_avatar_usuario(u_ident, uploaded_file.getvalue(), uploaded_file.type or "")
+                if ok_up:
+                    nueva_foto = res_up
+                else:
+                    error_validacion = res_up
             elif e_foto_url.strip():
-                st.session_state['user_info']['foto_perfil'] = e_foto_url.strip()
-            
-            if e_email.strip() and 'alerta_email' not in st.session_state['user_info']:
-                st.session_state['user_info']['alerta_email'] = True
-                
-            st.success("¡Tu perfil y avatar han sido actualizados correctamente!")
-            st.rerun()
+                if is_valid_https_image_url(e_foto_url.strip()):
+                    nueva_foto = e_foto_url.strip()
+                else:
+                    error_validacion = "La URL de imagen debe comenzar estrictamente con https:// y ser válida."
+            elif u_foto.startswith("https://") and not e_foto_url.strip():
+                nueva_foto = ""
+
+            if error_validacion:
+                st.error(error_validacion)
+            else:
+                exito_upd, msg_upd = actualizar_perfil_usuario(
+                    u_ident,
+                    nombre=e_nombre,
+                    email=e_email,
+                    telefono=e_telefono,
+                    bio=e_bio,
+                    foto_perfil=nueva_foto,
+                    ubicacion=e_ubicacion,
+                )
+                if exito_upd:
+                    st.session_state['user_info'].update({
+                        'nombre': e_nombre.strip(),
+                        'email': e_email.strip().lower(),
+                        'telefono': e_telefono.strip(),
+                        'ubicacion': e_ubicacion.strip() or 'Santiago, Chile',
+                        'bio': e_bio.strip(),
+                        'foto_perfil': nueva_foto,
+                    })
+                    st.success(msg_upd)
+                    st.rerun()
+                else:
+                    st.error(msg_upd)
 
 # --- TAB 3: CONFIGURACIÓN DE NOTIFICACIONES Y ALERTAS ---
 with tab_notif:
     svg_notif_header = f'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="{text_color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -3px; margin-right: 8px;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>'
-    st.markdown(f"<h3 style='display: flex; align-items: center;'>{svg_notif_header} Alertas por Correo Electrónico (Gmail)</h3>", unsafe_allow_html=True)
-    st.write("Recibe avisos en tiempo real cuando tus fragancias favoritas tengan una baja de precio o entren en oferta especial en tiendas auditadas de Chile.")
-    
+    st.markdown(f"<h3 style='display: flex; align-items: center;'>{svg_notif_header} Alertas Inteligentes por Correo Electrónico</h3>", unsafe_allow_html=True)
+    st.write("Configura cuándo deseas recibir avisos automáticos cuando tus fragancias monitoreadas bajen de precio o recuperen stock en tiendas chilenas auditadas.")
+
     if not u_email:
-        st.warning("Para activar y recibir notificaciones por correo electrónico, primero debes ingresar tu dirección de correo en la pestaña 'Editar Datos Personales'.")
-    
+        st.warning("Para activar notificaciones por correo electrónico, primero registra un correo válido en la pestaña 'Editar Datos Personales'.")
+
     with st.form("form_notif_settings"):
         alerta_check = st.checkbox(
-            "Deseo recibir correos electrónicos cuando una fragancia de mis favoritos baje de precio.",
+            "Recibir alertas por correo electrónico cuando un perfume favorito baje de precio.",
             value=u_alerta,
-            disabled=not bool(u_email)
+            disabled=not bool(u_email),
         )
-        
+
         umbral_val = st.slider(
-            "Avisarme únicamente si el descuento es igual o mayor a:",
+            "Avisarme únicamente si la baja de precio es igual o mayor a:",
             min_value=5,
             max_value=50,
-            value=st.session_state['user_info'].get('umbral_descuento', 10),
+            value=max(5, min(50, int(u_umbral))),
             step=5,
-            format="%d%%"
+            format="%d%%",
         )
-        
+
+        notif_stock_check = st.checkbox(
+            "Notificarme cuando una fragancia agotada vuelva a tener stock verificado.",
+            value=u_notif_stock,
+            disabled=not bool(u_email),
+        )
+
+        notif_resumen_check = st.checkbox(
+            "Recibir resumen semanal con las mayores liquidaciones verificadas en Chile.",
+            value=u_notif_resumen,
+            disabled=not bool(u_email),
+        )
+
         btn_save_notif = st.form_submit_button("Guardar Preferencias de Alertas", use_container_width=True)
-        
+
         if btn_save_notif:
-            st.session_state['user_info']['alerta_email'] = alerta_check
-            st.session_state['user_info']['umbral_descuento'] = umbral_val
-            
-            if alerta_check and u_email:
-                st.success(f"¡Alertas activadas! Te enviaremos un correo a {u_email} cuando detectemos ofertas con más de {umbral_val}% de descuento.")
+            ok_pref, msg_pref = actualizar_preferencias_notificacion(
+                u_ident,
+                alerta_email=alerta_check,
+                umbral_descuento=umbral_val,
+                notif_stock=notif_stock_check,
+                notif_resumen=notif_resumen_check,
+            )
+            if ok_pref:
+                st.session_state['user_info'].update({
+                    'alerta_email': alerta_check,
+                    'umbral_descuento': umbral_val,
+                    'notif_stock': notif_stock_check,
+                    'notif_resumen': notif_resumen_check,
+                })
+                st.success(msg_pref)
+                st.rerun()
             else:
-                st.info("Has desactivado las notificaciones por correo electrónico.")
-            st.rerun()
+                st.error(msg_pref)
 
 # 6. PIE DE PÁGINA
 st.markdown(f"<hr style='margin: 40px 0 20px 0; border: none; border-bottom: 1px solid {btn_border}; opacity: 0.3;'>", unsafe_allow_html=True)

@@ -26,340 +26,99 @@ if BASE_DIR not in sys.path:
 if APP_DIR not in sys.path:
     sys.path.append(APP_DIR)
 
-try:
-    from backend.database import (
-        obtener_catalogo,
-        obtener_precios_actuales,
-        obtener_historico_precios,
-        obtener_detalle_perfume,
-        crear_usuario,
-        verificar_usuario
-    )
-except ImportError:
-    from backend.database import (
-        obtener_catalogo,
-        obtener_precios_actuales,
-        obtener_historico_precios,
-        obtener_detalle_perfume
-    )
-    crear_usuario = None
-    verificar_usuario = None
+from backend.database import (
+    agregar_favorito,
+    eliminar_favorito,
+    obtener_catalogo,
+    obtener_detalle_perfume,
+    obtener_favoritos_Ids_usuario,
+    obtener_historico_precios,
+    obtener_precios_actuales,
+)
+from backend.normalizador import es_precio_valido
+from ui import (
+    HOME_RED_SVG as home_red_svg,
+    PERFUME_SVG_FAVICON,
+    SHIELD_RED_SVG as shield_red_svg,
+    TAG_RED_SVG as tag_red_svg,
+    TREND_RED_SVG as trend_red_svg,
+    cerrar_sesion_usuario,
+    clean_html as _shared_clean_html,
+    escape_html,
+    get_image_src,
+    get_theme_palette,
+    init_common_session_state,
+    modal_autenticacion,
+    resolver_url_oferta,
+    sanitize_external_url,
+    toggle_theme,
+)
 
-try:
-    from backend.normalizador import es_precio_valido
-except ImportError:
-    try:
-        from normalizador import es_precio_valido
-    except ImportError:
-        def es_precio_valido(p):
-            try:
-                val = int(round(float(p)))
-                return 4000 <= val < 1000000 and val not in (9999999, 9999990, 999999)
-            except Exception:
-                return False
+
+def clean_html(html_str: str) -> str:
+    """Limpia espacios iniciales y saltos de línea para evitar bloques de código accidentales."""
+    return _shared_clean_html(html_str, join_char=" ")
+
 
 # =============================================================================
 # BLOQUE 1: CACHÉ EN MEMORIA DE ALTO RENDIMIENTO (STREAMLIT CACHE DATA)
-# -----------------------------------------------------------------------------
-# ¿QUÉ HACE ESTE BLOQUE?
-# Utiliza el decorador `@st.cache_data(ttl=300)` (Time-To-Live de 5 minutos):
-# - Almacena en memoria RAM el catálogo, las ofertas vivas y el historial de precios.
-# - Evita saturar la base de datos (Supabase / SQLite) con peticiones repetitivas
-#   cada vez que el usuario interactúa con la interfaz o cambia de pestaña.
-# - Se invalida automáticamente cada 5 minutos para refrescar nuevos precios.
 # =============================================================================
-@st.cache_data(ttl=300, show_spinner=False)
+@st.cache_data(ttl=120, show_spinner=False)
 def get_cached_catalogo():
-    """Retorna el catálogo consolidado desde la capa de datos con caché de 5 minutos."""
+    """Retorna el catálogo consolidado desde la capa de datos con caché de 2 minutos."""
     return obtener_catalogo()
 
-@st.cache_data(ttl=300, show_spinner=False)
+
+@st.cache_data(ttl=120, show_spinner=False)
 def get_cached_precios(perfume_id):
     """Consulta los precios vigentes en cada tienda para el perfume seleccionado."""
     return obtener_precios_actuales(perfume_id)
 
-@st.cache_data(ttl=300, show_spinner=False)
-def get_cached_historico(perfume_id):
-    """Consulta la serie de tiempo de precios históricos para generar el gráfico."""
-    return obtener_historico_precios(perfume_id)
 
-@st.cache_data(ttl=300, show_spinner=False)
+@st.cache_data(ttl=120, show_spinner=False)
+def get_cached_historico(perfume_id, volumen_ml=None):
+    """Consulta la serie de tiempo de precios históricos filtrada por presentación."""
+    return obtener_historico_precios(perfume_id, volumen_ml=volumen_ml)
+
+
+@st.cache_data(ttl=120, show_spinner=False)
 def get_cached_detalle(perfume_id):
     """Retorna la ficha técnica completa del perfume (notas, género, concentración)."""
     return obtener_detalle_perfume(perfume_id)
 
 
 # =============================================================================
-# BLOQUE 2: SANITIZACIÓN HTML Y RESOLUCIÓN INTELIGENTE DE ENLACES EXTERNOS
-# -----------------------------------------------------------------------------
-# ¿QUÉ HACE ESTE BLOQUE?
-# 1. `clean_html()`: Remueve saltos de línea e identaciones en bloques HTML para que
-#    el parser Markdown de Streamlit no los confunda con bloques de código preformateado.
-# 2. `resolver_url_oferta()`: Garantiza que el botón "Ir a la oferta" nunca lleve a un
-#    enlace roto. Si el scraper capturó la URL directa a la ficha, la usa; si no,
-#    construye automáticamente la consulta al motor de búsqueda oficial de la tienda.
+# BLOQUE 2: CONFIGURACIÓN DE LA PÁGINA Y GESTIÓN DE SESIÓN
 # =============================================================================
-def clean_html(html_str: str) -> str:
-    """Limpia espacios iniciales y elimina saltos de línea para evitar que Streamlit interprete HTML como código."""
-    return " ".join(line.strip() for line in html_str.splitlines() if line.strip())
-
-def resolver_url_oferta(tienda_nombre: str, perfume_nombre: str, url_prod: str, url_base: str, marca: str = "") -> str:
-    """
-    Retorna el enlace directo a la ficha del perfume exacto en la tienda.
-    Si por algún motivo no existe URL directa o es una URL obsoleta / rota, redirige a la búsqueda de la tienda.
-    """
-    t = (tienda_nombre or "").lower()
-    query_parts = f"{marca} {perfume_nombre}".strip() if (marca and marca.lower() not in perfume_nombre.lower()) else perfume_nombre.strip()
-    q = urllib.parse.quote(query_parts)
-
-    # Paris.cl: Respetar URLs directas a la ficha concreta (.html o búsqueda).
-    # Solo recurrir a búsqueda si la URL está vacía, no es válida o contiene IDs obsoletos conocidos (ej. 916524999).
-    if "paris" in t or ("paris.cl" in (url_prod or "").lower()):
-        if not url_prod or url_prod == "#" or any(dead in url_prod for dead in ["916524999", "construccion", "experiencia"]):
-            return f"https://www.paris.cl/search?q={q}"
-        return url_prod
-
-    # Validar que la URL directa no sea un marcador o enlace muerto
-    if url_prod and url_prod.startswith("http") and url_prod != "#":
-        return url_prod
-
-    if "falabella" in t:
-        return f"https://www.falabella.com/falabella-cl/search?Ntt={q}"
-    elif "paris" in t:
-        return f"https://www.paris.cl/search?q={q}"
-    elif "ripley" in t:
-        return f"https://simple.ripley.cl/search/{q}"
-    elif "silk" in t:
-        return f"https://www.silkperfumes.cl/search?q={q}"
-    elif "elite" in t:
-        return f"https://www.eliteperfumes.cl/search?q={q}"
-    elif "alisha" in t:
-        return f"https://www.alisha.cl/search?q={q}"
-    elif "yauras" in t:
-        return f"https://www.yauras.cl/search?q={q}"
-    elif "dbs" in t:
-        return f"https://www.dbs.cl/search?q={q}"
-
-    return url_base or "#"
-
-def get_image_src(img_path_or_url):
-    """
-    Retorna la URL remota o codifica la imagen local a base64 (Data URI)
-    para que se renderice directamente en el navegador sin requerir un servidor estático.
-    """
-    if not img_path_or_url:
-        return "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=500&q=80"
-    
-    if img_path_or_url.startswith("http://") or img_path_or_url.startswith("https://") or img_path_or_url.startswith("data:"):
-        return img_path_or_url
-
-    local_path = img_path_or_url
-    if not os.path.isabs(local_path):
-        cand1 = os.path.join(BASE_DIR, local_path)
-        cand2 = os.path.join(BASE_DIR, "APP", local_path)
-        if os.path.exists(cand1):
-            local_path = cand1
-        elif os.path.exists(cand2):
-            local_path = cand2
-
-    if os.path.exists(local_path):
-        ext = os.path.splitext(local_path)[1].lower().replace(".", "")
-        mime = "image/png" if ext == "png" else "image/jpeg"
-        try:
-            with open(local_path, "rb") as f:
-                b64 = base64.b64encode(f.read()).decode("utf-8")
-                return f"data:{mime};base64,{b64}"
-        except Exception:
-            pass
-
-    return img_path_or_url
-
-# =============================================================================
-# BLOQUE 3: CONFIGURACIÓN DE LA PÁGINA Y GESTIÓN DE SESIÓN (STREAMLIT STATE)
-# -----------------------------------------------------------------------------
-# ¿QUÉ HACE ESTE BLOQUE?
-# 1. Configura el título y layout ancho (`wide`) de la página.
-# 2. Inicializa las variables reactivas en `st.session_state`:
-#    - `theme`: 'dark' o 'light' para alternar temas visuales.
-#    - `logged_in`: booleano de autenticación.
-#    - `user_info`: diccionario con nombre, email y teléfono del usuario.
-#    - `show_login_modal`: controla la apertura del modal emergente de inicio de sesión.
-# =============================================================================
-st.set_page_config(page_title="Comparador de Precios - PerfumeTrending", layout="wide", initial_sidebar_state="collapsed")
-
-if 'theme' not in st.session_state:
-    st.session_state['theme'] = 'dark'
-
-# ESTADOS DE AUTENTICACIÓN Y CONTROL DE MODAL
-if 'logged_in' not in st.session_state:
-    st.session_state['logged_in'] = False
-if 'user_info' not in st.session_state:
-    st.session_state['user_info'] = None
-if 'show_login_modal' not in st.session_state:
-    st.session_state['show_login_modal'] = False
-
-# ESTADOS PARA INICIO POR CÓDIGO (OTP)
-if 'otp_code_sent' not in st.session_state:
-    st.session_state['otp_code_sent'] = False
-if 'otp_contact' not in st.session_state:
-    st.session_state['otp_contact'] = ""
-if 'otp_secret' not in st.session_state:
-    st.session_state['otp_secret'] = ""
-
-def toggle_theme():
-    st.session_state['theme'] = 'dark' if st.session_state['theme'] == 'light' else 'light'
-
-# MODAL FLOTANTE DE INICIO DE SESIÓN Y REGISTRO
-@st.dialog("Acceso a PerfumeTrending")
-def modal_autenticacion():
-    tab_codigo, tab_login, tab_registro = st.tabs(["Inicio por Código", "Iniciar Sesión", "Registrarse"])
-    
-    # OPCIÓN PREDETERMINADA: INICIO POR CÓDIGO
-    with tab_codigo:
-        st.markdown("#### Ingresa con tu Correo o Teléfono")
-        
-        if not st.session_state['otp_code_sent']:
-            with st.form("form_send_otp", clear_on_submit=False):
-                contact_input = st.text_input("Correo electrónico o número de teléfono", key="otp_contact_input", placeholder="ejemplo@correo.cl o +56912345678")
-                btn_send = st.form_submit_button("Enviar código de verificación", use_container_width=True)
-                
-                if btn_send:
-                    if not contact_input.strip():
-                        st.error("Por favor ingresa un correo electrónico o teléfono válido.")
-                    else:
-                        code = str(random.randint(100000, 999999))
-                        st.session_state['otp_code_sent'] = True
-                        st.session_state['otp_contact'] = contact_input.strip()
-                        st.session_state['otp_secret'] = code
-                        st.rerun()
-        else:
-            st.info(f"Un código de verificación ha sido enviado a **{st.session_state['otp_contact']}**")
-            st.caption(f"*(Código de prueba rápido: **{st.session_state['otp_secret']}**)*")
-            
-            with st.form("form_verify_otp", clear_on_submit=False):
-                input_code = st.text_input("Ingresa el código de 6 dígitos", key="otp_code_input", placeholder="123456", max_chars=6)
-                btn_verify = st.form_submit_button("Verificar e Ingresar", use_container_width=True)
-                
-                if btn_verify:
-                    if input_code.strip() == st.session_state['otp_secret']:
-                        contact_str = st.session_state['otp_contact']
-                        
-                        st.session_state['logged_in'] = True
-                        st.session_state['user_info'] = {
-                            'nombre': contact_str.split('@')[0] if '@' in contact_str else contact_str,
-                            'email': contact_str if '@' in contact_str else f"{contact_str}@usuario.cl",
-                            'telefono': contact_str if '@' not in contact_str else '+56 9 1234 5678'
-                        }
-                        
-                        # Resetear estados de login y cerrar modal
-                        st.session_state['otp_code_sent'] = False
-                        st.session_state['otp_contact'] = ""
-                        st.session_state['otp_secret'] = ""
-                        st.session_state['show_login_modal'] = False
-                        st.rerun()
-                    else:
-                        st.error("Código incorrecto. Revisa e intenta nuevamente.")
-                        
-            if st.button("Cambiar correo/teléfono", key="btn_reset_otp", use_container_width=True):
-                st.session_state['otp_code_sent'] = False
-                st.session_state['otp_contact'] = ""
-                st.session_state['otp_secret'] = ""
-                st.rerun()
-
-    # OPCIÓN 2: CON TRADICIONAL CORREO / CONTRASEÑA
-    with tab_login:
-        st.markdown("#### Ingresa a tu cuenta")
-        with st.form("form_login_pass", clear_on_submit=False):
-            login_email = st.text_input("Correo Electrónico", key="login_email_input", placeholder="usuario@correo.cl")
-            login_pass = st.text_input("Contraseña", type="password", key="login_pass_input", placeholder="••••••••")
-            btn_login = st.form_submit_button("Ingresar a la plataforma", use_container_width=True)
-            
-            if btn_login:
-                if not login_email or not login_pass:
-                    st.error("Por favor ingresa tu correo y contraseña.")
-                elif verificar_usuario:
-                    exito, usuario_data = verificar_usuario(login_email, login_pass)
-                    if exito:
-                        st.session_state['logged_in'] = True
-                        st.session_state['user_info'] = usuario_data
-                        st.session_state['show_login_modal'] = False
-                        st.rerun()
-                    else:
-                        st.error("Correo o contraseña incorrectos.")
-                else:
-                    st.info("Función de backend en proceso de actualización.")
-
-    # OPCIÓN 3: REGISTRO NUEVO USUARIO
-    with tab_registro:
-        st.markdown("#### Crea una cuenta nueva")
-        with st.form("form_reg_user", clear_on_submit=False):
-            reg_nombre = st.text_input("Nombre completo", key="reg_nombre_input", placeholder="Juan Pérez")
-            reg_email = st.text_input("Correo Electrónico", key="reg_email_input", placeholder="usuario@correo.cl")
-            reg_pass1 = st.text_input("Contraseña", type="password", key="reg_pass1_input", placeholder="••••••••")
-            reg_pass2 = st.text_input("Confirmar Contraseña", type="password", key="reg_pass2_input", placeholder="••••••••")
-            btn_reg = st.form_submit_button("Crear mi cuenta", use_container_width=True)
-            
-            if btn_reg:
-                if not reg_nombre or not reg_email or not reg_pass1:
-                    st.error("Todos los campos son obligatorios.")
-                elif reg_pass1 != reg_pass2:
-                    st.error("Las contraseñas no coinciden.")
-                elif len(reg_pass1) < 6:
-                    st.warning("La contraseña debe tener al menos 6 caracteres.")
-                elif crear_usuario:
-                    exito, msg = crear_usuario(reg_nombre, reg_email, reg_pass1)
-                    if exito:
-                        st.success("¡Cuenta creada con éxito! Ya puedes iniciar sesión.")
-                    else:
-                        st.error(msg)
-                else:
-                    st.info("Función de backend en proceso de actualización.")
-
-is_dark = st.session_state['theme'] == 'dark'
-
-# Colores dinámicos adaptables por tema
-app_bg = "#0c0e12" if is_dark else "#f9f9fb"
-app_bg_css = f"background-color: {app_bg} !important;"
-
-text_color = "#f0f0f0" if is_dark else "#18181b"
-subtext_color = "#888890" if is_dark else "#666670"
-
-btn_bg = "#181c24" if is_dark else "#ffffff"
-btn_text = "#ffffff" if is_dark else "#18181b"
-btn_border = "#2a2e39" if is_dark else "#d1d5db"
-
-input_bg = "#14171d" if is_dark else "#ffffff"
-input_text = "#f0f0f0" if is_dark else "#18181b"
-input_border = "#2a2e39" if is_dark else "#d1d5db"
-
-# SWITCH DE TEMA - POSICIONAMIENTO Y SVGS
-bottle_left_pos = "42px" if is_dark else "-2px"
-static_icon_pos = "12px center" if is_dark else "calc(100% - 12px) center"
-
-static_icon_svg = (
-    "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='4'/><line x1='12' y1='1' x2='12' y2='3'/><line x1='12' y1='21' x2='12' y2='23'/><line x1='4.22' y1='4.22' x2='5.64' y2='5.64'/><line x1='18.36' y1='18.36' x2='19.78' y2='19.78'/><line x1='1' y1='12' x2='3' y2='12'/><line x1='21' y1='12' x2='23' y2='12'/><line x1='4.22' y1='19.78' x2='5.64' y2='18.36'/><line x1='18.36' y1='5.64' x2='19.78' y2='4.22'/></svg>"
-    if is_dark else
-    "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M21 12.79A9 9 0 0 1 11.21 3 7 7 0 0 0 21 12.79z'/></svg>"
+st.set_page_config(
+    page_title="Comparador de Precios - PerfumeTrending",
+    page_icon=PERFUME_SVG_FAVICON,
+    layout="wide",
+    initial_sidebar_state="collapsed",
 )
 
-bottle_svg = (
-    "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 58'><rect x='18' y='2' width='14' height='7' rx='2' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><rect x='21' y='9' width='8' height='5' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='19' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><path d='M21 28a8 8 0 0 0 9 10.5 8.5 8.5 0 0 1-9-10.5z' fill='none' stroke='%23111111' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/></svg>"
-    if is_dark else
-    "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 58'><rect x='18' y='2' width='14' height='7' rx='2' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><rect x='21' y='9' width='8' height='5' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='19' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='5' fill='none' stroke='%23111111' stroke-width='2'/><line x1='25' y1='23' x2='25' y2='26' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='25' y1='42' x2='25' y2='45' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='14' y1='34' x2='17' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='33' y1='34' x2='36' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='17' y1='26' x2='19' y2='28' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='31' y1='40' x2='33' y2='42' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='17' y1='42' x2='19' y2='40' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='31' y1='28' x2='33' y2='26' stroke='%23111111' stroke-width='2' stroke-linecap='round'/></svg>"
-)
+init_common_session_state()
 
-user_icon_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23{btn_text[1:]}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2'/><circle cx='12' cy='7' r='4'/></svg>"
-settings_icon_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23{btn_text[1:]}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z'/><circle cx='12' cy='12' r='3'/></svg>"
-logout_icon_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23{btn_text[1:]}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4'/><polyline points='16 17 21 12 16 7'/><line x1='21' y1='12' x2='9' y2='12'/></svg>"
-
-# ICONOS VECTORIALES DE ALTA PRECISIÓN (ESTILO LINEAR / STRIPE / LUCIDE)
-trend_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d83737' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='23 6 13.5 15.5 8.5 10.5 1 18'/><polyline points='17 6 23 6 23 12'/></svg>"
-shield_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d83737' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/><polyline points='9 12 11 14 15 10'/></svg>"
-tag_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d83737' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z'/><circle cx='7' cy='7' r='1.5' fill='%23d83737'/></svg>"
-home_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d83737' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z'/><polyline points='9 22 9 12 15 12 15 22'/></svg>"
-logo_color_encoded = "%238c7b6d"
-text_color_encoded = "%23ffffff" if is_dark else "%2318181b"
-logo_svg_data = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 36' fill='none' stroke-linecap='round' stroke-linejoin='round'><path d='M 6.8 21 L 29.2 21 C 30 25 27 32 18 32 C 9 32 6 25 6.8 21 Z' fill='{logo_color_encoded}' /><line x1='6.8' y1='21' x2='29.2' y2='21' stroke='{text_color_encoded}' stroke-width='1.5' /><line x1='18' y1='10' x2='18' y2='30' stroke='{text_color_encoded}' stroke-width='1' /><path d='M 18 32 C 9 32 5 24 7.5 17 C 9 12 13 10 15 10 L 21 10 C 23 10 27 12 28.5 17 C 31 24 27 32 18 32 Z' stroke='{text_color_encoded}' stroke-width='2' /><rect x='15' y='7' width='6' height='3' stroke='{text_color_encoded}' stroke-width='1.5' /><rect x='13' y='3' width='10' height='4' rx='1' stroke='{text_color_encoded}' stroke-width='1.5' /><rect x='16' y='0' width='4' height='3' rx='1' fill='{logo_color_encoded}' stroke='{text_color_encoded}' stroke-width='1' /></svg>"
+pal = get_theme_palette()
+is_dark = pal.is_dark
+app_bg = pal.app_bg
+app_bg_css = pal.app_bg_css
+text_color = pal.text_color
+subtext_color = pal.subtext_color
+btn_bg = pal.btn_bg
+btn_text = pal.btn_text
+btn_border = pal.btn_border
+input_bg = pal.input_bg
+input_text = pal.input_text
+input_border = pal.input_border
+bottle_left_pos = pal.bottle_left_pos
+static_icon_pos = pal.static_icon_pos
+static_icon_svg = pal.static_icon_svg
+bottle_svg = pal.bottle_svg
+user_icon_svg = pal.user_icon_svg
+settings_icon_svg = pal.settings_icon_svg
+logout_icon_svg = pal.logout_icon_svg
+logo_svg_data = pal.logo_svg_data
 
 # 2. CSS ADAPTABLE Y ESTILOS PRINCIPALES
 st.markdown(f"""
@@ -868,19 +627,20 @@ with btn_col1:
                 st.switch_page("pages/perfil.py")
                 
             if st.button("Cerrar Sesión", key="btn_logout", use_container_width=True):
-                st.session_state['logged_in'] = False
-                st.session_state['user_info'] = None
+                cerrar_sesion_usuario()
                 st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
     else:
         if st.button("Ingresar", key="login_btn", use_container_width=True):
             st.session_state['show_login_modal'] = True
+            st.rerun()
 
 with btn_col2:
     st.button(" ", key="theme_toggle", on_click=toggle_theme)
 
 # MONITOREO Y RENDERIZADO PERSISTENTE DEL MODAL
 if st.session_state.get('show_login_modal', False):
+    st.session_state['show_login_modal'] = False
     modal_autenticacion()
 
 st.markdown("<div style='margin-top: 14px;'></div>", unsafe_allow_html=True)
@@ -924,37 +684,68 @@ if not catalogo:
     st.warning("No hay perfumes disponibles en el catálogo en este momento.")
     st.stop()
 
-# Diccionario de mapeo rápido: Etiqueta Legible -> Objeto Perfume
-opciones_perfumes = {f"{p['nombre']} — {p['marca']}": p for p in catalogo}
+# Diccionario de mapeo rápido sin colisiones entre concentraciones (EDT/EDP/Parfum) ni géneros (Hombre/Mujer)
+opciones_perfumes = {}
+for p in catalogo:
+    tipo_lbl = (p.get("tipo") or "Eau de Parfum").strip()
+    gen_lbl = (p.get("genero") or "Unisex").strip()
+    base_lbl = f"{p['nombre']} — {p['marca']} ({tipo_lbl} · {gen_lbl})"
+    lbl_final = base_lbl if base_lbl not in opciones_perfumes else f"{base_lbl} [#{p['id']}]"
+    opciones_perfumes[lbl_final] = p
+
 lista_nombres = list(opciones_perfumes.keys())
 
-# Determinar perfume pre-seleccionado si el usuario vino redirigido desde otra vista
+# Determinar perfume pre-seleccionado desde sesión (dict, id o nombre) o desde query param compartible (?id=)
 default_index = 0
-selected_session = st.session_state.get('selected_perfume')
-if selected_session is not None:
-    for idx, (lbl, p) in enumerate(opciones_perfumes.items()):
-        if str(selected_session) == str(p['id']) or (isinstance(selected_session, str) and selected_session.lower() in p['nombre'].lower()):
+selected_session = st.session_state.get("selected_perfume")
+qp_id = st.query_params.get("id")
+
+target_id = None
+if isinstance(selected_session, dict) and selected_session.get("id") is not None:
+    target_id = str(selected_session.get("id"))
+elif selected_session is not None and str(selected_session).isdigit():
+    target_id = str(selected_session)
+elif qp_id and str(qp_id).isdigit():
+    target_id = str(qp_id)
+
+if target_id is not None:
+    for idx, (_, p) in enumerate(opciones_perfumes.items()):
+        if str(p["id"]) == target_id:
+            default_index = idx
+            break
+elif isinstance(selected_session, str) and selected_session.strip():
+    term_sel = selected_session.strip().lower()
+    for idx, (_, p) in enumerate(opciones_perfumes.items()):
+        if term_sel in p["nombre"].lower():
             default_index = idx
             break
 
 selected_label = st.selectbox("Selecciona un perfume para comparar ofertas en Chile:", lista_nombres, index=default_index)
 perfume = opciones_perfumes[selected_label]
-selected_id = perfume['id']
+selected_id = perfume["id"]
+st.session_state["selected_perfume"] = selected_id
+try:
+    if st.query_params.get("id") != str(selected_id):
+        st.query_params["id"] = str(selected_id)
+except Exception:
+    pass
 
 # Obtener detalle enriquecido desde caché
 detalle = get_cached_detalle(selected_id) or perfume
 
-# Mostrar ficha cabecera del perfume con packshot de alta resolución
+# Mostrar ficha cabecera del perfume con packshot de alta resolución y sanitización XSS
 img_src = get_image_src(detalle.get('imagen_url'))
-notas_txt = detalle.get('notas', 'Notas olfativas exclusivas')
-genero_txt = detalle.get('genero', 'Unisex')
-tipo_txt = detalle.get('tipo', 'Eau de Parfum')
+nombre_safe = escape_html(detalle.get('nombre', ''))
+marca_safe = escape_html(detalle.get('marca', ''))
+notas_safe = escape_html(detalle.get('notas') or 'Notas olfativas exclusivas')
+genero_safe = escape_html(detalle.get('genero') or 'Unisex')
+tipo_safe = escape_html(detalle.get('tipo') or 'Eau de Parfum')
 
 col_img, col_info = st.columns([1, 3], gap="medium")
 with col_img:
     st.markdown(f"""
     <div style="background: #ffffff; border-radius: 12px; padding: 12px; display: flex; align-items: center; justify-content: center; border: 1px solid {btn_border};">
-        <img src="{img_src}" alt="{detalle['nombre']}" style="max-height: 180px; max-width: 100%; object-fit: contain;">
+        <img src="{img_src}" alt="{nombre_safe}" style="max-height: 180px; max-width: 100%; object-fit: contain;">
     </div>
     """, unsafe_allow_html=True)
 
@@ -963,22 +754,51 @@ with col_info:
     if not es_precio_valido(ref_precio):
         ref_precio = None
     ref_str = f"${ref_precio:,.0f} CLP".replace(",", ".") if ref_precio else "Consultar"
-    
+
     st.markdown(f"""
     <div style="padding-top: 4px;">
-        <h2 style="margin: 0 0 6px 0; color: {text_color}; font-size: 1.6rem; font-weight: 700;">{detalle['nombre']}</h2>
+        <h2 style="margin: 0 0 6px 0; color: {text_color}; font-size: 1.6rem; font-weight: 700;">{nombre_safe}</h2>
         <div style="color: {subtext_color}; font-size: 0.95rem; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px;">
-            {detalle['marca']} &bull; {tipo_txt} &bull; {genero_txt}
+            {marca_safe} &bull; {tipo_safe} &bull; {genero_safe}
         </div>
         <p style="margin: 0 0 8px 0; color: {text_color}; font-size: 0.9rem; line-height: 1.5;">
-            <b>Notas olfativas:</b> {notas_txt}
+            <b>Notas olfativas:</b> {notas_safe}
         </p>
-        <div style="margin-top: 10px; display: flex; gap: 16px; align-items: center;">
+        <div style="margin-top: 10px; display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
             <span style="font-size: 0.85rem; color: {subtext_color};">Precio referencial de mercado: <b style="color: {text_color};">{ref_str}</b></span>
             <span style="background-color: #2e7d3222; color: #4caf50; font-size: 0.78rem; font-weight: 700; padding: 3px 8px; border-radius: 4px; border: 1px solid #4caf5044;">DISPONIBLE EN TIENDAS AUDITADAS</span>
         </div>
     </div>
     """, unsafe_allow_html=True)
+
+    # Botón persistente de Favoritos y Monitoreo de Alertas conectado a Supabase Auth / SQLite
+    favs_actuales = st.session_state.get('favoritos') or []
+    if st.session_state.get('logged_in') and st.session_state.get('user_info') and not favs_actuales:
+        u_key_fav = st.session_state['user_info'].get('id') or st.session_state['user_info'].get('email')
+        if u_key_fav:
+            favs_actuales = obtener_favoritos_Ids_usuario(u_key_fav, email=st.session_state['user_info'].get('email'))
+            st.session_state['favoritos'] = favs_actuales
+
+    ya_es_favorito = int(selected_id) in [int(x) for x in favs_actuales if str(x).isdigit()]
+    col_fav_btn, _ = st.columns([1.8, 3.2])
+    with col_fav_btn:
+        st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
+        lbl_fav = "★ En tu Seguimiento (Quitar)" if ya_es_favorito else "☆ Guardar y Monitorear Baja de Precio"
+        if st.button(lbl_fav, key=f"btn_toggle_fav_{selected_id}", use_container_width=True):
+            if not st.session_state.get('logged_in') or not st.session_state.get('user_info'):
+                st.session_state['show_login_modal'] = True
+                st.rerun()
+            else:
+                u_ident = st.session_state['user_info'].get('id') or st.session_state['user_info'].get('email')
+                if ya_es_favorito:
+                    eliminar_favorito(u_ident, int(selected_id))
+                    st.session_state['favoritos'] = [x for x in favs_actuales if int(x) != int(selected_id)]
+                    st.toast("Fragancia retirada de tu seguimiento.", icon="🗑️")
+                else:
+                    agregar_favorito(u_ident, int(selected_id))
+                    st.session_state['favoritos'] = list(set(favs_actuales + [int(selected_id)]))
+                    st.toast("Fragancia guardada en tu seguimiento de precios.", icon="⭐")
+                st.rerun()
 
 st.markdown("<div style='margin-top: 24px;'></div>", unsafe_allow_html=True)
 st.markdown(f"<h3 style='font-size: 1.15rem; color: {text_color}; font-weight: 600; margin-bottom: 16px;'>Ofertas en tiendas chilenas verificadas</h3>", unsafe_allow_html=True)
@@ -1096,23 +916,33 @@ else:
         tiendas_filtradas = list(tiendas_db)
 
     # 3. Ordenamiento inteligente estricto:
-    #    - Primero: ofertas con stock disponible (en_stock == True), ordenadas de menor a mayor precio.
+    #    - Primero: ofertas con stock disponible (en_stock == True), priorizando formato regular a igual precio.
     #    - Al final: ofertas agotadas (en_stock == False), ordenadas de menor a mayor precio.
+    def es_tester_item(it):
+        return str(it.get('formato') or '').lower() == 'tester' or 'tester' in str(it.get('url_producto') or '').lower()
+
     tiendas_ordenadas = sorted(
         tiendas_filtradas,
         key=lambda x: (
             0 if esta_en_stock(x) else 1,
-            x.get('precio_actual', 0) if x.get('precio_actual', 0) > 0 else 999999999
+            x.get('precio_actual', 0) if x.get('precio_actual', 0) > 0 else 999999999,
+            1 if es_tester_item(x) else 0,
         )
     )
 
-    # 4. Identificar el mejor precio únicamente entre ofertas con stock disponible dentro del filtro
+    # 4. Identificar el mejor precio priorizando botellas selladas ('regular') cuando existe stock regular
+    precios_regular_stock = [
+        t['precio_actual']
+        for t in tiendas_filtradas
+        if t.get('precio_actual', 0) > 0 and esta_en_stock(t) and not es_tester_item(t)
+    ]
     precios_validos = [
         t['precio_actual']
         for t in tiendas_filtradas
         if t.get('precio_actual', 0) > 0 and esta_en_stock(t)
     ]
-    min_precio = min(precios_validos) if precios_validos else 0
+    hay_regular_en_stock = len(precios_regular_stock) > 0
+    min_precio = min(precios_regular_stock) if hay_regular_en_stock else (min(precios_validos) if precios_validos else 0)
 
     total_agotados = len([t for t in tiendas_ordenadas if not esta_en_stock(t)])
     total_disponibles = len(tiendas_ordenadas) - total_agotados
@@ -1130,7 +960,7 @@ else:
             unsafe_allow_html=True
         )
 
-    # 5. Renderizado de tarjetas con separador antes de los agotados
+    # 5. Renderizado de tarjetas con separador antes de los agotados y distintivo TESTER transparente
     separador_mostrado = False
 
     for item in tiendas_ordenadas:
@@ -1138,8 +968,14 @@ else:
         p_norm = item.get('precio_normal', 0)
         vol_ml = extraer_volumen(item)
         en_stock = esta_en_stock(item)
-        is_best_deal = (p_act == min_precio and p_act > 0 and en_stock)
-        
+        es_tester = es_tester_item(item)
+        is_best_deal = (
+            p_act == min_precio
+            and p_act > 0
+            and en_stock
+            and (not es_tester if hay_regular_en_stock else True)
+        )
+
         # Si pasamos a las ofertas agotadas y habían ofertas en stock, mostrar separador al final
         if not en_stock and not separador_mostrado and total_disponibles > 0:
             separador_mostrado = True
@@ -1156,35 +992,46 @@ else:
             )
 
         card_class = "price-card best-deal" if is_best_deal else ("price-card" if en_stock else "price-card out-of-stock")
-        
+
         if is_best_deal:
-            status_badge = f"<span style='background: {'rgba(34, 197, 94, 0.15)' if is_dark else '#e8f5e9'}; color: {'#4ade80' if is_dark else '#2e7d32'}; border: 1px solid {'rgba(74, 222, 128, 0.35)' if is_dark else 'rgba(46, 125, 50, 0.3)'}; font-weight: 700; margin-left: 8px; font-size: 0.72rem; padding: 2px 8px; border-radius: 4px; letter-spacing: 0.5px;'>MEJOR PRECIO</span>"
+            lbl_best = "MEJOR PRECIO TESTER" if es_tester else "MEJOR PRECIO"
+            status_badge = f"<span style='background: {'rgba(34, 197, 94, 0.15)' if is_dark else '#e8f5e9'}; color: {'#4ade80' if is_dark else '#2e7d32'}; border: 1px solid {'rgba(74, 222, 128, 0.35)' if is_dark else 'rgba(46, 125, 50, 0.3)'}; font-weight: 700; margin-left: 8px; font-size: 0.72rem; padding: 2px 8px; border-radius: 4px; letter-spacing: 0.5px;'>{lbl_best}</span>"
         elif not en_stock:
             status_badge = f"<span style='background: {'rgba(239, 68, 68, 0.15)' if is_dark else '#fee2e2'}; color: {'#f87171' if is_dark else '#dc2626'}; border: 1px solid {'rgba(248, 113, 113, 0.35)' if is_dark else 'rgba(220, 38, 38, 0.3)'}; font-weight: 700; margin-left: 8px; font-size: 0.72rem; padding: 2px 8px; border-radius: 4px; letter-spacing: 0.5px;'>AGOTADO</span>"
         else:
             status_badge = ""
-        
+
+        badge_tester = (
+            f"<span title='Unidad Tester de demostración comercial (puede venir en caja neutra o sin celofán)' "
+            f"style='background: {'rgba(245, 158, 11, 0.16)' if is_dark else '#fef3c7'}; "
+            f"color: {'#fbbf24' if is_dark else '#b45309'}; "
+            f"border: 1px solid {'rgba(251, 191, 36, 0.4)' if is_dark else 'rgba(180, 83, 9, 0.3)'}; "
+            f"font-weight: 700; margin-left: 8px; font-size: 0.72rem; padding: 2px 8px; border-radius: 4px; letter-spacing: 0.5px;'>TESTER</span>"
+            if es_tester else ""
+        )
+
         precio_actual_str = f"${p_act:,.0f}".replace(",", ".")
         precio_ant_str = f"${p_norm:,.0f}".replace(",", ".") if p_norm and p_norm > p_act else ""
         old_price_html = f"<span class='old-price'>{precio_ant_str}</span>" if (precio_ant_str and en_stock) else ""
-        
-        # Cálculo de valor por mililitro ($/ml)
+
         ml_txt = ""
         if p_act > 0 and vol_ml > 0 and en_stock:
             p_ml = int(round(p_act / vol_ml))
             ml_txt = f"<span style='font-size: 0.78rem; color: {subtext_color}; display: block; text-align: right;'>${p_ml:,.0f}/ml ({vol_ml}ml)</span>".replace(",", ".")
-        
-        # Enlace inteligente verificado directo a la ficha del producto en la tienda
-        url_directa = resolver_url_oferta(
-            tienda_nombre=item.get('tienda_nombre', ''),
-            perfume_nombre=detalle.get('nombre', ''),
-            url_prod=item.get('url_producto', ''),
-            url_base=item.get('url_base', ''),
-            marca=detalle.get('marca', '')
+
+        url_directa = sanitize_external_url(
+            resolver_url_oferta(
+                tienda_nombre=item.get('tienda_nombre', ''),
+                perfume_nombre=detalle.get('nombre', ''),
+                url_prod=item.get('url_producto', ''),
+                url_base=item.get('url_base', ''),
+                marca=detalle.get('marca', '')
+            )
         )
-        badge_tienda = item.get('badge', 'Tienda Verificada')
+        tienda_safe = escape_html(item.get('tienda_nombre', 'Tienda'))
+        badge_tienda_safe = escape_html(item.get('badge', 'Tienda Verificada'))
         badge_vol = f"<span class='store-badge' style='background: {btn_bg}; border: 1px solid {btn_border}; font-weight: 600;'>{vol_ml}ml</span>" if vol_ml else ""
-        
+
         if not en_stock:
             price_display_html = f"""
             <div style="text-align: right;">
@@ -1204,13 +1051,14 @@ else:
             """
             btn_label = "Ir a la oferta ↗"
             btn_extra_style = ""
-        
+
         html_card = f"""
         <div class="{card_class}">
             <div>
-                <span class="store-name">{item['tienda_nombre']}</span>
-                <span class="store-badge">{badge_tienda}</span>
+                <span class="store-name">{tienda_safe}</span>
+                <span class="store-badge">{badge_tienda_safe}</span>
                 {badge_vol}
+                {badge_tester}
                 {status_badge}
             </div>
             <div style="display: flex; align-items: center; gap: 16px;">
@@ -1223,25 +1071,39 @@ else:
 
 
 # =============================================================================
-# BLOQUE 6: GRÁFICO INTERACTIVO DE EVOLUCIÓN HISTÓRICA DE PRECIOS
-# -----------------------------------------------------------------------------
-# ¿QUÉ HACE ESTE BLOQUE?
-# 1. Consulta la serie cronológica de snapshots en `precios_registro`.
-# 2. Convierte los datos a un DataFrame de Pandas (`pd.DataFrame`).
-# 3. Transforma la tabla mediante `pivot_table(index='fecha', columns='tienda', values='precio')`.
-# 4. Renderiza un gráfico de líneas nativo con `st.line_chart(df_pivot)` para que el
-#    usuario observe si el perfume está en su punto más bajo histórico o si conviene esperar.
+# BLOQUE 6: GRÁFICO INTERACTIVO DE EVOLUCIÓN HISTÓRICA DE PRECIOS POR VOLUMEN
 # =============================================================================
 st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
-with st.expander("Ver Evolución Histórica de Precios en Tiendas Chilenas"):
-    historico = get_cached_historico(selected_id)
+vol_filtro_hist = None
+if 'seleccion_vol' in locals() and seleccion_vol != "Todos":
+    try:
+        vol_filtro_hist = int(seleccion_vol.upper().replace("ML", "").strip())
+    except Exception:
+        vol_filtro_hist = None
+
+titulo_hist = (
+    f"Ver Evolución Histórica de Precios ({vol_filtro_hist} ML)"
+    if vol_filtro_hist
+    else "Ver Evolución Histórica de Precios en Tiendas Chilenas"
+)
+with st.expander(titulo_hist):
+    historico = get_cached_historico(selected_id, volumen_ml=vol_filtro_hist)
     if historico:
         df_hist = pd.DataFrame(historico)
+        if 'fecha_registro' in df_hist.columns and 'fecha' not in df_hist.columns:
+            df_hist = df_hist.rename(columns={'fecha_registro': 'fecha'})
+        if 'precio_actual' in df_hist.columns and 'precio' not in df_hist.columns:
+            df_hist = df_hist.rename(columns={'precio_actual': 'precio'})
+
         if 'fecha' in df_hist.columns and 'precio' in df_hist.columns and 'tienda' in df_hist.columns:
-            df_hist['fecha'] = pd.to_datetime(df_hist['fecha'])
-            df_pivot = df_hist.pivot_table(index='fecha', columns='tienda', values='precio', aggfunc='min')
-            st.line_chart(df_pivot)
+            df_hist['fecha'] = pd.to_datetime(df_hist['fecha'], errors='coerce')
+            df_hist = df_hist.dropna(subset=['fecha', 'precio'])
+            if not df_hist.empty:
+                df_pivot = df_hist.pivot_table(index='fecha', columns='tienda', values='precio', aggfunc='min')
+                st.line_chart(df_pivot)
+            else:
+                st.caption("Aún no existen suficientes puntos temporales verificados para graficar esta presentación.")
         else:
-            st.write(df_hist)
+            st.dataframe(df_hist, use_container_width=True)
     else:
-        st.write("Recopilando datos históricos de variaciones de precio en comercios auditados.")
+        st.caption("Recopilando observaciones históricas verificadas en comercios chilenos para esta presentación.")

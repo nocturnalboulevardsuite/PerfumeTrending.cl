@@ -11,208 +11,63 @@ Módulo de transparencia y evaluación de legitimidad para tiendas de perfumerí
 import streamlit as st
 import sys
 import os
-import random
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+APP_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if BASE_DIR not in sys.path:
     sys.path.append(BASE_DIR)
+if APP_DIR not in sys.path:
+    sys.path.append(APP_DIR)
 
-try:
-    from backend.database import (
-        obtener_tiendas,
-        crear_usuario,
-        verificar_usuario
-    )
-except ImportError:
-    from backend.database import obtener_tiendas
-    crear_usuario = None
-    verificar_usuario = None
+from backend.database import auditar_tienda_por_url, obtener_tiendas
+from ui import (
+    FLAME_RED_SVG as flame_red_svg,
+    HOME_RED_SVG as home_red_svg,
+    PERFUME_SVG_FAVICON,
+    SHIELD_RED_SVG as shield_red_svg,
+    TAG_RED_SVG as tag_red_svg,
+    TREND_RED_SVG as trend_red_svg,
+    cerrar_sesion_usuario,
+    clean_html,
+    escape_html,
+    get_theme_palette,
+    init_common_session_state,
+    modal_autenticacion,
+    sanitize_external_url,
+    toggle_theme,
+)
 
-# 1. CONFIGURACIÓN DE PÁGINA
+# 1. CONFIGURACIÓN DE PÁGINA Y ESTADO COMPARTIDO
 st.set_page_config(
     page_title="PerfumeTrending — Verificación de Confianza",
+    page_icon=PERFUME_SVG_FAVICON,
     layout="wide",
-    initial_sidebar_state="collapsed"
+    initial_sidebar_state="collapsed",
 )
 
-# HELPER: Limpia espacios/indentaciones iniciales para evitar que Streamlit Markdown convierta HTML en código
-def clean_html(html_str: str) -> str:
-    return "\n".join(line.strip() for line in html_str.splitlines())
+init_common_session_state()
 
-# 2. GESTIÓN DEL TEMA Y ESTADO DE SESIÓN
-if "theme" not in st.session_state:
-    st.session_state.theme = "dark"
-
-if 'logged_in' not in st.session_state:
-    st.session_state['logged_in'] = False
-if 'user_info' not in st.session_state:
-    st.session_state['user_info'] = None
-if 'show_login_modal' not in st.session_state:
-    st.session_state['show_login_modal'] = False
-
-# ESTADOS PARA INICIO POR CÓDIGO (OTP)
-if 'otp_code_sent' not in st.session_state:
-    st.session_state['otp_code_sent'] = False
-if 'otp_contact' not in st.session_state:
-    st.session_state['otp_contact'] = ""
-if 'otp_secret' not in st.session_state:
-    st.session_state['otp_secret'] = ""
-
-def toggle_theme():
-    st.session_state.theme = "light" if st.session_state.theme == "dark" else "dark"
-
-# MODAL FLOTANTE DE INICIO DE SESIÓN Y REGISTRO
-@st.dialog("Acceso a PerfumeTrending")
-def modal_autenticacion():
-    tab_codigo, tab_login, tab_registro = st.tabs(["Inicio por Código", "Iniciar Sesión", "Registrarse"])
-    
-    # OPCIÓN PREDETERMINADA: INICIO POR CÓDIGO
-    with tab_codigo:
-        st.markdown("#### Ingresa con tu Correo o Teléfono")
-        
-        if not st.session_state['otp_code_sent']:
-            with st.form("form_send_otp", clear_on_submit=False):
-                contact_input = st.text_input("Correo electrónico o número de teléfono", key="otp_contact_input", placeholder="ejemplo@correo.cl o +56912345678")
-                btn_send = st.form_submit_button("Enviar código de verificación", use_container_width=True)
-                
-                if btn_send:
-                    if not contact_input.strip():
-                        st.error("Por favor ingresa un correo electrónico o teléfono válido.")
-                    else:
-                        code = str(random.randint(100000, 999999))
-                        st.session_state['otp_code_sent'] = True
-                        st.session_state['otp_contact'] = contact_input.strip()
-                        st.session_state['otp_secret'] = code
-                        st.rerun()
-        else:
-            st.info(f"Un código de verificación ha sido enviado a **{st.session_state['otp_contact']}**")
-            st.caption(f"*(Código de prueba rápido: **{st.session_state['otp_secret']}**)*")
-            
-            with st.form("form_verify_otp", clear_on_submit=False):
-                input_code = st.text_input("Ingresa el código de 6 dígitos", key="otp_code_input", placeholder="123456", max_chars=6)
-                btn_verify = st.form_submit_button("Verificar e Ingresar", use_container_width=True)
-                
-                if btn_verify:
-                    if input_code.strip() == st.session_state['otp_secret']:
-                        contact_str = st.session_state['otp_contact']
-                        
-                        st.session_state['logged_in'] = True
-                        st.session_state['user_info'] = {
-                            'nombre': contact_str.split('@')[0] if '@' in contact_str else contact_str,
-                            'email': contact_str if '@' in contact_str else f"{contact_str}@usuario.cl",
-                            'telefono': contact_str if '@' not in contact_str else '+56 9 1234 5678'
-                        }
-                        
-                        # Resetear estados de login y cerrar modal
-                        st.session_state['otp_code_sent'] = False
-                        st.session_state['otp_contact'] = ""
-                        st.session_state['otp_secret'] = ""
-                        st.session_state['show_login_modal'] = False
-                        st.rerun()
-                    else:
-                        st.error("Código incorrecto. Revisa e intenta nuevamente.")
-                        
-            if st.button("Cambiar correo/teléfono", key="btn_reset_otp", use_container_width=True):
-                st.session_state['otp_code_sent'] = False
-                st.session_state['otp_contact'] = ""
-                st.session_state['otp_secret'] = ""
-                st.rerun()
-
-    # OPCIÓN 2: CON TRADICIONAL CORREO / CONTRASEÑA
-    with tab_login:
-        st.markdown("#### Ingresa a tu cuenta")
-        with st.form("form_login_pass", clear_on_submit=False):
-            login_email = st.text_input("Correo Electrónico", key="login_email_input", placeholder="usuario@correo.cl")
-            login_pass = st.text_input("Contraseña", type="password", key="login_pass_input", placeholder="••••••••")
-            btn_login = st.form_submit_button("Ingresar a la plataforma", use_container_width=True)
-            
-            if btn_login:
-                if not login_email or not login_pass:
-                    st.error("Por favor ingresa tu correo y contraseña.")
-                elif verificar_usuario:
-                    exito, usuario_data = verificar_usuario(login_email, login_pass)
-                    if exito:
-                        st.session_state['logged_in'] = True
-                        st.session_state['user_info'] = usuario_data
-                        st.session_state['show_login_modal'] = False
-                        st.rerun()
-                    else:
-                        st.error("Correo o contraseña incorrectos.")
-                else:
-                    st.info("Función de backend en proceso de actualización.")
-
-    # OPCIÓN 3: REGISTRO NUEVO USUARIO
-    with tab_registro:
-        st.markdown("#### Crea una cuenta nueva")
-        with st.form("form_reg_user", clear_on_submit=False):
-            reg_nombre = st.text_input("Nombre completo", key="reg_nombre_input", placeholder="Juan Pérez")
-            reg_email = st.text_input("Correo Electrónico", key="reg_email_input", placeholder="usuario@correo.cl")
-            reg_pass1 = st.text_input("Contraseña", type="password", key="reg_pass1_input", placeholder="••••••••")
-            reg_pass2 = st.text_input("Confirmar Contraseña", type="password", key="reg_pass2_input", placeholder="••••••••")
-            btn_reg = st.form_submit_button("Crear mi cuenta", use_container_width=True)
-            
-            if btn_reg:
-                if not reg_nombre or not reg_email or not reg_pass1:
-                    st.error("Todos los campos son obligatorios.")
-                elif reg_pass1 != reg_pass2:
-                    st.error("Las contraseñas no coinciden.")
-                elif len(reg_pass1) < 6:
-                    st.warning("La contraseña debe tener al menos 6 caracteres.")
-                elif crear_usuario:
-                    exito, msg = crear_usuario(reg_nombre, reg_email, reg_pass1)
-                    if exito:
-                        st.success("¡Cuenta creada con éxito! Ya puedes iniciar sesión.")
-                    else:
-                        st.error(msg)
-                else:
-                    st.info("Función de backend en proceso de actualización.")
-
-is_dark = st.session_state.theme == "dark"
-
-# 3. PALETA DE COLORES Y SVGS
-bg_color = "#0c0e12" if is_dark else "#f8f9fa"
-card_bg = "#14171d" if is_dark else "#ffffff"
-border_color = "#232730" if is_dark else "#e2e8f0"
-text_color = "#f3f4f6" if is_dark else "#0f172a"
-subtext_color = "#8e95a5" if is_dark else "#64748b"
-
-btn_bg = "#181c24" if is_dark else "#ffffff"
-btn_text = "#ffffff" if is_dark else "#18181b"
-btn_border = "#2a2e39" if is_dark else "#d1d5db"
-
-input_bg = "#14171d" if is_dark else "#ffffff"
-input_text = "#f0f0f0" if is_dark else "#18181b"
-input_border = "#2a2e39" if is_dark else "#d1d5db"
-
-# Configuración del Switch
-bottle_left_pos = "42px" if is_dark else "-2px"
-static_icon_pos = "12px center" if is_dark else "calc(100% - 12px) center"
-
-static_icon_svg = (
-    "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='4'/><line x1='12' y1='1' x2='12' y2='3'/><line x1='12' y1='21' x2='12' y2='23'/><line x1='4.22' y1='4.22' x2='5.64' y2='5.64'/><line x1='18.36' y1='18.36' x2='19.78' y2='19.78'/><line x1='1' y1='12' x2='3' y2='12'/><line x1='21' y1='12' x2='23' y2='12'/><line x1='4.22' y1='19.78' x2='5.64' y2='18.36'/><line x1='18.36' y1='5.64' x2='19.78' y2='4.22'/></svg>"
-    if is_dark else
-    "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M21 12.79A9 9 0 0 1 11.21 3 7 7 0 0 0 21 12.79z'/></svg>"
-)
-
-bottle_svg = (
-    "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 58'><rect x='18' y='2' width='14' height='7' rx='2' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><rect x='21' y='9' width='8' height='5' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='19' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><path d='M21 28a8 8 0 0 0 9 10.5 8.5 8.5 0 0 1-9-10.5z' fill='none' stroke='%23111111' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/></svg>"
-    if is_dark else
-    "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 58'><rect x='18' y='2' width='14' height='7' rx='2' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><rect x='21' y='9' width='8' height='5' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='19' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='5' fill='none' stroke='%23111111' stroke-width='2'/><line x1='25' y1='23' x2='25' y2='26' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='25' y1='42' x2='25' y2='45' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='14' y1='34' x2='17' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='33' y1='34' x2='36' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='17' y1='26' x2='19' y2='28' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='31' y1='40' x2='33' y2='42' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='17' y1='42' x2='19' y2='40' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='31' y1='28' x2='33' y2='26' stroke='%23111111' stroke-width='2' stroke-linecap='round'/></svg>"
-)
-
-user_icon_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23{btn_text[1:]}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2'/><circle cx='12' cy='7' r='4'/></svg>"
-settings_icon_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23{btn_text[1:]}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z'/><circle cx='12' cy='12' r='3'/></svg>"
-logout_icon_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23{btn_text[1:]}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4'/><polyline points='16 17 21 12 16 7'/><line x1='21' y1='12' x2='9' y2='12'/></svg>"
-
-# ICONOS VECTORIALES DE ALTA PRECISIÓN (ESTILO LINEAR / STRIPE / LUCIDE)
-trend_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d83737' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='23 6 13.5 15.5 8.5 10.5 1 18'/><polyline points='17 6 23 6 23 12'/></svg>"
-shield_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d83737' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/><polyline points='9 12 11 14 15 10'/></svg>"
-tag_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d83737' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z'/><circle cx='7' cy='7' r='1.5' fill='%23d83737'/></svg>"
-home_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d83737' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z'/><polyline points='9 22 9 12 15 12 15 22'/></svg>"
-flame_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d83737' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z'/></svg>"
-logo_color_encoded = "%238c7b6d"
-text_color_encoded = "%23ffffff" if is_dark else "%230f172a"
-logo_svg_data = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 36' fill='none' stroke-linecap='round' stroke-linejoin='round'><path d='M 6.8 21 L 29.2 21 C 30 25 27 32 18 32 C 9 32 6 25 6.8 21 Z' fill='{logo_color_encoded}' /><line x1='6.8' y1='21' x2='29.2' y2='21' stroke='{text_color_encoded}' stroke-width='1.5' /><line x1='18' y1='10' x2='18' y2='30' stroke='{text_color_encoded}' stroke-width='1' /><path d='M 18 32 C 9 32 5 24 7.5 17 C 9 12 13 10 15 10 L 21 10 C 23 10 27 12 28.5 17 C 31 24 27 32 18 32 Z' stroke='{text_color_encoded}' stroke-width='2' /><rect x='15' y='7' width='6' height='3' stroke='{text_color_encoded}' stroke-width='1.5' /><rect x='13' y='3' width='10' height='4' rx='1' stroke='{text_color_encoded}' stroke-width='1.5' /><rect x='16' y='0' width='4' height='3' rx='1' fill='{logo_color_encoded}' stroke='{text_color_encoded}' stroke-width='1' /></svg>"
+pal = get_theme_palette()
+is_dark = pal.is_dark
+bg_color = pal.app_bg
+card_bg = pal.card_bg
+border_color = pal.border_color
+text_color = pal.text_color
+subtext_color = pal.subtext_color
+btn_bg = pal.btn_bg
+btn_text = pal.btn_text
+btn_border = pal.btn_border
+input_bg = pal.input_bg
+input_text = pal.input_text
+input_border = pal.input_border
+bottle_left_pos = pal.bottle_left_pos
+static_icon_pos = pal.static_icon_pos
+static_icon_svg = pal.static_icon_svg
+bottle_svg = pal.bottle_svg
+user_icon_svg = pal.user_icon_svg
+settings_icon_svg = pal.settings_icon_svg
+logout_icon_svg = pal.logout_icon_svg
+logo_svg_data = pal.logo_svg_data
 
 # 4. ESTILOS CSS CON TIPOGRAFÍA ELEGANTE Y EDITORIAL
 css_styles = f"""
@@ -808,17 +663,15 @@ with btn_col1:
         user_display = st.session_state['user_info'].get('nombre') or st.session_state['user_info'].get('email', 'Usuario')
         st.markdown('<div class="user-popover-container">', unsafe_allow_html=True)
         with st.popover(f"{user_display}", use_container_width=True):
-            st.write(f"**Conectado como:**")
+            st.write("**Conectado como:**")
             st.write(st.session_state['user_info'].get('email', ''))
             st.markdown("<div style='margin-top: 8px;'></div>", unsafe_allow_html=True)
-            
-            # ACOPLE DIRECTO A LA PÁGINA DE PERFIL CON DIBUJO VECTORIAL SVG
+
             if st.button("Mi Perfil y Alertas", key="btn_go_profile", use_container_width=True):
                 st.switch_page("pages/perfil.py")
-                
+
             if st.button("Cerrar Sesión", key="btn_logout", use_container_width=True):
-                st.session_state['logged_in'] = False
-                st.session_state['user_info'] = None
+                cerrar_sesion_usuario()
                 st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
     else:
@@ -828,8 +681,9 @@ with btn_col1:
 with btn_col2:
     st.button(" ", key="theme_toggle", on_click=toggle_theme)
 
-# MONITOREO Y RENDERIZADO PERSISTENTE DEL MODAL
+# MONITOREO Y RENDERIZADO DEL MODAL
 if st.session_state.get('show_login_modal', False):
+    st.session_state['show_login_modal'] = False
     modal_autenticacion()
 
 st.markdown("<div style='margin-top: 14px;'></div>", unsafe_allow_html=True)
@@ -847,8 +701,7 @@ with col_chip3:
     st.page_link("pages/compararprecios.py", label="Comparar Precios", use_container_width=True)
 with col_chip_remates:
     if st.button("Remates & Flash", key="chip_remates", use_container_width=True):
-        st.session_state["filtro_catalogo_remates"] = True
-        st.switch_page("app.py")
+        st.switch_page("pages/remates.py")
 
 st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
 col_sub_title, col_sub_back = st.columns([7, 3], vertical_alignment="center")
@@ -861,18 +714,6 @@ st.markdown(f"<hr style='border: none; border-top: 1px solid {border_color}; mar
 
 # =============================================================================
 # BLOQUE 4: ESTRUCTURA DE AUDITORÍA (FICHA ILUSTRADA + TABLA DE CONFIANZA)
-# -----------------------------------------------------------------------------
-# ¿QUÉ HACE ESTE BLOQUE?
-# Divide la pantalla en 2 columnas estratégicas:
-# 1. Columna Izquierda: Ficha técnica minimalista con vector SVG interactivo del frasco
-#    y desglose de pirámide olfativa (Salida, Corazón y Fondo).
-# 2. Columna Derecha: Tabla de verificación de comercios chilenos:
-#    - Consulta las tiendas auditadas desde `obtener_tiendas()`.
-#    - Muestra la puntuación de confianza (ej. 98/100, 92/100).
-#    - Clasifica el estado: "VERIFICADO" (verde) si el score >= 85, o "AUDITORÍA" (rojo).
-#    - Añade una fila comparativa de "VENDEDOR NO AUDITADO" (38/100, ALTO RIESGO)
-#      para educar al consumidor chileno sobre los peligros de comprar en sitios sin RUT
-#      tributario legal ni boleta electrónica del SII.
 # =============================================================================
 left_col, right_col = st.columns([1, 1.4], gap="large")
 
@@ -917,23 +758,34 @@ with left_col:
     """
     st.markdown(clean_html(card_left_html), unsafe_allow_html=True)
 
-# --- COLUMNA DERECHA: TABLA DE VERIFICACIÓN EN ESPAÑOL ---
+# --- COLUMNA DERECHA: TABLA DE VERIFICACIÓN EN ESPAÑOL + AUDITOR DE URL ---
 with right_col:
     tiendas_auditadas = obtener_tiendas()
-    
+
     filas_html = []
     for idx, t in enumerate(tiendas_auditadas, 1):
         num_str = f"{idx:02d}"
-        score = t.get('trust_score', 95)
-        badge_status = '<span class="status-badge-safe">VERIFICADO</span>' if score >= 85 else '<span class="status-badge-danger">AUDITORÍA</span>'
-        accion_html = f'<a href="{t.get("url_base", "#")}" target="_blank" rel="noopener noreferrer" class="btn-buy-now">VISITAR</a>'
-        
+        score = int(t.get('trust_score', 95) or 95)
+        badge_status = (
+            '<span class="status-badge-safe">VERIFICADO</span>'
+            if score >= 85
+            else '<span class="status-badge-danger">AUDITORÍA</span>'
+        )
+        raw_url = str(t.get("url_base") or "")
+        if "alisha.cl" in raw_url and "alishaperfumes.cl" not in raw_url:
+            raw_url = "https://alishaperfumes.cl"
+        safe_url = escape_html(sanitize_external_url(raw_url, fallback="#"))
+        safe_nombre = escape_html(str(t.get('nombre', 'Tienda')).upper())
+        safe_badge = escape_html(str(t.get('badge') or 'Comercio Oficial'))
+        safe_rut = escape_html(str(t.get('rut') or 'Verificado SII'))
+        accion_html = f'<a href="{safe_url}" target="_blank" rel="noopener noreferrer" class="btn-buy-now">VISITAR</a>'
+
         fila = f"""
         <tr>
             <td>{num_str}</td>
             <td>
-                <div class="store-title">{t['nombre'].upper()}</div>
-                <div style="font-size: 0.65rem; color: {subtext_color};">{t.get('badge', 'Comercio Oficial')} &bull; RUT: {t.get('rut', 'Verificado')}</div>
+                <div class="store-title">{safe_nombre}</div>
+                <div style="font-size: 0.65rem; color: {subtext_color};">{safe_badge} &bull; RUT: {safe_rut}</div>
             </td>
             <td><span class="price-tag">{score}/100</span></td>
             <td>{badge_status}</td>
@@ -942,7 +794,6 @@ with right_col:
         """
         filas_html.append(fila)
 
-    # Fila preventiva de comercio de alto riesgo no verificado para alertar al usuario
     num_alerta = f"{len(tiendas_auditadas) + 1:02d}"
     fila_riesgo = f"""
     <tr>
@@ -977,3 +828,53 @@ with right_col:
     </div>
     """
     st.markdown(clean_html(table_html), unsafe_allow_html=True)
+
+    st.markdown("<div style='margin-top: 22px;'></div>", unsafe_allow_html=True)
+    with st.form("form_auditar_url_tienda", clear_on_submit=False):
+        st.markdown(
+            f"<div style='font-size: 0.82rem; font-weight: 700; color: {text_color}; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.6px;'>Auditor Interactivo de Sitios de Perfumería</div>",
+            unsafe_allow_html=True,
+        )
+        col_u1, col_u2 = st.columns([3.2, 1.3], vertical_alignment="bottom")
+        with col_u1:
+            url_check = st.text_input(
+                "Ingresa el dominio o URL de una tienda para verificar su respaldo",
+                placeholder="Ej: silkperfumes.cl, eliteperfumes.cl o tienda-sospechosa.com",
+                label_visibility="collapsed",
+            )
+        with col_u2:
+            btn_audit = st.form_submit_button("Auditar Sitio", use_container_width=True)
+
+        if btn_audit:
+            res_audit = auditar_tienda_por_url(url_check)
+            if not res_audit:
+                st.warning("Ingresa un dominio o URL válido para analizar.")
+            else:
+                sc_val = int(res_audit.get("score", 0))
+                es_ok = bool(res_audit.get("es_conocida")) and sc_val >= 85
+                borde_res = "#10b981" if es_ok else ("#f59e0b" if sc_val >= 70 else "#ef4444")
+                safe_nom_aud = escape_html(res_audit.get("nombre", ""))
+                safe_dom_aud = escape_html(res_audit.get("dominio", ""))
+                safe_rec_aud = escape_html(res_audit.get("recomendacion", ""))
+                safe_rut_aud = escape_html(res_audit.get("rut", ""))
+                alertas = res_audit.get("senales_alerta") or []
+                alertas_html = ""
+                if alertas:
+                    items_al = "".join(f"<li>{escape_html(a)}</li>" for a in alertas)
+                    alertas_html = f"<ul style='margin: 8px 0 0 18px; color: #ef4444; font-size: 0.78rem;'>{items_al}</ul>"
+                st.markdown(
+                    clean_html(f"""
+                    <div style="background: {card_bg}; border: 1px solid {borde_res}; border-left: 4px solid {borde_res}; border-radius: 10px; padding: 14px 16px; margin-top: 10px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+                            <div>
+                                <div style="font-weight: 700; font-size: 0.95rem; color: {text_color};">{safe_nom_aud} <span style="font-weight: 400; font-size: 0.78rem; color: {subtext_color};">({safe_dom_aud})</span></div>
+                                <div style="font-size: 0.76rem; color: {subtext_color}; margin-top: 2px;">RUT: {safe_rut_aud} &bull; {escape_html(res_audit.get('badge', ''))}</div>
+                            </div>
+                            <div style="font-weight: 800; font-size: 1.15rem; color: {borde_res};">{sc_val}/100</div>
+                        </div>
+                        <div style="font-size: 0.8rem; color: {text_color}; margin-top: 8px;">{safe_rec_aud}</div>
+                        {alertas_html}
+                    </div>
+                    """),
+                    unsafe_allow_html=True,
+                )

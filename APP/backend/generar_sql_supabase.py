@@ -115,26 +115,22 @@ ALTER TABLE public.precios_registro ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.tendencias_metricas ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.scraping_logs ENABLE ROW LEVEL SECURITY;
 
--- Políticas RLS Permisivas para App Web & Scrapers Autónomos
+-- Políticas RLS de Mínimo Privilegio (Lectura Pública / Escritura Exclusiva service_role)
 DROP POLICY IF EXISTS "Lectura publica tiendas" ON public.tiendas;
 CREATE POLICY "Lectura publica tiendas" ON public.tiendas FOR SELECT USING (true);
 DROP POLICY IF EXISTS "Escritura tiendas" ON public.tiendas;
-CREATE POLICY "Escritura tiendas" ON public.tiendas FOR ALL USING (true) WITH CHECK (true);
 
 DROP POLICY IF EXISTS "Lectura publica perfumes" ON public.perfumes;
 CREATE POLICY "Lectura publica perfumes" ON public.perfumes FOR SELECT USING (true);
 DROP POLICY IF EXISTS "Escritura perfumes" ON public.perfumes;
-CREATE POLICY "Escritura perfumes" ON public.perfumes FOR ALL USING (true) WITH CHECK (true);
 
 DROP POLICY IF EXISTS "Lectura publica precios" ON public.precios_registro;
 CREATE POLICY "Lectura publica precios" ON public.precios_registro FOR SELECT USING (true);
 DROP POLICY IF EXISTS "Escritura precios" ON public.precios_registro;
-CREATE POLICY "Escritura precios" ON public.precios_registro FOR ALL USING (true) WITH CHECK (true);
 
 DROP POLICY IF EXISTS "Lectura publica tendencias" ON public.tendencias_metricas;
 CREATE POLICY "Lectura publica tendencias" ON public.tendencias_metricas FOR SELECT USING (true);
 DROP POLICY IF EXISTS "Escritura tendencias" ON public.tendencias_metricas;
-CREATE POLICY "Escritura tendencias" ON public.tendencias_metricas FOR ALL USING (true) WITH CHECK (true);
 
 -- 6. Vistas Optimizadas para Consultas de Alto Rendimiento en la App Web
 CREATE OR REPLACE VIEW public.vista_catalogo AS
@@ -188,9 +184,7 @@ GRANT SELECT ON public.vista_catalogo TO anon, authenticated, service_role;
 GRANT SELECT ON public.vista_precios_actuales TO anon, authenticated, service_role;
 
 DROP POLICY IF EXISTS "Lectura publica scraping_logs" ON public.scraping_logs;
-CREATE POLICY "Lectura publica scraping_logs" ON public.scraping_logs FOR SELECT USING (true);
 DROP POLICY IF EXISTS "Escritura scraping_logs" ON public.scraping_logs;
-CREATE POLICY "Escritura scraping_logs" ON public.scraping_logs FOR ALL USING (true) WITH CHECK (true);
 """)
 
     # 1. Tiendas INSERTs
@@ -246,10 +240,8 @@ CREATE POLICY "Escritura scraping_logs" ON public.scraping_logs FOR ALL USING (t
     # Ajustar secuencia de ID de perfumes
     sql_parts.append("\nSELECT setval(pg_get_serial_sequence('public.perfumes', 'id'), COALESCE(MAX(id), 1) + 1, false) FROM public.perfumes;")
 
-    # 3. Precios Históricos
-    sql_parts.append("\n-- POBLADO INICIAL: HISTÓRICO TIME-SERIES DE PRECIOS")
-    dias_atras = [21, 14, 7, 3, 1, 0]
-    
+    # 3. Precios Iniciales Reales (sin fluctuaciones sintéticas artificiales)
+    sql_parts.append("\n-- POBLADO INICIAL: OBSERVACIONES BASE DE PRECIOS")
     for p in perfumes:
         p_id = p["id"]
         for enlace in p.get("enlaces_tiendas", []):
@@ -260,22 +252,11 @@ CREATE POLICY "Escritura scraping_logs" ON public.scraping_logs FOR ALL USING (t
             url_prod = enlace.get("url_producto", "").replace("'", "''")
             vol_ml = enlace.get("volumen_ml", p.get("volumen_ml", 100))
 
-            for dia in dias_atras:
-                if dia == 0:
-                    p_act_h = precio_act
-                    p_norm_h = precio_norm
-                else:
-                    fluc = 1.0 + (dia * 0.004)
-                    p_act_h = int(round((precio_act * fluc) / 1000) * 1000)
-                    p_norm_h = precio_norm if precio_norm > precio_act else p_act_h
-
-                fecha_expr = f"NOW() - INTERVAL '{dia} days'"
-
-                sql_parts.append(
-                    f"INSERT INTO public.precios_registro (perfume_id, tienda_id, precio_actual, precio_normal, en_stock, volumen_ml, url_producto, fecha_registro) "
-                    f"SELECT {p_id}, t.id, {p_act_h}, {p_norm_h}, TRUE, {vol_ml}, '{url_prod}', {fecha_expr} "
-                    f"FROM public.tiendas t WHERE t.nombre = '{t_nombre}';"
-                )
+            sql_parts.append(
+                f"INSERT INTO public.precios_registro (perfume_id, tienda_id, precio_actual, precio_normal, en_stock, volumen_ml, url_producto, fecha_registro) "
+                f"SELECT {p_id}, t.id, {precio_act}, {precio_norm}, TRUE, {vol_ml}, '{url_prod}', NOW() "
+                f"FROM public.tiendas t WHERE t.nombre = '{t_nombre}';"
+            )
 
     full_sql = "\n".join(sql_parts) + "\n"
 

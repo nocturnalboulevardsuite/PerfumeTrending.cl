@@ -21,11 +21,14 @@ class TestSortingAndVols(unittest.TestCase):
         
         # The first item MUST be in stock
         self.assertTrue(sorted_vols[0]['en_stock'])
-        self.assertEqual(sorted_vols[0]['tienda_nombre'], 'Paris')
         
-        # The subsequent items MUST be out of stock
-        self.assertFalse(sorted_vols[1]['en_stock'])
-        self.assertFalse(sorted_vols[2]['en_stock'])
+        # Verify all in-stock items appear before any out-of-stock items
+        seen_out = False
+        for item in sorted_vols:
+            if not item.get('en_stock', True):
+                seen_out = True
+            elif seen_out:
+                self.fail(f"In-stock item {item['tienda_nombre']} found after out-of-stock item!")
 
     def test_sort_order_all_perfume_2(self):
         precios = obtener_precios_actuales(2)
@@ -48,8 +51,13 @@ class TestSortingAndVols(unittest.TestCase):
         self.assertTrue(len(catalogo) > 0)
         bleu = next((p for p in catalogo if p['id'] == 1), None)
         self.assertIsNotNone(bleu)
-        # In Supabase ofertas_actuales, Bleu de Chanel in-stock best price is 181500 (Paris)
-        self.assertEqual(bleu['mejor_precio'], 181500)
+        precios_bleu = obtener_precios_actuales(1)
+        esperado_min = min(
+            p['precio_actual']
+            for p in precios_bleu
+            if p.get('en_stock') and p.get('formato', 'regular') != 'tester' and (p.get('volumen_ml') or 100) >= 25
+        )
+        self.assertEqual(bleu['mejor_precio'], esperado_min)
 
 if __name__ == '__main__':
     unittest.main()

@@ -67,8 +67,11 @@ REPORTE_ULTIMO_PATH = os.path.join(REPORTES_DIR, "ultimo_scraping.json")
 # Importación de capa de persistencia y normalización
 try:
     from backend.database import (
+        _fetch_all_rows,
+        finalizar_scraping_run,
         guardar_o_actualizar_perfume_scraped,
         get_connection,
+        iniciar_scraping_run,
         registrar_precio,
         registrar_observacion_oferta,
         registrar_fallo_scraping,
@@ -76,13 +79,24 @@ try:
         tienda_comercializa_marca,
         obtener_url_directa_tienda,
         get_supabase,
-        is_supabase_disponible
+        is_supabase_disponible,
     )
-    from backend.normalizador import es_producto_perfume_valido, extraer_volumen_ml, coincide_con_perfume, es_precio_valido
+    from backend.normalizador import (
+        coincide_con_perfume,
+        coincide_entidad_detallada,
+        detectar_formato_oferta,
+        es_arabe,
+        es_precio_valido,
+        es_producto_perfume_valido,
+        extraer_volumen_ml,
+    )
 except ImportError:
     from database import (
+        _fetch_all_rows,
+        finalizar_scraping_run,
         guardar_o_actualizar_perfume_scraped,
         get_connection,
+        iniciar_scraping_run,
         registrar_precio,
         registrar_observacion_oferta,
         registrar_fallo_scraping,
@@ -90,9 +104,17 @@ except ImportError:
         tienda_comercializa_marca,
         obtener_url_directa_tienda,
         get_supabase,
-        is_supabase_disponible
+        is_supabase_disponible,
     )
-    from normalizador import es_producto_perfume_valido, extraer_volumen_ml, coincide_con_perfume, es_precio_valido
+    from normalizador import (
+        coincide_con_perfume,
+        coincide_entidad_detallada,
+        detectar_formato_oferta,
+        es_arabe,
+        es_precio_valido,
+        es_producto_perfume_valido,
+        extraer_volumen_ml,
+    )
 
 # Pool de User-Agents residenciales modernos
 USER_AGENTS = [
@@ -191,7 +213,73 @@ TIENDAS_SHOPIFY = {
     "Elite Perfumes": "eliteperfumes.cl",
     "Alisha Perfumes": "alishaperfumes.cl",
     "Yauras Perfumes": "yauras.cl",
+    "Oferta Perfumes": "ofertaperfumes.cl",
 }
+
+_DOMINIOS_SIN_WWW = {"alishaperfumes.cl", "yauras.cl", "ofertaperfumes.cl"}
+
+_SELLERS_OFICIALES_MARKETPLACE = (
+    "falabella",
+    "ripley",
+    "paris",
+    "cencosud",
+    "sodimac",
+    "tottus",
+    "linio",
+    "dbs",
+    "preunic",
+    "salcobrand",
+    "cruz verde",
+    "silk perfumes",
+    "elite perfumes",
+    "alisha perfumes",
+    "yauras",
+    "oferta perfumes",
+)
+
+_SELLERS_SOSPECHOSOS = (
+    "alternativ",
+    "imitacion",
+    "imitación",
+    "inspiracion",
+    "inspiración",
+    "decant",
+    "outlet",
+    "generico",
+    "genérico",
+)
+
+
+def _resolver_base_shopify(dominio: str) -> str:
+    dom = (dominio or "").strip().lower().replace("https://", "").replace("http://", "").strip("/")
+    if dom.startswith("www."):
+        dom_bare = dom[4:]
+    else:
+        dom_bare = dom
+    if dom_bare in _DOMINIOS_SIN_WWW:
+        return f"https://{dom_bare}"
+    return f"https://www.{dom_bare}"
+
+
+def _es_vendedor_marketplace_no_verificado(seller_raw: Any, marca: str, perfume_nombre: str) -> bool:
+    """
+    Detecta vendedores terceros no auditados en Marketplaces (Falabella / Ripley)
+    para evitar infiltración de clones o imitaciones sobre fichas de diseñador/nicho.
+    """
+    if not seller_raw:
+        return False
+    s_norm = str(seller_raw).strip().lower()
+    if not s_norm:
+        return False
+    if any(oficial in s_norm for oficial in _SELLERS_OFICIALES_MARKETPLACE):
+        return False
+    if marca and len(marca.strip()) >= 3 and marca.strip().lower() in s_norm:
+        return False
+    if any(sosp in s_norm for sosp in _SELLERS_SOSPECHOSOS):
+        return True
+    if marca and not es_arabe(marca, perfume_nombre):
+        return True
+    return False
 
 
 def extraer_variedades_shopify(
@@ -200,65 +288,87 @@ def extraer_variedades_shopify(
     perfume_nombre: str,
     marca: str,
     volumen_ml_defecto: Optional[int] = None,
-    concentracion: str = ""
+    concentracion: str = "",
+    precio_referencia: Optional[int] = None,
+    diagnostico: Optional[Dict[str, Any]] = None,
 ) -> List[Dict[str, Any]]:
     """
-    Extrae múltiples variedades de tamaño (ml) y stock real en tiendas Shopify
-    (Silk Perfumes, Elite Perfumes, Alisha Perfumes, Yauras Perfumes).
-    Retorna una lista de diccionarios, uno por cada tamaño/presentación detectada.
+    Extrae múltiples variedades de tamaño (ml), formato ('regular' vs 'tester') y stock real
+    en tiendas Shopify auditadas (Silk, Elite, Alisha, Yauras, Oferta Perfumes).
     """
-    query_str = f"{marca} {perfume_nombre}".strip() if (marca and marca.lower() not in perfume_nombre.lower()) else perfume_nombre.strip()
+    query_str = (
+        f"{marca} {perfume_nombre}".strip()
+        if (marca and marca.lower() not in perfume_nombre.lower())
+        else perfume_nombre.strip()
+    )
     q = urllib.parse.quote(query_str)
-    url_api = f"https://www.{dominio}/search/suggest.json?q={q}&resources[type]=product"
-    headers = obtener_headers_json(referer=f"https://www.{dominio}/")
+    base_host = _resolver_base_shopify(dominio)
+    url_api = f"{base_host}/search/suggest.json?q={q}&resources[type]=product"
+    headers = obtener_headers_json(referer=f"{base_host}/")
 
     variedades: List[Dict[str, Any]] = []
     vols_vistos = set()
 
     try:
         res = session.get(url_api, headers=headers, timeout=9)
+        if res.status_code in (403, 429):
+            if diagnostico is not None:
+                diagnostico["waf_bloqueado"] = True
+                diagnostico["http_status"] = res.status_code
+            return variedades
         if res.status_code == 200:
             productos = res.json().get("resources", {}).get("results", {}).get("products", [])
-            tokens = [t.lower() for t in re.sub(r"[^\w\s]", " ", perfume_nombre).split() if len(t) >= 2]
-            if not tokens:
-                tokens = [perfume_nombre.lower().strip()]
             for p in productos:
                 raw_title = p.get("title", "")
-                
-                # Descartar si es accesorio o producto derivado
-                if not es_producto_perfume_valido(raw_title):
+                if not es_producto_perfume_valido(raw_title, marca=marca or None, volumen_min_ml=25):
                     continue
 
-                clean_url = f"https://www.{dominio}" + p.get("url", "").split("?")[0]
-                # Validar correspondencia exacta con la fragancia, concentración y URL
-                if not coincide_con_perfume(raw_title, perfume_nombre, marca, concentracion, url=clean_url):
+                raw_path = p.get("url", "").split("?")[0]
+                clean_url = raw_path if raw_path.startswith("http") else f"{base_host}{raw_path}"
+
+                precio_act = int(float(p.get("price", 0)))
+                if not es_precio_valido(precio_act):
                     continue
 
-                # Regla de seguridad especial: evitar cruces con fragancias de Chanel
+                vol_encontrado = extraer_volumen_ml(raw_title) or extraer_volumen_ml(clean_url) or volumen_ml_defecto or 100
+                if vol_encontrado < 25:
+                    continue
+
+                res_match = coincide_entidad_detallada(
+                    titulo=raw_title,
+                    perfume_nombre=perfume_nombre,
+                    marca=marca,
+                    concentracion=concentracion,
+                    url=clean_url,
+                    precio_candidato=precio_act,
+                    precio_referencia=precio_referencia,
+                )
+                if not res_match.coincide:
+                    continue
+
                 if "chanel" in perfume_nombre.lower() and "chanel" not in raw_title.lower():
                     continue
 
-                vol_encontrado = extraer_volumen_ml(raw_title) or volumen_ml_defecto or 100
-                if vol_encontrado in vols_vistos:
+                formato_det = res_match.formato_detectado or detectar_formato_oferta(raw_title, clean_url)
+                clave_var = (vol_encontrado, formato_det)
+                if clave_var in vols_vistos:
                     continue
 
-                precio_act = int(float(p.get("price", 0)))
                 p_comp_raw = p.get("compare_at_price_max") or p.get("compare_at_price_min")
                 precio_norm = int(float(p_comp_raw)) if p_comp_raw else precio_act
 
-                if es_precio_valido(precio_act):
-                    vols_vistos.add(vol_encontrado)
-                    clean_url = f"https://www.{dominio}" + p.get("url", "").split("?")[0]
-                    norm_valido = precio_norm if (es_precio_valido(precio_norm) and precio_norm > precio_act) else precio_act
-                    variedades.append({
-                        "exito": True,
-                        "precio_actual": precio_act,
-                        "precio_normal": norm_valido,
-                        "url": clean_url,
-                        "en_stock": bool(p.get("available", True)),
-                        "volumen_ml": vol_encontrado,
-                        "metodo": "Shopify Multi-Suggest"
-                    })
+                vols_vistos.add(clave_var)
+                norm_valido = precio_norm if (es_precio_valido(precio_norm) and precio_norm > precio_act) else precio_act
+                variedades.append({
+                    "exito": True,
+                    "precio_actual": precio_act,
+                    "precio_normal": norm_valido,
+                    "url": clean_url,
+                    "en_stock": bool(p.get("available", True)),
+                    "volumen_ml": vol_encontrado,
+                    "formato": formato_det,
+                    "metodo": "Shopify Multi-Suggest",
+                })
     except Exception as e:
         logger.warning(f"Error consultando Shopify {dominio} para '{perfume_nombre}': {e}")
 
@@ -270,7 +380,7 @@ def extraer_precio_shopify(
     dominio: str,
     perfume_nombre: str,
     marca: str,
-    volumen_ml: Optional[int] = None
+    volumen_ml: Optional[int] = None,
 ) -> Dict[str, Any]:
     """Retrocompatibilidad con pruebas unitarias: retorna la primera variedad o {exito: False}."""
     vars_found = extraer_variedades_shopify(session, dominio, perfume_nombre, marca, volumen_ml)
@@ -285,13 +395,13 @@ def extraer_variedades_falabella(
     perfume_nombre: str,
     marca: str = "",
     volumen_ml_defecto: Optional[int] = None,
-    concentracion: str = ""
+    concentracion: str = "",
+    precio_referencia: Optional[int] = None,
+    diagnostico: Optional[Dict[str, Any]] = None,
 ) -> List[Dict[str, Any]]:
     """
-    Extrae múltiples presentaciones de Falabella Chile (30ml, 50ml, 60ml, 100ml, 200ml, etc.):
-    1. Si se provee una URL directa funcional, lee '__NEXT_DATA__' y extrae todos los SKUs/variantes.
-    2. Si no hay URL directa o responde 404, realiza búsqueda viva en Falabella (/search?Ntt=...)
-       y extrae las presentaciones de los productos concordantes.
+    Extrae múltiples presentaciones de Falabella Chile validando entidad en 12 capas
+    y descartando vendedores Marketplace terceros no auditados.
     """
     headers = obtener_headers_navegador(referer="https://www.falabella.com/falabella-cl")
     variedades: List[Dict[str, Any]] = []
@@ -301,41 +411,74 @@ def extraer_variedades_falabella(
     if url_directa and url_directa.startswith("http"):
         try:
             res = session.get(url_directa, headers=headers, timeout=10)
-            if res.status_code == 200:
+            if res.status_code in (403, 429) and diagnostico is not None:
+                diagnostico["waf_bloqueado"] = True
+                diagnostico["http_status"] = res.status_code
+            elif res.status_code == 200:
                 soup = BeautifulSoup(res.text, "html.parser")
                 tag = soup.find("script", id="__NEXT_DATA__")
                 if tag and tag.string:
                     data = json.loads(tag.string)
                     pdata = data.get("props", {}).get("pageProps", {}).get("productData", {})
+                    seller_direct = pdata.get("sellerName") or pdata.get("offeredBy")
                     is_prod_out = bool(pdata.get("isOutOfStock", False))
                     skus = pdata.get("variants", []) or pdata.get("skus", [])
                     prod_name = pdata.get("name", perfume_nombre)
-                    # Validación de integridad: asegurar que la URL directa corresponde al perfume auditado
-                    if not coincide_con_perfume(prod_name, perfume_nombre, marca, concentracion, url=url_directa):
-                        logger.warning(f"⚠️ URL directa Falabella descartada por inconsistencia ({prod_name} != {perfume_nombre})")
+
+                    if _es_vendedor_marketplace_no_verificado(seller_direct, marca, perfume_nombre):
+                        logger.info(f"Omitiendo vendedor Marketplace Falabella no auditado: {seller_direct} ({prod_name})")
                     else:
-                        for v in skus:
-                            v_name = v.get("name") or prod_name
-                            size_attr = v.get("attributes", {}).get("size")
-                            vol = clean_digits(size_attr) if size_attr else extraer_volumen_ml(v_name)
-                            if not vol or vol < 10 or vol > 1000:
-                                vol = extraer_volumen_ml(v_name) or volumen_ml_defecto or 100
-                            if vol in vols_vistos:
-                                continue
-                            prices = v.get("prices", [])
-                            p_act, p_norm = 0, 0
-                            for p_item in prices:
-                                t = p_item.get("type", "")
-                                val = clean_digits(p_item.get("price", ["0"])[0])
-                                if t in ("internetPrice", "eventPrice") and val > 0:
-                                    p_act = val
-                                elif t == "normalPrice" and val > 0:
-                                    p_norm = val
-                            if p_act == 0 and prices:
-                                p_act = clean_digits(prices[0].get("price", ["0"])[0])
-                            if es_precio_valido(p_act):
+                        res_head = coincide_entidad_detallada(
+                            titulo=prod_name,
+                            perfume_nombre=perfume_nombre,
+                            marca=marca,
+                            concentracion=concentracion,
+                            url=url_directa,
+                        )
+                        if not res_head.coincide:
+                            logger.warning(f"URL directa Falabella descartada ({res_head.motivo}): {prod_name} != {perfume_nombre}")
+                        else:
+                            for v in skus:
+                                v_seller = v.get("sellerName") or seller_direct
+                                if _es_vendedor_marketplace_no_verificado(v_seller, marca, perfume_nombre):
+                                    continue
+                                v_name = v.get("name") or prod_name
+                                size_attr = v.get("attributes", {}).get("size")
+                                vol = clean_digits(size_attr) if size_attr else extraer_volumen_ml(v_name)
+                                if not vol or vol < 10 or vol > 1000:
+                                    vol = extraer_volumen_ml(v_name) or volumen_ml_defecto or 100
+                                if vol < 25:
+                                    continue
+                                prices = v.get("prices", [])
+                                p_act, p_norm = 0, 0
+                                for p_item in prices:
+                                    t = p_item.get("type", "")
+                                    val = clean_digits(p_item.get("price", ["0"])[0])
+                                    if t in ("internetPrice", "eventPrice") and val > 0:
+                                        p_act = val
+                                    elif t == "normalPrice" and val > 0:
+                                        p_norm = val
+                                if p_act == 0 and prices:
+                                    p_act = clean_digits(prices[0].get("price", ["0"])[0])
+                                if not es_precio_valido(p_act):
+                                    continue
+                                res_v = coincide_entidad_detallada(
+                                    titulo=v_name,
+                                    perfume_nombre=perfume_nombre,
+                                    marca=marca,
+                                    concentracion=concentracion,
+                                    url=url_directa,
+                                    precio_candidato=p_act,
+                                    precio_referencia=precio_referencia,
+                                )
+                                if not res_v.coincide:
+                                    continue
+                                formato_det = res_v.formato_detectado or detectar_formato_oferta(v_name, url_directa)
+                                clave_var = (vol, formato_det)
+                                if clave_var in vols_vistos:
+                                    continue
                                 is_out = bool(v.get("isOutOfStock", False)) or is_prod_out or (v.get("isPurchaseable") is False)
-                                vols_vistos.add(vol)
+                                vols_vistos.add(clave_var)
                                 norm_valido = p_norm if (es_precio_valido(p_norm) and p_norm > p_act) else p_act
                                 variedades.append({
                                     "exito": True,
@@ -344,7 +487,8 @@ def extraer_variedades_falabella(
                                     "url": url_directa,
                                     "en_stock": not is_out,
                                     "volumen_ml": vol,
-                                    "metodo": "Falabella Direct Variants"
+                                    "formato": formato_det,
+                                    "metodo": "Falabella Direct Variants",
                                 })
         except Exception as e:
             logger.debug(f"Aviso leyendo URL directa Falabella: {e}")
@@ -353,26 +497,40 @@ def extraer_variedades_falabella(
         return variedades
 
     # Intento 2: Búsqueda dinámica en vivo en Falabella
-    query_str = f"{marca} {perfume_nombre}".strip() if (marca and marca.lower() not in perfume_nombre.lower()) else perfume_nombre.strip()
+    query_str = (
+        f"{marca} {perfume_nombre}".strip()
+        if (marca and marca.lower() not in perfume_nombre.lower())
+        else perfume_nombre.strip()
+    )
     q = urllib.parse.quote(query_str)
     search_url = f"https://www.falabella.com/falabella-cl/search?Ntt={q}"
     try:
         res_s = session.get(search_url, headers=headers, timeout=11)
-        if res_s.status_code == 200:
+        if res_s.status_code in (403, 429) and diagnostico is not None:
+            diagnostico["waf_bloqueado"] = True
+            diagnostico["http_status"] = res_s.status_code
+        elif res_s.status_code == 200:
             soup_s = BeautifulSoup(res_s.text, "html.parser")
             tag_s = soup_s.find("script", id="__NEXT_DATA__")
             if tag_s and tag_s.string:
                 data_s = json.loads(tag_s.string)
                 results = data_s.get("props", {}).get("pageProps", {}).get("results", [])
-                tokens = [t.lower() for t in re.sub(r"[^\w\s]", " ", perfume_nombre).split() if len(t) >= 2]
-                if not tokens:
-                    tokens = [perfume_nombre.lower().strip()]
                 for r in results:
                     d_name = r.get("displayName", "")
                     prod_url = r.get("url", "")
-                    if not es_producto_perfume_valido(d_name):
+                    r_seller = r.get("sellerName") or r.get("sellerId")
+                    if _es_vendedor_marketplace_no_verificado(r_seller, marca, perfume_nombre):
                         continue
-                    if not coincide_con_perfume(d_name, perfume_nombre, marca, concentracion, url=prod_url):
+                    if not es_producto_perfume_valido(d_name, marca=marca or None, volumen_min_ml=25):
+                        continue
+                    res_card = coincide_entidad_detallada(
+                        titulo=d_name,
+                        perfume_nombre=perfume_nombre,
+                        marca=marca,
+                        concentracion=concentracion,
+                        url=prod_url,
+                    )
+                    if not res_card.coincide:
                         continue
                     if prod_url and len(variedades) < 4:
                         try:
@@ -383,6 +541,9 @@ def extraer_variedades_falabella(
                                 if tag_p and tag_p.string:
                                     data_p = json.loads(tag_p.string)
                                     pdata = data_p.get("props", {}).get("pageProps", {}).get("productData", {})
+                                    p_seller = pdata.get("sellerName") or pdata.get("offeredBy") or r_seller
+                                    if _es_vendedor_marketplace_no_verificado(p_seller, marca, perfume_nombre):
+                                        continue
                                     is_prod_out = bool(pdata.get("isOutOfStock", False))
                                     skus = pdata.get("variants", []) or pdata.get("skus", [])
                                     for v in skus:
@@ -391,7 +552,7 @@ def extraer_variedades_falabella(
                                         vol = clean_digits(size_attr) if size_attr else extraer_volumen_ml(v_name)
                                         if not vol or vol < 10 or vol > 1000:
                                             vol = extraer_volumen_ml(v_name) or volumen_ml_defecto or 100
-                                        if vol in vols_vistos:
+                                        if vol < 25:
                                             continue
                                         prices = v.get("prices", [])
                                         p_act, p_norm = 0, 0
@@ -404,38 +565,68 @@ def extraer_variedades_falabella(
                                                 p_norm = val
                                         if p_act == 0 and prices:
                                             p_act = clean_digits(prices[0].get("price", ["0"])[0])
-                                        if es_precio_valido(p_act):
-                                            is_out = bool(v.get("isOutOfStock", False)) or is_prod_out or (v.get("isPurchaseable") is False)
-                                            vols_vistos.add(vol)
-                                            norm_valido = p_norm if (es_precio_valido(p_norm) and p_norm > p_act) else p_act
-                                            variedades.append({
-                                                "exito": True,
-                                                "precio_actual": p_act,
-                                                "precio_normal": norm_valido,
-                                                "url": prod_url,
-                                                "en_stock": not is_out,
-                                                "volumen_ml": vol,
-                                                "metodo": "Falabella Live Variants"
-                                            })
+                                        if not es_precio_valido(p_act):
+                                            continue
+                                        res_v = coincide_entidad_detallada(
+                                            titulo=v_name,
+                                            perfume_nombre=perfume_nombre,
+                                            marca=marca,
+                                            concentracion=concentracion,
+                                            url=prod_url,
+                                            precio_candidato=p_act,
+                                            precio_referencia=precio_referencia,
+                                        )
+                                        if not res_v.coincide:
+                                            continue
+                                        formato_det = res_v.formato_detectado or detectar_formato_oferta(v_name, prod_url)
+                                        clave_var = (vol, formato_det)
+                                        if clave_var in vols_vistos:
+                                            continue
+                                        is_out = bool(v.get("isOutOfStock", False)) or is_prod_out or (v.get("isPurchaseable") is False)
+                                        vols_vistos.add(clave_var)
+                                        norm_valido = p_norm if (es_precio_valido(p_norm) and p_norm > p_act) else p_act
+                                        variedades.append({
+                                            "exito": True,
+                                            "precio_actual": p_act,
+                                            "precio_normal": norm_valido,
+                                            "url": prod_url,
+                                            "en_stock": not is_out,
+                                            "volumen_ml": vol,
+                                            "formato": formato_det,
+                                            "metodo": "Falabella Live Variants",
+                                        })
                         except Exception:
                             pass
-                    # Si no pudimos traer variantes detalladas, registrar precio del resultado de búsqueda
                     if not variedades:
                         prices = r.get("prices", [])
                         if prices:
                             p_act = clean_digits(prices[0].get("price", ["0"])[0])
                             vol = extraer_volumen_ml(d_name) or volumen_ml_defecto or 100
-                            if es_precio_valido(p_act) and vol not in vols_vistos:
-                                vols_vistos.add(vol)
-                                variedades.append({
-                                    "exito": True,
-                                    "precio_actual": p_act,
-                                    "precio_normal": p_act,
-                                    "url": prod_url or search_url,
-                                    "en_stock": not bool(r.get("isOutOfStock", False)),
-                                    "volumen_ml": vol,
-                                    "metodo": "Falabella Search Card"
-                                })
+                            if vol >= 25 and es_precio_valido(p_act):
+                                res_sc = coincide_entidad_detallada(
+                                    titulo=d_name,
+                                    perfume_nombre=perfume_nombre,
+                                    marca=marca,
+                                    concentracion=concentracion,
+                                    url=prod_url or search_url,
+                                    precio_candidato=p_act,
+                                    precio_referencia=precio_referencia,
+                                )
+                                if res_sc.coincide:
+                                    formato_det = res_sc.formato_detectado or detectar_formato_oferta(d_name, prod_url or "")
+                                    clave_var = (vol, formato_det)
+                                    if clave_var not in vols_vistos:
+                                        vols_vistos.add(clave_var)
+                                        variedades.append({
+                                            "exito": True,
+                                            "precio_actual": p_act,
+                                            "precio_normal": p_act,
+                                            "url": prod_url or search_url,
+                                            "en_stock": not bool(r.get("isOutOfStock", False)),
+                                            "volumen_ml": vol,
+                                            "formato": formato_det,
+                                            "metodo": "Falabella Search Card",
+                                        })
                     if len(variedades) >= 3:
                         break
     except Exception as e:
@@ -448,7 +639,7 @@ def extraer_precio_falabella(
     session: requests.Session,
     url_directa: str,
     perfume_nombre: str,
-    volumen_ml: Optional[int] = None
+    volumen_ml: Optional[int] = None,
 ) -> Dict[str, Any]:
     """Retrocompatibilidad con pruebas unitarias y selección de volumen específico."""
     vars_found = extraer_variedades_falabella(session, url_directa, perfume_nombre, "", volumen_ml)
@@ -467,25 +658,29 @@ def extraer_variedades_paris(
     perfume_nombre: str,
     marca: str = "",
     volumen_ml_defecto: Optional[int] = None,
-    concentracion: str = ""
+    concentracion: str = "",
+    precio_referencia: Optional[int] = None,
+    diagnostico: Optional[Dict[str, Any]] = None,
 ) -> List[Dict[str, Any]]:
     """
-    Extrae presentaciones y precios reales en Paris.cl:
-    1. Si hay URL directa, parsea Schema.org JSON-LD.
-    2. Si no hay URL directa o es 404, busca en Paris (/search?q=...) e inspecciona las fichas encontradas.
+    Extrae presentaciones y precios reales en Paris.cl validando entidad tanto en URLs
+    directas como en búsqueda viva para impedir SKUs reciclados o cruzados.
     """
     headers = obtener_headers_navegador(referer="https://www.paris.cl/")
     variedades: List[Dict[str, Any]] = []
     vols_vistos = set()
 
-    # Intento 1: URL directa
+    # Intento 1: URL directa con validación estricta de entidad
     if url_directa and url_directa.startswith("http"):
         try:
             res = session.get(url_directa, headers=headers, timeout=10)
-            if res.status_code == 200:
+            if res.status_code in (403, 429) and diagnostico is not None:
+                diagnostico["waf_bloqueado"] = True
+                diagnostico["http_status"] = res.status_code
+            elif res.status_code == 200:
                 is_dead_paris = any(w in res.text.lower() for w in [
                     'página en construcción', 'pagina en construccion',
-                    'mejorando tu experiencia', 'página no encontrada', 'no encontramos productos'
+                    'mejorando tu experiencia', 'página no encontrada', 'no encontramos productos',
                 ])
                 if not is_dead_paris:
                     soup = BeautifulSoup(res.text, "html.parser")
@@ -493,14 +688,32 @@ def extraer_variedades_paris(
                         if "Product" in s_tag.text:
                             d = json.loads(s_tag.text)
                             p_name = d.get("name", perfume_nombre)
+                            if not es_producto_perfume_valido(p_name, marca=marca or None, volumen_min_ml=25):
+                                continue
                             offers = d.get("offers", [])
                             off = offers[0] if isinstance(offers, list) and offers else (offers if isinstance(offers, dict) else {})
                             p_raw = off.get("price")
                             if p_raw:
                                 p_act = clean_digits(p_raw)
                                 vol = extraer_volumen_ml(p_name) or volumen_ml_defecto or 100
-                                if es_precio_valido(p_act) and vol not in vols_vistos:
-                                    vols_vistos.add(vol)
+                                if vol < 25 or not es_precio_valido(p_act):
+                                    continue
+                                res_match = coincide_entidad_detallada(
+                                    titulo=p_name,
+                                    perfume_nombre=perfume_nombre,
+                                    marca=marca,
+                                    concentracion=concentracion,
+                                    url=url_directa,
+                                    precio_candidato=p_act,
+                                    precio_referencia=precio_referencia,
+                                )
+                                if not res_match.coincide:
+                                    logger.warning(f"URL directa Paris descartada ({res_match.motivo}): {p_name} != {perfume_nombre}")
+                                    continue
+                                formato_det = res_match.formato_detectado or detectar_formato_oferta(p_name, url_directa)
+                                clave_var = (vol, formato_det)
+                                if clave_var not in vols_vistos:
+                                    vols_vistos.add(clave_var)
                                     avail = str(off.get("availability", "")).lower()
                                     en_stock = False if ("outofstock" in avail or "agotado" in avail) else True
                                     variedades.append({
@@ -510,7 +723,8 @@ def extraer_variedades_paris(
                                         "url": url_directa,
                                         "en_stock": en_stock,
                                         "volumen_ml": vol,
-                                        "metodo": "Paris Schema.org Direct"
+                                        "formato": formato_det,
+                                        "metodo": "Paris Schema.org Direct",
                                     })
         except Exception as e:
             logger.debug(f"Aviso leyendo URL directa Paris: {e}")
@@ -519,12 +733,19 @@ def extraer_variedades_paris(
         return variedades
 
     # Intento 2: Búsqueda dinámica en vivo en Paris
-    query_str = f"{marca} {perfume_nombre}".strip() if (marca and marca.lower() not in perfume_nombre.lower()) else perfume_nombre.strip()
+    query_str = (
+        f"{marca} {perfume_nombre}".strip()
+        if (marca and marca.lower() not in perfume_nombre.lower())
+        else perfume_nombre.strip()
+    )
     q = urllib.parse.quote(query_str)
     url_search = f"https://www.paris.cl/search?q={q}"
     try:
         res_s = session.get(url_search, headers=headers, timeout=10)
-        if res_s.status_code == 200:
+        if res_s.status_code in (403, 429) and diagnostico is not None:
+            diagnostico["waf_bloqueado"] = True
+            diagnostico["http_status"] = res_s.status_code
+        elif res_s.status_code == 200:
             soup_s = BeautifulSoup(res_s.text, "html.parser")
             tokens = [t.lower() for t in re.sub(r"[^\w\s]", " ", perfume_nombre).split() if len(t) >= 2]
             if not tokens:
@@ -545,9 +766,7 @@ def extraer_variedades_paris(
                             if "Product" in s_tag.text:
                                 d = json.loads(s_tag.text)
                                 p_name = d.get("name", perfume_nombre)
-                                if not es_producto_perfume_valido(p_name):
-                                    continue
-                                if not coincide_con_perfume(p_name, perfume_nombre, marca, concentracion, url=lk):
+                                if not es_producto_perfume_valido(p_name, marca=marca or None, volumen_min_ml=25):
                                     continue
                                 offers = d.get("offers", [])
                                 off = offers[0] if isinstance(offers, list) and offers else (offers if isinstance(offers, dict) else {})
@@ -555,8 +774,23 @@ def extraer_variedades_paris(
                                 if p_raw:
                                     p_act = clean_digits(p_raw)
                                     vol = extraer_volumen_ml(p_name) or volumen_ml_defecto or 100
-                                    if es_precio_valido(p_act) and vol not in vols_vistos:
-                                        vols_vistos.add(vol)
+                                    if vol < 25 or not es_precio_valido(p_act):
+                                        continue
+                                    res_match = coincide_entidad_detallada(
+                                        titulo=p_name,
+                                        perfume_nombre=perfume_nombre,
+                                        marca=marca,
+                                        concentracion=concentracion,
+                                        url=lk,
+                                        precio_candidato=p_act,
+                                        precio_referencia=precio_referencia,
+                                    )
+                                    if not res_match.coincide:
+                                        continue
+                                    formato_det = res_match.formato_detectado or detectar_formato_oferta(p_name, lk)
+                                    clave_var = (vol, formato_det)
+                                    if clave_var not in vols_vistos:
+                                        vols_vistos.add(clave_var)
                                         avail = str(off.get("availability", "")).lower()
                                         en_stock = False if ("outofstock" in avail or "agotado" in avail) else True
                                         variedades.append({
@@ -566,7 +800,8 @@ def extraer_variedades_paris(
                                             "url": lk,
                                             "en_stock": en_stock,
                                             "volumen_ml": vol,
-                                            "metodo": "Paris Live Schema.org"
+                                            "formato": formato_det,
+                                            "metodo": "Paris Live Schema.org",
                                         })
                 except Exception:
                     pass
@@ -582,7 +817,7 @@ def extraer_precio_paris(
     session: requests.Session,
     url_directa: str,
     perfume_nombre: str,
-    volumen_ml: Optional[int] = None
+    volumen_ml: Optional[int] = None,
 ) -> Dict[str, Any]:
     """Retrocompatibilidad con pruebas unitarias y selección de volumen específico."""
     vars_found = extraer_variedades_paris(session, url_directa, perfume_nombre, "", volumen_ml)
@@ -601,16 +836,21 @@ def extraer_variedades_ripley(
     perfume_nombre: str,
     marca: str = "",
     volumen_ml_defecto: Optional[int] = None,
-    concentracion: str = ""
+    concentracion: str = "",
+    precio_referencia: Optional[int] = None,
+    diagnostico: Optional[Dict[str, Any]] = None,
 ) -> List[Dict[str, Any]]:
     """
-    Extrae múltiples presentaciones de Ripley Chile (30ml, 50ml, 60ml, 100ml, 200ml, etc.):
-    Utiliza curl_cffi para emulación nativa de TLS Chrome (evasión transparente de Cloudflare 403),
-    inspecciona las fichas técnicas (PDP) encontradas y extrae cada variante con su volumen, precio y stock real.
+    Extrae múltiples presentaciones de Ripley Chile validando entidad, vendedores Marketplace
+    y distinguiendo bloqueos HTTP 403 WAF de falta real de stock.
     """
     variedades: List[Dict[str, Any]] = []
     vols_vistos = set()
-    query_str = f"{marca} {perfume_nombre}".strip() if (marca and marca.lower() not in perfume_nombre.lower()) else perfume_nombre.strip()
+    query_str = (
+        f"{marca} {perfume_nombre}".strip()
+        if (marca and marca.lower() not in perfume_nombre.lower())
+        else perfume_nombre.strip()
+    )
     q = urllib.parse.quote(query_str)
     url_search = f"https://simple.ripley.cl/search/{q}"
 
@@ -618,7 +858,7 @@ def extraer_variedades_ripley(
         "User-Agent": random.choice(USER_AGENTS),
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "Accept-Language": "es-CL,es;q=0.9,en;q=0.8",
-        "Referer": "https://simple.ripley.cl/"
+        "Referer": "https://simple.ripley.cl/",
     }
 
     try:
@@ -629,7 +869,11 @@ def extraer_variedades_ripley(
         else:
             res = session.get(url_search, headers=obtener_headers_navegador(), timeout=10)
 
-        if res.status_code == 200:
+        if res.status_code in (403, 429):
+            if diagnostico is not None:
+                diagnostico["waf_bloqueado"] = True
+                diagnostico["http_status"] = res.status_code
+        elif res.status_code == 200:
             soup = BeautifulSoup(res.text, "html.parser")
             tag = soup.find("script", id="__NEXT_DATA__")
             if tag and tag.text:
@@ -639,18 +883,30 @@ def extraer_variedades_ripley(
                 candidatos = []
                 for p in prods:
                     d_name = p.get("name", "")
+                    r_seller = p.get("marketplaceSeller") or p.get("sellerName") or p.get("seller")
+                    if _es_vendedor_marketplace_no_verificado(r_seller, marca, perfume_nombre):
+                        continue
                     p_id = p.get("parentProductID") or p.get("sku")
                     slug = p.get("url") or p_id
-                    pdp_url = f"https://simple.ripley.cl/{slug.lstrip('/')}" if slug and not slug.startswith("http") else (slug or f"https://simple.ripley.cl/{p_id}")
-                    if not es_producto_perfume_valido(d_name):
+                    pdp_url = (
+                        f"https://simple.ripley.cl/{slug.lstrip('/')}"
+                        if slug and not slug.startswith("http")
+                        else (slug or f"https://simple.ripley.cl/{p_id}")
+                    )
+                    if not es_producto_perfume_valido(d_name, marca=marca or None, volumen_min_ml=25):
                         continue
-                    if not coincide_con_perfume(d_name, perfume_nombre, marca, concentracion, url=pdp_url):
+                    res_cand = coincide_entidad_detallada(
+                        titulo=d_name,
+                        perfume_nombre=perfume_nombre,
+                        marca=marca,
+                        concentracion=concentracion,
+                        url=pdp_url,
+                    )
+                    if not res_cand.coincide:
                         continue
                     candidatos.append((p, pdp_url))
 
-                # Inspeccionar fichas PDP de los productos coincidentes
                 for p, pdp_url in candidatos[:2]:
-
                     if pdp_url and c_session is not None:
                         try:
                             headers_pdp = {
@@ -666,7 +922,11 @@ def extraer_variedades_ripley(
                                 if tag_p and tag_p.text:
                                     d_pdp = json.loads(tag_p.text)
                                     prod_info = d_pdp.get("props", {}).get("pageProps", {}).get("detailProps", {}).get("data", {}).get("product", {})
+                                    p_seller = prod_info.get("sellerName") or prod_info.get("marketplaceSeller")
+                                    if _es_vendedor_marketplace_no_verificado(p_seller, marca, perfume_nombre):
+                                        continue
                                     variants = prod_info.get("variants", [])
+                                    pdp_title = prod_info.get("name", p.get("name", ""))
 
                                     for v in variants:
                                         price_obj = v.get("price", {})
@@ -675,7 +935,6 @@ def extraer_variedades_ripley(
                                         if not sale_p or not es_precio_valido(sale_p):
                                             continue
 
-                                        # Identificar volumen específico desde definingAttribute o attributes
                                         vol = None
                                         for def_attr in v.get("definingAttribute", []):
                                             val_str = def_attr.get("value", "")
@@ -693,13 +952,28 @@ def extraer_variedades_ripley(
                                                         break
 
                                         if not vol:
-                                            vol = extraer_volumen_ml(prod_info.get("name", "")) or volumen_ml_defecto or 100
-
-                                        if vol in vols_vistos:
+                                            vol = extraer_volumen_ml(pdp_title) or volumen_ml_defecto or 100
+                                        if vol < 25:
                                             continue
-                                        vols_vistos.add(vol)
 
-                                        # Determinar stock real con precisión milimétrica
+                                        res_v = coincide_entidad_detallada(
+                                            titulo=pdp_title,
+                                            perfume_nombre=perfume_nombre,
+                                            marca=marca,
+                                            concentracion=concentracion,
+                                            url=pdp_url,
+                                            precio_candidato=int(sale_p),
+                                            precio_referencia=precio_referencia,
+                                        )
+                                        if not res_v.coincide:
+                                            continue
+
+                                        formato_det = res_v.formato_detectado or detectar_formato_oferta(pdp_title, pdp_url)
+                                        clave_var = (vol, formato_det)
+                                        if clave_var in vols_vistos:
+                                            continue
+                                        vols_vistos.add(clave_var)
+
                                         in_stock = (
                                             bool(v.get("stock", False))
                                             and not bool(v.get("notBuyable", False))
@@ -716,7 +990,8 @@ def extraer_variedades_ripley(
                                             "url": pdp_url,
                                             "en_stock": in_stock,
                                             "volumen_ml": vol,
-                                            "metodo": "Ripley Live PDP Variants"
+                                            "formato": formato_det,
+                                            "metodo": "Ripley Live PDP Variants",
                                         })
                         except Exception as e_pdp:
                             logger.debug(f"Aviso leyendo PDP Ripley {pdp_url}: {e_pdp}")
@@ -725,25 +1000,49 @@ def extraer_variedades_ripley(
                         p_act = p.get("priceNumber", 0)
                         p_norm = p.get("masterPriceNumber", p_act) or p_act
                         if p_act and es_precio_valido(p_act):
-                            vol = extraer_volumen_ml(p.get("name", "")) or volumen_ml_defecto or 100
-                            if vol not in vols_vistos:
-                                vols_vistos.add(vol)
-                                norm_valido = p_norm if (es_precio_valido(p_norm) and p_norm > p_act) else p_act
-                                variedades.append({
-                                    "exito": True,
-                                    "precio_actual": p_act,
-                                    "precio_normal": norm_valido,
-                                    "url": pdp_url or url_search,
-                                    "en_stock": bool(p.get("inStock", True)),
-                                    "volumen_ml": vol,
-                                    "metodo": "Ripley Chrome Search Card"
-                                })
+                            p_title = p.get("name", "")
+                            vol = extraer_volumen_ml(p_title) or volumen_ml_defecto or 100
+                            if vol >= 25:
+                                res_sc = coincide_entidad_detallada(
+                                    titulo=p_title,
+                                    perfume_nombre=perfume_nombre,
+                                    marca=marca,
+                                    concentracion=concentracion,
+                                    url=pdp_url or url_search,
+                                    precio_candidato=int(p_act),
+                                    precio_referencia=precio_referencia,
+                                )
+                                if res_sc.coincide:
+                                    formato_det = res_sc.formato_detectado or detectar_formato_oferta(p_title, pdp_url or "")
+                                    clave_var = (vol, formato_det)
+                                    if clave_var not in vols_vistos:
+                                        vols_vistos.add(clave_var)
+                                        norm_valido = p_norm if (es_precio_valido(p_norm) and p_norm > p_act) else p_act
+                                        variedades.append({
+                                            "exito": True,
+                                            "precio_actual": p_act,
+                                            "precio_normal": norm_valido,
+                                            "url": pdp_url or url_search,
+                                            "en_stock": bool(p.get("inStock", True)),
+                                            "volumen_ml": vol,
+                                            "formato": formato_det,
+                                            "metodo": "Ripley Chrome Search Card",
+                                        })
     except Exception as e:
         logger.warning(f"Error consultando Ripley para '{perfume_nombre}': {e}")
 
-    # Fallback a URL directa si no hubo resultados en búsqueda viva
     if not variedades and url_directa:
-        res_old = extraer_precio_ripley(session, url_directa, perfume_nombre, volumen_ml_defecto)
+        res_old = extraer_precio_ripley(
+            session,
+            url_directa,
+            perfume_nombre,
+            volumen_ml_defecto,
+            marca=marca,
+            concentracion=concentracion,
+            precio_referencia=precio_referencia,
+        )
+        if res_old.get("waf_bloqueado") and diagnostico is not None:
+            diagnostico["waf_bloqueado"] = True
         if res_old.get("exito"):
             variedades.append(res_old)
 
@@ -754,11 +1053,14 @@ def extraer_precio_ripley(
     session: requests.Session,
     url_directa: str,
     perfume_nombre: str,
-    volumen_ml: Optional[int] = None
+    volumen_ml: Optional[int] = None,
+    marca: str = "",
+    concentracion: str = "",
+    precio_referencia: Optional[int] = None,
 ) -> Dict[str, Any]:
     """
-    Extrae precio y stock de Ripley Chile combinando Schema.org y selectores DOM.
-    Maneja con elegancia protecciones anti-bot de Cloudflare (HTTP 403).
+    Extrae precio y stock de Ripley Chile combinando Schema.org y selectores DOM,
+    validando entidad en auto-sanación 404 y manejando protecciones WAF (HTTP 403).
     """
     headers = obtener_headers_navegador(referer="https://simple.ripley.cl/")
     url_a_probar = url_directa
@@ -770,29 +1072,57 @@ def extraer_precio_ripley(
         logger.warning(f"Fallo conexión Ripley direct: {e}")
         res = None
 
-    if res and res.status_code == 403:
-        return {"exito": False, "motivo": "Ripley protegido por Cloudflare WAF (HTTP 403)"}
+    if res and res.status_code in (403, 429):
+        return {
+            "exito": False,
+            "waf_bloqueado": True,
+            "motivo": f"Ripley protegido por Cloudflare WAF (HTTP {res.status_code})",
+        }
 
-    # Intento 2: Si dio 404, auto-sanar buscando la ficha viva en Ripley
+    # Intento 2: Si dio 404, auto-sanar validando entidad antes de adoptar el enlace nuevo
     if not res or res.status_code != 200:
-        q = urllib.parse.quote(perfume_nombre)
+        query_str = (
+            f"{marca} {perfume_nombre}".strip()
+            if (marca and marca.lower() not in perfume_nombre.lower())
+            else perfume_nombre.strip()
+        )
+        q = urllib.parse.quote(query_str)
         try:
             res_s = session.get(f"https://simple.ripley.cl/search/{q}", headers=headers, timeout=10)
-            if res_s.status_code == 403:
-                return {"exito": False, "motivo": "Ripley protegido por Cloudflare WAF (HTTP 403)"}
+            if res_s.status_code in (403, 429):
+                return {
+                    "exito": False,
+                    "waf_bloqueado": True,
+                    "motivo": f"Ripley protegido por Cloudflare WAF (HTTP {res_s.status_code})",
+                }
             if res_s.status_code == 200:
                 soup_s = BeautifulSoup(res_s.text, "html.parser")
-                tokens = [t.lower() for t in perfume_nombre.split() if len(t) > 3]
+                tokens = [t.lower() for t in re.sub(r"[^\w\s]", " ", perfume_nombre).split() if len(t) >= 3]
                 for a in soup_s.find_all("a", href=True):
                     h = a.get("href", "")
-                    if h.endswith("p") and any(tok in h.lower() for tok in tokens):
-                        url_a_probar = "https://simple.ripley.cl" + h.split("?")[0]
-                        res = session.get(url_a_probar, headers=headers, timeout=9)
-                        break
+                    if not h.endswith("p"):
+                        continue
+                    cand_url = h.split("?")[0] if h.startswith("http") else "https://simple.ripley.cl" + h.split("?")[0]
+                    anchor_txt = a.get_text(" ", strip=True)
+                    if anchor_txt and len(anchor_txt) >= 4:
+                        res_a = coincide_entidad_detallada(
+                            titulo=anchor_txt,
+                            perfume_nombre=perfume_nombre,
+                            marca=marca,
+                            concentracion=concentracion,
+                            url=cand_url,
+                        )
+                        if not res_a.coincide:
+                            continue
+                    elif tokens and not all(tok in h.lower() for tok in tokens[:2]):
+                        continue
+                    url_a_probar = cand_url
+                    res = session.get(url_a_probar, headers=headers, timeout=9)
+                    break
         except Exception as e:
             logger.warning(f"Fallo auto-sanación Ripley: {e}")
 
-    # Paso 3: Parsear ficha del producto
+    # Paso 3: Parsear ficha del producto con validación de entidad
     if res and res.status_code == 200:
         try:
             soup = BeautifulSoup(res.text, "html.parser")
@@ -801,21 +1131,43 @@ def extraer_precio_ripley(
                 if '"@type":"Product"' in b or '"@type": "Product"' in b:
                     try:
                         d = json.loads(b)
+                        p_name = d.get("name", "")
                         offers = d.get("offers", {})
                         if isinstance(offers, dict) and "price" in offers:
                             p_act = clean_digits(offers["price"])
+                            if not es_precio_valido(p_act):
+                                continue
+                            if p_name:
+                                res_ld = coincide_entidad_detallada(
+                                    titulo=p_name,
+                                    perfume_nombre=perfume_nombre,
+                                    marca=marca,
+                                    concentracion=concentracion,
+                                    url=url_a_probar,
+                                    precio_candidato=p_act,
+                                    precio_referencia=precio_referencia,
+                                )
+                                if not res_ld.coincide:
+                                    continue
+                                vol_det = extraer_volumen_ml(p_name) or volumen_ml or 100
+                                fmt_det = res_ld.formato_detectado or detectar_formato_oferta(p_name, url_a_probar)
+                            else:
+                                vol_det = volumen_ml or 100
+                                fmt_det = detectar_formato_oferta(perfume_nombre, url_a_probar)
+                            if vol_det < 25:
+                                continue
                             avail_r = str(offers.get("availability", "")).lower()
                             en_stock_r = False if ("outofstock" in avail_r or "agotado" in avail_r) else True
-                            if es_precio_valido(p_act):
-                                return {
-                                    "exito": True,
-                                    "precio_actual": p_act,
-                                    "precio_normal": p_act,
-                                    "url": url_a_probar,
-                                    "en_stock": en_stock_r,
-                                    "volumen_ml": volumen_ml or 100,
-                                    "metodo": "Ripley Schema.org"
-                                }
+                            return {
+                                "exito": True,
+                                "precio_actual": p_act,
+                                "precio_normal": p_act,
+                                "url": url_a_probar,
+                                "en_stock": en_stock_r,
+                                "volumen_ml": vol_det,
+                                "formato": fmt_det,
+                                "metodo": "Ripley Schema.org",
+                            }
                     except Exception:
                         pass
 
@@ -824,15 +1176,36 @@ def extraer_precio_ripley(
                 p_act = clean_digits(p_val.get_text())
                 agotado_dom = bool(soup.find(string=re.compile(r"agotado|sin stock", re.I)))
                 if es_precio_valido(p_act):
-                    return {
-                        "exito": True,
-                        "precio_actual": p_act,
-                        "precio_normal": p_act,
-                        "url": url_a_probar,
-                        "en_stock": not agotado_dom,
-                        "volumen_ml": volumen_ml or 100,
-                        "metodo": "Ripley DOM Price"
-                    }
+                    dom_title_el = soup.find("h1") or soup.find("title")
+                    dom_title = dom_title_el.get_text(" ", strip=True) if dom_title_el else ""
+                    if dom_title:
+                        res_dom = coincide_entidad_detallada(
+                            titulo=dom_title,
+                            perfume_nombre=perfume_nombre,
+                            marca=marca,
+                            concentracion=concentracion,
+                            url=url_a_probar,
+                            precio_candidato=p_act,
+                            precio_referencia=precio_referencia,
+                        )
+                        if not res_dom.coincide:
+                            return {"exito": False, "motivo": res_dom.motivo}
+                        vol_dom = extraer_volumen_ml(dom_title) or volumen_ml or 100
+                        fmt_dom = res_dom.formato_detectado or detectar_formato_oferta(dom_title, url_a_probar)
+                    else:
+                        vol_dom = volumen_ml or 100
+                        fmt_dom = detectar_formato_oferta(perfume_nombre, url_a_probar)
+                    if vol_dom >= 25:
+                        return {
+                            "exito": True,
+                            "precio_actual": p_act,
+                            "precio_normal": p_act,
+                            "url": url_a_probar,
+                            "en_stock": not agotado_dom,
+                            "volumen_ml": vol_dom,
+                            "formato": fmt_dom,
+                            "metodo": "Ripley DOM Price",
+                        }
         except Exception as e:
             logger.warning(f"Error parseando precio en Ripley: {e}")
 
@@ -869,37 +1242,87 @@ def obtener_ultimo_reporte_scraping() -> Optional[Dict[str, Any]]:
 
 def ejecutar_ciclo_scraping_y_descubrimiento() -> Dict[str, Any]:
     """
-    ¿Qué hace este gran bloque orquestador?
-    Ejecuta el ciclo de extracción ETL, auditoría periódica y persistencia de precios reales:
-    1. Recupera catálogo de perfumes y comercios registrados en base de datos.
-    2. Realiza extracciones en vivo contra los 5 comercios oficiales con cabeceras de navegador.
-    3. Si una tienda tiene descuento real, registra precio_normal y precio_actual.
-       Si no tiene descuento, precio_normal == precio_actual (sin tachado falso).
-    4. Auto-sana URLs rotas y preserva el volumen_ml calibrado.
-    5. Fallback de resiliencia: Si una tienda responde 429/403 o timeout, mantiene el último
-       precio verificado para garantizar Zero-Downtime.
-    6. Genera informe auditable en data/reportes/ultimo_scraping.json.
+    Orquesta el ciclo de extracción ETL, auditoría periódica y persistencia transaccional:
+    1. Recupera catálogo completo paginado (>1.000 filas) incluyendo `tipo` (concentración) y `precio_referencia`.
+    2. Precarga ofertas vivas conocidas (`ofertas_actuales`) para consultar URLs directas sin N+1 queries.
+    3. Ejecuta los extractores de los comercios auditados activando las 12 capas de resolución de entidad,
+       separando formatos `'regular'` vs `'tester'` y descartando decants `< 25 ml` y terceros no auditados.
+    4. Distingue bloqueos temporales WAF (`HTTP 403/429`) de falta de disponibilidad real para no degradar ofertas sanas.
+    5. Registra el inicio y cierre en `scraping_runs` y genera `data/reportes/ultimo_scraping.json`.
     """
     init_db()
     inicio = time.time()
     ahora = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     logger.info("Iniciando ciclo de scraping ETL profesional con precios 100% reales")
+    run_id = iniciar_scraping_run(
+        tipo_scraper="Scraper Periódico Precios y Stock",
+        mensaje_detalle="Inicio de auditoría periódica multitienda",
+    )
 
-    # 1. Sesión HTTP reutilizable con reintentos exponenciales
     session = crear_sesion_robusta()
-    
-    # 2. Consultamos la lista de perfumes y tiendas desde la base de datos (Supabase prioritario, SQLite fallback)
+
     perfumes_db: List[Dict[str, Any]] = []
     tiendas_db: List[Dict[str, Any]] = []
+    urls_conocidas_map: Dict[Tuple[int, int], Tuple[str, int]] = {}
+
     sb = get_supabase(use_service_role=True)
     if sb and is_supabase_disponible():
         try:
-            resp_p = sb.table("perfumes").select("id, nombre, marca, precio_referencia").order("id").execute()
-            perfumes_db = resp_p.data or []
+            perfumes_db = _fetch_all_rows(
+                lambda off, lim: (
+                    sb.table("perfumes")
+                    .select("id, nombre, marca, tipo, precio_referencia, es_arabe")
+                    .order("id", desc=False)
+                    .range(off, off + lim - 1)
+                ),
+                page_size=1000,
+            )
             resp_t = sb.table("tiendas").select("id, nombre, url_base, trust_score").order("id").execute()
             tiendas_db = resp_t.data or []
-            logger.info(f"Catálogo cargado desde Supabase Cloud: {len(perfumes_db)} perfumes, {len(tiendas_db)} tiendas.")
+
+            variantes_rows = _fetch_all_rows(
+                lambda off, lim: (
+                    sb.table("variantes_perfume")
+                    .select("id, perfume_id, volumen_ml, formato")
+                    .order("id", desc=False)
+                    .range(off, off + lim - 1)
+                ),
+                page_size=1000,
+            )
+            var_to_perf: Dict[int, Tuple[int, int, str]] = {}
+            for vr in variantes_rows:
+                try:
+                    var_to_perf[int(vr["id"])] = (
+                        int(vr["perfume_id"]),
+                        int(round(float(vr.get("volumen_ml") or 100))),
+                        str(vr.get("formato") or "regular").lower(),
+                    )
+                except Exception:
+                    pass
+
+            ofertas_rows = _fetch_all_rows(
+                lambda off, lim: (
+                    sb.table("ofertas_actuales")
+                    .select("variante_id, tienda_id, url_producto, estado")
+                    .neq("estado", "requiere_revision")
+                    .order("id", desc=False)
+                    .range(off, off + lim - 1)
+                ),
+                page_size=1000,
+            )
+            for oa in ofertas_rows:
+                u_prod = str(oa.get("url_producto") or "").strip()
+                v_info = var_to_perf.get(int(oa.get("variante_id") or 0))
+                if u_prod.startswith("http") and v_info and v_info[2] != "tester":
+                    k_pt = (v_info[0], int(oa["tienda_id"]))
+                    if k_pt not in urls_conocidas_map:
+                        urls_conocidas_map[k_pt] = (u_prod, v_info[1])
+
+            logger.info(
+                f"Catálogo cargado desde Supabase Cloud: {len(perfumes_db)} perfumes, "
+                f"{len(tiendas_db)} tiendas, {len(urls_conocidas_map)} enlaces directos en caché."
+            )
         except Exception as e:
             logger.warning(f"Aviso consultando catálogo en Supabase ({e}), recurriendo a SQLite local.")
 
@@ -907,23 +1330,45 @@ def ejecutar_ciclo_scraping_y_descubrimiento() -> Dict[str, Any]:
         init_db()
         conn = get_connection()
         cursor = conn.cursor()
-        cursor.execute("SELECT id, nombre, marca, precio_referencia FROM perfumes;")
+        cursor.execute("SELECT id, nombre, marca, tipo, precio_referencia, es_arabe FROM perfumes ORDER BY id ASC;")
         perfumes_db = [dict(r) for r in cursor.fetchall()]
-        cursor.execute("SELECT id, nombre, url_base, trust_score FROM tiendas;")
+        cursor.execute("SELECT id, nombre, url_base, trust_score FROM tiendas ORDER BY id ASC;")
         tiendas_db = [dict(r) for r in cursor.fetchall()]
+        cursor.execute(
+            """
+            SELECT vp.perfume_id, oa.tienda_id, oa.url_producto, CAST(ROUND(COALESCE(vp.volumen_ml, 100)) AS INTEGER) as vol_ml
+            FROM ofertas_actuales oa
+            JOIN variantes_perfume vp ON vp.id = oa.variante_id
+            WHERE oa.url_producto IS NOT NULL AND oa.estado != 'requiere_revision' AND COALESCE(vp.formato, 'regular') != 'tester';
+            """
+        )
+        for r in cursor.fetchall():
+            k_pt = (int(r["perfume_id"]), int(r["tienda_id"]))
+            if k_pt not in urls_conocidas_map and str(r["url_producto"]).startswith("http"):
+                urls_conocidas_map[k_pt] = (str(r["url_producto"]), int(r["vol_ml"] or 100))
         conn.close()
         logger.info(f"Catálogo cargado desde SQLite local: {len(perfumes_db)} perfumes, {len(tiendas_db)} tiendas.")
 
     actualizaciones = 0
+    ofertas_nuevas = 0
+    cambios_precio = 0
+    cambios_stock = 0
+    cambios_url = 0
     omitidos = 0
+    bloqueos_waf = 0
     errores: List[str] = []
     detalle_precios: List[Dict[str, Any]] = []
     tiendas_stats: Dict[str, Dict[str, Any]] = {
-        t["nombre"]: {"consultas": 0, "exitos_en_vivo": 0, "fallbacks_seguridad": 0, "trust_score": t["trust_score"]}
+        t["nombre"]: {
+            "consultas": 0,
+            "exitos_en_vivo": 0,
+            "fallbacks_seguridad": 0,
+            "bloqueos_waf": 0,
+            "trust_score": t["trust_score"],
+        }
         for t in tiendas_db
     }
 
-    # Posibilidad de configurar límite para pruebas de humo o auditar el catálogo completo
     limit_env = os.environ.get("SCRAPER_LIMIT_PERFUMES")
     if limit_env and limit_env.isdigit():
         max_p = int(limit_env)
@@ -933,38 +1378,40 @@ def ejecutar_ciclo_scraping_y_descubrimiento() -> Dict[str, Any]:
         perfumes_a_auditar = perfumes_db
         logger.info(f"Modo completo activo: auditando catálogo entero ({len(perfumes_a_auditar)} perfumes).")
 
-    # 3. Bucle Principal: recorremos cada perfume del catálogo
     for p in perfumes_a_auditar:
         p_id = p["id"]
         p_nom = p["nombre"]
         p_marca = p["marca"]
-        p_tipo = p.get("tipo", "")
+        p_tipo = p.get("tipo") or ""
+        p_ref = p.get("precio_referencia")
 
-        logger.info(f"Auditando fragancia: {p_nom} ({p_marca})")
+        logger.info(f"Auditando fragancia: {p_nom} ({p_marca}) [{p_tipo or 'N/A'}]")
 
-        # 4. Bucle Secundario: consultamos cada tienda auditada
         for tienda in tiendas_db:
             t_id = tienda["id"]
             t_nom = tienda["nombre"]
 
-            # Regla de negocio: verificar si la tienda comercializa esa marca
             if not tienda_comercializa_marca(t_nom, p_marca):
                 omitidos += 1
                 continue
 
             url_directa_info = obtener_url_directa_tienda(p_id, t_nom)
-            url_directa_guardada = url_directa_info[0] if url_directa_info else None
-            vol_ml_base = url_directa_info[3] if url_directa_info else 100
+            if url_directa_info:
+                url_directa_guardada = url_directa_info[0]
+                vol_ml_base = url_directa_info[3] or 100
+            elif (int(p_id), int(t_id)) in urls_conocidas_map:
+                url_directa_guardada, vol_ml_base = urls_conocidas_map[(int(p_id), int(t_id))]
+            else:
+                url_directa_guardada = None
+                vol_ml_base = 100
 
             tiendas_stats[t_nom]["consultas"] += 1
+            time.sleep(random.uniform(0.18, 0.45))
 
-            # Pausa breve humana aleatoria
-            time.sleep(random.uniform(0.2, 0.5))
-
+            diag: Dict[str, Any] = {}
             try:
                 lista_variedades: List[Dict[str, Any]] = []
 
-                # Rama A: Tiendas Shopify (Silk, Elite, Alisha, Yauras, DBS)
                 if t_nom in TIENDAS_SHOPIFY:
                     dominio = TIENDAS_SHOPIFY[t_nom]
                     lista_variedades = extraer_variedades_shopify(
@@ -973,10 +1420,10 @@ def ejecutar_ciclo_scraping_y_descubrimiento() -> Dict[str, Any]:
                         perfume_nombre=p_nom,
                         marca=p_marca,
                         volumen_ml_defecto=vol_ml_base,
-                        concentracion=p_tipo
+                        concentracion=p_tipo,
+                        precio_referencia=p_ref,
+                        diagnostico=diag,
                     )
-
-                # Rama B: Falabella (Búsqueda viva Next.js + múltiples variantes de volumen)
                 elif "falabella" in t_nom.lower():
                     lista_variedades = extraer_variedades_falabella(
                         session=session,
@@ -984,10 +1431,10 @@ def ejecutar_ciclo_scraping_y_descubrimiento() -> Dict[str, Any]:
                         perfume_nombre=p_nom,
                         marca=p_marca,
                         volumen_ml_defecto=vol_ml_base,
-                        concentracion=p_tipo
+                        concentracion=p_tipo,
+                        precio_referencia=p_ref,
+                        diagnostico=diag,
                     )
-
-                # Rama C: Paris (Schema.org JSON-LD de Google + búsqueda viva)
                 elif "paris" in t_nom.lower():
                     lista_variedades = extraer_variedades_paris(
                         session=session,
@@ -995,10 +1442,10 @@ def ejecutar_ciclo_scraping_y_descubrimiento() -> Dict[str, Any]:
                         perfume_nombre=p_nom,
                         marca=p_marca,
                         volumen_ml_defecto=vol_ml_base,
-                        concentracion=p_tipo
+                        concentracion=p_tipo,
+                        precio_referencia=p_ref,
+                        diagnostico=diag,
                     )
-
-                # Rama D: Ripley (Búsqueda viva Next.js + curl_cffi Chrome TLS)
                 elif "ripley" in t_nom.lower():
                     lista_variedades = extraer_variedades_ripley(
                         session=session,
@@ -1006,23 +1453,29 @@ def ejecutar_ciclo_scraping_y_descubrimiento() -> Dict[str, Any]:
                         perfume_nombre=p_nom,
                         marca=p_marca,
                         volumen_ml_defecto=vol_ml_base,
-                        concentracion=p_tipo
+                        concentracion=p_tipo,
+                        precio_referencia=p_ref,
+                        diagnostico=diag,
                     )
+                else:
+                    omitidos += 1
+                    continue
 
-                # 5. Procesamiento y persistencia de cada variedad extraída
                 if lista_variedades:
                     for var_data in lista_variedades:
                         if not var_data.get("exito"):
                             continue
-                        precio_actual_final = var_data["precio_actual"]
+                        precio_actual_final = int(var_data["precio_actual"])
                         if not es_precio_valido(precio_actual_final):
                             continue
-                        precio_normal_final = var_data["precio_normal"]
+                        precio_normal_final = int(var_data.get("precio_normal") or precio_actual_final)
                         url_final = var_data["url"]
-                        vol_final = var_data.get("volumen_ml", vol_ml_base)
+                        vol_final = int(var_data.get("volumen_ml") or vol_ml_base or 100)
+                        if vol_final < 25:
+                            continue
                         stock_final = bool(var_data.get("en_stock", True))
+                        formato_final = str(var_data.get("formato") or detectar_formato_oferta(p_nom, url_final))
 
-                        # Persistencia Transaccional Atómica (ACID en Supabase y SQLite)
                         res_obs = registrar_observacion_oferta({
                             "perfume_id": p_id,
                             "tienda_id": t_id,
@@ -1030,10 +1483,23 @@ def ejecutar_ciclo_scraping_y_descubrimiento() -> Dict[str, Any]:
                             "precio_normal": precio_normal_final,
                             "en_stock": stock_final,
                             "url_producto": url_final,
-                            "volumen_ml": vol_final
+                            "volumen_ml": vol_final,
+                            "formato": formato_final,
+                            "scraping_run_id": run_id,
                         })
-                        if res_obs.get("resultado") in ("creada", "actualizada"):
+                        res_tipo = res_obs.get("resultado")
+                        if res_tipo in ("creada", "actualizada"):
                             actualizaciones += 1
+                            if res_tipo == "creada":
+                                ofertas_nuevas += 1
+                            c_mods = res_obs.get("campos_modificados") or []
+                            if "precio_actual" in c_mods:
+                                cambios_precio += 1
+                            if "en_stock" in c_mods:
+                                cambios_stock += 1
+                            if "url_producto" in c_mods:
+                                cambios_url += 1
+
                         tiendas_stats[t_nom]["exitos_en_vivo"] += 1
                         detalle_precios.append({
                             "perfume": p_nom,
@@ -1043,15 +1509,26 @@ def ejecutar_ciclo_scraping_y_descubrimiento() -> Dict[str, Any]:
                             "tiene_descuento": bool(precio_normal_final > precio_actual_final),
                             "origen": var_data.get("metodo", "Extracción en Vivo"),
                             "volumen_ml": vol_final,
-                            "en_stock": stock_final
+                            "formato": formato_final,
+                            "en_stock": stock_final,
                         })
-                        logger.info(f"  -> [{t_nom}] EN VIVO: ${precio_actual_final:,} (Normal: ${precio_normal_final:,}) | {vol_final}ml | stock: {stock_final}")
+                        logger.info(
+                            f"  -> [{t_nom}] EN VIVO: ${precio_actual_final:,} "
+                            f"(Normal: ${precio_normal_final:,}) | {vol_final}ml ({formato_final}) | stock: {stock_final}"
+                        )
+                elif diag.get("waf_bloqueado"):
+                    bloqueos_waf += 1
+                    tiendas_stats[t_nom]["bloqueos_waf"] += 1
+                    logger.info(
+                        f"  -> [{t_nom}] Bloqueo temporal WAF (HTTP {diag.get('http_status', 403)}). "
+                        "Se preserva última oferta sin penalizar fallos consecutivos."
+                    )
                 else:
                     motivo_fallo = f"Sin disponibilidad confirmada en {t_nom}"
                     registrar_fallo_scraping(
                         tienda_id=t_id,
                         perfume_id=p_id,
-                        mensaje=motivo_fallo
+                        mensaje=motivo_fallo,
                     )
                     tiendas_stats[t_nom]["fallbacks_seguridad"] += 1
                     logger.debug(f"  -> [{t_nom}] FALLO SCRAPING: {motivo_fallo}. No se altera precio ni stock.")
@@ -1064,7 +1541,7 @@ def ejecutar_ciclo_scraping_y_descubrimiento() -> Dict[str, Any]:
                     registrar_fallo_scraping(
                         tienda_id=t_id,
                         perfume_id=p_id,
-                        mensaje=str(ex)
+                        mensaje=str(ex),
                     )
                 except Exception:
                     pass
@@ -1072,32 +1549,52 @@ def ejecutar_ciclo_scraping_y_descubrimiento() -> Dict[str, Any]:
     duracion = round(time.time() - inicio, 2)
     estado_general = "EXITOSO" if not errores else ("DEGRADADO" if actualizaciones > 0 else "FALLIDO")
 
+    finalizar_scraping_run(
+        run_id=run_id,
+        estado="completado" if estado_general == "EXITOSO" else estado_general.lower(),
+        productos_procesados=len(perfumes_a_auditar),
+        ofertas_nuevas=ofertas_nuevas,
+        cambios_precio=cambios_precio,
+        cambios_stock=cambios_stock,
+        cambios_url=cambios_url,
+        errores=len(errores),
+        mensaje_detalle=(
+            f"Auditados {len(perfumes_a_auditar)} perfumes en {duracion}s: "
+            f"{actualizaciones} actualizaciones, {bloqueos_waf} bloqueos WAF."
+        ),
+    )
+
     reporte = {
         "actualizaciones": actualizaciones,
         "fecha": ahora,
         "duracion_segundos": duracion,
         "metadata": {
-            "version_etl": "3.0.0",
+            "version_etl": "3.2.0",
             "sistema": "PerfumeTrending Professional Anti-Bot ETL",
             "fecha_ejecucion": ahora,
             "duracion_segundos": duracion,
-            "estado": estado_general
+            "estado": estado_general,
+            "scraping_run_id": run_id,
         },
         "metricas": {
             "total_perfumes_catalogo": len(perfumes_db),
+            "perfumes_auditados": len(perfumes_a_auditar),
             "total_tiendas_registradas": len(tiendas_db),
             "precios_actualizados": actualizaciones,
+            "ofertas_nuevas": ofertas_nuevas,
+            "cambios_precio": cambios_precio,
+            "cambios_stock": cambios_stock,
+            "cambios_url": cambios_url,
+            "bloqueos_waf": bloqueos_waf,
             "exclusiones_marca": omitidos,
-            "errores_totales": len(errores)
+            "errores_totales": len(errores),
         },
         "estadisticas_tiendas": tiendas_stats,
         "muestra_capturas": detalle_precios[:15],
-        "errores": errores
+        "errores": errores,
     }
 
-    # Guardar reporte de auditoría JSON
     guardar_reporte_auditoria(reporte)
-
     logger.info(f"Ciclo ETL completado en {duracion}s | {actualizaciones} precios sincronizados | Estado: {estado_general}")
     return reporte
 

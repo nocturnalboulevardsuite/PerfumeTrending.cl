@@ -24,7 +24,7 @@ import random
 import re
 import sys
 import time
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional, Set, Tuple
 import urllib.parse
 
 import requests
@@ -56,37 +56,47 @@ REPORTE_DESCUBRIMIENTO_PATH = os.path.join(REPORTES_DIR, "ultimo_descubrimiento.
 # Importación de persistencia y normalización
 try:
     from backend.database import (
+        finalizar_scraping_run,
         get_db_cursor,
         init_db,
+        iniciar_scraping_run,
         get_supabase,
         is_supabase_disponible,
         registrar_precio,
-        registrar_observacion_oferta
+        registrar_observacion_oferta,
     )
     from backend.normalizador import (
-        extraer_volumen_ml,
+        detectar_formato_oferta,
+        es_arabe,
+        es_precio_valido,
+        es_producto_perfume_valido,
         extraer_concentracion,
         extraer_genero,
-        es_arabe,
-        es_producto_perfume_valido,
-        limpiar_nombre_perfume
+        extraer_volumen_ml,
+        limpiar_nombre_perfume,
+        normalizar_marca_canonica,
     )
 except ImportError:
     from database import (
+        finalizar_scraping_run,
         get_db_cursor,
         init_db,
+        iniciar_scraping_run,
         get_supabase,
         is_supabase_disponible,
         registrar_precio,
-        registrar_observacion_oferta
+        registrar_observacion_oferta,
     )
     from normalizador import (
-        extraer_volumen_ml,
+        detectar_formato_oferta,
+        es_arabe,
+        es_precio_valido,
+        es_producto_perfume_valido,
         extraer_concentracion,
         extraer_genero,
-        es_arabe,
-        es_producto_perfume_valido,
-        limpiar_nombre_perfume
+        extraer_volumen_ml,
+        limpiar_nombre_perfume,
+        normalizar_marca_canonica,
     )
 
 # =============================================================================
@@ -121,6 +131,12 @@ TIENDAS_CRAWLER_CONFIG = [
         "url_base": "https://yauras.cl",
         "endpoint": "https://yauras.cl/products.json",
         "trust_score": 88
+    },
+    {
+        "nombre": "Oferta Perfumes",
+        "url_base": "https://ofertaperfumes.cl",
+        "endpoint": "https://ofertaperfumes.cl/products.json",
+        "trust_score": 90
     }
 ]
 
@@ -241,11 +257,14 @@ def guardar_reporte_descubrimiento(reporte: Dict[str, Any]) -> str:
 #    transaccional `registrar_observacion_oferta()` para registrar la oferta viva y el historial.
 # =============================================================================
 def ejecutar_descubrimiento_autonomo(
-    limite_por_tienda: int = 20,
-    paginas: int = 1
+    limite_por_tienda: int = 250,
+    paginas: int = 2,
+    subir_imagenes: bool = False,
+    filtro_tiendas: Optional[List[str]] = None
 ) -> Dict[str, Any]:
     """
     Ejecuta el ciclo de rastreo masivo autónomo en comercios especializados.
+    Optimizado para alta concurrencia y volumen masivo (cientos/miles de productos).
     """
     init_db()
     inicio = time.time()
@@ -254,7 +273,7 @@ def ejecutar_descubrimiento_autonomo(
     sb = get_supabase(use_service_role=True)
     supabase_activo = is_supabase_disponible()
 
-    logger.info(f"Iniciando descubrimiento autónomo (límite: {limite_por_tienda} items/tienda, {paginas} páginas)")
+    logger.info(f"Iniciando descubrimiento autónomo masivo (límite: {limite_por_tienda} items/página, {paginas} páginas)")
     logger.info(f"Destino de persistencia: {'SUPABASE CLOUD + SQLITE' if supabase_activo else 'SQLITE LOCAL'}")
 
     session = crear_sesion_robusta()
@@ -270,9 +289,20 @@ def ejecutar_descubrimiento_autonomo(
     errores: List[str] = []
     muestras_descubiertas: List[Dict[str, Any]] = []
 
-    # Mapas de tiendas y perfumes en Supabase para evitar consultas duplicadas
+    run_id = iniciar_scraping_run(
+        tipo_scraper="Descubrimiento Autónomo Multitienda",
+        mensaje_detalle=f"Rastreo masivo ({paginas} páginas/tienda, límite {limite_por_tienda})",
+    )
+
+    def _perfume_canon_key(m_raw: str, n_raw: str, c_raw: str) -> Tuple[str, str, str]:
+        m_c = (normalizar_marca_canonica(m_raw) or "Diseñador").strip().lower()
+        n_c = (limpiar_nombre_perfume(n_raw, m_raw) or n_raw or "").strip().lower()
+        c_c = (c_raw or "Eau de Parfum").strip().lower()
+        return (m_c, n_c, c_c)
+
     sb_tiendas_map: Dict[str, int] = {}
-    sb_perfumes_conocidos: Dict[str, int] = {}
+    sb_perfumes_conocidos: Dict[Tuple[str, str, str], int] = {}
+    sb_variantes_conocidas: Dict[Tuple[int, int, str], int] = {}
 
     if supabase_activo and sb:
         try:
@@ -280,16 +310,47 @@ def ejecutar_descubrimiento_autonomo(
             for r in res_t.data or []:
                 sb_tiendas_map[r["nombre"].lower()] = r["id"]
 
-            res_p = sb.table("perfumes").select("id, nombre").execute()
-            for r in res_p.data or []:
-                sb_perfumes_conocidos[r["nombre"].strip().lower()] = r["id"]
+            offset = 0
+            while True:
+                res_p = sb.table("perfumes").select("id, marca, nombre, tipo").range(offset, offset + 999).execute()
+                if not res_p.data:
+                    break
+                for r in res_p.data:
+                    ck = _perfume_canon_key(r.get("marca") or "", r.get("nombre") or "", r.get("tipo") or "")
+                    sb_perfumes_conocidos[ck] = r["id"]
+                if len(res_p.data) < 1000:
+                    break
+                offset += 1000
+
+            offset_v = 0
+            while True:
+                res_v = sb.table("variantes_perfume").select("id, perfume_id, volumen_ml, formato").range(offset_v, offset_v + 999).execute()
+                if not res_v.data:
+                    break
+                for r in res_v.data:
+                    try:
+                        v_ml = int(round(float(r["volumen_ml"])))
+                        v_fmt = str(r.get("formato") or "regular").lower()
+                        sb_variantes_conocidas[(r["perfume_id"], v_ml, v_fmt)] = r["id"]
+                    except Exception:
+                        pass
+                if len(res_v.data) < 1000:
+                    break
+                offset_v += 1000
+
+            logger.info(f"Caché Supabase inicializada: {len(sb_perfumes_conocidos)} perfumes, {len(sb_variantes_conocidas)} variantes.")
         except Exception as e:
             logger.warning(f"Error cargando caché inicial desde Supabase: {e}")
 
     with get_db_cursor(commit=True) as cursor:
-        # Obtener mapeo de tiendas en SQLite
         cursor.execute("SELECT id, nombre FROM tiendas;")
         sqlite_tiendas_map = {r["nombre"].lower(): r["id"] for r in cursor.fetchall()}
+
+        cursor.execute("SELECT id, marca, nombre, tipo FROM perfumes;")
+        sqlite_perfumes_map: Dict[Tuple[str, str, str], int] = {}
+        for r in cursor.fetchall():
+            ck = _perfume_canon_key(r["marca"] or "", r["nombre"] or "", r["tipo"] or "")
+            sqlite_perfumes_map[ck] = r["id"]
 
         for tienda_cfg in TIENDAS_CRAWLER_CONFIG:
             t_nombre = tienda_cfg["nombre"]
@@ -297,7 +358,9 @@ def ejecutar_descubrimiento_autonomo(
             t_endpoint = tienda_cfg["endpoint"]
             t_key = t_nombre.lower()
 
-            # Asegurar tienda en Supabase
+            if filtro_tiendas and not any(f.lower() in t_key for f in filtro_tiendas):
+                continue
+
             t_id_supabase = sb_tiendas_map.get(t_key)
             if not t_id_supabase and supabase_activo and sb:
                 try:
@@ -306,7 +369,7 @@ def ejecutar_descubrimiento_autonomo(
                         "url_base": t_url_base,
                         "trust_score": tienda_cfg["trust_score"],
                         "badge": "Tienda Verificada",
-                        "logo_emoji": ""
+                        "logo_emoji": "",
                     }, on_conflict="nombre").execute()
                     if ins_t.data:
                         t_id_supabase = ins_t.data[0]["id"]
@@ -314,7 +377,6 @@ def ejecutar_descubrimiento_autonomo(
                 except Exception as e:
                     logger.warning(f"Error asegurando tienda {t_nombre} en Supabase: {e}")
 
-            # Asegurar tienda en SQLite
             t_id_sqlite = sqlite_tiendas_map.get(t_key)
             if not t_id_sqlite:
                 cursor.execute("""
@@ -326,20 +388,23 @@ def ejecutar_descubrimiento_autonomo(
                 t_id_sqlite = row_t["id"] if row_t else 1
                 sqlite_tiendas_map[t_key] = t_id_sqlite
 
-            logger.info(f"Rastreando catálogo de: {t_nombre}...")
+            logger.info(f"Rastreando catálogo masivo de: {t_nombre}...")
 
             for pag in range(1, paginas + 1):
-                params = {"limit": limite_por_tienda, "page": pag}
+                params = {"limit": min(limite_por_tienda, 250), "page": pag}
                 try:
-                    res = session.get(t_endpoint, params=params, headers=headers, timeout=12)
+                    res = session.get(t_endpoint, params=params, headers=headers, timeout=15)
                     if res.status_code != 200:
                         logger.warning(f"Respuesta HTTP {res.status_code} en {t_nombre} (pág {pag})")
-                        continue
+                        break
 
                     data = res.json()
                     productos = data.get("products", [])
                     if not productos:
+                        logger.info(f"Fin del catálogo en {t_nombre} en página {pag}.")
                         break
+
+                    logger.info(f"Procesando lote de {len(productos)} productos en {t_nombre} (pág {pag})...")
 
                     for prod in productos:
                         total_procesados += 1
@@ -347,95 +412,140 @@ def ejecutar_descubrimiento_autonomo(
                         raw_vendor = (prod.get("vendor", "") or "").strip()
                         tags = prod.get("tags", [])
 
-                        # 1. Filtro estricto de productos que no son fragancias
-                        if not es_producto_perfume_valido(raw_title, tags):
+                        marca = normalizar_marca_canonica(raw_vendor) if len(raw_vendor) > 1 else "Diseñador"
+
+                        # 1. Filtro estricto de productos que no son fragancias embotelladas (>= 25 ml)
+                        if not es_producto_perfume_valido(raw_title, tags, marca=marca, volumen_min_ml=25):
                             descartados_no_perfume += 1
                             continue
 
-                        # 2. Normalización de atributos
-                        marca = raw_vendor if len(raw_vendor) > 1 else "Diseñador"
                         nombre_limpio = limpiar_nombre_perfume(raw_title, marca)
+                        if not nombre_limpio or len(nombre_limpio.strip()) < 2:
+                            descartados_no_perfume += 1
+                            continue
+
                         concentracion = extraer_concentracion(raw_title)
                         genero = extraer_genero(raw_title)
                         arabe_flag = 1 if es_arabe(marca, nombre_limpio) else 0
 
-                        # Imagen
                         images = prod.get("images", [])
                         img_url = images[0].get("src", "") if images else "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=500&q=80"
                         url_producto = f"{t_url_base}/products/{prod.get('handle', '')}"
+                        formato_prod = detectar_formato_oferta(raw_title, url_producto)
 
                         variants = prod.get("variants", [])
                         if not variants:
                             continue
 
-                        primer_precio = int(float(variants[0].get("price", 0)))
-                        if primer_precio <= 0:
+                        # Pre-filtrar solo variantes válidas (>= 25 ml y precio comercial sano)
+                        variantes_validas: List[Dict[str, Any]] = []
+                        for v in variants:
+                            v_price = int(float(v.get("price", 0)))
+                            if not es_precio_valido(v_price):
+                                continue
+                            v_title = v.get("title", "")
+                            vol_ml = extraer_volumen_ml(f"{raw_title} {v_title}") or 100
+                            if vol_ml < 25:
+                                continue
+                            v_compare_raw = v.get("compare_at_price")
+                            v_compare = int(float(v_compare_raw)) if (v_compare_raw and float(v_compare_raw) > v_price) else None
+                            v_avail = v.get("available")
+                            v_stock = bool(v_avail) if v_avail is not None else True
+                            v_fmt = detectar_formato_oferta(f"{raw_title} {v_title}", url_producto) if formato_prod == "regular" else formato_prod
+                            variantes_validas.append({
+                                "price": v_price,
+                                "compare": v_compare,
+                                "stock": v_stock,
+                                "vol": vol_ml,
+                                "formato": v_fmt,
+                            })
+
+                        if not variantes_validas:
+                            descartados_no_perfume += 1
                             continue
 
-                        nombre_key = nombre_limpio.strip().lower()
+                        primer_precio = variantes_validas[0]["price"]
+                        canon_key = (marca.strip().lower(), nombre_limpio.strip().lower(), concentracion.strip().lower())
                         es_nuevo = False
 
                         # -----------------------------------------------------
-                        # 3. GESTIÓN DEL PERFUME EN SUPABASE
+                        # 3. GESTIÓN CANÓNICA DEL PERFUME EN SUPABASE
                         # -----------------------------------------------------
-                        perfume_id_sb = sb_perfumes_conocidos.get(nombre_key)
+                        perfume_id_sb = sb_perfumes_conocidos.get(canon_key)
                         if not perfume_id_sb and supabase_activo and sb:
                             try:
-                                # Verificar existencia en Supabase
-                                chk_p = sb.table("perfumes").select("id").ilike("nombre", nombre_limpio).execute()
+                                chk_p = (
+                                    sb.table("perfumes")
+                                    .select("id")
+                                    .ilike("marca", marca)
+                                    .ilike("nombre", nombre_limpio)
+                                    .ilike("tipo", concentracion)
+                                    .limit(1)
+                                    .execute()
+                                )
                                 if chk_p.data:
                                     perfume_id_sb = chk_p.data[0]["id"]
                                 else:
-                                    # Subir la foto del perfume al bucket IMG_perfumes en Supabase
-                                    img_url_cdn = subir_imagen_a_bucket_supabase(
-                                        session=session,
-                                        img_url=img_url,
-                                        nombre_perfume=nombre_limpio,
-                                        sb_client=sb if supabase_activo else None
-                                    )
+                                    img_url_final = img_url
+                                    if subir_imagenes:
+                                        img_url_final = subir_imagen_a_bucket_supabase(
+                                            session=session,
+                                            img_url=img_url,
+                                            nombre_perfume=nombre_limpio,
+                                            sb_client=sb if supabase_activo else None,
+                                        )
 
-                                    # Insertar nuevo perfume en Supabase con su URL CDN
                                     nuevo_p = sb.table("perfumes").insert({
                                         "nombre": nombre_limpio,
                                         "marca": marca,
                                         "genero": genero,
                                         "tipo": concentracion,
                                         "notas": "Notas aromáticas exclusivas",
-                                        "imagen_url": img_url_cdn,
+                                        "imagen_url": img_url_final,
                                         "es_arabe": bool(arabe_flag),
-                                        "en_tendencia": True,
+                                        "en_tendencia": False,
                                         "en_remate": False,
-                                        "precio_referencia": primer_precio
+                                        "precio_referencia": primer_precio,
                                     }).execute()
                                     if nuevo_p.data:
                                         perfume_id_sb = nuevo_p.data[0]["id"]
                                         es_nuevo = True
 
                                 if perfume_id_sb:
-                                    sb_perfumes_conocidos[nombre_key] = perfume_id_sb
+                                    sb_perfumes_conocidos[canon_key] = perfume_id_sb
                             except Exception as e:
                                 logger.warning(f"Error guardando perfume {nombre_limpio} en Supabase: {e}")
 
                         # -----------------------------------------------------
-                        # 4. GESTIÓN DEL PERFUME EN SQLITE
+                        # 4. GESTIÓN CANÓNICA DEL PERFUME EN SQLITE (SIN LIKE AMBIGUO)
                         # -----------------------------------------------------
-                        cursor.execute("""
-                        SELECT id, precio_referencia FROM perfumes 
-                        WHERE LOWER(nombre) = ? OR LOWER(nombre) LIKE ?;
-                        """, (nombre_key, f"%{nombre_key}%"))
-                        row_sqlite = cursor.fetchone()
-
-                        if row_sqlite:
-                            perfume_id_sqlite = row_sqlite["id"]
-                        else:
-                            cursor.execute("""
-                            INSERT INTO perfumes (
-                                nombre, marca, genero, tipo, notas, imagen_url, es_arabe, en_tendencia, en_remate, precio_referencia
+                        perfume_id_sqlite = sqlite_perfumes_map.get(canon_key)
+                        if not perfume_id_sqlite:
+                            cursor.execute(
+                                """
+                                SELECT id FROM perfumes
+                                WHERE LOWER(TRIM(marca)) = LOWER(?)
+                                  AND LOWER(TRIM(nombre)) = LOWER(?)
+                                  AND LOWER(COALESCE(TRIM(tipo), '')) = LOWER(?);
+                                """,
+                                (marca, nombre_limpio, concentracion),
                             )
-                            VALUES (?, ?, ?, ?, 'Notas aromáticas exclusivas', ?, ?, 1, 0, ?);
-                            """, (nombre_limpio, marca, genero, concentracion, img_url, arabe_flag, primer_precio))
-                            perfume_id_sqlite = cursor.lastrowid
-                            es_nuevo = True
+                            row_sqlite = cursor.fetchone()
+
+                            if row_sqlite:
+                                perfume_id_sqlite = row_sqlite["id"]
+                            else:
+                                cursor.execute("""
+                                INSERT INTO perfumes (
+                                    nombre, marca, genero, tipo, notas, imagen_url, es_arabe, en_tendencia, en_remate, precio_referencia
+                                )
+                                VALUES (?, ?, ?, ?, 'Notas aromáticas exclusivas', ?, ?, 0, 0, ?);
+                                """, (nombre_limpio, marca, genero, concentracion, img_url, arabe_flag, primer_precio))
+                                perfume_id_sqlite = cursor.lastrowid
+                                es_nuevo = True
+
+                            if perfume_id_sqlite:
+                                sqlite_perfumes_map[canon_key] = perfume_id_sqlite
 
                         if es_nuevo:
                             nuevos_perfumes += 1
@@ -445,62 +555,76 @@ def ejecutar_descubrimiento_autonomo(
                                 "tipo": concentracion,
                                 "es_arabe": bool(arabe_flag),
                                 "tienda": t_nombre,
-                                "precio": primer_precio
+                                "precio": primer_precio,
                             })
-                            logger.info(f"✨ ¡NUEVO PERFUME DESCUBIERTO!: {nombre_limpio} ({marca}) - ${primer_precio:,}")
+                            logger.info(f"NUEVO PERFUME DESCUBIERTO: {nombre_limpio} ({marca}) - ${primer_precio:,}")
 
                         # -----------------------------------------------------
-                        # 5. INGESTA DE VARIANTES Y PRECIOS POR VOLUMEN ML
+                        # 5. INGESTA DE VARIANTES Y PRECIOS POR VOLUMEN Y FORMATO
                         # -----------------------------------------------------
-                        for v in variants:
-                            v_price = int(float(v.get("price", 0)))
-                            if v_price <= 0:
-                                continue
+                        for v_item in variantes_validas:
+                            v_price = v_item["price"]
+                            v_compare = v_item["compare"]
+                            v_stock = v_item["stock"]
+                            volumen_ml = v_item["vol"]
+                            v_fmt = v_item["formato"]
 
-                            v_compare_raw = v.get("compare_at_price")
-                            v_compare = int(float(v_compare_raw)) if (v_compare_raw and float(v_compare_raw) > v_price) else None
+                            var_id_sb = sb_variantes_conocidas.get((perfume_id_sb, volumen_ml, v_fmt)) if perfume_id_sb else None
 
-                            v_avail = v.get("available")
-                            v_stock = bool(v_avail) if v_avail is not None else True
-                            v_title = v.get("title", "")
-                            volumen_ml = extraer_volumen_ml(f"{raw_title} {v_title}")
-
-                            # Persistencia atómica de oferta viva e historial
                             try:
-                                registrar_observacion_oferta({
-                                    "perfume_id": perfume_id_sqlite,
-                                    "tienda_id": t_id_sqlite,
+                                res_obs = registrar_observacion_oferta({
+                                    "perfume_id": perfume_id_sb,
+                                    "perfume_id_sb": perfume_id_sb,
+                                    "perfume_id_sqlite": perfume_id_sqlite,
+                                    "tienda_id": t_id_supabase or t_id_sqlite,
+                                    "tienda_id_sb": t_id_supabase,
+                                    "tienda_id_sqlite": t_id_sqlite,
+                                    "variante_id_sb": var_id_sb,
                                     "precio_actual": v_price,
                                     "precio_normal": v_compare,
                                     "en_stock": v_stock,
                                     "volumen_ml": volumen_ml,
-                                    "url_producto": url_producto
+                                    "formato": v_fmt,
+                                    "url_producto": url_producto,
+                                    "scraping_run_id": run_id,
                                 })
                                 precios_registrados += 1
+                                if perfume_id_sb and not var_id_sb and res_obs and isinstance(res_obs, dict) and res_obs.get("variante_id"):
+                                    sb_variantes_conocidas[(perfume_id_sb, volumen_ml, v_fmt)] = res_obs["variante_id"]
                             except Exception as ex_obs:
-                                logger.warning(f"Aviso registrando oferta de {nombre_limpio}: {ex_obs}")
+                                logger.debug(f"Aviso registrando oferta de {nombre_limpio} ({volumen_ml}ml): {ex_obs}")
 
                 except Exception as e:
                     err_msg = f"Fallo procesando {t_nombre} página {pag}: {e}"
                     logger.error(err_msg)
                     errores.append(err_msg)
 
-                time.sleep(0.5)
+                time.sleep(0.3)
 
     duracion = round(time.time() - inicio, 2)
     estado = "EXITOSO" if not errores else ("DEGRADADO" if precios_registrados > 0 else "FALLIDO")
+
+    finalizar_scraping_run(
+        run_id=run_id,
+        estado="completado" if estado == "EXITOSO" else estado.lower(),
+        productos_procesados=total_procesados,
+        ofertas_nuevas=nuevos_perfumes,
+        cambios_precio=precios_registrados,
+        errores=len(errores),
+        mensaje_detalle=f"Rastreo masivo: {nuevos_perfumes} nuevos perfumes, {precios_registrados} variantes en {duracion}s",
+    )
 
     # Registrar log de auditoría en Supabase
     if supabase_activo and sb:
         try:
             sb.table("scraping_logs").insert({
                 "tipo_scraper": "Descubrimiento Autónomo",
-                "tienda_nombre": "Silk Perfumes & Elite Perfumes",
+                "tienda_nombre": "Crawler Multitienda (Silk, Elite, Alisha, Yauras, Oferta)",
                 "productos_procesados": total_procesados,
                 "productos_nuevos": nuevos_perfumes,
                 "precios_actualizados": precios_registrados,
                 "estado": estado,
-                "mensaje_detalle": f"Rastreo autónomo: {nuevos_perfumes} nuevos perfumes, {precios_registrados} variantes en {duracion}s",
+                "mensaje_detalle": f"Rastreo masivo: {nuevos_perfumes} nuevos perfumes, {precios_registrados} variantes en {duracion}s",
                 "fecha_ejecucion": ahora
             }).execute()
         except Exception as e:
@@ -508,7 +632,7 @@ def ejecutar_descubrimiento_autonomo(
 
     reporte = {
         "metadata": {
-            "version": "2.0.0 (Cloud Supabase)",
+            "version": "2.1.0 (Cloud Supabase Multi-Tienda Masivo)",
             "sistema": "PerfumeTrending Autonomous Discovery Crawler",
             "fecha_ejecucion": ahora,
             "duracion_segundos": duracion,
@@ -522,7 +646,7 @@ def ejecutar_descubrimiento_autonomo(
             "precios_variantes_registrados": precios_registrados,
             "errores_totales": len(errores)
         },
-        "muestras_nuevas": muestras_descubiertas[:15],
+        "muestras_nuevas": muestras_descubiertas[:25],
         "errores": errores
     }
 
@@ -533,11 +657,20 @@ def ejecutar_descubrimiento_autonomo(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Scraper Autónomo de Perfumes (PerfumeTrending.cl)")
-    parser.add_argument("--limit", type=int, default=25, help="Límite de productos por tienda (default: 25)")
-    parser.add_argument("--pages", type=int, default=1, help="Páginas a rastrear por tienda (default: 1)")
+    parser.add_argument("--limit", type=int, default=250, help="Límite de productos por página (default: 250)")
+    parser.add_argument("--pages", type=int, default=2, help="Páginas a rastrear por tienda (default: 2)")
+    parser.add_argument("--upload-images", action="store_true", help="Subir imágenes a Supabase Storage (más lento)")
+    parser.add_argument("--stores", type=str, default="all", help="Tiendas separadas por coma (ej: silk,elite,oferta)")
     args = parser.parse_args()
 
-    resultado = ejecutar_descubrimiento_autonomo(limite_por_tienda=args.limit, paginas=args.pages)
+    filtro = None if args.stores.lower() == "all" else [s.strip() for s in args.stores.split(",") if s.strip()]
+
+    resultado = ejecutar_descubrimiento_autonomo(
+        limite_por_tienda=args.limit,
+        paginas=args.pages,
+        subir_imagenes=args.upload_images,
+        filtro_tiendas=filtro
+    )
     print("\n" + "=" * 60)
     print("RESUMEN DE DESCUBRIMIENTO AUTÓNOMO EN SUPABASE & SQLITE:")
     print(f"Estado: {resultado['metadata']['estado']}")
@@ -546,3 +679,4 @@ if __name__ == "__main__":
     print(f"Precios/Variantes registradas: {resultado['metricas']['precios_variantes_registrados']}")
     print(f"Duración: {resultado['metadata']['duracion_segundos']}s")
     print("=" * 60)
+
