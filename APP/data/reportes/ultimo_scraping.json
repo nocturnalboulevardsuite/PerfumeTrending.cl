@@ -1,74 +1,90 @@
 {
-  "actualizaciones": 161,
-  "fecha": "2026-10-27 12:56:21",
-  "duracion_segundos": 8100.98,
+  "actualizaciones": 3,
+  "fecha": "2026-10-28 14:29:52",
+  "duracion_segundos": 35.34,
   "metadata": {
-    "version_etl": "3.0.0",
+    "version_etl": "3.2.0",
     "sistema": "PerfumeTrending Professional Anti-Bot ETL",
-    "fecha_ejecucion": "2026-10-27 12:56:21",
-    "duracion_segundos": 8100.98,
-    "estado": "EXITOSO"
+    "fecha_ejecucion": "2026-10-28 14:29:52",
+    "duracion_segundos": 35.34,
+    "estado": "EXITOSO",
+    "scraping_run_id": 3
   },
   "metricas": {
-    "total_perfumes_catalogo": 1000,
+    "total_perfumes_catalogo": 2339,
+    "perfumes_auditados": 2,
     "total_tiendas_registradas": 9,
-    "precios_actualizados": 161,
-    "exclusiones_marca": 84,
+    "precios_actualizados": 3,
+    "ofertas_nuevas": 0,
+    "cambios_precio": 1,
+    "cambios_stock": 2,
+    "cambios_url": 1,
+    "bloqueos_waf": 0,
+    "exclusiones_marca": 7,
     "errores_totales": 0
   },
   "estadisticas_tiendas": {
     "Falabella": {
-      "consultas": 1000,
-      "exitos_en_vivo": 1059,
-      "fallbacks_seguridad": 458,
+      "consultas": 2,
+      "exitos_en_vivo": 6,
+      "fallbacks_seguridad": 0,
+      "bloqueos_waf": 0,
       "trust_score": 96
     },
     "Paris": {
-      "consultas": 1000,
-      "exitos_en_vivo": 0,
-      "fallbacks_seguridad": 1000,
+      "consultas": 2,
+      "exitos_en_vivo": 2,
+      "fallbacks_seguridad": 0,
+      "bloqueos_waf": 0,
       "trust_score": 95
     },
     "Ripley": {
-      "consultas": 1000,
-      "exitos_en_vivo": 0,
-      "fallbacks_seguridad": 1000,
+      "consultas": 2,
+      "exitos_en_vivo": 4,
+      "fallbacks_seguridad": 0,
+      "bloqueos_waf": 0,
       "trust_score": 94
     },
     "Silk Perfumes": {
-      "consultas": 986,
-      "exitos_en_vivo": 869,
-      "fallbacks_seguridad": 364,
+      "consultas": 1,
+      "exitos_en_vivo": 2,
+      "fallbacks_seguridad": 0,
+      "bloqueos_waf": 0,
       "trust_score": 92
     },
     "Elite Perfumes": {
-      "consultas": 986,
-      "exitos_en_vivo": 353,
-      "fallbacks_seguridad": 696,
+      "consultas": 1,
+      "exitos_en_vivo": 0,
+      "fallbacks_seguridad": 1,
+      "bloqueos_waf": 0,
       "trust_score": 89
     },
     "DBS Beauty Store": {
-      "consultas": 986,
+      "consultas": 1,
       "exitos_en_vivo": 0,
-      "fallbacks_seguridad": 986,
+      "fallbacks_seguridad": 0,
+      "bloqueos_waf": 0,
       "trust_score": 91
     },
     "Alisha Perfumes": {
-      "consultas": 986,
+      "consultas": 1,
       "exitos_en_vivo": 0,
-      "fallbacks_seguridad": 986,
+      "fallbacks_seguridad": 1,
+      "bloqueos_waf": 0,
       "trust_score": 88
     },
     "Yauras Perfumes": {
-      "consultas": 986,
-      "exitos_en_vivo": 638,
-      "fallbacks_seguridad": 559,
+      "consultas": 1,
+      "exitos_en_vivo": 1,
+      "fallbacks_seguridad": 0,
+      "bloqueos_waf": 0,
       "trust_score": 88
     },
     "Oferta Perfumes": {
-      "consultas": 986,
-      "exitos_en_vivo": 0,
-      "fallbacks_seguridad": 986,
+      "consultas": 1,
+      "exitos_en_vivo": 2,
+      "fallbacks_seguridad": 0,
+      "bloqueos_waf": 0,
       "trust_score": 90
     }
   },
@@ -81,6 +97,7 @@
       "tiene_descuento": false,
       "origen": "Falabella Direct Variants",
       "volumen_ml": 50,
+      "formato": "regular",
       "en_stock": true
     },
     {
@@ -91,6 +108,7 @@
       "tiene_descuento": false,
       "origen": "Falabella Direct Variants",
       "volumen_ml": 150,
+      "formato": "regular",
       "en_stock": true
     },
     {
@@ -101,6 +119,51 @@
       "tiene_descuento": false,
       "origen": "Falabella Direct Variants",
       "volumen_ml": 100,
+      "formato": "regular",
+      "en_stock": true
+    },
+    {
+      "perfume": "Bleu de Chanel",
+      "tienda": "Paris",
+      "precio_actual": 181500,
+      "precio_normal": 181500,
+      "tiene_descuento": false,
+      "origen": "Paris Schema.org Direct",
+      "volumen_ml": 100,
+      "formato": "regular",
+      "en_stock": true
+    },
+    {
+      "perfume": "Bleu de Chanel",
+      "tienda": "Ripley",
+      "precio_actual": 145200,
+      "precio_normal": 145200,
+      "tiene_descuento": false,
+      "origen": "Ripley Live PDP Variants",
+      "volumen_ml": 50,
+      "formato": "regular",
+      "en_stock": false
+    },
+    {
+      "perfume": "Bleu de Chanel",
+      "tienda": "Ripley",
+      "precio_actual": 181500,
+      "precio_normal": 181500,
+      "tiene_descuento": false,
+      "origen": "Ripley Live PDP Variants",
+      "volumen_ml": 100,
+      "formato": "regular",
+      "en_stock": true
+    },
+    {
+      "perfume": "Bleu de Chanel",
+      "tienda": "Ripley",
+      "precio_actual": 225500,
+      "precio_normal": 225500,
+      "tiene_descuento": false,
+      "origen": "Ripley Live PDP Variants",
+      "volumen_ml": 150,
+      "formato": "regular",
       "en_stock": true
     },
     {
@@ -111,6 +174,7 @@
       "tiene_descuento": false,
       "origen": "Falabella Direct Variants",
       "volumen_ml": 30,
+      "formato": "regular",
       "en_stock": true
     },
     {
@@ -121,6 +185,7 @@
       "tiene_descuento": false,
       "origen": "Falabella Direct Variants",
       "volumen_ml": 50,
+      "formato": "regular",
       "en_stock": true
     },
     {
@@ -131,16 +196,29 @@
       "tiene_descuento": false,
       "origen": "Falabella Direct Variants",
       "volumen_ml": 90,
+      "formato": "regular",
       "en_stock": true
     },
     {
       "perfume": "YSL Libre",
-      "tienda": "Falabella",
-      "precio_actual": 157990,
-      "precio_normal": 157990,
+      "tienda": "Paris",
+      "precio_actual": 176990,
+      "precio_normal": 176990,
       "tiene_descuento": false,
-      "origen": "Falabella Direct Variants",
-      "volumen_ml": 100,
+      "origen": "Paris Schema.org Direct",
+      "volumen_ml": 90,
+      "formato": "regular",
+      "en_stock": true
+    },
+    {
+      "perfume": "YSL Libre",
+      "tienda": "Ripley",
+      "precio_actual": 187990,
+      "precio_normal": 187990,
+      "tiene_descuento": false,
+      "origen": "Ripley Live PDP Variants",
+      "volumen_ml": 90,
+      "formato": "regular",
       "en_stock": true
     },
     {
@@ -151,76 +229,29 @@
       "tiene_descuento": true,
       "origen": "Shopify Multi-Suggest",
       "volumen_ml": 90,
+      "formato": "regular",
       "en_stock": true
     },
     {
       "perfume": "YSL Libre",
       "tienda": "Silk Perfumes",
-      "precio_actual": 54990,
-      "precio_normal": 120990,
+      "precio_actual": 55990,
+      "precio_normal": 123190,
       "tiene_descuento": true,
       "origen": "Shopify Multi-Suggest",
       "volumen_ml": 30,
+      "formato": "regular",
       "en_stock": true
     },
     {
       "perfume": "YSL Libre",
       "tienda": "Yauras Perfumes",
-      "precio_actual": 119990,
-      "precio_normal": 119990,
+      "precio_actual": 128990,
+      "precio_normal": 128990,
       "tiene_descuento": false,
       "origen": "Shopify Multi-Suggest",
       "volumen_ml": 90,
-      "en_stock": true
-    },
-    {
-      "perfume": "Dior Sauvage",
-      "tienda": "Falabella",
-      "precio_actual": 227800,
-      "precio_normal": 227800,
-      "tiene_descuento": false,
-      "origen": "Falabella Live Variants",
-      "volumen_ml": 50,
-      "en_stock": true
-    },
-    {
-      "perfume": "Dior Sauvage",
-      "tienda": "Falabella",
-      "precio_actual": 228300,
-      "precio_normal": 228300,
-      "tiene_descuento": false,
-      "origen": "Falabella Live Variants",
-      "volumen_ml": 100,
-      "en_stock": true
-    },
-    {
-      "perfume": "Dior Sauvage",
-      "tienda": "Falabella",
-      "precio_actual": 371090,
-      "precio_normal": 371100,
-      "tiene_descuento": true,
-      "origen": "Falabella Live Variants",
-      "volumen_ml": 300,
-      "en_stock": true
-    },
-    {
-      "perfume": "Dior Sauvage",
-      "tienda": "Falabella",
-      "precio_actual": 125000,
-      "precio_normal": 125000,
-      "tiene_descuento": false,
-      "origen": "Falabella Live Variants",
-      "volumen_ml": 30,
-      "en_stock": true
-    },
-    {
-      "perfume": "Dior Sauvage",
-      "tienda": "Falabella",
-      "precio_actual": 292100,
-      "precio_normal": 292100,
-      "tiene_descuento": false,
-      "origen": "Falabella Live Variants",
-      "volumen_ml": 200,
+      "formato": "regular",
       "en_stock": true
     }
   ],
