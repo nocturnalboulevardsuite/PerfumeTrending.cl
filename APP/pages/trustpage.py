@@ -32,10 +32,11 @@ from ui import (
     escape_html,
     get_theme_palette,
     init_common_session_state,
-    modal_autenticacion,
     sanitize_external_url,
     toggle_theme,
 )
+from auth_email import modal_autenticacion
+from perfume_actions import mostrar_aviso_favoritos
 
 # 1. CONFIGURACIÓN DE PÁGINA Y ESTADO COMPARTIDO
 st.set_page_config(
@@ -147,16 +148,16 @@ css_styles = f"""
     [data-testid="stCaptionContainer"], [data-testid="stCaptionContainer"] p {{ color: {subtext_color} !important; }}
     button[data-baseweb="tab"] {{ background: transparent !important; }}
     div[data-baseweb="tab-highlight"] {{ background-color: {accent} !important; }}
-    div[role="dialog"] {{
+    [role="dialog"] {{
         background-color: {card_bg} !important;
         color: {text_color} !important;
         border: 1px solid {border_color} !important;
         border-radius: 16px !important;
     }}
-    div[role="dialog"] h2, div[role="dialog"] h2 *, div[role="dialog"] p, div[role="dialog"] label {{
+    [role="dialog"] h2, [role="dialog"] h2 *, [role="dialog"] p, [role="dialog"] label {{
         color: {text_color} !important;
     }}
-    div[role="dialog"] button[aria-label="Close"] svg {{ color: {text_color} !important; fill: {text_color} !important; }}
+    [role="dialog"] button[aria-label="Close"] svg {{ color: {text_color} !important; fill: {text_color} !important; }}
 
     /* Campos de texto (modal de ingreso), versiones antiguas y nuevas de Streamlit */
     div[data-baseweb="input"],
@@ -925,6 +926,7 @@ with btn_col2:
 if st.session_state.get('show_login_modal', False):
     st.session_state['show_login_modal'] = False
     modal_autenticacion()
+mostrar_aviso_favoritos()
 
 st.markdown("<div style='margin-top: 22px;'></div>", unsafe_allow_html=True)
 
