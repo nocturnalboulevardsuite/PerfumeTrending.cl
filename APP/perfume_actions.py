@@ -7,6 +7,8 @@ PerfumeTrending.cl — Acciones compartidas sobre perfumes
   del perfil. Si no hay sesión, abre el ingreso y guarda el favorito apenas se inicie sesión.
 - `estilos_tarjetas_cliqueables`: CSS común para ambos elementos.
 - `mostrar_aviso_favoritos`: muestra el aviso (toast) pendiente tras guardar o quitar.
+- `estilos_avatar_usuario`: muestra la foto de perfil en un círculo dentro del botón
+  con el nombre del usuario en la cabecera de todas las páginas.
 
 Las tarjetas se envuelven así:
 
@@ -23,6 +25,16 @@ from backend.database import (
     eliminar_favorito,
     obtener_favoritos_Ids_usuario,
 )
+
+try:
+    from backend.database import obtener_perfil_usuario
+except Exception:  # pragma: no cover
+    obtener_perfil_usuario = None
+
+try:
+    from ui import get_image_src
+except Exception:  # pragma: no cover
+    get_image_src = None
 
 
 def _ident_usuario():
@@ -209,5 +221,78 @@ def estilos_tarjetas_cliqueables(accent: str, card_bg: str, border_color: str, s
     div[class*="st-key-favline_on_"] button p {{ color: {accent} !important; }}
     div[class*="st-key-favbtn_on_"] button,
     div[class*="st-key-favline_on_"] button {{ border-color: {accent} !important; }}
+    </style>
+    """ + estilos_avatar_usuario("#d4c2a5" if is_dark else "#8c7b6d")
+
+
+# -----------------------------------------------------------------------------
+# Foto de perfil en el botón del usuario (cabecera)
+# -----------------------------------------------------------------------------
+def _foto_perfil_usuario() -> str:
+    """URL segura de la foto de perfil del usuario conectado, o "" si no tiene."""
+    if not st.session_state.get("logged_in"):
+        return ""
+    info = st.session_state.get("user_info") or {}
+    foto = str(info.get("foto_perfil") or "").strip()
+
+    # Si la sesión aún no trae la foto (p. ej. recién ingresó desde el Inicio), se consulta una vez.
+    if not foto and not st.session_state.get("_avatar_sync_intentado") and obtener_perfil_usuario:
+        st.session_state["_avatar_sync_intentado"] = True
+        ident = info.get("id") or info.get("email")
+        if ident:
+            try:
+                perfil = obtener_perfil_usuario(ident) or {}
+                foto = str(perfil.get("foto_perfil") or "").strip()
+                if foto:
+                    st.session_state["user_info"]["foto_perfil"] = foto
+            except Exception:
+                foto = ""
+    if not foto:
+        return ""
+
+    src = ""
+    if get_image_src:
+        try:
+            # Nunca se leen rutas locales del servidor desde el avatar (misma regla que en el perfil)
+            src = get_image_src(foto, allow_local=False, default_src="") or ""
+        except TypeError:
+            src = ""
+        except Exception:
+            src = ""
+    if not src and (foto.startswith("https://") or foto.startswith("data:image/")):
+        src = foto
+    if not (src.startswith("https://") or src.startswith("data:image/")):
+        return ""
+    # Escapes mínimos para usarla dentro de url("...") en CSS
+    return src.replace("\\", "%5C").replace('"', "%22").replace("\n", "").replace("\r", "")
+
+
+def estilos_avatar_usuario(borde: str = "#8c7b6d") -> str:
+    """CSS que reemplaza el ícono genérico del botón de usuario por su foto en un círculo."""
+    src = _foto_perfil_usuario()
+    if not src:
+        return ""
+    return f"""
+    <style>
+    html body div[data-testid="stHorizontalBlock"]:has(.st-key-theme_toggle) div[data-testid="stColumn"] button[data-testid="stPopoverButton"] {{
+        position: relative !important;
+        background-image: none !important;
+        padding-left: 3rem !important;
+    }}
+    html body div[data-testid="stHorizontalBlock"]:has(.st-key-theme_toggle) div[data-testid="stColumn"] button[data-testid="stPopoverButton"]::before {{
+        content: "" !important;
+        position: absolute !important;
+        left: 8px !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        width: 28px !important;
+        height: 28px !important;
+        border-radius: 50% !important;
+        background-image: url("{src}") !important;
+        background-size: cover !important;
+        background-position: center !important;
+        background-repeat: no-repeat !important;
+        box-shadow: 0 0 0 2px {borde} !important;
+    }}
     </style>
     """
