@@ -55,6 +55,7 @@ from ui import (
 )
 from auth_email import modal_autenticacion
 from perfume_actions import (
+    sincronizar_id_en_url,
     boton_abrir_perfume,
     boton_corazon,
     estilos_tarjetas_cliqueables,
@@ -1050,8 +1051,9 @@ st.markdown(f"""
 
 # 3. ENCABEZADO SUPERIOR: LOGO, BOTÓN "INGRESAR" / PERFIL Y SWITCH DE TEMA
 if st.session_state['logged_in']:
-    col_logo, col_espacio, col_actions = st.columns([4.0, 0.5, 4.5], vertical_alignment="center")
-    btn_col1, btn_col2 = col_actions.columns([3.5, 1.0], vertical_alignment="center")
+    # Mismo tamaño del botón de usuario en todas las páginas: ni muy chico ni muy grande
+    col_logo, col_espacio, col_actions = st.columns([5.2, 0.6, 3.2], vertical_alignment="center")
+    btn_col1, btn_col2 = col_actions.columns([2.4, 0.8], vertical_alignment="center", gap="small")
 else:
     col_logo, col_espacio, col_actions = st.columns([5.6, 1.2, 2.4], vertical_alignment="center")
     btn_col1, btn_col2 = col_actions.columns([2.0, 0.8], vertical_alignment="center", gap="small")
@@ -1106,7 +1108,7 @@ mostrar_aviso_favoritos()
 st.markdown("<div style='margin-top: 22px;'></div>", unsafe_allow_html=True)
 
 # 4. CHIPS DE NAVEGACIÓN RÁPIDA
-col_chip_home, col_chip1, col_chip2, col_chip3, col_chip_space = st.columns([1.6, 1.5, 2.0, 1.7, 2.2], vertical_alignment="center")
+col_chip_home, col_chip1, col_chip2, col_chip3, col_chip_remates = st.columns([1.6, 1.5, 2.0, 1.7, 1.8], vertical_alignment="center")
 
 with col_chip_home:
     st.page_link("app.py", label="Inicio / Catálogo", use_container_width=True)
@@ -1116,6 +1118,8 @@ with col_chip2:
     st.page_link("pages/trustpage.py", label="Páginas de Confianza", use_container_width=True)
 with col_chip3:
     st.page_link("pages/compararprecios.py", label="Comparar Precios", use_container_width=True)
+with col_chip_remates:
+    st.page_link("pages/remates.py", label="Remates & Flash", use_container_width=True)
 
 st.markdown("<div style='margin-top: 34px;'></div>", unsafe_allow_html=True)
 
@@ -1150,8 +1154,12 @@ if not catalogo:
     st.stop()
 
 # Determinar perfume pre-seleccionado desde sesión (dict, id o nombre) o desde query param compartible (?id=)
-selected_session = st.session_state.get("selected_perfume")
 qp_id = st.query_params.get("id")
+# Si la dirección cambió por fuera (botones Atrás/Adelante del navegador), se muestra ese perfume
+_id_url_anterior = st.session_state.get("_cp_id_en_url")
+if qp_id and str(qp_id).isdigit() and _id_url_anterior is not None and str(qp_id) != str(_id_url_anterior):
+    st.session_state["selected_perfume"] = int(qp_id)
+selected_session = st.session_state.get("selected_perfume")
 
 target_id = None
 if isinstance(selected_session, dict) and selected_session.get("id") is not None:
@@ -1232,11 +1240,9 @@ selected_label = st.selectbox("Selecciona un perfume para comparar ofertas en Ch
 perfume = opciones_perfumes[selected_label]
 selected_id = perfume["id"]
 st.session_state["selected_perfume"] = selected_id
-try:
-    if st.query_params.get("id") != str(selected_id):
-        st.query_params["id"] = str(selected_id)
-except Exception:
-    pass
+# El id del perfume se refleja en la dirección (enlace compartible) reemplazando la entrada actual
+# del historial en vez de crear una nueva; así el botón "Atrás" del navegador vuelve a la página anterior.
+sincronizar_id_en_url(selected_id)
 
 # Obtener detalle enriquecido desde caché
 detalle = get_cached_detalle(selected_id) or perfume
@@ -1716,10 +1722,6 @@ if rel_final:
                 boton_corazon(p_rel['id'], "rel", nom_rel)
             if st.button("Comparar", key=f"btn_ir_rel_{p_rel['id']}", use_container_width=True):
                 st.session_state["selected_perfume"] = p_rel["id"]
-                try:
-                    st.query_params["id"] = str(p_rel["id"])
-                except Exception:
-                    pass
                 st.rerun()
 
 # PIE DE PÁGINA
