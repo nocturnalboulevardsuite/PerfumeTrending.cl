@@ -91,6 +91,34 @@ settings_icon_svg = pal.settings_icon_svg
 logout_icon_svg = pal.logout_icon_svg
 logo_svg_data = pal.logo_svg_data
 
+# Paleta clara reforzada: fondo blanco y texto oscuro legible en todos los componentes.
+# El modo oscuro conserva exactamente los valores de la paleta compartida.
+if not is_dark:
+    app_bg = "#ffffff"
+    card_bg = "#ffffff"
+    border_color = "#e6e1db"
+    text_color = "#1c1917"
+    subtext_color = "#6b6159"
+    btn_bg = "#ffffff"
+    btn_text = "#1c1917"
+    btn_border = "#d6cec5"
+    input_bg = "#ffffff"
+    input_text = "#1c1917"
+    input_border = "#d6cec5"
+
+# Tokens visuales compartidos con la página de Inicio
+accent = "#d83737"
+accent_hover = "#b92d2d"
+accent_soft = "rgba(216, 55, 55, 0.14)" if is_dark else "rgba(216, 55, 55, 0.07)"
+gold = "#d4c2a5" if is_dark else "#8c7b6d"
+gold_soft = "rgba(212, 194, 165, 0.16)" if is_dark else "rgba(140, 123, 109, 0.14)"
+price_green = "#4ade80" if is_dark else "#15803d"
+surface_soft = "rgba(255, 255, 255, 0.035)" if is_dark else "#faf8f5"
+shadow_sm = "0 1px 2px rgba(0,0,0,0.35)" if is_dark else "0 1px 2px rgba(40,30,20,0.06)"
+shadow_hover = "0 6px 16px rgba(0,0,0,0.35)" if is_dark else "0 6px 16px rgba(60,45,35,0.10)"
+font_sans = "'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+
+
 # 2. SISTEMA DE SONIDO Y EVENTOS DE TARJETAS
 js_color_script = f"""
 <script>
@@ -162,19 +190,35 @@ except Exception:
 # 3. CSS ADAPTABLE, BOTONES Y SWITCH DE TEMA (SIN AFECTAR LOS BOTONES DE POPOVER)
 st.markdown(f"""
     <style>
+    @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap');
+
     header[data-testid="stHeader"] {{ display: none !important; }}
     div[data-testid="stAppViewContainer"] {{ padding-top: 0px !important; }}
 
-    .stApp {{ 
-        background-color: {app_bg} !important; 
-        color: {text_color} !important; 
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+    html, body {{ background-color: {app_bg} !important; }}
+    .stApp {{
+        background-color: {app_bg} !important;
+        color: {text_color} !important;
+        font-family: {font_sans};
+        color-scheme: {"dark" if is_dark else "light"};
+    }}
+    [data-testid="stMain"],
+    [data-testid="stMainBlockContainer"],
+    [data-testid="stBottom"] > div {{
+        background: transparent !important;
+        background-color: transparent !important;
     }}
 
-    .block-container {{ 
-        padding-top: 1.2rem !important; 
-        padding-bottom: 2rem !important; 
-        max-width: 1200px !important;
+    .block-container {{
+        padding-top: 1.4rem !important;
+        padding-bottom: 2rem !important;
+        max-width: 1180px !important;
+        zoom: 0.92;
+    }}
+
+    .stApp p, .stApp label, .stApp li, .stApp input, .stApp textarea, .stApp button,
+    div[data-testid="stPopoverBody"] p {{
+        font-family: {font_sans} !important;
     }}
 
     .stApp p, .stApp span, .stApp label, .stMarkdown p {{
@@ -182,68 +226,91 @@ st.markdown(f"""
         text-shadow: none !important;
     }}
 
-    /* BOTONES GENERALES DE ESTILO SOBRIO (IGUAL A APP.PY) */
+    /* Textos nativos y modales (login) */
+    .stApp h1, .stApp h2, .stApp h3, .stApp strong, .stApp b,
+    [data-testid="stWidgetLabel"] p,
+    button[data-baseweb="tab"] p {{
+        color: {text_color} !important;
+    }}
+    [data-testid="stCaptionContainer"], [data-testid="stCaptionContainer"] p {{ color: {subtext_color} !important; }}
+    button[data-baseweb="tab"] {{ background: transparent !important; }}
+    div[data-baseweb="tab-highlight"] {{ background-color: {accent} !important; }}
+    div[role="dialog"] {{
+        background-color: {card_bg} !important;
+        color: {text_color} !important;
+        border: 1px solid {border_color} !important;
+        border-radius: 16px !important;
+    }}
+    div[role="dialog"] h2, div[role="dialog"] h2 *, div[role="dialog"] p, div[role="dialog"] label {{
+        color: {text_color} !important;
+    }}
+    div[role="dialog"] button[aria-label="Close"] svg {{ color: {text_color} !important; fill: {text_color} !important; }}
+
+    /* Campos de texto (modal de ingreso), versiones antiguas y nuevas de Streamlit */
+    div[data-baseweb="input"],
+    [data-testid="stTextInputRootElement"] {{
+        background-color: {input_bg} !important;
+        border: 1px solid {input_border} !important;
+        border-radius: 10px !important;
+        box-shadow: none !important;
+    }}
+    div[data-baseweb="base-input"] {{ background-color: transparent !important; border: none !important; }}
+    div[data-baseweb="input"] input,
+    [data-testid="stTextInputRootElement"] input {{
+        background-color: transparent !important;
+        color: {input_text} !important;
+    }}
+    div[data-baseweb="input"]:focus-within,
+    [data-testid="stTextInputRootElement"]:focus-within {{
+        border-color: {gold} !important;
+        box-shadow: 0 0 0 3px {gold_soft} !important;
+    }}
+    input::placeholder {{ color: {subtext_color} !important; opacity: 1 !important; }}
+
+    /* ---------- BOTONES BASE ---------- */
     div.stButton > button {{
         background-color: {btn_bg} !important;
         border: 1px solid {btn_border} !important;
         color: {btn_text} !important;
-        border-radius: 8px !important;
-        transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.15s ease, border-color 0.15s ease !important;
+        border-radius: 10px !important;
+        min-height: 42px;
+        box-shadow: {shadow_sm} !important;
+        transition: background-color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease !important;
         outline: none !important;
     }}
 
     div.stButton > button p {{
         color: {btn_text} !important;
         font-weight: 600 !important;
+        font-size: 0.92rem !important;
     }}
 
-    /* BOTÓN INGRESAR (LOGIN) Y CONTENEDORES DE LA CABECERA */
-    .st-key-login_btn, .st-key-theme_toggle {{
-        display: flex !important;
-        align-items: center !important;
-        height: 100% !important;
+    div.stButton > button:hover {{
+        border-color: {gold} !important;
+        box-shadow: {shadow_hover} !important;
     }}
 
-    .st-key-login_btn button {{
-        background-color: {btn_bg} !important;
-        color: {btn_text} !important;
-        border: 1px solid {btn_border} !important;
-        border-radius: 8px !important;
-        height: 44px !important;
-        min-height: 44px !important;
-        padding: 0 0.8rem 0 2.2rem !important;
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        background-image: url("{user_icon_svg}") !important;
-        background-repeat: no-repeat !important;
-        background-position: 10px center !important;
-        background-size: 18px 18px !important;
-        font-size: 0.95rem !important;
-        margin: 0 !important;
-        white-space: nowrap !important;
+    div.stButton > button:focus-visible,
+    a[data-testid="stPageLink-NavLink"]:focus-visible {{
+        outline: 2px solid {accent} !important;
+        outline-offset: 2px !important;
     }}
 
-    .st-key-login_btn button p {{
-        font-size: 0.95rem !important;
-        line-height: 1 !important;
-        margin: 0 !important;
-        color: {btn_text} !important;
-        font-weight: 600 !important;
-        white-space: nowrap !important;
-    }}
-
-    /* ESTILO PARA BOTÓN POPOVER Y DESPLEGABLE DE PERFIL */
-    div[data-testid="stPopover"],
-    div[data-testid="stPopover"] > button,
+    /* ---------- POPOVERS (perfil y filtro de período) ---------- */
     button[data-testid="stPopoverButton"],
-    div[data-testid="stPopover"] button {{
+    div[data-testid="stPopover"] > button {{
         background-color: {btn_bg} !important;
         color: {btn_text} !important;
         border: 1px solid {btn_border} !important;
-        border-radius: 8px !important;
-        min-height: 44px !important;
-        transition: transform 0.22s ease, background-color 0.15s ease !important;
+        border-radius: 999px !important;
+        min-height: 38px !important;
+        box-shadow: {shadow_sm} !important;
+        transition: border-color 0.18s ease, box-shadow 0.18s ease !important;
+    }}
+    button[data-testid="stPopoverButton"]:hover,
+    div[data-testid="stPopover"] > button:hover {{
+        border-color: {gold} !important;
+        box-shadow: {shadow_hover} !important;
     }}
 
     div[data-testid="stPopover"] button p,
@@ -259,50 +326,106 @@ st.markdown(f"""
     div[data-testid="stPopoverContent"] {{
         background-color: {input_bg} !important;
         border: 1px solid {btn_border} !important;
-        border-radius: 8px !important;
+        border-radius: 14px !important;
         color: {text_color} !important;
+        box-shadow: {shadow_hover} !important;
     }}
 
-    /* CONTENEDOR Y BOTÓN POPOVER DE USUARIO CON DIBUJO HTML/SVG */
-    .user-popover-container div[data-testid="stPopover"],
-    .user-popover-container div[data-testid="stPopover"] > button,
-    .user-popover-container button[data-testid="stPopoverButton"] {{
-        padding-left: 2.3rem !important;
+    /* Popover de usuario con icono */
+    div[data-testid="stColumn"]:has(.user-popover-container) button[data-testid="stPopoverButton"] {{
+        padding-left: 2.4rem !important;
         background-image: url("{user_icon_svg}") !important;
         background-repeat: no-repeat !important;
-        background-position: 12px center !important;
-        background-size: 18px 18px !important;
+        background-position: 14px center !important;
+        background-size: 17px 17px !important;
     }}
 
-    /* BOTÓN CERRAR SESIÓN Y MI PERFIL CON DIBUJOS VECTORIALES HTML/SVG (SIN FONDO ROJO) */
-    .st-key-btn_go_profile button {{
-        background-color: {btn_bg} !important;
-        border: 1px solid {btn_border} !important;
-        color: {btn_text} !important;
-        padding-left: 2.5rem !important;
-        background-image: url("{settings_icon_svg}") !important;
+    /* Mi Perfil / Cerrar sesión */
+    div.st-key-btn_go_profile div.stButton > button,
+    div.st-key-btn_logout div.stButton > button {{
+        justify-content: flex-start !important;
+        padding-left: 2.6rem !important;
         background-repeat: no-repeat !important;
         background-position: 14px center !important;
-        background-size: 18px 18px !important;
+        background-size: 17px 17px !important;
+        box-shadow: none !important;
+    }}
+    div.st-key-btn_go_profile div.stButton > button {{ background-image: url("{settings_icon_svg}") !important; }}
+    div.st-key-btn_logout div.stButton > button {{ background-image: url("{logout_icon_svg}") !important; }}
+
+    /* Opciones del filtro de período */
+    div[class*="st-key-btn_m_"] div.stButton > button {{
+        border: 1px solid transparent !important;
+        background-color: transparent !important;
+        box-shadow: none !important;
+        justify-content: flex-start !important;
+        min-height: 36px !important;
+        border-radius: 8px !important;
+    }}
+    div[class*="st-key-btn_m_"] div.stButton > button:hover {{
+        background-color: {gold_soft} !important;
+        border-color: transparent !important;
+        box-shadow: none !important;
     }}
 
-    .st-key-btn_go_profile button p {{
-        color: {btn_text} !important;
+    /* ---------- BOTÓN INGRESAR ---------- */
+    .st-key-login_btn, .st-key-theme_toggle {{
+        display: flex !important;
+        align-items: center !important;
+        height: 100% !important;
+    }}
+    .st-key-login_btn,
+    .st-key-login_btn div[data-testid="stButton"] {{
+        justify-content: flex-end !important;
+        width: 100% !important;
+        display: flex !important;
     }}
 
-    .st-key-btn_logout button {{
+    div.st-key-login_btn div.stButton > button {{
         background-color: {btn_bg} !important;
-        border: 1px solid {btn_border} !important;
         color: {btn_text} !important;
-        padding-left: 2.5rem !important;
-        background-image: url("{logout_icon_svg}") !important;
+        border: 1px solid {btn_border} !important;
+        border-radius: 999px !important;
+        width: auto !important;
+        min-width: max-content !important;
+        height: auto !important;
+        min-height: 38px !important;
+        padding: 6px 18px 6px 38px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        overflow: visible !important;
+        background-image: url("{user_icon_svg}") !important;
         background-repeat: no-repeat !important;
         background-position: 14px center !important;
-        background-size: 18px 18px !important;
+        background-size: 16px 16px !important;
+        box-shadow: {shadow_sm} !important;
+        margin: 0 !important;
+        white-space: nowrap !important;
     }}
-
-    .st-key-btn_logout button p {{
+    div.st-key-login_btn div.stButton > button > div,
+    div.st-key-login_btn div.stButton > button div[data-testid="stMarkdownContainer"] {{
+        overflow: visible !important;
+        width: auto !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        display: block !important;
+    }}
+    div.st-key-login_btn div.stButton > button p {{
+        font-size: 0.92rem !important;
+        line-height: 1.35 !important;
+        margin: 0 !important;
+        padding: 0 !important;
         color: {btn_text} !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.2px !important;
+        white-space: nowrap !important;
+        overflow: visible !important;
+        text-overflow: clip !important;
+    }}
+    div[data-testid="stColumn"]:has(.user-popover-container) button[data-testid="stPopoverButton"] {{
+        min-height: 38px !important;
+        height: auto !important;
     }}
 
     /* SWITCH PERSONALIZADO DE TEMA DE BOTELLA */
@@ -369,56 +492,75 @@ st.markdown(f"""
         z-index: 2 !important;
     }}
 
-    /* TÍTULO Y TOOLTIP DE INFORMACIÓN */
+    /* ---------- TÍTULO Y TOOLTIP DE INFORMACIÓN ---------- */
+    .radar-head {{
+        margin: 2px 0 4px 0;
+    }}
     .radar-title-container {{
         display: inline-flex;
-        align-items: baseline;
-        gap: 6px;
+        align-items: center;
+        gap: 10px;
     }}
 
     .radar-title-text {{
-        color: #d83737 !important;
-        font-weight: 900 !important;
-        font-size: 2.1rem !important;
-        letter-spacing: 1.5px !important;
-        margin: 0;
+        font-family: {font_sans} !important;
+        color: {text_color} !important;
+        font-weight: 800 !important;
+        font-size: clamp(1.6rem, 3vw, 2.2rem) !important;
+        letter-spacing: -0.025em !important;
+        line-height: 1.1 !important;
+        margin: 0 !important;
+        padding: 0 !important;
         display: inline;
-        transition: color 0.3s ease !important;
     }}
-
-    .radar-title-text:hover {{
-        color: #8b121a !important;
+    .radar-title-text .radar-title-mark {{
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: {accent};
+        margin-left: 4px;
+        box-shadow: 0 0 0 4px {accent_soft};
+        vertical-align: middle;
+        animation: radarPulse 2.4s ease-in-out infinite;
+    }}
+    @keyframes radarPulse {{
+        0%, 100% {{ box-shadow: 0 0 0 3px {accent_soft}; }}
+        50% {{ box-shadow: 0 0 0 7px rgba(216, 55, 55, 0); }}
+    }}
+    .radar-subtitle {{
+        font-size: 0.98rem;
+        color: {subtext_color};
+        margin-top: 8px;
+        max-width: 62ch;
+        line-height: 1.55;
     }}
 
     .info-icon-container {{
         position: relative;
         display: inline-block;
-        vertical-align: super;
-        top: -12px;
-        left: 3px;
     }}
 
     .info-btn-badge {{
-        width: 18px;
-        height: 18px;
-        background: linear-gradient(135deg, #d83737 0%, #a81722 100%);
-        color: #ffffff;
+        width: 20px;
+        height: 20px;
+        background: transparent;
+        color: {subtext_color};
+        border: 1.5px solid {btn_border};
         border-radius: 50%;
         font-size: 11px;
-        font-weight: 900;
-        font-family: 'Georgia', serif;
-        font-style: italic;
+        font-weight: 800;
+        font-family: {font_sans};
         display: flex;
         align-items: center;
         justify-content: center;
-        cursor: pointer;
-        box-shadow: 0 2px 6px rgba(216, 55, 55, 0.35);
-        transition: transform 0.25s ease, box-shadow 0.25s ease;
+        cursor: help;
+        transition: border-color 0.2s ease, color 0.2s ease;
     }}
 
     .info-icon-container:hover .info-btn-badge {{
-        transform: scale(1.22);
-        box-shadow: 0 4px 10px rgba(216, 55, 55, 0.5);
+        border-color: {accent};
+        color: {accent};
     }}
 
     .info-tooltip-box {{
@@ -428,17 +570,17 @@ st.markdown(f"""
         background-color: {card_bg};
         color: {text_color};
         border: 1px solid {border_color};
-        border-radius: 12px;
+        border-radius: 14px;
         padding: 14px 16px;
         position: absolute;
-        top: 26px;
-        left: -140px;
+        top: 30px;
+        left: -150px;
         z-index: 999;
-        box-shadow: 0 12px 30px rgba(0,0,0,0.25);
+        box-shadow: {shadow_hover};
         font-size: 0.86rem;
-        line-height: 1.45;
-        transition: opacity 0.25s ease, visibility 0.25s ease, transform 0.25s ease;
-        transform: translateY(-6px);
+        line-height: 1.55;
+        transition: opacity 0.2s ease, visibility 0.2s ease, transform 0.2s ease;
+        transform: translateY(-4px);
         pointer-events: none;
     }}
 
@@ -448,29 +590,36 @@ st.markdown(f"""
         transform: translateY(0);
         pointer-events: auto;
     }}
+    .info-tooltip-title {{
+        font-weight: 800;
+        color: {accent};
+        margin-bottom: 6px;
+        font-size: 0.92rem;
+    }}
 
-    /* FILTROS DE FECHA EN PÁGINA */
+    /* ---------- BARRA DE FILTROS ---------- */
     .filter-label-text {{
-        color: {text_color} !important;
-        font-weight: 700 !important;
-        font-size: 1rem !important;
+        color: {subtext_color} !important;
+        font-weight: 600 !important;
+        font-size: 0.9rem !important;
         margin: 0 !important;
         display: flex;
         align-items: center !important;
         justify-content: flex-start;
-        height: 32px;
+        height: 38px;
+        white-space: nowrap;
     }}
 
-    /* CHIP YOUTUBE */
     .social-select-box {{
         display: flex;
         align-items: center;
-        gap: 8px;
+        flex-wrap: wrap;
+        gap: 10px;
         color: {text_color};
-        font-size: 13px;
+        font-size: 0.88rem;
         width: 100%;
         box-sizing: border-box;
-        height: 32px;
+        min-height: 38px;
     }}
 
     .social-label {{
@@ -483,47 +632,47 @@ st.markdown(f"""
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        gap: 6px;
-        background-color: {card_bg};
-        border: 1px solid {border_color};
-        border-radius: 8px;
-        padding: 0 10px;
-        height: 32px;
+        gap: 7px;
+        background-color: {btn_bg};
+        border: 1px solid {btn_border};
+        border-radius: 999px;
+        padding: 0 14px;
+        height: 34px;
         box-sizing: border-box;
         color: {text_color};
+        font-family: {font_sans};
         font-weight: 700;
-        font-size: 12px;
+        font-size: 0.84rem;
         line-height: 1;
         white-space: nowrap;
-        cursor: pointer;
-        transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+        cursor: default;
         outline: none;
         user-select: none;
     }}
-
-    .yt-chip-btn:hover {{
-        transform: translateY(-1px);
-        border-color: #d83737;
-        background-color: {app_bg};
-        box-shadow: 0 3px 8px rgba(216, 55, 55, 0.15);
-    }}
+    .yt-chip-btn span {{ color: {text_color} !important; }}
 
     .social-desc {{
-        font-size: 11px;
+        font-size: 0.82rem;
         color: {subtext_color};
-        font-style: italic;
-        line-height: 1.2;
+        line-height: 1.4;
     }}
 
-    /* CHIPS DE ACCESO RÁPIDO Y PAGE LINKS */
+    .pt-divider {{
+        height: 1px;
+        background: {btn_border};
+        opacity: 0.55;
+        margin: 6px 0 8px 0;
+    }}
+
+    /* ---------- ACCESOS RÁPIDOS (CHIPS) ---------- */
     a[data-testid="stPageLink-NavLink"] {{
-        background-color: {btn_bg} !important;
+        background-color: transparent !important;
         border: 1px solid {btn_border} !important;
-        border-radius: 20px !important;
-        padding: 0.45rem 1rem !important;
+        border-radius: 999px !important;
+        padding: 0.45rem 1.1rem !important;
         box-shadow: none !important;
         width: 100% !important;
-        min-height: 0px !important;
+        min-height: 40px !important;
         height: auto !important;
         filter: none !important;
         text-decoration: none !important;
@@ -531,124 +680,104 @@ st.markdown(f"""
         align-items: center !important;
         justify-content: center !important;
         box-sizing: border-box !important;
+        transition: background-color 0.18s ease, border-color 0.18s ease !important;
     }}
-    
+    a[data-testid="stPageLink-NavLink"]:hover {{
+        background-color: {btn_bg} !important;
+        border-color: {gold} !important;
+    }}
+
     a[data-testid="stPageLink-NavLink"] p,
     a[data-testid="stPageLink-NavLink"] span {{
-        font-size: 0.85rem !important;
+        font-size: 0.87rem !important;
         font-weight: 600 !important;
         color: {btn_text} !important;
-        letter-spacing: 0.2px;
         white-space: nowrap !important;
         text-overflow: clip !important;
         overflow: visible !important;
         margin: 0 !important;
     }}
 
-    /* DIBUJOS ILUSTRADOS VECTORIALES EN ROJO PARA LOS BOTONES DE NAVEGACIÓN */
+    /* Página actual resaltada */
+    a[data-testid="stPageLink-NavLink"][href*="trendhype"] {{
+        border-color: {accent} !important;
+        background-color: {accent_soft} !important;
+    }}
+
     a[data-testid="stPageLink-NavLink"][href*="trendhype"],
     a[data-testid="stPageLink-NavLink"][href*="trustpage"],
     a[data-testid="stPageLink-NavLink"][href*="compararprecios"],
     a[data-testid="stPageLink-NavLink"][href$="app.py"],
     a[data-testid="stPageLink-NavLink"][href="/"] {{
         position: relative !important;
-        padding-left: 2.7rem !important;
+        padding-left: 2.6rem !important;
         padding-right: 1.1rem !important;
         overflow: hidden !important;
     }}
 
-    a[data-testid="stPageLink-NavLink"][href*="trendhype"]::before {{
-        content: '' !important;
-        position: absolute !important;
-        left: 14px !important;
-        top: 50% !important;
-        transform: translateY(-50%) !important;
-        width: 17px !important;
-        height: 17px !important;
-        background-image: url("{trend_red_svg}") !important;
-        background-repeat: no-repeat !important;
-        background-size: contain !important;
-        background-position: center !important;
-        z-index: 1 !important;
-    }}
-
-    a[data-testid="stPageLink-NavLink"][href*="trustpage"]::before {{
-        content: '' !important;
-        position: absolute !important;
-        left: 14px !important;
-        top: 50% !important;
-        transform: translateY(-50%) !important;
-        width: 17px !important;
-        height: 17px !important;
-        background-image: url("{shield_red_svg}") !important;
-        background-repeat: no-repeat !important;
-        background-size: contain !important;
-        background-position: center !important;
-        z-index: 1 !important;
-    }}
-
-    a[data-testid="stPageLink-NavLink"][href*="compararprecios"]::before {{
-        content: '' !important;
-        position: absolute !important;
-        left: 14px !important;
-        top: 50% !important;
-        transform: translateY(-50%) !important;
-        width: 17px !important;
-        height: 17px !important;
-        background-image: url("{tag_red_svg}") !important;
-        background-repeat: no-repeat !important;
-        background-size: contain !important;
-        background-position: center !important;
-        z-index: 1 !important;
-    }}
-
+    a[data-testid="stPageLink-NavLink"][href*="trendhype"]::before,
+    a[data-testid="stPageLink-NavLink"][href*="trustpage"]::before,
+    a[data-testid="stPageLink-NavLink"][href*="compararprecios"]::before,
     a[data-testid="stPageLink-NavLink"][href$="app.py"]::before,
     a[data-testid="stPageLink-NavLink"][href="/"]::before {{
         content: '' !important;
         position: absolute !important;
-        left: 14px !important;
+        left: 15px !important;
         top: 50% !important;
         transform: translateY(-50%) !important;
-        width: 17px !important;
-        height: 17px !important;
-        background-image: url("{home_red_svg}") !important;
+        width: 16px !important;
+        height: 16px !important;
         background-repeat: no-repeat !important;
         background-size: contain !important;
         background-position: center !important;
         z-index: 1 !important;
     }}
+    a[data-testid="stPageLink-NavLink"][href*="trendhype"]::before {{ background-image: url("{trend_red_svg}") !important; }}
+    a[data-testid="stPageLink-NavLink"][href*="trustpage"]::before {{ background-image: url("{shield_red_svg}") !important; }}
+    a[data-testid="stPageLink-NavLink"][href*="compararprecios"]::before {{ background-image: url("{tag_red_svg}") !important; }}
+    a[data-testid="stPageLink-NavLink"][href$="app.py"]::before,
+    a[data-testid="stPageLink-NavLink"][href="/"]::before {{ background-image: url("{home_red_svg}") !important; }}
 
-    /* TARJETAS DE PERFUME DE TENDENCIA */
+    /* ---------- TARJETAS DE PERFUME DE TENDENCIA ---------- */
     .hype-card {{
         background-color: {card_bg};
-        border: 2px solid {border_color};
-        border-radius: 12px;
-        padding: 14px;
+        border: 1px solid {border_color};
+        border-bottom: none;
+        border-radius: 16px 16px 0 0;
+        padding: 16px 16px 20px 16px;
         position: relative;
-        margin-top: 15px;
-        margin-bottom: 12px;
-        box-shadow: 2px 4px 10px rgba(0,0,0,0.08);
+        margin-top: 14px;
+        margin-bottom: 0;
         color: {text_color};
-        font-family: 'Inter', sans-serif;
-        transition: transform 0.32s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.32s cubic-bezier(0.25, 0.8, 0.25, 1), border-color 0.32s ease;
+        font-family: {font_sans};
+        cursor: pointer;
+        transition: border-color 0.2s ease;
     }}
-    
-    .hype-card:hover {{
-        transform: translateY(-8px) scale(1.025);
-        box-shadow: 0 16px 30px rgba(0,0,0,0.16);
-        border-color: #d83737;
+    div[data-testid="stColumn"]:has(.hype-card) {{
+        margin-bottom: 18px;
+    }}
+    div[data-testid="stColumn"]:has(.hype-card):hover .hype-card {{
+        border-color: {gold};
+    }}
+
+    .hype-top {{
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
     }}
 
     .rank-badge {{
-        position: absolute; top: -12px; left: -8px;
-        background-color: {card_bg}; color: {text_color};
-        font-size: 16px; font-weight: 900; padding: 3px 10px;
-        border: 2px solid {border_color}; border-radius: 6px; box-shadow: 2px 2px 0px {border_color}; z-index: 2;
-        display: flex; align-items: center; gap: 6px;
-        transition: border-color 0.3s ease;
-    }}
-    .hype-card:hover .rank-badge {{
-        border-color: #d83737;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.95rem;
+        font-weight: 800;
+        color: {text_color};
+        background-color: {surface_soft};
+        border: 1px solid {border_color};
+        border-radius: 999px;
+        padding: 4px 12px 4px 9px;
+        font-variant-numeric: tabular-nums;
     }}
 
     @keyframes minimalStarGlow {{
@@ -670,85 +799,184 @@ st.markdown(f"""
     .star-minimal-gold {{ animation: goldStarGlow 3.2s ease-in-out infinite; display: inline-flex; vertical-align: middle; }}
     .star-minimal-silver {{ animation: silverStarGlow 3.5s ease-in-out infinite; display: inline-flex; vertical-align: middle; }}
 
+    /* Anillo del Hype Score: se llena según el porcentaje */
     .score-circle {{
-        position: absolute; top: 10px; right: 10px; width: 56px; height: 56px; border-radius: 50%;
-        border: 2px solid {border_color}; display: flex; flex-direction: column; justify-content: center;
-        align-items: center; background-color: {card_bg}; padding: 2px;
-        box-shadow: inset 0 0 0 2px {card_bg}, inset 0 0 0 2px {border_color};
-        transition: border-color 0.3s ease;
+        width: 58px;
+        height: 58px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
     }}
-    .hype-card:hover .score-circle {{ border-color: #d83737; }}
+    .score-inner {{
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background-color: {card_bg};
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }}
+    .score-value {{
+        font-size: 0.95rem;
+        font-weight: 800;
+        color: {text_color};
+        line-height: 1;
+        font-variant-numeric: tabular-nums;
+    }}
+    .score-title {{
+        font-size: 0.6rem;
+        font-weight: 700;
+        color: {subtext_color};
+        line-height: 1;
+        margin-top: 3px;
+        letter-spacing: 0.2px;
+    }}
 
-    .score-title {{ font-size: 7px; font-weight: 800; line-height: 1.0; text-align: center; color: {text_color}; }}
-    .score-value {{ font-size: 15px; font-weight: 900; color: {text_color}; }}
-    
-    .img-wrapper {{ text-align: center; margin-top: 10px; position: relative; overflow: hidden; border-radius: 8px; }}
-    .img-wrapper img {{ 
-        width: 105px; 
-        height: 105px; 
-        object-fit: contain; 
-        transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    .img-wrapper {{
+        position: relative;
+        margin: 10px 0 0 0;
+        height: 150px;
+        border-radius: 12px;
+        background: {"radial-gradient(circle at 50% 45%, #1d222c 0%, #11141a 100%)" if is_dark else "radial-gradient(circle at 50% 45%, #ffffff 0%, #f6f4f1 100%)"};
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
     }}
-    
-    .hype-card:hover .img-wrapper img {{ transform: scale(1.12); }}
+    .img-wrapper img {{
+        max-width: 70%;
+        max-height: 128px;
+        object-fit: contain;
+        transition: transform 0.35s ease;
+        filter: {"drop-shadow(0 10px 18px rgba(0,0,0,0.45))" if is_dark else "drop-shadow(0 8px 14px rgba(60,45,35,0.12))"};
+    }}
+    div[data-testid="stColumn"]:has(.hype-card):hover .img-wrapper img {{ transform: scale(1.05); }}
 
     .year-badge {{
-        position: absolute; bottom: 0; right: 5px; background: {card_bg}; border: 1px solid {border_color};
-        border-radius: 4px; padding: 1px 6px; font-size: 11px; font-weight: bold; color: {text_color};
+        position: absolute;
+        bottom: 8px;
+        right: 8px;
+        background: {card_bg};
+        border: 1px solid {border_color};
+        border-radius: 999px;
+        padding: 2px 9px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: {subtext_color};
+        font-variant-numeric: tabular-nums;
     }}
-    .perfume-title {{ text-align: center; font-size: 14px; font-weight: bold; margin-top: 8px; margin-bottom: 10px; color: {text_color}; }}
-    .stats-row {{ display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 10px; }}
-    .stats-text {{ width: 55%; color: {text_color}; line-height: 1.25; }}
+    .perfume-title {{
+        font-size: 1.05rem;
+        font-weight: 700;
+        margin: 14px 0 10px 0;
+        color: {text_color};
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }}
+    .stats-row {{
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 12px;
+    }}
+    .stats-text {{
+        color: {subtext_color};
+        font-size: 0.82rem;
+        line-height: 1.4;
+    }}
     .chile-badge {{
-        display: flex; align-items: center; gap: 4px; background-color: {app_bg}; border: 1px solid {border_color};
-        border-radius: 16px; padding: 3px 6px; font-weight: bold; font-size: 9px; text-align: left; line-height: 1.1; color: {text_color};
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        flex-shrink: 0;
+        background-color: {surface_soft};
+        border: 1px solid {border_color};
+        border-radius: 999px;
+        padding: 4px 10px 4px 8px;
+        font-weight: 700;
+        font-size: 0.72rem;
+        line-height: 1.15;
+        color: {text_color};
+    }}
+    .chile-dot {{
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: {price_green};
+        flex-shrink: 0;
     }}
     .ai-box {{
-        display: flex; gap: 8px; align-items: center; border: 1px solid {border_color}; border-radius: 8px;
-        padding: 8px; margin-bottom: 10px; font-size: 10px; line-height: 1.25; background-color: {app_bg}; color: {subtext_color};
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+        border-radius: 12px;
+        padding: 10px 12px;
+        margin-bottom: 12px;
+        font-size: 0.82rem;
+        line-height: 1.5;
+        background-color: {gold_soft};
+        color: {text_color};
     }}
     .ai-icon {{
-        min-width: 22px; height: 22px; border-radius: 50%; border: 1px solid {border_color}; display: flex;
-        justify-content: center; align-items: center; font-weight: bold; font-size: 9px; background-color: {card_bg}; color: {text_color};
+        min-width: 24px;
+        height: 24px;
+        border-radius: 7px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-weight: 800;
+        font-size: 0.66rem;
+        background-color: {gold};
+        color: {"#1c1917" if is_dark else "#ffffff"};
+        letter-spacing: 0.3px;
     }}
-    .price-text {{ text-align: center; font-size: 11px; color: {text_color}; margin-bottom: 6px; }}
+    .price-text {{
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 8px;
+        padding-top: 10px;
+        border-top: 1px dashed {border_color};
+        font-size: 0.8rem;
+        color: {subtext_color};
+    }}
+    .price-text b {{
+        font-size: 1.1rem;
+        font-weight: 800;
+        color: {price_green} !important;
+        font-variant-numeric: tabular-nums;
+        letter-spacing: -0.01em;
+    }}
 
-    /* BOTONES DE COMPARAR PRECIOS (EXCLUSIVO PARA BOTONES DENTRO DE TARJETAS DE PERFUME) */
-    div[data-testid="stElementContainer"] div.stButton button[key*="btn_compare_"],
-    div.stButton > button[key*="btn_compare_"] {{
-        background-color: #d83737 !important;
+    /* ---------- BOTÓN COMPARAR PRECIOS (unido a la tarjeta) ---------- */
+    div[class*="st-key-btn_compare_"] {{
+        margin-top: -1rem !important;
+    }}
+    div[class*="st-key-btn_compare_"] div.stButton > button {{
+        background-color: {accent} !important;
         color: #ffffff !important;
-        border: 1px solid #d83737 !important;
-        border-radius: 10px !important;
-        font-weight: 700 !important;
-        font-size: 13px !important;
-        padding: 10px 16px !important;
-        box-shadow: 0 4px 12px rgba(216, 55, 55, 0.22) !important;
-        transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s ease, box-shadow 0.25s ease !important;
+        border: 1px solid {accent} !important;
+        border-radius: 0 0 16px 16px !important;
+        min-height: 46px !important;
+        box-shadow: none !important;
         width: 100% !important;
     }}
-
-    div[data-testid="stElementContainer"] div.stButton button[key*="btn_compare_"] p,
-    div.stButton > button[key*="btn_compare_"] p {{
+    div[class*="st-key-btn_compare_"] div.stButton > button p {{
         color: #ffffff !important;
         font-weight: 700 !important;
     }}
-
-    div[data-testid="stElementContainer"] div.stButton button[key*="btn_compare_"]:hover,
-    div.stButton > button[key*="btn_compare_"]:hover {{
-        background-color: #be2e2e !important;
-        border-color: #be2e2e !important;
-        color: #ffffff !important;
-        transform: scale(1.03) translateY(-2px) !important;
-        box-shadow: 0 6px 18px rgba(216, 55, 55, 0.38) !important;
+    div[class*="st-key-btn_compare_"] div.stButton > button:hover {{
+        background-color: {accent_hover} !important;
+        border-color: {accent_hover} !important;
+        box-shadow: 0 8px 18px rgba(216, 55, 55, 0.28) !important;
     }}
 
-    div[data-testid="stElementContainer"] div.stButton button[key*="btn_compare_"]:active,
-    div.stButton > button[key*="btn_compare_"]:active {{
-        transform: scale(0.98) translateY(0px) !important;
-    }}
-
-    /* BRAND LOGO INTERACTIVO NATIVO 100% LIMPIO Y TRANSPARENTE */
+    /* ---------- LOGO ---------- */
     a.brand-logo-clean,
     a.brand-logo-clean:visited,
     a.brand-logo-clean:hover,
@@ -759,7 +987,6 @@ st.markdown(f"""
         gap: 12px !important;
         text-decoration: none !important;
         background: transparent !important;
-        background-color: transparent !important;
         border: none !important;
         box-shadow: none !important;
         outline: none !important;
@@ -767,27 +994,84 @@ st.markdown(f"""
         margin: 0 !important;
         cursor: pointer !important;
         user-select: none !important;
-        transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
-    }}
-    a.brand-logo-clean:hover {{
-        transform: scale(1.02) !important;
-        background: transparent !important;
-        background-color: transparent !important;
-        border: none !important;
-        box-shadow: none !important;
     }}
     .brand-logo-text {{
-        font-size: 1.55rem !important;
+        font-family: {font_sans} !important;
+        font-size: 1.6rem !important;
         color: {text_color} !important;
-        letter-spacing: 0.3px !important;
+        letter-spacing: -0.02em !important;
         font-weight: 300 !important;
         line-height: 1 !important;
         display: inline-block !important;
-        text-decoration: none !important;
     }}
     .brand-logo-text strong {{
-        font-weight: 700 !important;
+        font-weight: 800 !important;
         color: {text_color} !important;
+    }}
+
+    /* ---------- PIE DE PÁGINA ---------- */
+    .pt-footer {{
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 22px 0 26px 0;
+        margin-top: 40px;
+        border-top: 1px solid {btn_border};
+    }}
+    .pt-footer-mark {{ font-size: 1.1rem; font-weight: 300; color: {text_color}; }}
+    .pt-footer-mark strong {{ font-weight: 800; color: {text_color}; }}
+    .pt-footer-copy {{ font-size: 0.85rem; color: {subtext_color}; }}
+
+    @media (prefers-reduced-motion: reduce) {{
+        .star-minimal-ruby, .star-minimal-gold, .star-minimal-silver,
+        .radar-title-text .radar-title-mark {{ animation: none !important; }}
+    }}
+
+    /* ---------- MÓVIL ---------- */
+    @media (max-width: 768px) {{
+        .block-container {{
+            padding-top: 0.4rem !important;
+            padding-left: 0.8rem !important;
+            padding-right: 0.8rem !important;
+        }}
+        div[data-testid="stHorizontalBlock"] {{
+            flex-wrap: wrap !important;
+            gap: 6px !important;
+        }}
+        div[data-testid="stColumn"] {{
+            width: 100% !important;
+            flex: 1 1 100% !important;
+            min-width: 0 !important;
+        }}
+        div[data-testid="stHorizontalBlock"]:has(.st-key-login_btn, .st-key-theme_toggle) {{
+            flex-wrap: nowrap !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+        }}
+        div[data-testid="stColumn"]:has(a[data-testid="stPageLink-NavLink"]) {{
+            flex: 1 1 calc(50% - 4px) !important;
+            width: calc(50% - 4px) !important;
+        }}
+        a[data-testid="stPageLink-NavLink"] {{
+            justify-content: flex-start !important;
+            padding-left: 2.2rem !important;
+        }}
+        a[data-testid="stPageLink-NavLink"] p,
+        a[data-testid="stPageLink-NavLink"] span {{
+            font-size: 0.8rem !important;
+            white-space: normal !important;
+            line-height: 1.15 !important;
+        }}
+        a[data-testid="stPageLink-NavLink"]::before {{ left: 11px !important; }}
+        .brand-logo-text {{ font-size: 1.35rem !important; }}
+        .info-tooltip-box {{ left: -230px; width: 280px; }}
+        div.st-key-login_btn div.stButton > button {{
+            min-height: 36px !important;
+            padding: 5px 14px 5px 32px !important;
+            background-position: 11px center !important;
+        }}
     }}
     </style>
 """, unsafe_allow_html=True)
@@ -797,26 +1081,24 @@ if st.session_state['logged_in']:
     col_logo, col_espacio, col_actions = st.columns([4.0, 0.5, 4.5], vertical_alignment="center")
     btn_col1, btn_col2 = col_actions.columns([3.5, 1.0], vertical_alignment="center")
 else:
-    col_logo, col_espacio, col_actions = st.columns([5.5, 0.8, 2.7], vertical_alignment="center")
-    btn_col1, btn_col2 = col_actions.columns([1.8, 1.0], vertical_alignment="center")
+    col_logo, col_espacio, col_actions = st.columns([5.6, 1.2, 2.4], vertical_alignment="center")
+    btn_col1, btn_col2 = col_actions.columns([2.0, 0.8], vertical_alignment="center", gap="small")
 
 with col_logo:
-    st.markdown(f"""
+    st.markdown(clean_html(f"""
     <a href="/" target="_self" class="brand-logo-clean" title="PerfumeTrending">
-        <svg width="34" height="34" viewBox="0 0 36 36" fill="none" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M 6.8 21 L 29.2 21 C 30 25 27 32 18 32 C 9 32 6 25 6.8 21 Z" fill="#8c7b6d" />
+        <svg width="34" height="34" viewBox="0 0 36 36" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M 6.8 21 L 29.2 21 C 30 25 27 32 18 32 C 9 32 6 25 6.8 21 Z" fill="{gold}" />
             <line x1="6.8" y1="21" x2="29.2" y2="21" stroke="{text_color}" stroke-width="1.5" />
             <line x1="18" y1="10" x2="18" y2="30" stroke="{text_color}" stroke-width="1" />
             <path d="M 18 32 C 9 32 5 24 7.5 17 C 9 12 13 10 15 10 L 21 10 C 23 10 27 12 28.5 17 C 31 24 27 32 18 32 Z" stroke="{text_color}" stroke-width="2" />
             <rect x="15" y="7" width="6" height="3" stroke="{text_color}" stroke-width="1.5" />
             <rect x="13" y="3" width="10" height="4" rx="1" stroke="{text_color}" stroke-width="1.5" />
-            <rect x="16" y="0" width="4" height="3" rx="1" fill="#8c7b6d" stroke="{text_color}" stroke-width="1" />
+            <rect x="16" y="0" width="4" height="3" rx="1" fill="{gold}" stroke="{text_color}" stroke-width="1" />
         </svg>
-        <span class="brand-logo-text">
-            Perfume<strong>Trending</strong>
-        </span>
+        <div class="brand-logo-text">Perfume<strong>Trending</strong></div>
     </a>
-    """, unsafe_allow_html=True)
+    """), unsafe_allow_html=True)
 
 with btn_col1:
     if st.session_state['logged_in']:
@@ -848,7 +1130,7 @@ if st.session_state.get('show_login_modal', False):
     st.session_state['show_login_modal'] = False
     modal_autenticacion()
 
-st.markdown("<div style='margin-top: 14px;'></div>", unsafe_allow_html=True)
+st.markdown("<div style='margin-top: 22px;'></div>", unsafe_allow_html=True)
 
 # CHIPS DE NAVEGACIÓN RÁPIDA
 col_chip_home, col_chip1, col_chip2, col_chip3, col_chip_space = st.columns([1.6, 1.5, 2.0, 1.7, 2.2], vertical_alignment="center")
@@ -863,28 +1145,31 @@ with col_chip3:
     st.page_link("pages/compararprecios.py", label="Comparar Precios", use_container_width=True)
 
 # 5. SECCIÓN DEL TÍTULO Y NAVEGACIÓN
-st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
+st.markdown("<div style='margin-top: 34px;'></div>", unsafe_allow_html=True)
 col_header_title, col_back_btn = st.columns([3.4, 1], vertical_alignment="center")
 
 with col_header_title:
-    title_html = f"""
-    <div class="radar-title-container">
-        <h1 class="radar-title-text">RADAR DEL HYPE - VIRAL FRAGRANCES</h1>
-        <div class="info-icon-container">
-            <div class="info-btn-badge">i</div>
-            <div class="info-tooltip-box">
-                <div style="font-weight: 800; color: #d83737; margin-bottom: 6px; font-size: 0.92rem;">¿Qué es el Radar del Hype?</div>
-                Es nuestro sistema inteligente que detecta qué fragancias se están volviendo virales en tiempo real analizando menciones y reproducciones en <b>YouTube</b>. Una herramienta clave para <b>revendedores, influencers y entusiastas</b> que buscan adelantarse a las tendencias del mercado.
+    title_html = """
+    <div class="radar-head">
+        <div class="radar-title-container">
+            <div class="radar-title-text">Radar del Hype<span class="radar-title-mark"></span></div>
+            <div class="info-icon-container">
+                <div class="info-btn-badge">i</div>
+                <div class="info-tooltip-box">
+                    <div class="info-tooltip-title">¿Qué es el Radar del Hype?</div>
+                    Es nuestro sistema inteligente que detecta qué fragancias se están volviendo virales en tiempo real analizando menciones y reproducciones en <b>YouTube</b>. Una herramienta clave para <b>revendedores, influencers y entusiastas</b> que buscan adelantarse a las tendencias del mercado.
+                </div>
             </div>
         </div>
+        <div class="radar-subtitle">Las fragancias más virales del momento, ordenadas por su Hype Score.</div>
     </div>
     """
-    st.markdown(title_html, unsafe_allow_html=True)
+    st.markdown(clean_html(title_html), unsafe_allow_html=True)
 
 with col_back_btn:
-    st.page_link("app.py", label="← Volver al Catálogo")
+    st.page_link("app.py", label="Volver al catálogo")
 
-st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
+st.markdown("<div style='margin-top: 14px;'></div>", unsafe_allow_html=True)
 
 # =============================================================================
 # BLOQUE 4: FILTRADO TEMPORAL Y FUENTE DE INTELIGENCIA DE TENDENCIAS
@@ -895,36 +1180,37 @@ st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
 # 2. Especifica la fuente de analítica social (YouTube / TikTok / Instagram):
 #    - Monitorea volumen de reseñas, menciones y reproducciones totales de videos.
 # =============================================================================
-col_title, col_fecha, col_red = st.columns([0.28, 0.42, 3.3], gap="small", vertical_alignment="center")
+col_title, col_fecha, col_red = st.columns([0.7, 1.2, 6.1], gap="small", vertical_alignment="center")
 
 with col_title:
-    st.markdown("<div class='filter-label-text'>Filtrado por :</div>", unsafe_allow_html=True)
+    st.markdown("<div class='filter-label-text'>Período:</div>", unsafe_allow_html=True)
 
 with col_fecha:
     opciones_fecha = ["Este Mes", "Hoy / Día", "Esta Semana", "Este Año", "Año Pasado"]
     with st.popover(f"{st.session_state.selected_month}", use_container_width=False):
         for opt in opciones_fecha:
-            if st.button(opt, key=f"btn_m_{opt}", use_container_width=True):
+            etiqueta_opt = f"✓  {opt}" if opt == st.session_state.selected_month else opt
+            if st.button(etiqueta_opt, key=f"btn_m_{opt}", use_container_width=True):
                 st.session_state.selected_month = opt
                 st.rerun()
 
 with col_red:
-    social_select_html = f"""
+    social_select_html = """
     <div class="social-select-box">
         <span class="social-label">Red social analizada:</span>
         <button class="yt-chip-btn">
-            <svg width="16" height="12" viewBox="0 0 26 20" fill="none">
+            <svg width="16" height="12" viewBox="0 0 26 20" fill="none" aria-hidden="true">
                 <rect x="1" y="1" width="24" height="18" rx="5" fill="#d83737" />
                 <polygon points="10,5 18,10 10,15" fill="#ffffff" />
             </svg>
             <span>YouTube</span>
         </button>
-        <span class="social-desc">(Mide la popularidad en tiempo real según menciones y reseñas en video)</span>
+        <span class="social-desc">Mide la popularidad en tiempo real según menciones y reseñas en video.</span>
     </div>
     """
-    st.markdown(social_select_html, unsafe_allow_html=True)
+    st.markdown(clean_html(social_select_html), unsafe_allow_html=True)
 
-st.write("")
+st.markdown("<div class='pt-divider'></div>", unsafe_allow_html=True)
 
 
 # =============================================================================
@@ -1036,6 +1322,7 @@ hype_data = [
 
 # 8. RENDERIZADO DE TARJETAS EN REJILLA CON VINCULACIÓN DINÁMICA AL CATÁLOGO
 cat_map = get_cached_catalogo_map()
+score_track = "rgba(255, 255, 255, 0.08)" if is_dark else "#efebe6"
 cols_per_row = 3
 for row in range(0, len(hype_data), cols_per_row):
     cols = st.columns(cols_per_row, gap="medium")
@@ -1061,33 +1348,54 @@ for row in range(0, len(hype_data), cols_per_row):
 
             name_safe = escape_html(data['name'])
             ai_safe = escape_html(data['ai_text'])
+
+            # Porcentaje del anillo del Hype Score (solo visual)
+            try:
+                score_pct = max(0, min(100, int(str(data['score']).strip().rstrip('%'))))
+            except ValueError:
+                score_pct = 0
+            score_deg = round(score_pct * 3.6, 1)
+
             with cols[i]:
                 html_card = f"""
                 <div class="hype-card">
-                    <div class="rank-badge">{data['star']}{data['rank']}</div>
-                    <div class="score-circle">
-                        <div class="score-title">HYPE<br>SCORE:</div>
-                        <div class="score-value">{data['score']}</div>
+                    <div class="hype-top">
+                        <div class="rank-badge">{data['star']}{data['rank']}</div>
+                        <div class="score-circle" style="background: conic-gradient({accent} {score_deg}deg, {score_track} 0deg);" title="Hype Score">
+                            <div class="score-inner">
+                                <div class="score-value">{data['score']}</div>
+                                <div class="score-title">HYPE</div>
+                            </div>
+                        </div>
                     </div>
                     <div class="img-wrapper">
                         <img src="{data['img']}" alt="{name_safe}">
                         <div class="year-badge">{data['year']}</div>
                     </div>
-                    <div class="perfume-title">{name_safe}</div>
+                    <div class="perfume-title" title="{name_safe}">{name_safe}</div>
                     <div class="stats-row">
                         <div class="stats-text">{data['stats']}</div>
                         <div class="chile-badge">
+                            <span class="chile-dot"></span>
                             <div>Disponible<br>en Chile</div>
                         </div>
                     </div>
                     <div class="ai-box">
                         <div class="ai-icon">AI</div>
-                        <div>"{ai_safe}"</div>
+                        <div>{ai_safe}</div>
                     </div>
-                    <div class="price-text">Mejor precio hoy: <b>{price_disp}</b></div>
+                    <div class="price-text"><div>Mejor precio hoy</div><b>{price_disp}</b></div>
                 </div>
                 """
                 st.markdown(clean_html(html_card), unsafe_allow_html=True)
                 if st.button("Comparar Precios", key=f"btn_compare_{idx}", use_container_width=True):
                     st.session_state['selected_perfume'] = resolved_pid
                     st.switch_page("pages/compararprecios.py")
+
+# PIE DE PÁGINA
+st.markdown(clean_html("""
+    <div class="pt-footer">
+        <div class="pt-footer-mark">Perfume<strong>Trending</strong></div>
+        <div class="pt-footer-copy">© 2026 Perfume Trending. Todos los derechos reservados.</div>
+    </div>
+"""), unsafe_allow_html=True)
