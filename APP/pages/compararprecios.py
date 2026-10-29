@@ -49,10 +49,16 @@ from ui import (
     get_image_src,
     get_theme_palette,
     init_common_session_state,
-    modal_autenticacion,
     resolver_url_oferta,
     sanitize_external_url,
     toggle_theme,
+)
+from auth_email import modal_autenticacion
+from perfume_actions import (
+    boton_abrir_perfume,
+    boton_corazon,
+    estilos_tarjetas_cliqueables,
+    mostrar_aviso_favoritos,
 )
 
 
@@ -202,16 +208,16 @@ st.markdown(f"""
     [data-testid="stCaptionContainer"], [data-testid="stCaptionContainer"] p {{ color: {subtext_color} !important; }}
     button[data-baseweb="tab"] {{ background: transparent !important; }}
     div[data-baseweb="tab-highlight"] {{ background-color: {accent} !important; }}
-    div[role="dialog"] {{
+    [role="dialog"] {{
         background-color: {card_bg} !important;
         color: {text_color} !important;
         border: 1px solid {border_color} !important;
         border-radius: 16px !important;
     }}
-    div[role="dialog"] h2, div[role="dialog"] h2 *, div[role="dialog"] p, div[role="dialog"] label {{
+    [role="dialog"] h2, [role="dialog"] h2 *, [role="dialog"] p, [role="dialog"] label {{
         color: {text_color} !important;
     }}
-    div[role="dialog"] button[aria-label="Close"] svg {{ color: {text_color} !important; fill: {text_color} !important; }}
+    [role="dialog"] button[aria-label="Close"] svg {{ color: {text_color} !important; fill: {text_color} !important; }}
 
     /* Campos de texto (modal de ingreso), versiones antiguas y nuevas de Streamlit */
     div[data-baseweb="input"],
@@ -1032,6 +1038,16 @@ st.markdown(f"""
     </style>
 """, unsafe_allow_html=True)
 
+# Tarjetas de perfume cliqueables y corazón de favoritos (compartido con todas las páginas)
+st.markdown(estilos_tarjetas_cliqueables(accent, card_bg, border_color, subtext_color, is_dark), unsafe_allow_html=True)
+st.markdown(f"""
+    <style>
+    div[class*="st-key-pcard_rel_"] {{ --heart-top: 20px; --heart-right: 20px; }}
+    div[class*="st-key-pcard_rel_"]:hover .rel-card {{ border-color: {gold}; }}
+    div[class*="st-key-pcard_main_"] {{ --heart-top: 12px; --heart-right: 12px; }}
+    </style>
+""", unsafe_allow_html=True)
+
 # 3. ENCABEZADO SUPERIOR: LOGO, BOTÓN "INGRESAR" / PERFIL Y SWITCH DE TEMA
 if st.session_state['logged_in']:
     col_logo, col_espacio, col_actions = st.columns([4.0, 0.5, 4.5], vertical_alignment="center")
@@ -1085,6 +1101,7 @@ with btn_col2:
 if st.session_state.get('show_login_modal', False):
     st.session_state['show_login_modal'] = False
     modal_autenticacion()
+mostrar_aviso_favoritos()
 
 st.markdown("<div style='margin-top: 22px;'></div>", unsafe_allow_html=True)
 
@@ -1235,11 +1252,13 @@ tipo_safe = escape_html(detalle.get('tipo') or 'Eau de Parfum')
 
 col_img, col_info = st.columns([1, 3], gap="medium")
 with col_img:
-    st.markdown(clean_html(f"""
-    <div class="perfume-header-stage">
-        <img src="{img_src}" alt="{nombre_safe}">
-    </div>
-    """), unsafe_allow_html=True)
+    with st.container(key=f"pcard_main_{selected_id}"):
+        st.markdown(clean_html(f"""
+        <div class="perfume-header-stage">
+            <img src="{img_src}" alt="{nombre_safe}">
+        </div>
+        """), unsafe_allow_html=True)
+        boton_corazon(selected_id, "main", nombre_especifico_det)
 
 with col_info:
     ref_precio = detalle.get('precio_referencia')
@@ -1678,19 +1697,23 @@ if rel_final:
             ref_val = p_rel.get("precio_referencia")
             ref_txt = f"${ref_val:,.0f} CLP".replace(",", ".") if es_precio_valido(ref_val) else "Ver ofertas"
 
-            st.markdown(
-                clean_html(f"""
-                <div class="rel-card">
-                    <div class="rel-stage">
-                        <img src="{img_rel}" alt="{nom_rel_safe}">
+            # Toda la tarjeta abre el perfume; el corazón lo guarda en favoritos
+            with st.container(key=f"pcard_rel_{p_rel['id']}"):
+                st.markdown(
+                    clean_html(f"""
+                    <div class="rel-card">
+                        <div class="rel-stage">
+                            <img src="{img_rel}" alt="{nom_rel_safe}">
+                        </div>
+                        <div class="rel-brand">{marca_rel_safe}, {tipo_rel_safe}</div>
+                        <div class="rel-name" title="{nom_rel_safe}">{nom_rel_safe}</div>
+                        <div class="rel-price">{ref_txt}</div>
                     </div>
-                    <div class="rel-brand">{marca_rel_safe}, {tipo_rel_safe}</div>
-                    <div class="rel-name" title="{nom_rel_safe}">{nom_rel_safe}</div>
-                    <div class="rel-price">{ref_txt}</div>
-                </div>
-                """),
-                unsafe_allow_html=True,
-            )
+                    """),
+                    unsafe_allow_html=True,
+                )
+                boton_abrir_perfume(p_rel['id'], "rel", misma_pagina=True)
+                boton_corazon(p_rel['id'], "rel", nom_rel)
             if st.button("Comparar", key=f"btn_ir_rel_{p_rel['id']}", use_container_width=True):
                 st.session_state["selected_perfume"] = p_rel["id"]
                 try:
