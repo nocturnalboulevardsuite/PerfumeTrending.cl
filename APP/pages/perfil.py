@@ -52,8 +52,14 @@ from ui import (
     get_theme_palette,
     init_common_session_state,
     is_valid_https_image_url,
-    modal_autenticacion,
     toggle_theme,
+)
+from auth_email import modal_autenticacion
+from perfume_actions import (
+    boton_abrir_perfume,
+    boton_corazon,
+    estilos_tarjetas_cliqueables,
+    mostrar_aviso_favoritos,
 )
 
 
@@ -191,16 +197,16 @@ st.markdown(f"""
     [data-testid="stCaptionContainer"], [data-testid="stCaptionContainer"] p {{ color: {subtext_color} !important; }}
     button[data-baseweb="tab"] {{ background: transparent !important; }}
     div[data-baseweb="tab-highlight"] {{ background-color: {accent} !important; }}
-    div[role="dialog"] {{
+    [role="dialog"] {{
         background-color: {card_bg} !important;
         color: {text_color} !important;
         border: 1px solid {border_color} !important;
         border-radius: 16px !important;
     }}
-    div[role="dialog"] h2, div[role="dialog"] h2 *, div[role="dialog"] p, div[role="dialog"] label {{
+    [role="dialog"] h2, [role="dialog"] h2 *, [role="dialog"] p, [role="dialog"] label {{
         color: {text_color} !important;
     }}
-    div[role="dialog"] button[aria-label="Close"] svg {{ color: {text_color} !important; fill: {text_color} !important; }}
+    [role="dialog"] button[aria-label="Close"] svg {{ color: {text_color} !important; fill: {text_color} !important; }}
 
     /* Campos de texto (modal de ingreso), versiones antiguas y nuevas de Streamlit */
     div[data-baseweb="input"],
@@ -930,6 +936,15 @@ st.markdown(f"""
     </style>
 """, unsafe_allow_html=True)
 
+# Perfumes cliqueables y corazón de favoritos (compartido con todas las páginas)
+st.markdown(estilos_tarjetas_cliqueables(accent, card_bg, border_color, subtext_color, is_dark), unsafe_allow_html=True)
+st.markdown(f"""
+    <style>
+    div[class*="st-key-pcard_favrow_"] {{ cursor: pointer; }}
+    div[class*="st-key-pcard_favrow_"]:hover .fav-name {{ color: {accent}; text-decoration: underline; text-underline-offset: 3px; }}
+    </style>
+""", unsafe_allow_html=True)
+
 # 3. ENCABEZADO SUPERIOR: LOGO, BOTÓN "INGRESAR" / PERFIL Y SWITCH DE TEMA
 if st.session_state['logged_in']:
     col_logo, col_espacio, col_actions = st.columns([4.0, 0.5, 4.5], vertical_alignment="center")
@@ -975,6 +990,7 @@ with btn_col2:
 if st.session_state.get('show_login_modal', False):
     st.session_state['show_login_modal'] = False
     modal_autenticacion()
+mostrar_aviso_favoritos()
 
 st.markdown("<div style='margin-top: 22px;'></div>", unsafe_allow_html=True)
 
@@ -1190,9 +1206,14 @@ with tab_favs:
                 badge_precio = "<span class='pt-price-out'>Temporalmente agotado en tiendas</span>"
 
             with st.container(key=f"fav_row_{p_id}"):
-                col_f1, col_f2, col_f3, col_f4 = st.columns([3, 2.5, 2, 1.5], vertical_alignment="center")
+                col_f0, col_f1, col_f2, col_f3, col_f4 = st.columns([0.55, 3, 2.5, 2, 1.5], vertical_alignment="center")
+            with col_f0:
+                boton_corazon(p_id, "perfil", item.get('nombre', ''), en_linea=True)
             with col_f1:
-                st.markdown(f"<div class='fav-name'>{p_nombre_safe}</div><div class='fav-brand'>{p_marca_safe}</div>", unsafe_allow_html=True)
+                # El nombre del perfume abre su comparativa
+                with st.container(key=f"pcard_favrow_{p_id}"):
+                    st.markdown(f"<div class='fav-name'>{p_nombre_safe}</div><div class='fav-brand'>{p_marca_safe}</div>", unsafe_allow_html=True)
+                    boton_abrir_perfume(p_id, "perfil")
             with col_f2:
                 st.markdown(f"<div>{badge_precio}</div>", unsafe_allow_html=True)
             with col_f3:
