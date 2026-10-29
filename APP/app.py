@@ -4,7 +4,7 @@ PerfumeTrending.cl — Aplicación Web Principal (Streamlit Portal)
 Punto de entrada de la plataforma chilena de comparación de precios de fragancias:
 - Arquitectura de navegación multipágina (Home, Comparador, Remates, TrendHype, TrustScore, Perfil).
 - Catálogo interactivo con filtrado multifacético: por búsqueda difusa, familias olfativas, notas y marcas.
-- Renderizado de componentes visuales con CSS personalizado (modo oscuro/claro, tipografía Bodoni Moda + Instrument Sans).
+- Renderizado de componentes visuales con CSS personalizado (modo oscuro/claro, tipografía Manrope).
 - Paginación dinámica y caché en memoria con invalidación TTL para alto rendimiento.
 - Consumo resiliente de datos: consulta primaria a Supabase (PostgreSQL en la nube) con fallback a SQLite.
 """
@@ -134,6 +134,22 @@ btn_border = pal.btn_border
 input_bg = pal.input_bg
 input_text = pal.input_text
 input_border = pal.input_border
+
+# Paleta clara reforzada: fondo blanco y texto oscuro legible en todos los componentes.
+# El modo oscuro conserva exactamente los valores de la paleta compartida.
+if not is_dark:
+    app_bg = "#ffffff"
+    app_bg_css = "background: #ffffff !important; background-color: #ffffff !important;"
+    card_bg = "#ffffff"
+    border_color = "#e6e1db"
+    text_color = "#1c1917"
+    subtext_color = "#6b6159"
+    btn_bg = "#ffffff"
+    btn_text = "#1c1917"
+    btn_border = "#d6cec5"
+    input_bg = "#ffffff"
+    input_text = "#1c1917"
+    input_border = "#d6cec5"
 
 # MODAL FLOTANTE PARA BÚSQUEDA VISUAL CON DIBUJOS HTML VECTORIALES
 @st.dialog("Búsqueda Visual de Perfumes")
@@ -394,8 +410,8 @@ gold_soft = "rgba(212, 194, 165, 0.16)" if is_dark else "rgba(140, 123, 109, 0.1
 price_green = "#4ade80" if is_dark else "#15803d"
 shadow_sm = "0 1px 2px rgba(0,0,0,0.35)" if is_dark else "0 1px 2px rgba(40,30,20,0.06)"
 shadow_hover = "0 6px 16px rgba(0,0,0,0.35)" if is_dark else "0 6px 16px rgba(60,45,35,0.10)"
-font_display = "'Bodoni Moda', 'Didot', 'Bodoni 72', Georgia, serif"
-font_sans = "'Instrument Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+font_display = "'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+font_sans = "'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
 
 _search_svg = (
     f'<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" '
@@ -407,7 +423,7 @@ search_icon_svg = "data:image/svg+xml;base64," + base64.b64encode(_search_svg.en
 # 6. CSS ADAPTABLE Y ESTILOS
 st.markdown(f"""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..700;1,6..96,400..600&family=Instrument+Sans:wght@400;500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap');
 
     header[data-testid="stHeader"] {{ display: none !important; }}
 
@@ -417,7 +433,89 @@ st.markdown(f"""
         max-width: 1180px !important;
     }}
 
-    .stApp {{ {app_bg_css} color: {text_color} !important; font-family: {font_sans}; }}
+    html, body {{ background-color: {app_bg} !important; }}
+    .stApp {{ {app_bg_css} color: {text_color} !important; font-family: {font_sans}; color-scheme: {"dark" if is_dark else "light"}; }}
+    [data-testid="stAppViewContainer"],
+    [data-testid="stMain"],
+    [data-testid="stMainBlockContainer"],
+    [data-testid="stBottom"] > div {{
+        background: transparent !important;
+        background-color: transparent !important;
+    }}
+
+    /* Textos nativos: títulos, captions, alertas, pestañas del modal */
+    .stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp strong, .stApp b,
+    [data-testid="stCaptionContainer"], [data-testid="stCaptionContainer"] p,
+    [data-testid="stWidgetLabel"] p,
+    button[data-baseweb="tab"] p {{
+        color: {text_color} !important;
+    }}
+    [data-testid="stCaptionContainer"], [data-testid="stCaptionContainer"] p {{
+        color: {subtext_color} !important;
+    }}
+    button[data-baseweb="tab"] {{ background: transparent !important; }}
+    div[data-baseweb="tab-highlight"] {{ background-color: {accent} !important; }}
+    div[data-baseweb="tab-border"] {{ background-color: {btn_border} !important; }}
+
+    /* Ventanas modales (login y búsqueda visual) */
+    div[role="dialog"] {{
+        background-color: {card_bg} !important;
+        color: {text_color} !important;
+        border: 1px solid {border_color} !important;
+        border-radius: 16px !important;
+    }}
+    div[role="dialog"] h2, div[role="dialog"] h2 * , div[role="dialog"] p, div[role="dialog"] label {{
+        color: {text_color} !important;
+    }}
+    div[role="dialog"] button[aria-label="Close"] svg {{ color: {text_color} !important; fill: {text_color} !important; }}
+
+    /* Menús desplegables (selectbox / multiselect) */
+    div[data-baseweb="popover"] ul,
+    div[data-baseweb="popover"] div[data-baseweb="menu"],
+    ul[data-testid="stSelectboxVirtualDropdown"] {{
+        background-color: {input_bg} !important;
+        border: 1px solid {border_color} !important;
+        border-radius: 10px !important;
+    }}
+    div[data-baseweb="popover"] li,
+    div[data-baseweb="popover"] li * {{
+        color: {input_text} !important;
+        background-color: transparent;
+    }}
+    div[data-baseweb="popover"] li:hover,
+    div[data-baseweb="popover"] li[aria-selected="true"] {{
+        background-color: {gold_soft} !important;
+    }}
+    div[data-baseweb="select"] div,
+    div[data-baseweb="select"] input {{
+        color: {input_text} !important;
+    }}
+    div[data-baseweb="select"] svg {{ color: {subtext_color} !important; fill: {subtext_color} !important; }}
+    span[data-baseweb="tag"] {{
+        background-color: {gold_soft} !important;
+        border: 1px solid {gold} !important;
+    }}
+    span[data-baseweb="tag"] span, span[data-baseweb="tag"] svg {{
+        color: {text_color} !important; fill: {text_color} !important;
+    }}
+    input::placeholder, textarea::placeholder {{
+        color: {subtext_color} !important;
+        opacity: 1 !important;
+    }}
+
+    /* Alertas (st.info, etc.) */
+    div[data-testid="stAlert"] > div {{
+        background-color: {gold_soft} !important;
+        border-radius: 12px !important;
+    }}
+    div[data-testid="stAlert"] p {{ color: {text_color} !important; }}
+
+    /* Uploader y cámara */
+    [data-testid="stFileUploader"] section *,
+    [data-testid="stFileUploaderDropzone"] * {{
+        color: {text_color} !important;
+    }}
+    [data-testid="stFileUploader"] small {{ color: {subtext_color} !important; }}
 
     .stApp p, .stApp label, .stApp li, .stApp input, .stApp textarea, .stApp button,
     .stApp div[data-baseweb="select"] div,
@@ -877,15 +975,15 @@ st.markdown(f"""
     }}
     .brand-logo-text {{
         font-family: {font_display} !important;
-        font-size: 1.75rem !important;
+        font-size: 1.6rem !important;
         color: {text_color} !important;
-        font-weight: 400 !important;
-        letter-spacing: -0.01em !important;
+        font-weight: 300 !important;
+        letter-spacing: -0.02em !important;
         line-height: 1 !important;
         display: inline-block !important;
     }}
     .brand-logo-text strong {{
-        font-weight: 700 !important;
+        font-weight: 800 !important;
         color: {text_color} !important;
     }}
 
@@ -895,10 +993,10 @@ st.markdown(f"""
     }}
     .pt-display {{
         font-family: {font_display};
-        font-weight: 500;
-        font-size: clamp(2rem, 3.8vw, 2.9rem);
-        line-height: 1.06;
-        letter-spacing: -0.015em;
+        font-weight: 800;
+        font-size: clamp(1.8rem, 3.4vw, 2.5rem);
+        line-height: 1.1;
+        letter-spacing: -0.025em;
         color: {text_color};
         margin: 0 0 10px 0;
     }}
@@ -950,7 +1048,8 @@ st.markdown(f"""
     }}
     .pt-empty-title {{
         font-family: {font_display};
-        font-size: 1.5rem;
+        font-size: 1.25rem;
+        font-weight: 700;
         color: {text_color};
         margin-bottom: 6px;
     }}
@@ -1049,7 +1148,7 @@ st.markdown(f"""
         position: relative;
         width: 100%;
         aspect-ratio: 1 / 1;
-        background: {"radial-gradient(circle at 50% 42%, #1d222c 0%, #11141a 100%)" if is_dark else "radial-gradient(circle at 50% 42%, #ffffff 0%, #f3f1ee 100%)"};
+        background: {"radial-gradient(circle at 50% 42%, #1d222c 0%, #11141a 100%)" if is_dark else "radial-gradient(circle at 50% 42%, #ffffff 0%, #f6f4f1 100%)"};
         display: flex;
         align-items: center;
         justify-content: center;
@@ -1095,8 +1194,8 @@ st.markdown(f"""
     }}
     .overlay-title {{
         font-family: {font_display};
-        font-size: 1.15rem;
-        font-weight: 600;
+        font-size: 1rem;
+        font-weight: 700;
         color: {gold};
         margin-bottom: 8px;
         padding-bottom: 8px;
@@ -1205,8 +1304,8 @@ st.markdown(f"""
     }}
     .essence-title {{
         font-family: {font_display};
-        font-size: 1.22rem;
-        font-weight: 500;
+        font-size: 1.05rem;
+        font-weight: 700;
         line-height: 1.2;
         margin-bottom: 6px;
     }}
@@ -1252,10 +1351,11 @@ st.markdown(f"""
     }}
     .pt-footer-mark {{
         font-family: {font_display};
-        font-size: 1.25rem;
+        font-size: 1.1rem;
+        font-weight: 300;
         color: {text_color};
     }}
-    .pt-footer-mark strong {{ font-weight: 700; color: {text_color}; }}
+    .pt-footer-mark strong {{ font-weight: 800; color: {text_color}; }}
     .pt-footer-copy {{
         font-size: 0.85rem;
         color: {subtext_color};
@@ -1289,8 +1389,8 @@ st.markdown(f"""
             min-width: 0 !important;
         }}
 
-        .brand-logo-text {{ font-size: 1.4rem !important; }}
-        .pt-display {{ font-size: 1.85rem; }}
+        .brand-logo-text {{ font-size: 1.35rem !important; }}
+        .pt-display {{ font-size: 1.7rem; }}
         .pt-lede {{ font-size: 0.94rem; }}
 
         div[data-testid="stHorizontalBlock"]:has(.st-key-login_btn, .st-key-theme_toggle) {{
