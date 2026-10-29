@@ -276,55 +276,6 @@ settings_icon_svg = pal.settings_icon_svg
 logout_icon_svg = pal.logout_icon_svg
 logo_svg_data = pal.logo_svg_data
 
-# Íconos del switch de tema: luna mejorada (modo oscuro) y sol que se ilumina al activarse (modo claro).
-# El switch conserva su riel, tamaño, posición y frasco originales; solo cambia el dibujo del ícono.
-_MOON_SVG = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-<defs>
-<radialGradient id="mg" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#f6e7b4" stop-opacity="0.45"/><stop offset="1" stop-color="#f6e7b4" stop-opacity="0"/></radialGradient>
-<radialGradient id="mf" cx="0.35" cy="0.35" r="0.75"><stop offset="0" stop-color="#fffbea"/><stop offset="1" stop-color="#e6d39a"/></radialGradient>
-<mask id="cut"><rect width="24" height="24" fill="#fff"/><circle cx="15.6" cy="8.6" r="6.6" fill="#000"/></mask>
-</defs>
-<circle cx="11" cy="13" r="11" fill="url(#mg)"/>
-<g mask="url(#cut)">
-<circle cx="11" cy="13" r="8" fill="url(#mf)"/>
-<circle cx="7.6" cy="15.2" r="1.4" fill="#cbb77c" opacity="0.55"/>
-<circle cx="10.6" cy="18.2" r="0.9" fill="#cbb77c" opacity="0.5"/>
-<circle cx="6.2" cy="11.4" r="0.7" fill="#cbb77c" opacity="0.45"/>
-</g>
-<path d="M19.6 2.6 l0.55 1.25 1.25 0.55 -1.25 0.55 -0.55 1.25 -0.55 -1.25 -1.25 -0.55 1.25 -0.55 Z" fill="#ffffff">
-<animate attributeName="opacity" values="1;0.35;1" dur="2.4s" repeatCount="indefinite"/>
-</path>
-<circle cx="21.2" cy="10.4" r="0.7" fill="#ffffff" opacity="0.8"/>
-<animate attributeName="opacity" values="0;1" dur="0.5s" fill="freeze"/>
-</svg>"""
-
-_SUN_SVG = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-<defs>
-<radialGradient id="sg" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ffd166" stop-opacity="0.95"/><stop offset="0.55" stop-color="#ffb703" stop-opacity="0.35"/><stop offset="1" stop-color="#ffb703" stop-opacity="0"/></radialGradient>
-<radialGradient id="sc" cx="0.4" cy="0.4" r="0.7"><stop offset="0" stop-color="#fff3b0"/><stop offset="1" stop-color="#ffb703"/></radialGradient>
-</defs>
-<circle cx="12" cy="12" r="11" fill="url(#sg)" opacity="0">
-<animate attributeName="opacity" values="0;1;0.7" keyTimes="0;0.6;1" dur="1s" fill="freeze"/>
-<animate attributeName="r" values="3;12;11" keyTimes="0;0.6;1" dur="1s" fill="freeze"/>
-</circle>
-<g stroke="#ffb703" stroke-width="1.9" stroke-linecap="round" opacity="0.2">
-<line x1="12" y1="1.8" x2="12" y2="4.4"/><line x1="12" y1="19.6" x2="12" y2="22.2"/>
-<line x1="1.8" y1="12" x2="4.4" y2="12"/><line x1="19.6" y1="12" x2="22.2" y2="12"/>
-<line x1="4.8" y1="4.8" x2="6.6" y2="6.6"/><line x1="17.4" y1="17.4" x2="19.2" y2="19.2"/>
-<line x1="4.8" y1="19.2" x2="6.6" y2="17.4"/><line x1="17.4" y1="6.6" x2="19.2" y2="4.8"/>
-<animate attributeName="opacity" values="0.2;1" begin="0.2s" dur="0.6s" fill="freeze"/>
-</g>
-<circle cx="12" cy="12" r="5" fill="#9a8a62">
-<animate attributeName="fill" values="#9a8a62;#ffc93c" dur="0.6s" fill="freeze"/>
-</circle>
-<circle cx="12" cy="12" r="5" fill="url(#sc)" opacity="0">
-<animate attributeName="opacity" values="0;1" begin="0.3s" dur="0.5s" fill="freeze"/>
-</circle>
-</svg>"""
-
-static_icon_svg = "data:image/svg+xml;base64," + base64.b64encode(
-    (_MOON_SVG if is_dark else _SUN_SVG).encode("utf-8")
-).decode("ascii")
 
 # 4. SISTEMA DE SONIDO Y EVENTOS DE TARJETAS
 js_color_script = f"""
