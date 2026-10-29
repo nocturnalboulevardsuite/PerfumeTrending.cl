@@ -882,8 +882,9 @@ if _css_avatar:
 
 # 5. HEADER (LOGO + INICIO DE SESIÓN DINÁMICO + SWITCH COPIADO EXACTO DE APP.PY)
 if st.session_state['logged_in']:
-    col_logo, col_espacio, col_actions = st.columns([4.0, 0.5, 4.5], vertical_alignment="center")
-    btn_col1, btn_col2 = col_actions.columns([3.5, 1.0], vertical_alignment="center")
+    # Mismo tamaño del botón de usuario en todas las páginas: ni muy chico ni muy grande
+    col_logo, col_espacio, col_actions = st.columns([5.2, 0.6, 3.2], vertical_alignment="center")
+    btn_col1, btn_col2 = col_actions.columns([2.4, 0.8], vertical_alignment="center", gap="small")
 else:
     col_logo, col_espacio, col_actions = st.columns([5.6, 1.2, 2.4], vertical_alignment="center")
     btn_col1, btn_col2 = col_actions.columns([2.0, 0.8], vertical_alignment="center", gap="small")
