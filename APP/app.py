@@ -1642,7 +1642,11 @@ st.markdown(f"""
 st.markdown(estilos_tarjetas_cliqueables(accent, card_bg, border_color, subtext_color, is_dark), unsafe_allow_html=True)
 
 # 7. CABECERA CON LOGO COMPACTO E INTERACTIVO
-col_logo, col_espacio, col_actions = st.columns([5.6, 1.2, 2.4], vertical_alignment="center")
+if st.session_state['logged_in']:
+    # Mismo tamaño del botón de usuario en todas las páginas: ni muy chico ni muy grande
+    col_logo, col_espacio, col_actions = st.columns([5.2, 0.6, 3.2], vertical_alignment="center")
+else:
+    col_logo, col_espacio, col_actions = st.columns([5.6, 1.2, 2.4], vertical_alignment="center")
 
 with col_logo:
     st.markdown(clean_html(f"""
@@ -1661,7 +1665,10 @@ with col_logo:
     """), unsafe_allow_html=True)
 
 with col_actions:
-    btn_col1, btn_col2 = st.columns([2.0, 0.8], vertical_alignment="center", gap="small")
+    if st.session_state['logged_in']:
+        btn_col1, btn_col2 = st.columns([2.4, 0.8], vertical_alignment="center", gap="small")
+    else:
+        btn_col1, btn_col2 = st.columns([2.0, 0.8], vertical_alignment="center", gap="small")
     with btn_col1:
         if st.session_state['logged_in']:
             user_display = st.session_state['user_info'].get('nombre') or st.session_state['user_info'].get('email', 'Usuario')
