@@ -14,6 +14,7 @@ import sys
 import os
 import base64
 import random
+from datetime import timedelta, timezone
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 APP_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -38,6 +39,7 @@ from ui import (
     toggle_theme,
 )
 from auth_email import modal_autenticacion
+from hype_youtube import PERIODOS, formatear_numero, obtener_ranking_hype
 from perfume_actions import (
     boton_abrir_perfume,
     boton_corazon,
@@ -1094,6 +1096,56 @@ st.markdown(f"""
     </style>
 """, unsafe_allow_html=True)
 
+st.markdown(f"""
+    <style>
+    .hype-meta {{
+        font-size: 0.86rem;
+        color: {subtext_color};
+        margin: 2px 0 6px 0;
+    }}
+    .hype-meta b {{ color: {text_color}; }}
+    .hype-meta-warn {{
+        background: {gold_soft};
+        border: 1px solid {border_color};
+        border-radius: 12px;
+        padding: 10px 14px;
+        color: {text_color};
+    }}
+    .img-wrapper img.hype-thumb {{
+        width: 100%;
+        height: 100%;
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: cover;
+        filter: none;
+    }}
+    .chile-badge-new .chile-dot {{ background: {accent}; }}
+    .price-text b.hype-noprice {{
+        color: {subtext_color} !important;
+        font-size: 0.86rem !important;
+        font-weight: 700 !important;
+        white-space: nowrap;
+    }}
+    a.hype-card-link, a.hype-card-link:hover, a.hype-card-link:visited {{
+        text-decoration: none !important;
+        color: inherit !important;
+        display: block;
+    }}
+    a.hype-card-link:hover .hype-card {{ border-color: {gold}; }}
+    div[class*="st-key-ytbtn_"] {{ margin-top: -1rem !important; }}
+    div[class*="st-key-ytbtn_"] a {{
+        background-color: {accent} !important;
+        border: 1px solid {accent} !important;
+        color: #ffffff !important;
+        border-radius: 0 0 16px 16px !important;
+        min-height: 46px !important;
+        box-shadow: none !important;
+    }}
+    div[class*="st-key-ytbtn_"] a p, div[class*="st-key-ytbtn_"] a span {{ color: #ffffff !important; font-weight: 700 !important; }}
+    div[class*="st-key-ytbtn_"] a:hover {{ background-color: {accent_hover} !important; border-color: {accent_hover} !important; }}
+    </style>
+""", unsafe_allow_html=True)
+
 # 4. ENCABEZADO SUPERIOR: LOGO, BOTÓN "INGRESAR" / PERFIL Y SWITCH DE TEMA
 if st.session_state['logged_in']:
     # Mismo tamaño del botón de usuario en todas las páginas: ni muy chico ni muy grande
@@ -1227,7 +1279,7 @@ with col_red:
             </svg>
             <span>YouTube</span>
         </button>
-        <span class="social-desc">Mide la popularidad en tiempo real según menciones y reseñas en video.</span>
+        <span class="social-desc">Videos en español de Latinoamérica: visitas, videos nuevos, canales y velocidad de crecimiento.</span>
     </div>
     """
     st.markdown(clean_html(social_select_html), unsafe_allow_html=True)
@@ -1342,18 +1394,65 @@ hype_data = [
     }
 ]
 
-# 8. RENDERIZADO DE TARJETAS EN REJILLA CON VINCULACIÓN DINÁMICA AL CATÁLOGO
+# 8. RANKING REAL DESDE YOUTUBE (con respaldo de ejemplo si no hay clave o falla la conexión)
 cat_map = get_cached_catalogo_map()
+periodo_actual = st.session_state.selected_month
+periodo_txt = PERIODOS.get(periodo_actual, PERIODOS["Este Mes"])["texto"]
+with st.spinner("Analizando los videos de perfumes en YouTube..."):
+    ranking = obtener_ranking_hype(periodo_actual, list(cat_map.values()), limite=12)
+
+estrellas = [star_ruby_svg, star_gold_svg, star_silver_svg]
+if ranking["ok"]:
+    hype_items = []
+    for pos, f in enumerate(ranking["items"]):
+        p_cat = cat_map.get(f["perfume_id"]) if f["perfume_id"] else None
+        if p_cat and (p_cat.get("mejor_precio") or p_cat.get("precio_referencia")):
+            p_disp = p_cat.get("mejor_precio") or p_cat.get("precio_referencia")
+            price_txt = f"${int(p_disp):,.0f} CLP".replace(",", ".")
+        else:
+            price_txt = "Sin ofertas"
+        img_cat = get_image_src(p_cat.get("imagen_url")) if (p_cat and p_cat.get("imagen_url")) else ""
+        hype_items.append({
+            "perfume_id": f["perfume_id"],
+            "en_catalogo": f["en_catalogo"],
+            "rank": f"#{pos + 1}",
+            "star": estrellas[pos] if pos < 3 else "",
+            "name": f["nombre"],
+            "score": f"{f['score']}%",
+            "year": f"{f['videos']} videos",
+            "price": price_txt,
+            "img": img_cat or f["miniatura"],
+            "es_miniatura": not img_cat,
+            "stats": f"↗ {f['videos']} videos y {formatear_numero(f['visitas'])}<br>visitas {periodo_txt}",
+            "ai_text": f["insight"],
+            "url": f["top_url"],
+        })
+    hora_txt = ranking["actualizado"].astimezone(timezone(timedelta(hours=-3))).strftime("%d/%m %H:%M") if ranking.get("actualizado") else ""
+    st.markdown(
+        f"<div class='hype-meta'>Basado en <b>{ranking['videos_analizados']}</b> videos de perfumes en español publicados {periodo_txt}. "
+        f"Actualizado el {hora_txt} (hora de Chile).</div>",
+        unsafe_allow_html=True,
+    )
+    if ranking.get("mensaje"):
+        st.caption(ranking["mensaje"])
+else:
+    # Respaldo: datos de ejemplo (la página nunca queda vacía)
+    hype_items = [dict(d, en_catalogo=True, es_miniatura=False, url="") for d in hype_data]
+    if ranking.get("mensaje"):
+        st.markdown(f"<div class='hype-meta hype-meta-warn'>{escape_html(ranking['mensaje'])}</div>", unsafe_allow_html=True)
+
+# 9. RENDERIZADO DE TARJETAS EN REJILLA CON VINCULACIÓN DINÁMICA AL CATÁLOGO
 score_track = "rgba(255, 255, 255, 0.08)" if is_dark else "#efebe6"
 cols_per_row = 3
-for row in range(0, len(hype_data), cols_per_row):
+for row in range(0, len(hype_items), cols_per_row):
     cols = st.columns(cols_per_row, gap="medium")
     for i in range(cols_per_row):
         idx = row + i
-        if idx < len(hype_data):
-            data = hype_data[idx]
-            perf_info = cat_map.get(data['perfume_id'])
-            if not perf_info:
+        if idx < len(hype_items):
+            data = hype_items[idx]
+            en_catalogo = bool(data.get("en_catalogo")) and data.get("perfume_id") is not None
+            perf_info = cat_map.get(data['perfume_id']) if en_catalogo else None
+            if en_catalogo and not perf_info:
                 target_words = [w.lower() for w in data['name'].split() if len(w) > 3]
                 for cand in cat_map.values():
                     c_full = f"{cand.get('marca', '')} {cand.get('nombre', '')}".lower()
@@ -1370,6 +1469,8 @@ for row in range(0, len(hype_data), cols_per_row):
 
             name_safe = escape_html(data['name'])
             ai_safe = escape_html(data['ai_text'])
+            img_safe = escape_html(data['img'])
+            img_class = "hype-thumb" if data.get("es_miniatura") else ""
 
             # Porcentaje del anillo del Hype Score (solo visual)
             try:
@@ -1377,6 +1478,21 @@ for row in range(0, len(hype_data), cols_per_row):
             except ValueError:
                 score_pct = 0
             score_deg = round(score_pct * 3.6, 1)
+
+            if en_catalogo:
+                badge_html = """
+                        <div class="chile-badge">
+                            <span class="chile-dot"></span>
+                            <div>Disponible<br>en Chile</div>
+                        </div>"""
+                precio_label = "Mejor precio hoy"
+            else:
+                badge_html = """
+                        <div class="chile-badge chile-badge-new">
+                            <span class="chile-dot"></span>
+                            <div>Nuevo en<br>tendencia</div>
+                        </div>"""
+                precio_label = "Aún no en tiendas auditadas"
 
             with cols[i]:
                 html_card = f"""
@@ -1391,32 +1507,38 @@ for row in range(0, len(hype_data), cols_per_row):
                         </div>
                     </div>
                     <div class="img-wrapper">
-                        <img src="{data['img']}" alt="{name_safe}">
+                        <img src="{img_safe}" alt="{name_safe}" class="{img_class}" loading="lazy">
                         <div class="year-badge">{data['year']}</div>
                     </div>
                     <div class="perfume-title" title="{name_safe}">{name_safe}</div>
                     <div class="stats-row">
-                        <div class="stats-text">{data['stats']}</div>
-                        <div class="chile-badge">
-                            <span class="chile-dot"></span>
-                            <div>Disponible<br>en Chile</div>
-                        </div>
+                        <div class="stats-text">{data['stats']}</div>{badge_html}
                     </div>
                     <div class="ai-box">
                         <div class="ai-icon">AI</div>
                         <div>{ai_safe}</div>
                     </div>
-                    <div class="price-text"><div>Mejor precio hoy</div><b>{price_disp}</b></div>
+                    <div class="price-text"><div>{precio_label}</div><b class="{'' if en_catalogo else 'hype-noprice'}">{price_disp}</b></div>
                 </div>
                 """
-                # Toda la tarjeta abre el perfume; el corazón lo guarda en favoritos
-                with st.container(key=f"pcard_hype_{idx}_{resolved_pid}"):
-                    st.markdown(clean_html(html_card), unsafe_allow_html=True)
-                    boton_abrir_perfume(resolved_pid, f"hype{idx}")
-                    boton_corazon(resolved_pid, f"hype{idx}", data['name'])
-                if st.button("Comparar Precios", key=f"btn_compare_{idx}", use_container_width=True):
-                    st.session_state['selected_perfume'] = resolved_pid
-                    st.switch_page("pages/compararprecios.py")
+                if en_catalogo:
+                    # Toda la tarjeta abre el perfume; el corazón lo guarda en favoritos
+                    with st.container(key=f"pcard_hype_{idx}_{resolved_pid}"):
+                        st.markdown(clean_html(html_card), unsafe_allow_html=True)
+                        boton_abrir_perfume(resolved_pid, f"hype{idx}")
+                        boton_corazon(resolved_pid, f"hype{idx}", data['name'])
+                    if st.button("Comparar Precios", key=f"btn_compare_{idx}", use_container_width=True):
+                        st.session_state['selected_perfume'] = resolved_pid
+                        st.switch_page("pages/compararprecios.py")
+                else:
+                    # Perfume viral que aún no está en el catálogo: la tarjeta abre su video más visto
+                    url_safe = escape_html(data.get("url") or "#")
+                    st.markdown(
+                        clean_html(f'<div class="hype-link-wrap"><a class="hype-card-link" href="{url_safe}" target="_blank" rel="noopener noreferrer">{html_card}</a></div>'),
+                        unsafe_allow_html=True,
+                    )
+                    with st.container(key=f"ytbtn_{idx}"):
+                        st.link_button("Ver el video más visto ↗", data.get("url") or "https://www.youtube.com", use_container_width=True)
 
 # PIE DE PÁGINA
 st.markdown(clean_html("""
