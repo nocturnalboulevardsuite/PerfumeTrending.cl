@@ -49,8 +49,15 @@ from ui import (
     get_image_src,
     get_theme_palette,
     init_common_session_state,
-    modal_autenticacion,
     toggle_theme as _shared_toggle_theme,
+)
+from auth_email import modal_autenticacion
+from perfume_actions import (
+    boton_abrir_perfume,
+    boton_corazon,
+    estilos_tarjetas_cliqueables,
+    favoritos_ids,
+    mostrar_aviso_favoritos,
 )
 
 
@@ -249,12 +256,17 @@ def modal_busqueda_visual():
                     p_val = p.get('mejor_precio')
                     p_txt = f"${p_val:,.0f} CLP".replace(",", ".") if p_val else "Ver tiendas"
                     st.markdown(f"<span style='color:#4caf50; font-weight:600;'>Mejor precio: {p_txt}</span>", unsafe_allow_html=True)
-                    if st.button("Comparar Precios", key=f"btn_vis_select_{p['id']}", use_container_width=True):
-                        st.session_state['selected_perfume'] = p['id']
-                        reset_modals()
-                        st.switch_page("pages/compararprecios.py")
+                    c_vis_cmp, c_vis_fav = st.columns([4, 1], vertical_alignment="center")
+                    with c_vis_cmp:
+                        if st.button("Comparar Precios", key=f"btn_vis_select_{p['id']}", use_container_width=True):
+                            st.session_state['selected_perfume'] = p['id']
+                            reset_modals()
+                            st.switch_page("pages/compararprecios.py")
+                    with c_vis_fav:
+                        boton_corazon(p['id'], "visual", p.get('nombre', ''), en_linea=True, recargar_pagina=False)
                 st.markdown("<div style='margin-bottom: 8px;'></div>", unsafe_allow_html=True)
 
+    mostrar_aviso_favoritos()
     st.markdown(f"<hr style='margin: 14px 0; border: none; border-bottom: 1px solid {btn_border};'>", unsafe_allow_html=True)
     if st.button("Cerrar Ventana", key="btn_close_vis_modal", use_container_width=True):
         reset_modals()
@@ -264,6 +276,7 @@ def modal_busqueda_visual():
 if st.session_state.get('show_login_modal', False):
     st.session_state['show_login_modal'] = False
     modal_autenticacion()
+mostrar_aviso_favoritos()
 
 # Posicionamiento del Switch de Tema y SVGs dinámicos desde paleta compartida
 bottle_left_pos = pal.bottle_left_pos
@@ -461,16 +474,16 @@ st.markdown(f"""
     div[data-baseweb="tab-border"] {{ background-color: {btn_border} !important; }}
 
     /* Ventanas modales (login y búsqueda visual) */
-    div[role="dialog"] {{
+    [role="dialog"] {{
         background-color: {card_bg} !important;
         color: {text_color} !important;
         border: 1px solid {border_color} !important;
         border-radius: 16px !important;
     }}
-    div[role="dialog"] h2, div[role="dialog"] h2 * , div[role="dialog"] p, div[role="dialog"] label {{
+    [role="dialog"] h2, [role="dialog"] h2 * , [role="dialog"] p, [role="dialog"] label {{
         color: {text_color} !important;
     }}
-    div[role="dialog"] button[aria-label="Close"] svg {{ color: {text_color} !important; fill: {text_color} !important; }}
+    [role="dialog"] button[aria-label="Close"] svg {{ color: {text_color} !important; fill: {text_color} !important; }}
 
     /* Menús desplegables (selectbox / multiselect) */
     div[data-baseweb="popover"] ul,
@@ -1267,7 +1280,8 @@ st.markdown(f"""
         overflow-y: auto !important;
         z-index: 4 !important;
     }}
-    .catalog-card:hover .card-hover-overlay {{
+    .catalog-card:hover .card-hover-overlay,
+    div[class*="st-key-pcard_"]:hover .card-hover-overlay {{
         opacity: 1 !important;
         visibility: visible !important;
         pointer-events: auto !important;
@@ -1623,6 +1637,9 @@ st.markdown(f"""
     }}
     </style>
 """, unsafe_allow_html=True)
+
+# Tarjetas de perfume cliqueables y corazón de favoritos (compartido con todas las páginas)
+st.markdown(estilos_tarjetas_cliqueables(accent, card_bg, border_color, subtext_color, is_dark), unsafe_allow_html=True)
 
 # 7. CABECERA CON LOGO COMPACTO E INTERACTIVO
 col_logo, col_espacio, col_actions = st.columns([5.6, 1.2, 2.4], vertical_alignment="center")
@@ -1993,7 +2010,11 @@ if st.session_state['current_page'] == 'home':
                     </div>
                     """
                     with cols[j]:
-                        st.markdown(clean_html(card_html), unsafe_allow_html=True)
+                        # Toda la tarjeta abre el perfume; el corazón lo guarda en favoritos
+                        with st.container(key=f"pcard_cat_{p['id']}"):
+                            st.markdown(clean_html(card_html), unsafe_allow_html=True)
+                            boton_abrir_perfume(p['id'], "cat")
+                            boton_corazon(p['id'], "cat", p.get('nombre', ''))
                         if st.button("Comparar Precios", key=f"btn_comp_{p['id']}", use_container_width=True):
                             st.session_state['selected_perfume'] = p['id']
                             reset_modals()
