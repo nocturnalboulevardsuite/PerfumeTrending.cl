@@ -276,6 +276,56 @@ settings_icon_svg = pal.settings_icon_svg
 logout_icon_svg = pal.logout_icon_svg
 logo_svg_data = pal.logo_svg_data
 
+# Íconos del switch de tema: luna mejorada (modo oscuro) y sol que se ilumina al activarse (modo claro).
+# El switch conserva su riel, tamaño, posición y frasco originales; solo cambia el dibujo del ícono.
+_MOON_SVG = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+<defs>
+<radialGradient id="mg" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#f6e7b4" stop-opacity="0.45"/><stop offset="1" stop-color="#f6e7b4" stop-opacity="0"/></radialGradient>
+<radialGradient id="mf" cx="0.35" cy="0.35" r="0.75"><stop offset="0" stop-color="#fffbea"/><stop offset="1" stop-color="#e6d39a"/></radialGradient>
+<mask id="cut"><rect width="24" height="24" fill="#fff"/><circle cx="15.6" cy="8.6" r="6.6" fill="#000"/></mask>
+</defs>
+<circle cx="11" cy="13" r="11" fill="url(#mg)"/>
+<g mask="url(#cut)">
+<circle cx="11" cy="13" r="8" fill="url(#mf)"/>
+<circle cx="7.6" cy="15.2" r="1.4" fill="#cbb77c" opacity="0.55"/>
+<circle cx="10.6" cy="18.2" r="0.9" fill="#cbb77c" opacity="0.5"/>
+<circle cx="6.2" cy="11.4" r="0.7" fill="#cbb77c" opacity="0.45"/>
+</g>
+<path d="M19.6 2.6 l0.55 1.25 1.25 0.55 -1.25 0.55 -0.55 1.25 -0.55 -1.25 -1.25 -0.55 1.25 -0.55 Z" fill="#ffffff">
+<animate attributeName="opacity" values="1;0.35;1" dur="2.4s" repeatCount="indefinite"/>
+</path>
+<circle cx="21.2" cy="10.4" r="0.7" fill="#ffffff" opacity="0.8"/>
+<animate attributeName="opacity" values="0;1" dur="0.5s" fill="freeze"/>
+</svg>"""
+
+_SUN_SVG = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+<defs>
+<radialGradient id="sg" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ffd166" stop-opacity="0.95"/><stop offset="0.55" stop-color="#ffb703" stop-opacity="0.35"/><stop offset="1" stop-color="#ffb703" stop-opacity="0"/></radialGradient>
+<radialGradient id="sc" cx="0.4" cy="0.4" r="0.7"><stop offset="0" stop-color="#fff3b0"/><stop offset="1" stop-color="#ffb703"/></radialGradient>
+</defs>
+<circle cx="12" cy="12" r="11" fill="url(#sg)" opacity="0">
+<animate attributeName="opacity" values="0;1;0.7" keyTimes="0;0.6;1" dur="1s" fill="freeze"/>
+<animate attributeName="r" values="3;12;11" keyTimes="0;0.6;1" dur="1s" fill="freeze"/>
+</circle>
+<g stroke="#ffb703" stroke-width="1.9" stroke-linecap="round" opacity="0.2">
+<line x1="12" y1="1.8" x2="12" y2="4.4"/><line x1="12" y1="19.6" x2="12" y2="22.2"/>
+<line x1="1.8" y1="12" x2="4.4" y2="12"/><line x1="19.6" y1="12" x2="22.2" y2="12"/>
+<line x1="4.8" y1="4.8" x2="6.6" y2="6.6"/><line x1="17.4" y1="17.4" x2="19.2" y2="19.2"/>
+<line x1="4.8" y1="19.2" x2="6.6" y2="17.4"/><line x1="17.4" y1="6.6" x2="19.2" y2="4.8"/>
+<animate attributeName="opacity" values="0.2;1" begin="0.2s" dur="0.6s" fill="freeze"/>
+</g>
+<circle cx="12" cy="12" r="5" fill="#9a8a62">
+<animate attributeName="fill" values="#9a8a62;#ffc93c" dur="0.6s" fill="freeze"/>
+</circle>
+<circle cx="12" cy="12" r="5" fill="url(#sc)" opacity="0">
+<animate attributeName="opacity" values="0;1" begin="0.3s" dur="0.5s" fill="freeze"/>
+</circle>
+</svg>"""
+
+static_icon_svg = "data:image/svg+xml;base64," + base64.b64encode(
+    (_MOON_SVG if is_dark else _SUN_SVG).encode("utf-8")
+).decode("ascii")
+
 # 4. SISTEMA DE SONIDO Y EVENTOS DE TARJETAS
 js_color_script = f"""
 <script>
@@ -420,35 +470,6 @@ _search_svg = (
 )
 search_icon_svg = "data:image/svg+xml;base64," + base64.b64encode(_search_svg.encode("utf-8")).decode("ascii")
 
-# Dibujo perfeccionado del frasco del switch de tema (mismo switch, mismo riel e ícono)
-def _svg_uri(svg: str) -> str:
-    return "data:image/svg+xml;base64," + base64.b64encode(svg.encode("utf-8")).decode("ascii")
-
-if is_dark:
-    _liq_a, _liq_b, _glass_a, _glass_b, _outline = "#e6cfa6", "#a88a5f", "#f4f1ec", "#d9d3ca", "#5b4f45"
-else:
-    _liq_a, _liq_b, _glass_a, _glass_b, _outline = "#d9bf95", "#8c7b6d", "#ffffff", "#e9e4dd", "#4a4038"
-
-switch_bottle_svg = _svg_uri(f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 46">
-<defs>
-<linearGradient id="cap" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f3dc9f"/><stop offset="0.5" stop-color="#c9a24f"/><stop offset="1" stop-color="#8a6524"/></linearGradient>
-<linearGradient id="glass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="{_glass_a}"/><stop offset="1" stop-color="{_glass_b}"/></linearGradient>
-<linearGradient id="liq" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="{_liq_a}"/><stop offset="1" stop-color="{_liq_b}"/></linearGradient>
-<linearGradient id="shine" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ffffff" stop-opacity="0.9"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></linearGradient>
-</defs>
-<rect x="14" y="1.2" width="12" height="8.6" rx="2.2" fill="url(#cap)" stroke="{_outline}" stroke-width="0.9"/>
-<rect x="15.8" y="2.6" width="2" height="5.8" rx="1" fill="#ffffff" opacity="0.55"/>
-<line x1="14.6" y1="6.6" x2="25.4" y2="6.6" stroke="#8a6524" stroke-width="0.6" opacity="0.6"/>
-<rect x="16.6" y="9.8" width="6.8" height="3.6" fill="#cfc6ba" stroke="{_outline}" stroke-width="0.8"/>
-<path d="M9.5 13.4 H30.5 Q35.5 13.4 35.5 18.6 V38.4 Q35.5 44.4 29.5 44.4 H10.5 Q4.5 44.4 4.5 38.4 V18.6 Q4.5 13.4 9.5 13.4 Z" fill="url(#glass)" stroke="{_outline}" stroke-width="1.3"/>
-<path d="M7 24.5 Q13.5 22.6 20 24.5 T33 24.5 V38.2 Q33 41.9 29.3 41.9 H10.7 Q7 41.9 7 38.2 Z" fill="url(#liq)"/>
-<path d="M7 24.5 Q13.5 22.6 20 24.5 T33 24.5" fill="none" stroke="#ffffff" stroke-opacity="0.6" stroke-width="0.9"/>
-<rect x="12.5" y="27.6" width="15" height="8.6" rx="1.4" fill="#ffffff" fill-opacity="0.88" stroke="#c9a24f" stroke-width="0.7"/>
-<line x1="15.4" y1="30.6" x2="24.6" y2="30.6" stroke="{_outline}" stroke-width="1" stroke-linecap="round"/>
-<line x1="17" y1="33.2" x2="23" y2="33.2" stroke="{_outline}" stroke-width="0.8" stroke-linecap="round" opacity="0.7"/>
-<rect x="6.6" y="16" width="3.2" height="22" rx="1.6" fill="url(#shine)"/>
-<circle cx="31" cy="18" r="1" fill="#ffffff" opacity="0.8"/>
-</svg>""")
 
 # 6. CSS ADAPTABLE Y ESTILOS
 st.markdown(f"""
@@ -461,7 +482,7 @@ st.markdown(f"""
         padding-top: 1.4rem !important;
         padding-bottom: 2rem !important;
         max-width: 1180px !important;
-        zoom: 0.95;
+        zoom: 0.92;
     }}
 
     html, body {{ background-color: {app_bg} !important; }}
@@ -726,15 +747,17 @@ st.markdown(f"""
         border: 1px solid {btn_border} !important;
         border-radius: 999px !important;
         width: auto !important;
-        height: 36px !important;
-        min-height: 36px !important;
-        padding: 0 1rem 0 2.2rem !important;
+        min-width: max-content !important;
+        height: auto !important;
+        min-height: 38px !important;
+        padding: 6px 18px 6px 38px !important;
         display: inline-flex !important;
         align-items: center !important;
         justify-content: center !important;
+        overflow: visible !important;
         background-image: url("{user_icon_svg}") !important;
         background-repeat: no-repeat !important;
-        background-position: 12px center !important;
+        background-position: 14px center !important;
         background-size: 16px 16px !important;
         box-shadow: {shadow_sm} !important;
         margin: 0 !important;
@@ -744,18 +767,30 @@ st.markdown(f"""
         border-color: {gold} !important;
         box-shadow: {shadow_hover} !important;
     }}
-    div.st-key-login_btn div.stButton > button p {{
-        font-size: 0.88rem !important;
-        line-height: 1 !important;
+    div.st-key-login_btn div.stButton > button > div,
+    div.st-key-login_btn div.stButton > button div[data-testid="stMarkdownContainer"] {{
+        overflow: visible !important;
+        width: auto !important;
         margin: 0 !important;
+        padding: 0 !important;
+        display: block !important;
+    }}
+    div.st-key-login_btn div.stButton > button p {{
+        font-size: 0.92rem !important;
+        line-height: 1.35 !important;
+        margin: 0 !important;
+        padding: 0 !important;
         color: {btn_text} !important;
         font-weight: 700 !important;
-        letter-spacing: 0.1px !important;
+        letter-spacing: 0.2px !important;
         white-space: nowrap !important;
+        overflow: visible !important;
+        text-overflow: clip !important;
+        transform: none !important;
     }}
     div[data-testid="stColumn"]:has(.user-popover-container) button[data-testid="stPopoverButton"] {{
-        min-height: 36px !important;
-        height: 36px !important;
+        min-height: 38px !important;
+        height: auto !important;
     }}
 
     /* SWITCH TEMA */
@@ -818,7 +853,7 @@ st.markdown(f"""
         top: -1px !important;
         left: {bottle_left_pos} !important;
         width: 40px !important; height: 46px !important;
-        background-image: url("{switch_bottle_svg}") !important;
+        background-image: url("{bottle_svg}") !important;
         background-repeat: no-repeat !important;
         background-size: contain !important;
         transition: left 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
@@ -922,6 +957,56 @@ st.markdown(f"""
         border: 1px dashed {input_border} !important;
         border-radius: 12px !important;
         padding: 14px !important;
+    }}
+
+    /* Compatibilidad con versiones nuevas de Streamlit (sin data-baseweb) */
+    [data-testid="stTextInputRootElement"],
+    [data-testid="stSelectbox"] div[role="group"],
+    [data-testid="stMultiSelect"] div[role="group"] {{
+        background-color: {input_bg} !important;
+        border: 1px solid {input_border} !important;
+        border-radius: 10px !important;
+        min-height: 42px !important;
+        color: {input_text} !important;
+        box-shadow: none !important;
+        transition: border-color 0.18s ease, box-shadow 0.18s ease !important;
+    }}
+    [data-testid="stTextInputRootElement"]:focus-within,
+    [data-testid="stSelectbox"] div[role="group"]:focus-within,
+    [data-testid="stMultiSelect"] div[role="group"]:focus-within {{
+        border-color: {gold} !important;
+        box-shadow: 0 0 0 3px {gold_soft} !important;
+    }}
+    [data-testid="stTextInputRootElement"] input,
+    [data-testid="stSelectbox"] input,
+    [data-testid="stMultiSelect"] input {{
+        background-color: transparent !important;
+        color: {input_text} !important;
+        font-size: 0.92rem !important;
+    }}
+    [data-testid="stSelectbox"] button svg,
+    [data-testid="stMultiSelect"] button svg {{ color: {subtext_color} !important; fill: {subtext_color} !important; }}
+    [data-testid="stTextInput"]:has(input[placeholder*="Buscar"]) [data-testid="stTextInputRootElement"] {{
+        border-radius: 999px !important;
+        min-height: 46px !important;
+        padding-left: 30px !important;
+        background-image: url("{search_icon_svg}") !important;
+        background-repeat: no-repeat !important;
+        background-position: 16px center !important;
+        background-size: 17px 17px !important;
+    }}
+    [role="listbox"] {{
+        background-color: {input_bg} !important;
+        border: 1px solid {border_color} !important;
+        border-radius: 10px !important;
+    }}
+    [role="listbox"] [role="option"], [role="listbox"] [role="option"] * {{
+        color: {input_text} !important;
+    }}
+    [role="listbox"] [role="option"]:hover,
+    [role="listbox"] [role="option"][aria-selected="true"],
+    [role="listbox"] [role="option"][data-focused="true"] {{
+        background-color: {gold_soft} !important;
     }}
 
     /* ---------- ACCESOS RÁPIDOS (CHIPS) ---------- */
@@ -1038,7 +1123,7 @@ st.markdown(f"""
     .pt-display {{
         font-family: {font_display};
         font-weight: 800;
-        font-size: clamp(1.8rem, 3.4vw, 2.5rem);
+        font-size: clamp(1.6rem, 3vw, 2.2rem);
         line-height: 1.1;
         letter-spacing: -0.025em;
         color: {text_color};
@@ -1449,15 +1534,15 @@ st.markdown(f"""
         }}
 
         div.st-key-login_btn div.stButton > button {{
-            height: 34px !important;
-            min-height: 34px !important;
-            padding: 0 0.8rem 0 2rem !important;
-            background-position: 10px center !important;
+            min-height: 36px !important;
+            padding: 5px 14px 5px 32px !important;
+            background-position: 11px center !important;
             background-size: 15px 15px !important;
         }}
 
         div.st-key-login_btn div.stButton > button p {{
-            font-size: 0.84rem !important;
+            font-size: 0.86rem !important;
+            line-height: 1.35 !important;
             white-space: nowrap !important;
         }}
 
