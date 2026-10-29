@@ -1519,13 +1519,15 @@ def generar_url_tienda(tienda_nombre: str, perfume_nombre: str, url_directa: Opt
     return None
 
 
-def tienda_comercializa_marca(tienda_nombre: str, marca: str) -> bool:
+def tienda_comercializa_marca(tienda_nombre: str, marca: str, es_arabe_flag: Optional[bool] = None) -> bool:
     t_nom = (tienda_nombre or "").lower()
     m = (marca or "").lower()
     if "chanel" in m or "maison francis" in m or "tom ford" in m:
         return any(retail in t_nom for retail in ["falabella", "paris", "ripley"])
     # Los grandes retailers tradicionales y farmacias no comercializan perfumería árabe en tienda oficial (solo marketplace)
     if any(retail in t_nom for retail in ["falabella", "paris", "ripley", "dbs"]):
+        if es_arabe_flag is True:
+            return False
         try:
             from backend.normalizador import es_arabe
         except ImportError:
@@ -1761,6 +1763,23 @@ def registrar_observacion_oferta(observacion: Optional[Dict[str, Any]] = None, *
                 return rpc_res.data
             raise RuntimeError("La RPC registrar_observacion_oferta no retornó datos.")
         except Exception as e:
+            if "inactiva" in str(e).lower():
+                try:
+                    logger.info(f"Reactivando variante {sb_variante_id} en Supabase tras hallazgo de oferta en vivo...")
+                    sb.table("variantes_perfume").update({"activa": True}).eq("id", int(sb_variante_id)).execute()
+                    rpc_res = sb.rpc("registrar_observacion_oferta", {
+                        "p_variante_id": int(sb_variante_id),
+                        "p_tienda_id": int(sb_tienda_id),
+                        "p_precio_actual": precio_actual,
+                        "p_precio_normal": p_normal_rpc,
+                        "p_en_stock": en_stock,
+                        "p_url_producto": url_producto,
+                        "p_scraping_run_id": scraping_run_id,
+                    }).execute()
+                    if rpc_res.data:
+                        return rpc_res.data
+                except Exception as e_retry:
+                    logger.error(f"Fallo tras reactivación de variante {sb_variante_id}: {e_retry}")
             logger.error(
                 f"Fallo transaccional en Supabase RPC registrar_observacion_oferta "
                 f"(variante={sb_variante_id}, tienda={sb_tienda_id}): {e}"

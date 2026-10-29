@@ -1490,6 +1490,13 @@ class CatalogoTiendaBulk:
             self.por_marca[marca.lower()].append(item)
         self.total_productos += 1
 
+    def ingestar_productos(self, prods: List[Dict[str, Any]]):
+        for p in prods:
+            if self.tipo == "shopify":
+                self.agregar_producto_shopify(p)
+            else:
+                self.agregar_producto_woocommerce(p)
+
     def agregar_producto_woocommerce(self, prod: Dict[str, Any]):
         raw_title = html.unescape(prod.get("name", "") or "").strip()
         wc_brands = [html.unescape(b.get("name", "")).strip() for b in prod.get("brands", []) if b.get("name")]
@@ -1513,9 +1520,9 @@ class CatalogoTiendaBulk:
         clean_url = prod.get("permalink", "")
         formato_prod = detectar_formato_oferta(raw_title, clean_url)
         prices = prod.get("prices", {})
-        p_act = clean_digits(prices.get("price"))
-        p_norm = clean_digits(prices.get("regular_price")) or p_act
-        in_stock = bool(prod.get("is_in_stock", True))
+        p_act = clean_digits(prices.get("price")) or clean_digits(prod.get("price"))
+        p_norm = clean_digits(prices.get("regular_price")) or clean_digits(prod.get("regular_price")) or p_act
+        in_stock = bool(prod.get("is_in_stock", True)) if "is_in_stock" in prod else (prod.get("stock_status") != "outofstock")
         vol_ml = extraer_volumen_ml(raw_title) or extraer_volumen_ml(clean_url) or 100
 
         item = {
@@ -1726,6 +1733,7 @@ def auditar_lote_perfumes(
     total_rotaciones: int = 1,
     total_catalogo: int = 0,
     cache_tiendas_bulk: Optional[Dict[str, CatalogoTiendaBulk]] = None,
+    ofertas_activas_set: Optional[Set[Tuple[int, int]]] = None,
 ) -> Dict[str, Any]:
     """
     Ejecuta la auditoría en vivo para un subconjunto (lote/rotación) específico de perfumes.
@@ -1780,7 +1788,17 @@ def auditar_lote_perfumes(
             t_id = tienda["id"]
             t_nom = tienda["nombre"]
 
-            if not tienda_comercializa_marca(t_nom, p_marca):
+            if not tienda_comercializa_marca(t_nom, p_marca, es_arabe_flag=p.get("es_arabe")):
+                omitidos += 1
+                continue
+
+            tiene_extractor = (
+                (cache_tiendas_bulk and t_nom in cache_tiendas_bulk)
+                or (t_nom in TIENDAS_SHOPIFY)
+                or (t_nom in TIENDAS_WOOCOMMERCE)
+                or any(r in t_nom.lower() for r in ["falabella", "paris", "ripley"])
+            )
+            if not tiene_extractor:
                 omitidos += 1
                 continue
 
@@ -1940,11 +1958,21 @@ def auditar_lote_perfumes(
                     )
                 else:
                     motivo_fallo = f"Sin disponibilidad confirmada en {t_nom}"
-                    registrar_fallo_scraping(
-                        tienda_id=t_id,
-                        perfume_id=p_id,
-                        mensaje=motivo_fallo,
-                    )
+                    tiene_oferta_previa = False
+                    if ofertas_activas_set is not None:
+                        tiene_oferta_previa = (int(p_id), int(t_id)) in ofertas_activas_set
+                    else:
+                        tiene_oferta_previa = (
+                            (int(p_id), int(t_id)) in urls_conocidas_map
+                            or bool(url_directa_guardada)
+                        )
+
+                    if tiene_oferta_previa:
+                        registrar_fallo_scraping(
+                            tienda_id=t_id,
+                            perfume_id=p_id,
+                            mensaje=motivo_fallo,
+                        )
                     tiendas_stats[t_nom]["fallbacks_seguridad"] += 1
                     logger.debug(f"  -> [{t_nom}] FALLO SCRAPING: {motivo_fallo}. No se altera precio ni stock.")
 
@@ -2053,6 +2081,7 @@ def ejecutar_ciclo_scraping_y_descubrimiento(
     perfumes_db: List[Dict[str, Any]] = []
     tiendas_db: List[Dict[str, Any]] = []
     urls_conocidas_map: Dict[Tuple[int, int], Tuple[str, int]] = {}
+    ofertas_activas_set: Set[Tuple[int, int]] = set()
     perfume_last_verified: Dict[int, str] = {}
 
     sb = get_supabase(use_service_role=True)
@@ -2105,13 +2134,15 @@ def ejecutar_ciclo_scraping_y_descubrimiento(
                 v_info = var_to_perf.get(int(oa.get("variante_id") or 0))
                 if v_info:
                     pid = v_info[0]
+                    t_id_oa = int(oa["tienda_id"])
+                    ofertas_activas_set.add((pid, t_id_oa))
                     ts = oa.get("ultima_verificacion_exitosa")
                     if ts:
                         if pid not in perfume_last_verified or ts > perfume_last_verified[pid]:
                             perfume_last_verified[pid] = ts
                     u_prod = str(oa.get("url_producto") or "").strip()
                     if u_prod.startswith("http") and v_info[2] != "tester":
-                        k_pt = (pid, int(oa["tienda_id"]))
+                        k_pt = (pid, t_id_oa)
                         if k_pt not in urls_conocidas_map:
                             urls_conocidas_map[k_pt] = (u_prod, v_info[1])
 
@@ -2142,7 +2173,9 @@ def ejecutar_ciclo_scraping_y_descubrimiento(
         )
         for r in cursor.fetchall():
             pid = int(r["perfume_id"])
-            k_pt = (pid, int(r["tienda_id"]))
+            t_id_r = int(r["tienda_id"])
+            ofertas_activas_set.add((pid, t_id_r))
+            k_pt = (pid, t_id_r)
             if k_pt not in urls_conocidas_map and str(r["url_producto"]).startswith("http"):
                 urls_conocidas_map[k_pt] = (str(r["url_producto"]), int(r["vol_ml"] or 100))
             ts = r["ultima_verificacion_exitosa"] if isinstance(r, dict) else r.get("ultima_verificacion_exitosa")
@@ -2229,6 +2262,7 @@ def ejecutar_ciclo_scraping_y_descubrimiento(
             total_rotaciones=num_rotaciones,
             total_catalogo=total_perfumes,
             cache_tiendas_bulk=cache_tiendas_bulk,
+            ofertas_activas_set=ofertas_activas_set,
         )
 
         consolidado_reportes.append(rep_lote)

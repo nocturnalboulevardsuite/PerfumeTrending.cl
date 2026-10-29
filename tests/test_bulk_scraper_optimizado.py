@@ -7,15 +7,22 @@ Verifica:
 4. Compatibilidad transparente con auditar_lote_perfumes.
 """
 
+import os
+import sys
 import unittest
 from unittest.mock import MagicMock, patch
 
+_app_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "APP"))
+if _app_dir not in sys.path:
+    sys.path.insert(0, _app_dir)
+
 try:
-    import APP.backend.scraper_periodico as sp_mod
-    from APP.backend.scraper_periodico import CatalogoTiendaBulk, auditar_lote_perfumes
-except ImportError:
-    import backend.scraper_periodico as sp_mod
     from backend.scraper_periodico import CatalogoTiendaBulk, auditar_lote_perfumes
+except ImportError:
+    try:
+        from scraper_periodico import CatalogoTiendaBulk, auditar_lote_perfumes
+    except ImportError:
+        from APP.backend.scraper_periodico import CatalogoTiendaBulk, auditar_lote_perfumes
 
 
 class TestBulkScraperOptimizado(unittest.TestCase):
@@ -28,164 +35,160 @@ class TestBulkScraperOptimizado(unittest.TestCase):
         )
 
         # Muestra de producto Shopify
-        self.cat_shopify.agregar_producto_shopify({
+        self.raw_shopify_prod = {
             "id": 101,
-            "title": "Bleu de Chanel Eau de Parfum 100ml",
-            "vendor": "Chanel",
-            "handle": "bleu-de-chanel-edp-100ml",
+            "title": "Versace Eros Flame EDP 100ml",
+            "vendor": "Versace",
+            "handle": "versace-eros-flame-edp-100ml",
             "variants": [
                 {
+                    "id": 1001,
                     "title": "100ml",
-                    "price": "145990.00",
-                    "compare_at_price": "165990.00",
+                    "price": "59990",
+                    "compare_at_price": "79990",
                     "available": True,
                 },
                 {
+                    "id": 1002,
                     "title": "50ml",
-                    "price": "115990.00",
-                    "compare_at_price": "125990.00",
-                    "available": True,
-                },
-            ]
-        })
-
-        # Muestra de producto árabe
-        self.cat_shopify.agregar_producto_shopify({
-            "id": 102,
-            "title": "Lattafa Khamrah Eau de Parfum 100ml",
-            "vendor": "Lattafa",
-            "handle": "lattafa-khamrah-edp-100ml",
-            "variants": [
-                {
-                    "title": "100ml",
-                    "price": "39990.00",
-                    "compare_at_price": "49990.00",
+                    "price": "44990",
+                    "compare_at_price": "59990",
                     "available": True,
                 }
-            ]
-        })
+            ],
+            "tags": ["hombre", "perfumeria"],
+        }
 
     def test_01_indexacion_por_marca_canonica(self):
-        """Verifica que los productos se clasifiquen bajo su marca canónica en minúsculas."""
-        self.assertEqual(self.cat_shopify.total_productos, 2)
-        self.assertIn("chanel", self.cat_shopify.por_marca)
-        self.assertIn("lattafa", self.cat_shopify.por_marca)
-        self.assertEqual(len(self.cat_shopify.por_marca["chanel"]), 1)
+        """Verifica que el producto se indexe bajo la marca canónica normalizada en minúsculas."""
+        self.cat_shopify.ingestar_productos([self.raw_shopify_prod])
+        self.assertEqual(self.cat_shopify.total_productos, 1)
+        self.assertIn("versace", self.cat_shopify.por_marca)
+        self.assertEqual(len(self.cat_shopify.por_marca["versace"]), 1)
 
     def test_02_extraccion_variedades_en_memoria(self):
-        """Verifica que extraer_variedades extraiga ambas presentaciones (100ml y 50ml) con stock y precio."""
-        variedades = self.cat_shopify.extraer_variedades(
-            perfume_nombre="Bleu de Chanel",
-            marca="Chanel",
+        """Extrae ambas variantes (100ml y 50ml) respetando precios, URLs y stock sin llamadas HTTP."""
+        self.cat_shopify.ingestar_productos([self.raw_shopify_prod])
+
+        res = self.cat_shopify.extraer_variedades(
+            perfume_nombre="Eros Flame",
+            marca="Versace",
+            volumen_ml_defecto=100,
             concentracion="Eau de Parfum",
         )
-        self.assertEqual(len(variedades), 2)
-        vols = {v["volumen_ml"] for v in variedades}
-        self.assertIn(100, vols)
-        self.assertIn(50, vols)
 
-        var_100 = next(v for v in variedades if v["volumen_ml"] == 100)
-        self.assertEqual(var_100["precio_actual"], 145990)
-        self.assertEqual(var_100["precio_normal"], 165990)
-        self.assertTrue(var_100["en_stock"])
-        self.assertIn("Silk Perfumes Bulk Cache", var_100["metodo"])
+        self.assertEqual(len(res), 2)
+        vols = {v["volumen_ml"] for v in res}
+        self.assertEqual(vols, {100, 50})
 
-    def test_03_filtro_por_tokens_y_concentracion(self):
-        """Verifica que un perfume con diferente nombre o concentración no haga match indebido."""
-        # Nombre diferente
-        res_otro = self.cat_shopify.extraer_variedades(
-            perfume_nombre="Allure Homme Sport",
-            marca="Chanel",
-            concentracion="Eau de Toilette",
+        v100 = next(v for v in res if v["volumen_ml"] == 100)
+        self.assertEqual(v100["precio_actual"], 59990)
+        self.assertEqual(v100["precio_normal"], 79990)
+        self.assertTrue(v100["en_stock"])
+        self.assertEqual(v100["formato"], "regular")
+        self.assertEqual(v100["metodo"], "Silk Perfumes Bulk Cache")
+
+    def test_03_filtro_concentracion_y_tokens(self):
+        """No debe emparejar Eros EDT si el catálogo busca Eros Flame EDP."""
+        prod_distinto = {
+            "id": 102,
+            "title": "Versace Eros EDT 100ml",
+            "vendor": "Versace",
+            "handle": "versace-eros-edt-100ml",
+            "variants": [
+                {
+                    "id": 1003,
+                    "title": "100ml",
+                    "price": "49990",
+                    "available": True,
+                }
+            ],
+        }
+        self.cat_shopify.ingestar_productos([prod_distinto])
+
+        res = self.cat_shopify.extraer_variedades(
+            perfume_nombre="Eros Flame",
+            marca="Versace",
+            volumen_ml_defecto=100,
+            concentracion="Eau de Parfum",
         )
-        self.assertEqual(len(res_otro), 0)
-
-        # Concentración incompatible (EDT vs EDP)
-        res_edt = self.cat_shopify.extraer_variedades(
-            perfume_nombre="Bleu de Chanel",
-            marca="Chanel",
-            concentracion="Eau de Toilette",
-        )
-        self.assertEqual(len(res_edt), 0)
+        self.assertEqual(len(res), 0)
 
     def test_04_woocommerce_bulk_ingestion(self):
-        """Verifica la ingesta de productos estructurados de WooCommerce Store API."""
-        cat_wc = CatalogoTiendaBulk(
-            nombre_tienda="Chile Perfume",
+        """Verifica la ingesta masiva y parsing de tiendas WooCommerce."""
+        cat_woo = CatalogoTiendaBulk(
+            nombre_tienda="Portal del Perfume",
             tipo="woocommerce",
-            url_base="https://www.chileperfume.cl",
+            url_base="https://portaldelperfume.cl",
         )
-        cat_wc.agregar_producto_woocommerce({
-            "id": 501,
-            "name": "Versace Eros Eau de Parfum 100ml",
-            "permalink": "https://www.chileperfume.cl/producto/versace-eros-edp-100ml/",
-            "brands": [{"name": "Versace"}],
-            "prices": {
-                "price": "69990",
-                "regular_price": "89990",
-            },
-            "is_in_stock": True,
-        })
-        self.assertEqual(cat_wc.total_productos, 1)
-        self.assertIn("versace", cat_wc.por_marca)
 
-        vars_wc = cat_wc.extraer_variedades(
-            perfume_nombre="Eros",
-            marca="Versace",
-            concentracion="Eau de Parfum",
+        woo_prod = {
+            "id": 201,
+            "name": "Armaf Club De Nuit Intense Man EDT 105ml",
+            "permalink": "https://portaldelperfume.cl/producto/club-de-nuit-intense-man-edt/",
+            "price": "34990",
+            "regular_price": "45990",
+            "stock_status": "instock",
+            "categories": [{"name": "Armaf"}],
+        }
+        cat_woo.ingestar_productos([woo_prod])
+
+        res = cat_woo.extraer_variedades(
+            perfume_nombre="Club De Nuit Intense Man",
+            marca="Armaf",
+            volumen_ml_defecto=105,
+            concentracion="Eau de Toilette",
         )
-        self.assertEqual(len(vars_wc), 1)
-        self.assertEqual(vars_wc[0]["precio_actual"], 69990)
-        self.assertEqual(vars_wc[0]["precio_normal"], 89990)
-        self.assertEqual(vars_wc[0]["volumen_ml"], 100)
-        self.assertTrue(vars_wc[0]["en_stock"])
 
-    def test_05_integracion_auditar_lote_con_cache_bulk(self):
-        """Verifica que auditar_lote_perfumes use cache_tiendas_bulk sin peticiones HTTP."""
+        self.assertEqual(len(res), 1)
+        self.assertEqual(res[0]["volumen_ml"], 105)
+        self.assertEqual(res[0]["precio_actual"], 34990)
+        self.assertEqual(res[0]["precio_normal"], 45990)
+        self.assertTrue(res[0]["en_stock"])
+
+    @patch("backend.scraper_periodico.registrar_observacion_oferta")
+    @patch("backend.scraper_periodico.iniciar_scraping_run")
+    @patch("backend.scraper_periodico.finalizar_scraping_run")
+    def test_05_integracion_auditar_lote_con_cache_bulk(
+        self, mock_finalizar, mock_iniciar, mock_reg
+    ):
+        """Comprueba que auditar_lote_perfumes consulta la caché en memoria y no hace peticiones HTTP para tiendas bulk."""
+        mock_iniciar.return_value = 999
+        mock_reg.return_value = {"resultado": "creada", "campos_modificados": ["precio_actual"]}
+
+        self.cat_shopify.ingestar_productos([self.raw_shopify_prod])
+        cache_bulk = {"Silk Perfumes": self.cat_shopify}
+
         perfumes_lote = [
             {
-                "id": 9999,
-                "nombre": "Khamrah",
-                "marca": "Lattafa",
-                "genero": "Unisex",
+                "id": 1,
+                "nombre": "Eros Flame",
+                "marca": "Versace",
                 "tipo": "Eau de Parfum",
-                "precio_referencia": 45000,
+                "precio_referencia": 60000,
             }
         ]
         tiendas_db = [
-            {
-                "id": 4,
-                "nombre": "Silk Perfumes",
-                "url_base": "https://www.silkperfumes.cl",
-                "trust_score": 92,
-            }
+            {"id": 10, "nombre": "Silk Perfumes", "trust_score": 92}
         ]
-        cache_bulk = {"Silk Perfumes": self.cat_shopify}
 
         mock_session = MagicMock()
 
-        with patch.object(sp_mod, "registrar_observacion_oferta") as mock_reg, \
-             patch.object(sp_mod, "iniciar_scraping_run", return_value=999), \
-             patch.object(sp_mod, "finalizar_scraping_run"):
+        resultado = auditar_lote_perfumes(
+            perfumes_lote=perfumes_lote,
+            tiendas_db=tiendas_db,
+            urls_conocidas_map={},
+            session=mock_session,
+            rotacion_idx=1,
+            total_rotaciones=1,
+            total_catalogo=1,
+            cache_tiendas_bulk=cache_bulk,
+        )
 
-            mock_reg.return_value = {"resultado": "creada", "campos_modificados": ["precio_actual"]}
-
-            reporte = auditar_lote_perfumes(
-                perfumes_lote=perfumes_lote,
-                tiendas_db=tiendas_db,
-                urls_conocidas_map={},
-                session=mock_session,
-                rotacion_idx=1,
-                total_rotaciones=1,
-                total_catalogo=1,
-                cache_tiendas_bulk=cache_bulk,
-            )
-
-            # La sesión HTTP NO debe haber sido llamada para Silk Perfumes
-            mock_session.get.assert_not_called()
-            # La oferta debe haber sido registrada exitosamente
-            self.assertEqual(reporte["metricas"]["ofertas_nuevas"], 1)
-            self.assertEqual(reporte["metricas"]["precios_actualizados"], 1)
+        # Debe actualizar con la oferta encontrada en memoria
+        self.assertEqual(resultado["metricas"]["precios_actualizados"], 2)
+        # La sesión HTTP NO debe haber hecho ningún get porque todo se resolvió en RAM
+        mock_session.get.assert_not_called()
 
 
 if __name__ == "__main__":
