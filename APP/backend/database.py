@@ -1524,6 +1524,20 @@ def tienda_comercializa_marca(tienda_nombre: str, marca: str) -> bool:
     m = (marca or "").lower()
     if "chanel" in m or "maison francis" in m or "tom ford" in m:
         return any(retail in t_nom for retail in ["falabella", "paris", "ripley"])
+    # Los grandes retailers tradicionales y farmacias no comercializan perfumería árabe en tienda oficial (solo marketplace)
+    if any(retail in t_nom for retail in ["falabella", "paris", "ripley", "dbs"]):
+        try:
+            from backend.normalizador import es_arabe
+        except ImportError:
+            try:
+                from normalizador import es_arabe
+            except ImportError:
+                try:
+                    from APP.backend.normalizador import es_arabe
+                except ImportError:
+                    es_arabe = None
+        if es_arabe and es_arabe(marca, ""):
+            return False
     return True
 
 

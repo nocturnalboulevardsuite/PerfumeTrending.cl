@@ -1,167 +1,237 @@
 {
-  "actualizaciones": 0,
-  "fecha": "2026-10-28 22:24:37",
-  "duracion_segundos": 83.31,
+  "actualizaciones": 4,
+  "fecha": "2026-10-29 15:21:49",
+  "duracion_segundos": 185.22,
   "metadata": {
     "version_etl": "3.3.0",
     "sistema": "PerfumeTrending Professional Anti-Bot ETL (Multi-Rotation LRU)",
-    "fecha_ejecucion": "2026-10-28 22:24:37",
-    "duracion_segundos": 83.31,
+    "fecha_ejecucion": "2026-10-29 15:21:49",
+    "duracion_segundos": 185.22,
     "estado": "EXITOSO",
-    "rotaciones_completadas": 2,
-    "total_rotaciones_planificadas": 2,
-    "tamano_lote": 1
+    "rotaciones_completadas": 1,
+    "total_rotaciones_planificadas": 1,
+    "tamano_lote": 15
   },
   "metricas": {
-    "total_perfumes_catalogo": 2,
-    "perfumes_auditados": 2,
+    "total_perfumes_catalogo": 3250,
+    "perfumes_auditados": 15,
     "total_tiendas_registradas": 17,
-    "precios_actualizados": 0,
-    "ofertas_nuevas": 0,
-    "cambios_precio": 0,
-    "cambios_stock": 0,
-    "cambios_url": 0,
+    "precios_actualizados": 4,
+    "ofertas_nuevas": 4,
+    "cambios_precio": 4,
+    "cambios_stock": 4,
+    "cambios_url": 4,
     "bloqueos_waf": 0,
-    "exclusiones_marca": 2,
+    "exclusiones_marca": 40,
     "errores_totales": 0
   },
   "estadisticas_tiendas": {
     "Falabella": {
-      "consultas": 2,
+      "consultas": 11,
       "exitos_en_vivo": 0,
-      "fallbacks_seguridad": 2,
+      "fallbacks_seguridad": 11,
       "bloqueos_waf": 0,
       "trust_score": 96
     },
     "Paris": {
-      "consultas": 2,
+      "consultas": 11,
       "exitos_en_vivo": 0,
-      "fallbacks_seguridad": 2,
+      "fallbacks_seguridad": 11,
       "bloqueos_waf": 0,
       "trust_score": 95
     },
     "Ripley": {
-      "consultas": 2,
+      "consultas": 11,
       "exitos_en_vivo": 0,
-      "fallbacks_seguridad": 2,
+      "fallbacks_seguridad": 11,
       "bloqueos_waf": 0,
       "trust_score": 94
     },
     "Silk Perfumes": {
-      "consultas": 2,
-      "exitos_en_vivo": 0,
-      "fallbacks_seguridad": 2,
+      "consultas": 14,
+      "exitos_en_vivo": 6,
+      "fallbacks_seguridad": 9,
       "bloqueos_waf": 0,
       "trust_score": 92
     },
     "Elite Perfumes": {
-      "consultas": 2,
+      "consultas": 14,
       "exitos_en_vivo": 0,
-      "fallbacks_seguridad": 2,
+      "fallbacks_seguridad": 14,
       "bloqueos_waf": 0,
       "trust_score": 89
     },
     "DBS Beauty Store": {
-      "consultas": 2,
+      "consultas": 10,
       "exitos_en_vivo": 0,
       "fallbacks_seguridad": 0,
       "bloqueos_waf": 0,
       "trust_score": 91
     },
     "Alisha Perfumes": {
-      "consultas": 2,
-      "exitos_en_vivo": 0,
-      "fallbacks_seguridad": 2,
+      "consultas": 14,
+      "exitos_en_vivo": 1,
+      "fallbacks_seguridad": 13,
       "bloqueos_waf": 0,
       "trust_score": 88
     },
     "Yauras Perfumes": {
-      "consultas": 2,
+      "consultas": 14,
       "exitos_en_vivo": 0,
-      "fallbacks_seguridad": 2,
+      "fallbacks_seguridad": 14,
       "bloqueos_waf": 0,
       "trust_score": 88
     },
     "Oferta Perfumes": {
-      "consultas": 2,
+      "consultas": 14,
       "exitos_en_vivo": 0,
-      "fallbacks_seguridad": 2,
+      "fallbacks_seguridad": 14,
       "bloqueos_waf": 0,
       "trust_score": 90
     },
     "L'Odoro": {
-      "consultas": 2,
+      "consultas": 14,
       "exitos_en_vivo": 0,
-      "fallbacks_seguridad": 2,
+      "fallbacks_seguridad": 14,
       "bloqueos_waf": 0,
       "trust_score": 92
     },
     "Chile Perfume": {
-      "consultas": 2,
+      "consultas": 14,
       "exitos_en_vivo": 0,
-      "fallbacks_seguridad": 2,
+      "fallbacks_seguridad": 14,
       "bloqueos_waf": 0,
       "trust_score": 91
     },
     "Mundo Aromas": {
-      "consultas": 2,
+      "consultas": 14,
       "exitos_en_vivo": 0,
-      "fallbacks_seguridad": 2,
+      "fallbacks_seguridad": 14,
       "bloqueos_waf": 0,
       "trust_score": 90
     },
     "Cosmetic": {
-      "consultas": 2,
+      "consultas": 14,
       "exitos_en_vivo": 0,
-      "fallbacks_seguridad": 2,
+      "fallbacks_seguridad": 14,
       "bloqueos_waf": 0,
       "trust_score": 90
     },
     "Fragante": {
-      "consultas": 2,
+      "consultas": 14,
       "exitos_en_vivo": 0,
-      "fallbacks_seguridad": 2,
+      "fallbacks_seguridad": 14,
       "bloqueos_waf": 0,
       "trust_score": 90
     },
     "ComprarEnChile": {
-      "consultas": 2,
+      "consultas": 14,
       "exitos_en_vivo": 0,
-      "fallbacks_seguridad": 2,
+      "fallbacks_seguridad": 14,
       "bloqueos_waf": 0,
       "trust_score": 88
     },
     "Portal del Perfume": {
-      "consultas": 2,
+      "consultas": 14,
       "exitos_en_vivo": 0,
-      "fallbacks_seguridad": 2,
+      "fallbacks_seguridad": 14,
       "bloqueos_waf": 0,
       "trust_score": 89
     },
     "Aromata": {
-      "consultas": 2,
+      "consultas": 14,
       "exitos_en_vivo": 0,
-      "fallbacks_seguridad": 2,
+      "fallbacks_seguridad": 14,
       "bloqueos_waf": 0,
       "trust_score": 89
     }
   },
-  "muestra_capturas": [],
+  "muestra_capturas": [
+    {
+      "perfume": "Purple Mood",
+      "tienda": "Alisha Perfumes",
+      "precio_actual": 9990,
+      "precio_normal": 18990,
+      "tiene_descuento": true,
+      "origen": "Alisha Perfumes Bulk Cache",
+      "volumen_ml": 100,
+      "formato": "regular",
+      "en_stock": false
+    },
+    {
+      "perfume": "CK One Reflections Edicion Limitada",
+      "tienda": "Silk Perfumes",
+      "precio_actual": 19990,
+      "precio_normal": 43990,
+      "tiene_descuento": true,
+      "origen": "Silk Perfumes Bulk Cache",
+      "volumen_ml": 100,
+      "formato": "regular",
+      "en_stock": false
+    },
+    {
+      "perfume": "Pour Elle Elegant",
+      "tienda": "Silk Perfumes",
+      "precio_actual": 35990,
+      "precio_normal": 50386,
+      "tiene_descuento": true,
+      "origen": "Silk Perfumes Bulk Cache",
+      "volumen_ml": 100,
+      "formato": "regular",
+      "en_stock": false
+    },
+    {
+      "perfume": "Pour Elle Elegant",
+      "tienda": "Silk Perfumes",
+      "precio_actual": 31490,
+      "precio_normal": 44990,
+      "tiene_descuento": true,
+      "origen": "Silk Perfumes Bulk Cache",
+      "volumen_ml": 100,
+      "formato": "tester",
+      "en_stock": false
+    },
+    {
+      "perfume": "Thallium Black",
+      "tienda": "Silk Perfumes",
+      "precio_actual": 13990,
+      "precio_normal": 19586,
+      "tiene_descuento": true,
+      "origen": "Silk Perfumes Bulk Cache",
+      "volumen_ml": 100,
+      "formato": "regular",
+      "en_stock": false
+    },
+    {
+      "perfume": "The One Collector'S Edición",
+      "tienda": "Silk Perfumes",
+      "precio_actual": 43990,
+      "precio_normal": 61586,
+      "tiene_descuento": true,
+      "origen": "Silk Perfumes Bulk Cache",
+      "volumen_ml": 100,
+      "formato": "regular",
+      "en_stock": false
+    },
+    {
+      "perfume": "Flower Eau De Vie Legere",
+      "tienda": "Silk Perfumes",
+      "precio_actual": 51990,
+      "precio_normal": 89990,
+      "tiene_descuento": true,
+      "origen": "Silk Perfumes Bulk Cache",
+      "volumen_ml": 100,
+      "formato": "regular",
+      "en_stock": false
+    }
+  ],
   "rotaciones_detalle": [
     {
       "rotacion": 1,
-      "scraping_run_id": 14,
-      "perfumes": 1,
-      "actualizaciones": 0,
-      "duracion_segundos": 46.39,
-      "estado": "EXITOSO"
-    },
-    {
-      "rotacion": 2,
-      "scraping_run_id": 15,
-      "perfumes": 1,
-      "actualizaciones": 0,
-      "duracion_segundos": 31.11,
+      "scraping_run_id": 24,
+      "perfumes": 15,
+      "actualizaciones": 4,
+      "duracion_segundos": 157.94,
       "estado": "EXITOSO"
     }
   ],

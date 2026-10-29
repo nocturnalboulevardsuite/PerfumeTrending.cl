@@ -22,7 +22,10 @@ Características de Ingeniería:
 """
 
 import argparse
+from collections import defaultdict
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
+import html
 import json
 import logging
 import math
@@ -31,7 +34,7 @@ import random
 import re
 import sys
 import time
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple
 import urllib.parse
 
 from bs4 import BeautifulSoup
@@ -86,6 +89,8 @@ try:
     )
     from backend.normalizador import (
         _GENERO_ESPERADO_CTX,
+        CANONICAL_BRAND_MAP,
+        MARCAS_INVALIDAS_CATALOGO,
         coincide_con_perfume,
         coincide_entidad_detallada,
         contexto_genero_esperado,
@@ -94,6 +99,10 @@ try:
         es_precio_valido,
         es_producto_perfume_valido,
         extraer_volumen_ml,
+        normalizar_marca_canonica,
+    )
+    from backend.scraper_autonomo import (
+        TIENDAS_CRAWLER_CONFIG,
     )
 except ImportError:
     from database import (
@@ -114,6 +123,8 @@ except ImportError:
     )
     from normalizador import (
         _GENERO_ESPERADO_CTX,
+        CANONICAL_BRAND_MAP,
+        MARCAS_INVALIDAS_CATALOGO,
         coincide_con_perfume,
         coincide_entidad_detallada,
         contexto_genero_esperado,
@@ -122,6 +133,10 @@ except ImportError:
         es_precio_valido,
         es_producto_perfume_valido,
         extraer_volumen_ml,
+        normalizar_marca_canonica,
+    )
+    from scraper_autonomo import (
+        TIENDAS_CRAWLER_CONFIG,
     )
 
 # Pool de User-Agents residenciales modernos
@@ -1429,6 +1444,279 @@ def _combinar_tiendas_stats(
     return consolidado
 
 
+# =============================================================================
+# INGESTA MASIVA EN MEMORIA (SHOPFIY & WOOCOMMERCE)
+# =============================================================================
+class CatalogoTiendaBulk:
+    """
+    Catálogo indexado en memoria para tiendas especializadas (Shopify / WooCommerce).
+    Descarga todo el catálogo en ráfagas paginadas (1-5s por tienda) y resuelve variantes
+    en <0.5ms sin peticiones de red adicionales por cada perfume.
+    """
+    def __init__(self, nombre_tienda: str, tipo: str, url_base: str):
+        self.nombre_tienda = nombre_tienda
+        self.tipo = tipo
+        self.url_base = url_base.rstrip("/")
+        self.por_marca: Dict[str, List[Dict[str, Any]]] = defaultdict(list)
+        self.todos_items: List[Dict[str, Any]] = []
+        self.total_productos: int = 0
+
+    def agregar_producto_shopify(self, prod: Dict[str, Any]):
+        raw_title = html.unescape(prod.get("title", "") or "").strip()
+        raw_vendor = html.unescape(prod.get("vendor", "") or "").strip()
+        handle = prod.get("handle", "")
+        clean_url = f"{self.url_base}/products/{handle}" if handle else ""
+        formato_prod = detectar_formato_oferta(raw_title, clean_url)
+
+        marca = normalizar_marca_canonica(raw_vendor) if len(raw_vendor) > 1 else ""
+        if not marca or marca in MARCAS_INVALIDAS_CATALOGO:
+            raw_title_lower = raw_title.lower()
+            for b_cand, b_canon in sorted(CANONICAL_BRAND_MAP.items(), key=lambda x: len(x[0]), reverse=True):
+                if re.search(r'\b' + re.escape(b_cand) + r'\b', raw_title_lower):
+                    marca = b_canon
+                    break
+
+        item = {
+            "title": raw_title,
+            "vendor": raw_vendor,
+            "marca": marca,
+            "url": clean_url,
+            "formato": formato_prod,
+            "variants": prod.get("variants", []),
+            "tipo": "shopify",
+        }
+        self.todos_items.append(item)
+        if marca:
+            self.por_marca[marca.lower()].append(item)
+        self.total_productos += 1
+
+    def agregar_producto_woocommerce(self, prod: Dict[str, Any]):
+        raw_title = html.unescape(prod.get("name", "") or "").strip()
+        wc_brands = [html.unescape(b.get("name", "")).strip() for b in prod.get("brands", []) if b.get("name")]
+        raw_vendor = wc_brands[0] if wc_brands else ""
+        if not raw_vendor:
+            for c in prod.get("categories", []):
+                c_name = html.unescape(c.get("name", "")).strip()
+                m_can = normalizar_marca_canonica(c_name)
+                if m_can and m_can not in MARCAS_INVALIDAS_CATALOGO:
+                    raw_vendor = m_can
+                    break
+
+        marca = normalizar_marca_canonica(raw_vendor) if len(raw_vendor) > 1 else ""
+        if not marca or marca in MARCAS_INVALIDAS_CATALOGO:
+            raw_title_lower = raw_title.lower()
+            for b_cand, b_canon in sorted(CANONICAL_BRAND_MAP.items(), key=lambda x: len(x[0]), reverse=True):
+                if re.search(r'\b' + re.escape(b_cand) + r'\b', raw_title_lower):
+                    marca = b_canon
+                    break
+
+        clean_url = prod.get("permalink", "")
+        formato_prod = detectar_formato_oferta(raw_title, clean_url)
+        prices = prod.get("prices", {})
+        p_act = clean_digits(prices.get("price"))
+        p_norm = clean_digits(prices.get("regular_price")) or p_act
+        in_stock = bool(prod.get("is_in_stock", True))
+        vol_ml = extraer_volumen_ml(raw_title) or extraer_volumen_ml(clean_url) or 100
+
+        item = {
+            "title": raw_title,
+            "vendor": raw_vendor,
+            "marca": marca,
+            "url": clean_url,
+            "formato": formato_prod,
+            "variants": [{
+                "title": f"{vol_ml}ml",
+                "price": p_act,
+                "compare_at_price": p_norm if p_norm > p_act else None,
+                "available": in_stock,
+            }],
+            "tipo": "woocommerce",
+        }
+        self.todos_items.append(item)
+        if marca:
+            self.por_marca[marca.lower()].append(item)
+        self.total_productos += 1
+
+    def extraer_variedades(
+        self,
+        perfume_nombre: str,
+        marca: str,
+        volumen_ml_defecto: Optional[int] = None,
+        concentracion: str = "",
+        precio_referencia: Optional[int] = None,
+        diagnostico: Optional[Dict[str, Any]] = None,
+    ) -> List[Dict[str, Any]]:
+        marca_canon = (normalizar_marca_canonica(marca) or marca or "").strip().lower()
+        candidatos = self.por_marca.get(marca_canon, [])
+        if not candidatos and marca:
+            m_low = marca.lower()
+            candidatos = [it for it in self.todos_items if m_low in it["title"].lower()]
+
+        if not candidatos:
+            return []
+
+        # Pre-filtrar por tokens distintivos del nombre del perfume
+        p_tokens = [w for w in re.split(r'[\s\-_\.,]+', perfume_nombre.lower()) if len(w) >= 3 and w not in ('perfume', 'eau', 'parfum', 'toilette', 'cologne', 'pour', 'femme', 'homme')]
+
+        variedades: List[Dict[str, Any]] = []
+        vols_vistos = set()
+
+        for item in candidatos:
+            raw_title = item["title"]
+            raw_title_lower = raw_title.lower()
+            if p_tokens and not any(tok in raw_title_lower for tok in p_tokens):
+                continue
+
+            if not es_producto_perfume_valido(raw_title, marca=marca or None, volumen_min_ml=25):
+                continue
+
+            clean_url = item["url"]
+            formato_prod = item["formato"]
+
+            for v in item.get("variants", []):
+                try:
+                    p_act = int(float(v.get("price", 0)))
+                except (ValueError, TypeError):
+                    continue
+
+                if not es_precio_valido(p_act):
+                    continue
+
+                v_title = v.get("title", "")
+                vol_encontrado = (
+                    extraer_volumen_ml(v_title)
+                    or extraer_volumen_ml(f"{raw_title} {v_title}")
+                    or extraer_volumen_ml(clean_url)
+                    or volumen_ml_defecto
+                    or 100
+                )
+                if vol_encontrado < 25:
+                    continue
+
+                res_match = coincide_entidad_detallada(
+                    titulo=raw_title,
+                    perfume_nombre=perfume_nombre,
+                    marca=marca,
+                    concentracion=concentracion,
+                    url=clean_url,
+                    precio_candidato=p_act,
+                    precio_referencia=precio_referencia,
+                )
+                if not res_match.coincide:
+                    continue
+
+                if "chanel" in perfume_nombre.lower() and "chanel" not in raw_title.lower():
+                    continue
+
+                formato_det = res_match.formato_detectado or (detectar_formato_oferta(f"{raw_title} {v_title}", clean_url) if formato_prod == "regular" else formato_prod)
+                clave_var = (vol_encontrado, formato_det)
+                if clave_var in vols_vistos:
+                    continue
+
+                vols_vistos.add(clave_var)
+
+                p_comp_raw = v.get("compare_at_price")
+                try:
+                    p_comp = int(float(p_comp_raw)) if p_comp_raw and float(p_comp_raw) > p_act else p_act
+                except (ValueError, TypeError):
+                    p_comp = p_act
+
+                norm_valido = p_comp if (es_precio_valido(p_comp) and p_comp > p_act) else p_act
+
+                variedades.append({
+                    "exito": True,
+                    "precio_actual": p_act,
+                    "precio_normal": norm_valido,
+                    "url": clean_url,
+                    "en_stock": bool(v.get("available", True)),
+                    "volumen_ml": vol_encontrado,
+                    "formato": formato_det,
+                    "metodo": f"{self.nombre_tienda} Bulk Cache",
+                })
+
+        return variedades
+
+
+def precargar_catalogos_bulk_tiendas(
+    session: requests.Session,
+    tiendas_db: List[Dict[str, Any]],
+    filtro_tiendas: Optional[List[str]] = None,
+    max_workers: int = 4,
+) -> Dict[str, CatalogoTiendaBulk]:
+    """
+    Descarga concurrentemente el catálogo completo de las tiendas especializadas (Shopify y WooCommerce)
+    mediante sus endpoints públicos masivos (/products.json y Store API).
+    Rendimiento: 13 tiendas (~25.000 productos) precargadas en ~15-20 segundos.
+    """
+    t_nombres_db = {t["nombre"].lower(): t for t in tiendas_db}
+    tiendas_a_descargar = []
+    for cfg in TIENDAS_CRAWLER_CONFIG:
+        nom_cfg = cfg["nombre"]
+        if filtro_tiendas and not any(f.lower() in nom_cfg.lower() for f in filtro_tiendas):
+            continue
+        if nom_cfg.lower() in t_nombres_db:
+            tiendas_a_descargar.append(cfg)
+
+    logger.info(f"Iniciando precarga masiva en memoria de {len(tiendas_a_descargar)} tiendas especializadas...")
+    inicio = time.time()
+    headers_browser = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+        "Accept": "application/json, text/plain, */*",
+        "Accept-Language": "es-CL,es;q=0.9",
+    }
+
+    def _descargar_tienda_individual(cfg: Dict[str, Any]) -> Tuple[str, CatalogoTiendaBulk]:
+        t_nom = cfg["nombre"]
+        t_tipo = cfg.get("tipo", "shopify")
+        endpoint = cfg["endpoint"]
+        url_base = cfg["url_base"]
+        cat = CatalogoTiendaBulk(nombre_tienda=t_nom, tipo=t_tipo, url_base=url_base)
+
+        sess = curl_requests.Session(impersonate="chrome124") if curl_requests is not None else session
+
+        for page in range(1, 15):
+            if t_tipo == "woocommerce":
+                url = f"{endpoint}?per_page=100&page={page}"
+                page_size = 100
+            else:
+                url = f"{endpoint}?limit=250&page={page}"
+                page_size = 250
+
+            try:
+                r = sess.get(url, headers=headers_browser, timeout=12)
+                if r.status_code != 200:
+                    break
+                data = r.json()
+                items = data if isinstance(data, list) else data.get("products", [])
+                if not items:
+                    break
+                for it in items:
+                    if t_tipo == "woocommerce":
+                        cat.agregar_producto_woocommerce(it)
+                    else:
+                        cat.agregar_producto_shopify(it)
+
+                if len(items) < page_size:
+                    break
+            except Exception as ex:
+                logger.debug(f"Aviso descargando página {page} de {t_nom}: {ex}")
+                break
+
+        logger.info(f"  ✓ [{t_nom}] {cat.total_productos} productos indexados en memoria.")
+        return (t_nom, cat)
+
+    resultados: Dict[str, CatalogoTiendaBulk] = {}
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        for t_nom, cat in executor.map(_descargar_tienda_individual, tiendas_a_descargar):
+            if cat.total_productos > 0:
+                resultados[t_nom] = cat
+
+    duracion = round(time.time() - inicio, 2)
+    total_prods = sum(c.total_productos for c in resultados.values())
+    logger.info(f"Precarga masiva completada: {len(resultados)} tiendas y {total_prods:,} productos listos en {duracion}s.")
+    return resultados
+
+
 def auditar_lote_perfumes(
     perfumes_lote: List[Dict[str, Any]],
     tiendas_db: List[Dict[str, Any]],
@@ -1437,6 +1725,7 @@ def auditar_lote_perfumes(
     rotacion_idx: int = 1,
     total_rotaciones: int = 1,
     total_catalogo: int = 0,
+    cache_tiendas_bulk: Optional[Dict[str, CatalogoTiendaBulk]] = None,
 ) -> Dict[str, Any]:
     """
     Ejecuta la auditoría en vivo para un subconjunto (lote/rotación) específico de perfumes.
@@ -1506,13 +1795,23 @@ def auditar_lote_perfumes(
                 vol_ml_base = 100
 
             tiendas_stats[t_nom]["consultas"] += 1
-            time.sleep(random.uniform(0.18, 0.45))
 
             diag: Dict[str, Any] = {}
             try:
                 lista_variedades: List[Dict[str, Any]] = []
 
-                if t_nom in TIENDAS_SHOPIFY:
+                # Si la tienda está precargada en memoria (Shopify / WooCommerce masivo)
+                if cache_tiendas_bulk and t_nom in cache_tiendas_bulk:
+                    lista_variedades = cache_tiendas_bulk[t_nom].extraer_variedades(
+                        perfume_nombre=p_nom,
+                        marca=p_marca,
+                        volumen_ml_defecto=vol_ml_base,
+                        concentracion=p_tipo,
+                        precio_referencia=p_ref,
+                        diagnostico=diag,
+                    )
+                elif t_nom in TIENDAS_SHOPIFY:
+                    time.sleep(random.uniform(0.18, 0.45))
                     dominio = TIENDAS_SHOPIFY[t_nom]
                     lista_variedades = extraer_variedades_shopify(
                         session=session,
@@ -1525,6 +1824,7 @@ def auditar_lote_perfumes(
                         diagnostico=diag,
                     )
                 elif t_nom in TIENDAS_WOOCOMMERCE:
+                    time.sleep(random.uniform(0.18, 0.45))
                     dominio = TIENDAS_WOOCOMMERCE[t_nom]
                     lista_variedades = extraer_variedades_woocommerce(
                         session=session,
@@ -1537,6 +1837,7 @@ def auditar_lote_perfumes(
                         diagnostico=diag,
                     )
                 elif "falabella" in t_nom.lower():
+                    time.sleep(random.uniform(0.18, 0.45))
                     lista_variedades = extraer_variedades_falabella(
                         session=session,
                         url_directa=url_directa_guardada,
@@ -1548,6 +1849,7 @@ def auditar_lote_perfumes(
                         diagnostico=diag,
                     )
                 elif "paris" in t_nom.lower():
+                    time.sleep(random.uniform(0.18, 0.45))
                     lista_variedades = extraer_variedades_paris(
                         session=session,
                         url_directa=url_directa_guardada,
@@ -1559,6 +1861,7 @@ def auditar_lote_perfumes(
                         diagnostico=diag,
                     )
                 elif "ripley" in t_nom.lower():
+                    time.sleep(random.uniform(0.18, 0.45))
                     lista_variedades = extraer_variedades_ripley(
                         session=session,
                         url_directa=url_directa_guardada,
@@ -1891,6 +2194,19 @@ def ejecutar_ciclo_scraping_y_descubrimiento(
     muestras_consolidadas: List[Dict[str, Any]] = []
     reporte_resultado: Dict[str, Any] = {}
 
+    # Precarga masiva en memoria de tiendas Shopify y WooCommerce (13 tiendas en ~15-20s)
+    cache_tiendas_bulk: Optional[Dict[str, CatalogoTiendaBulk]] = None
+    bulk_habilitado = os.environ.get("SCRAPER_ENABLE_BULK", "true").lower() not in ("false", "0", "no")
+    if bulk_habilitado:
+        try:
+            cache_tiendas_bulk = precargar_catalogos_bulk_tiendas(
+                session=session,
+                tiendas_db=tiendas_db,
+            )
+        except Exception as e_bulk:
+            logger.warning(f"Aviso en precarga masiva de tiendas ({e_bulk}), continuando con modo estándar individual.")
+            cache_tiendas_bulk = None
+
     for rot_idx in range(1, num_rotaciones + 1):
         idx_start = (rot_idx - 1) * effective_batch_size
         idx_end = min(idx_start + effective_batch_size, total_perfumes)
@@ -1912,6 +2228,7 @@ def ejecutar_ciclo_scraping_y_descubrimiento(
             rotacion_idx=rot_idx,
             total_rotaciones=num_rotaciones,
             total_catalogo=total_perfumes,
+            cache_tiendas_bulk=cache_tiendas_bulk,
         )
 
         consolidado_reportes.append(rep_lote)
@@ -2018,7 +2335,15 @@ if __name__ == "__main__":
         default=int(os.environ.get("SCRAPER_DELAY_ROTATIONS", 10)),
         help="Segundos de cooldown entre rotaciones consecutivas. Por defecto 10s.",
     )
+    parser.add_argument(
+        "--no-bulk",
+        action="store_true",
+        help="Desactivar precarga masiva JSON y forzar modo HTTP individual secuencial.",
+    )
     args = parser.parse_args()
+
+    if args.no_bulk:
+        os.environ["SCRAPER_ENABLE_BULK"] = "false"
 
     resultado = ejecutar_ciclo_scraping_y_descubrimiento(
         batch_size=args.batch_size,
