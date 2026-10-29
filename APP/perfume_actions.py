@@ -366,3 +366,210 @@ def estilos_avatar_usuario(borde: str = "#8c7b6d") -> str:
     }}
     </style>
     """
+
+
+# -----------------------------------------------------------------------------
+# Ajustes para celulares (se aplican en todas las páginas)
+# -----------------------------------------------------------------------------
+def estilos_moviles(accent: str = "#d83737", border_color: str = "#e6e1db", is_dark: bool = True) -> str:
+    """CSS responsivo común: cabecera ordenada, textos sin encimarse y tarjetas cómodas en celular."""
+    fila_riesgo = "rgba(239, 68, 68, 0.06)" if is_dark else "rgba(239, 68, 68, 0.04)"
+    return f"""
+    <style>
+    @media (max-width: 768px) {{
+        /* En celular la pantalla se usa al 100 % (el zoom de escritorio encimaba textos) */
+        html body .block-container {{
+            zoom: 1 !important;
+            padding: 0.6rem 0.95rem 1.6rem 0.95rem !important;
+        }}
+        html body .stMarkdown p, html body .stMarkdown li {{ line-height: 1.5 !important; }}
+
+        /* ---- Cabecera: logo arriba; botón de usuario/Ingresar y switch en la fila de abajo ---- */
+        html body div[data-testid="stHorizontalBlock"]:has(.brand-logo-clean) {{
+            flex-wrap: wrap !important;
+            row-gap: 10px !important;
+            column-gap: 0 !important;
+        }}
+        html body div[data-testid="stHorizontalBlock"]:has(.brand-logo-clean) > div[data-testid="stColumn"] {{
+            flex: 1 1 100% !important;
+            width: 100% !important;
+            min-width: 0 !important;
+        }}
+        html body div[data-testid="stHorizontalBlock"]:has(.brand-logo-clean) > div[data-testid="stColumn"]:nth-child(2) {{
+            display: none !important;
+        }}
+        html body div[data-testid="stHorizontalBlock"]:has(.st-key-theme_toggle):not(:has(.brand-logo-clean)) {{
+            flex-wrap: nowrap !important;
+            align-items: center !important;
+            justify-content: flex-end !important;
+            gap: 10px !important;
+        }}
+        html body div[data-testid="stHorizontalBlock"]:has(.st-key-theme_toggle):not(:has(.brand-logo-clean)) > div[data-testid="stColumn"]:first-child {{
+            flex: 1 1 auto !important;
+            width: auto !important;
+            min-width: 0 !important;
+        }}
+        html body div[data-testid="stHorizontalBlock"]:has(.st-key-theme_toggle):not(:has(.brand-logo-clean)) > div[data-testid="stColumn"]:last-child {{
+            flex: 0 0 auto !important;
+            width: auto !important;
+        }}
+        html body .brand-logo-text {{ font-size: 1.4rem !important; white-space: nowrap !important; }}
+        html body a.brand-logo-clean svg {{ width: 30px !important; height: 30px !important; }}
+        html body div[data-testid="stHorizontalBlock"]:has(.st-key-theme_toggle) button[data-testid="stPopoverButton"] {{
+            min-height: 40px !important;
+        }}
+        html body div[data-testid="stHorizontalBlock"]:has(.st-key-theme_toggle) button[data-testid="stPopoverButton"] p {{
+            font-size: 0.9rem !important;
+        }}
+
+        /* ---- Accesos rápidos: 2 por fila, texto centrado y legible ---- */
+        html body div[data-testid="stHorizontalBlock"]:has(a[data-testid="stPageLink-NavLink"][href*="trustpage"]) {{
+            flex-wrap: wrap !important;
+            gap: 8px !important;
+        }}
+        html body div[data-testid="stHorizontalBlock"]:has(a[data-testid="stPageLink-NavLink"][href*="trustpage"]) > div[data-testid="stColumn"] {{
+            flex: 1 1 calc(50% - 4px) !important;
+            width: calc(50% - 4px) !important;
+            min-width: 0 !important;
+        }}
+        html body a[data-testid="stPageLink-NavLink"],
+        html body div.st-key-chip_home div.stButton > button,
+        html body div.st-key-chip_remates div.stButton > button {{
+            justify-content: center !important;
+            min-height: 42px !important;
+            padding: 0.4rem 0.6rem 0.4rem 2.1rem !important;
+        }}
+        html body a[data-testid="stPageLink-NavLink"] p,
+        html body a[data-testid="stPageLink-NavLink"] span,
+        html body div.st-key-chip_home div.stButton > button p,
+        html body div.st-key-chip_remates div.stButton > button p {{
+            font-size: 0.82rem !important;
+            line-height: 1.2 !important;
+            white-space: normal !important;
+            text-align: center !important;
+        }}
+
+        /* ---- Títulos de sección y botón "Volver al catálogo" ---- */
+        html body .pt-display, html body .pt-title, html body .radar-title-text, html body .trust-head-title {{
+            font-size: 1.65rem !important;
+            line-height: 1.15 !important;
+        }}
+        html body .pt-lede, html body .radar-subtitle, html body .trust-head-sub {{
+            font-size: 0.93rem !important;
+            line-height: 1.55 !important;
+            margin-bottom: 4px !important;
+        }}
+        html body div[data-testid="stColumn"]:has(> div > div > a[data-testid="stPageLink-NavLink"][href$="app.py"]:only-child),
+        html body div[data-testid="stColumn"]:has(a[data-testid="stPageLink-NavLink"]):not(:has(a[href*="trustpage"])) {{
+            margin-top: 12px !important;
+        }}
+        html body .info-tooltip-box {{ left: auto !important; right: -10px !important; width: min(300px, 85vw) !important; }}
+
+        /* ---- Filtros, buscadores y selectores a todo el ancho ---- */
+        html body div[data-testid="stTextInput"] input,
+        html body div[data-testid="stSelectbox"] div,
+        html body div[data-testid="stTextArea"] textarea {{ font-size: 16px !important; }} /* evita el zoom automático del iPhone */
+        html body .filter-label-text {{ height: auto !important; margin-top: 4px !important; }}
+        html body .social-select-box {{ gap: 6px 8px !important; }}
+
+        /* ---- Tarjetas de perfume ---- */
+        html body .square-img-box {{ max-height: 250px !important; }}
+        html body .card-footer-info {{ padding: 12px 14px !important; }}
+        html body .card-perfume-name, html body .remate-title, html body .perfume-title {{ font-size: 1.02rem !important; }}
+        html body .img-wrapper {{ height: 170px !important; }}
+        html body .remate-img-box {{ height: 180px !important; }}
+        html body div[data-testid="stColumn"]:has(.catalog-card),
+        html body div[data-testid="stColumn"]:has(.hype-card),
+        html body div[data-testid="stColumn"]:has(.remate-card) {{ margin-bottom: 14px !important; }}
+        html body .stats-row {{ flex-wrap: wrap !important; }}
+
+        /* Recomendadas del comparador: 2 por fila */
+        html body div[data-testid="stHorizontalBlock"]:has(.rel-card) {{
+            flex-wrap: wrap !important;
+            gap: 10px !important;
+        }}
+        html body div[data-testid="stColumn"]:has(.rel-card) {{
+            flex: 1 1 calc(50% - 5px) !important;
+            width: calc(50% - 5px) !important;
+            min-width: 0 !important;
+            margin-bottom: 8px !important;
+        }}
+        html body .rel-stage {{ height: 110px !important; }}
+        html body .rel-name {{ font-size: 0.86rem !important; }}
+
+        /* Ficha del perfume en el comparador */
+        html body .perfume-header-stage {{ min-height: 180px !important; margin-bottom: 6px !important; }}
+        html body .perfume-name {{ font-size: 1.45rem !important; }}
+        html body .perfume-ref-row {{ gap: 8px !important; }}
+
+        /* Ofertas: precio y botón en una fila bajo el nombre de la tienda */
+        html body .price-card {{ flex-direction: column !important; align-items: stretch !important; gap: 12px !important; padding: 14px !important; }}
+        html body .price-card-right {{ justify-content: space-between !important; }}
+        html body .price-block {{ text-align: left !important; }}
+        html body span.pt-price-ml {{ text-align: left !important; }}
+        html body .offer-toolbar {{ flex-direction: column !important; align-items: flex-start !important; }}
+
+        /* ---- Tabla de tiendas (Páginas de Confianza) convertida en tarjetas ---- */
+        html body .trust-table-container {{ padding: 6px 10px !important; overflow: visible !important; }}
+        html body table.trust-table {{ min-width: 0 !important; }}
+        html body table.trust-table thead {{ display: none !important; }}
+        html body table.trust-table, html body table.trust-table tbody {{ display: block !important; width: 100% !important; }}
+        html body table.trust-table tbody tr {{
+            display: grid !important;
+            grid-template-columns: 34px 1fr auto;
+            grid-template-areas:
+                "num name name"
+                "num score status"
+                "num action action";
+            gap: 8px 10px;
+            padding: 14px 4px !important;
+            border-bottom: 1px solid {border_color} !important;
+        }}
+        html body table.trust-table tbody tr:last-child {{ border-bottom: none !important; }}
+        html body table.trust-table tbody tr.trust-row-risk {{ background: {fila_riesgo} !important; border-radius: 12px; }}
+        html body table.trust-table td {{ display: block !important; padding: 0 !important; border: none !important; background: transparent !important; }}
+        html body table.trust-table td:nth-child(1) {{ grid-area: num; padding-top: 3px !important; }}
+        html body table.trust-table td:nth-child(2) {{ grid-area: name; }}
+        html body table.trust-table td:nth-child(3) {{ grid-area: score; }}
+        html body table.trust-table td:nth-child(4) {{ grid-area: status; align-self: center; }}
+        html body table.trust-table td:nth-child(5) {{ grid-area: action; text-align: left !important; }}
+        html body table.trust-table td:nth-child(5) a,
+        html body table.trust-table td:nth-child(5) span {{ display: block !important; text-align: center !important; }}
+        html body .product-card {{ margin-bottom: 18px !important; }}
+
+        /* ---- Perfil ---- */
+        html body .avatar-help {{ margin-bottom: 10px !important; }}
+        html body .st-key-profile_card div[data-testid="stColumn"]:has(.profile-name) {{ margin-top: 14px !important; }}
+        html body .profile-contact {{ flex-direction: column !important; align-items: center !important; gap: 4px !important; }}
+        html body div[class*="st-key-fav_row_"] div[data-testid="stHorizontalBlock"] {{
+            flex-wrap: wrap !important;
+            gap: 10px !important;
+            align-items: center !important;
+        }}
+        html body div[class*="st-key-fav_row_"] div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"]:nth-child(1) {{
+            flex: 0 0 44px !important; width: 44px !important;
+        }}
+        html body div[class*="st-key-fav_row_"] div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"]:nth-child(2) {{
+            flex: 1 1 calc(100% - 54px) !important; width: calc(100% - 54px) !important;
+        }}
+        html body div[class*="st-key-fav_row_"] div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"]:nth-child(3) {{
+            flex: 1 1 100% !important; width: 100% !important;
+        }}
+        html body div[class*="st-key-fav_row_"] div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"]:nth-child(4),
+        html body div[class*="st-key-fav_row_"] div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"]:nth-child(5) {{
+            flex: 1 1 calc(50% - 5px) !important; width: calc(50% - 5px) !important;
+        }}
+        html body div[data-testid="stTabs"] button[role="tab"] {{ margin-right: 10px !important; }}
+
+        /* ---- Ventana de ingreso ---- */
+        html body [role="dialog"] {{ width: calc(100vw - 24px) !important; max-width: 480px !important; }}
+
+        /* ---- Corazón un poco más grande para el dedo ---- */
+        html body div[class*="st-key-favbtn_"] button,
+        html body div[class*="st-key-favline_"] button {{
+            width: 40px !important; height: 40px !important; min-width: 40px !important; min-height: 40px !important;
+        }}
+        html body .pt-footer {{ margin-top: 28px !important; }}
+    }}
+    </style>
+    """
