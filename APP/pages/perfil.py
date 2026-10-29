@@ -58,6 +58,7 @@ from auth_email import modal_autenticacion
 from perfume_actions import (
     boton_abrir_perfume,
     boton_corazon,
+    estilos_moviles,
     estilos_tarjetas_cliqueables,
     mostrar_aviso_favoritos,
 )
@@ -938,6 +939,8 @@ st.markdown(f"""
 
 # Perfumes cliqueables y corazón de favoritos (compartido con todas las páginas)
 st.markdown(estilos_tarjetas_cliqueables(accent, card_bg, border_color, subtext_color, is_dark), unsafe_allow_html=True)
+# Diseño responsivo para celulares (común a todas las páginas)
+st.markdown(estilos_moviles(accent, border_color, is_dark), unsafe_allow_html=True)
 st.markdown(f"""
     <style>
     div[class*="st-key-pcard_favrow_"] {{ cursor: pointer; }}
@@ -1178,6 +1181,7 @@ with tab_favs:
 
     fav_items = obtener_favoritos_usuario(u_ident) if u_ident else []
     st.session_state['favoritos'] = [int(it['id']) for it in fav_items if it.get('id')]
+    st.session_state['_favoritos_cargados_para'] = str(u_ident)  # esta lista manda: corazones llenos en tus favoritos
 
     if not fav_items:
         st.info("Aún no tienes fragancias guardadas en tu seguimiento. Explora el catálogo o el comparador y pulsa 'Guardar y Monitorear Baja de Precio'.")
