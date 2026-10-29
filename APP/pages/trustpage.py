@@ -36,7 +36,7 @@ from ui import (
     toggle_theme,
 )
 from auth_email import modal_autenticacion
-from perfume_actions import mostrar_aviso_favoritos
+from perfume_actions import estilos_avatar_usuario, mostrar_aviso_favoritos
 
 # 1. CONFIGURACIÓN DE PÁGINA Y ESTADO COMPARTIDO
 st.set_page_config(
@@ -874,6 +874,11 @@ a.brand-logo-clean:focus {{
 </style>
 """
 st.markdown(clean_html(css_styles), unsafe_allow_html=True)
+
+# Foto de perfil en el botón del usuario (cabecera)
+_css_avatar = estilos_avatar_usuario(gold)
+if _css_avatar:
+    st.markdown(_css_avatar, unsafe_allow_html=True)
 
 # 5. HEADER (LOGO + INICIO DE SESIÓN DINÁMICO + SWITCH COPIADO EXACTO DE APP.PY)
 if st.session_state['logged_in']:
