@@ -1,258 +1,168 @@
 {
-  "actualizaciones": 3,
-  "fecha": "2026-10-28 14:29:52",
-  "duracion_segundos": 35.34,
+  "actualizaciones": 0,
+  "fecha": "2026-10-28 22:24:37",
+  "duracion_segundos": 83.31,
   "metadata": {
-    "version_etl": "3.2.0",
-    "sistema": "PerfumeTrending Professional Anti-Bot ETL",
-    "fecha_ejecucion": "2026-10-28 14:29:52",
-    "duracion_segundos": 35.34,
+    "version_etl": "3.3.0",
+    "sistema": "PerfumeTrending Professional Anti-Bot ETL (Multi-Rotation LRU)",
+    "fecha_ejecucion": "2026-10-28 22:24:37",
+    "duracion_segundos": 83.31,
     "estado": "EXITOSO",
-    "scraping_run_id": 3
+    "rotaciones_completadas": 2,
+    "total_rotaciones_planificadas": 2,
+    "tamano_lote": 1
   },
   "metricas": {
-    "total_perfumes_catalogo": 2339,
+    "total_perfumes_catalogo": 2,
     "perfumes_auditados": 2,
-    "total_tiendas_registradas": 9,
-    "precios_actualizados": 3,
+    "total_tiendas_registradas": 17,
+    "precios_actualizados": 0,
     "ofertas_nuevas": 0,
-    "cambios_precio": 1,
-    "cambios_stock": 2,
-    "cambios_url": 1,
+    "cambios_precio": 0,
+    "cambios_stock": 0,
+    "cambios_url": 0,
     "bloqueos_waf": 0,
-    "exclusiones_marca": 7,
+    "exclusiones_marca": 2,
     "errores_totales": 0
   },
   "estadisticas_tiendas": {
     "Falabella": {
       "consultas": 2,
-      "exitos_en_vivo": 6,
-      "fallbacks_seguridad": 0,
+      "exitos_en_vivo": 0,
+      "fallbacks_seguridad": 2,
       "bloqueos_waf": 0,
       "trust_score": 96
     },
     "Paris": {
       "consultas": 2,
-      "exitos_en_vivo": 2,
-      "fallbacks_seguridad": 0,
+      "exitos_en_vivo": 0,
+      "fallbacks_seguridad": 2,
       "bloqueos_waf": 0,
       "trust_score": 95
     },
     "Ripley": {
       "consultas": 2,
-      "exitos_en_vivo": 4,
-      "fallbacks_seguridad": 0,
+      "exitos_en_vivo": 0,
+      "fallbacks_seguridad": 2,
       "bloqueos_waf": 0,
       "trust_score": 94
     },
     "Silk Perfumes": {
-      "consultas": 1,
-      "exitos_en_vivo": 2,
-      "fallbacks_seguridad": 0,
+      "consultas": 2,
+      "exitos_en_vivo": 0,
+      "fallbacks_seguridad": 2,
       "bloqueos_waf": 0,
       "trust_score": 92
     },
     "Elite Perfumes": {
-      "consultas": 1,
+      "consultas": 2,
       "exitos_en_vivo": 0,
-      "fallbacks_seguridad": 1,
+      "fallbacks_seguridad": 2,
       "bloqueos_waf": 0,
       "trust_score": 89
     },
     "DBS Beauty Store": {
-      "consultas": 1,
+      "consultas": 2,
       "exitos_en_vivo": 0,
       "fallbacks_seguridad": 0,
       "bloqueos_waf": 0,
       "trust_score": 91
     },
     "Alisha Perfumes": {
-      "consultas": 1,
+      "consultas": 2,
       "exitos_en_vivo": 0,
-      "fallbacks_seguridad": 1,
+      "fallbacks_seguridad": 2,
       "bloqueos_waf": 0,
       "trust_score": 88
     },
     "Yauras Perfumes": {
-      "consultas": 1,
-      "exitos_en_vivo": 1,
-      "fallbacks_seguridad": 0,
+      "consultas": 2,
+      "exitos_en_vivo": 0,
+      "fallbacks_seguridad": 2,
       "bloqueos_waf": 0,
       "trust_score": 88
     },
     "Oferta Perfumes": {
-      "consultas": 1,
-      "exitos_en_vivo": 2,
-      "fallbacks_seguridad": 0,
+      "consultas": 2,
+      "exitos_en_vivo": 0,
+      "fallbacks_seguridad": 2,
       "bloqueos_waf": 0,
       "trust_score": 90
+    },
+    "L'Odoro": {
+      "consultas": 2,
+      "exitos_en_vivo": 0,
+      "fallbacks_seguridad": 2,
+      "bloqueos_waf": 0,
+      "trust_score": 92
+    },
+    "Chile Perfume": {
+      "consultas": 2,
+      "exitos_en_vivo": 0,
+      "fallbacks_seguridad": 2,
+      "bloqueos_waf": 0,
+      "trust_score": 91
+    },
+    "Mundo Aromas": {
+      "consultas": 2,
+      "exitos_en_vivo": 0,
+      "fallbacks_seguridad": 2,
+      "bloqueos_waf": 0,
+      "trust_score": 90
+    },
+    "Cosmetic": {
+      "consultas": 2,
+      "exitos_en_vivo": 0,
+      "fallbacks_seguridad": 2,
+      "bloqueos_waf": 0,
+      "trust_score": 90
+    },
+    "Fragante": {
+      "consultas": 2,
+      "exitos_en_vivo": 0,
+      "fallbacks_seguridad": 2,
+      "bloqueos_waf": 0,
+      "trust_score": 90
+    },
+    "ComprarEnChile": {
+      "consultas": 2,
+      "exitos_en_vivo": 0,
+      "fallbacks_seguridad": 2,
+      "bloqueos_waf": 0,
+      "trust_score": 88
+    },
+    "Portal del Perfume": {
+      "consultas": 2,
+      "exitos_en_vivo": 0,
+      "fallbacks_seguridad": 2,
+      "bloqueos_waf": 0,
+      "trust_score": 89
+    },
+    "Aromata": {
+      "consultas": 2,
+      "exitos_en_vivo": 0,
+      "fallbacks_seguridad": 2,
+      "bloqueos_waf": 0,
+      "trust_score": 89
     }
   },
-  "muestra_capturas": [
+  "muestra_capturas": [],
+  "rotaciones_detalle": [
     {
-      "perfume": "Bleu de Chanel",
-      "tienda": "Falabella",
-      "precio_actual": 145200,
-      "precio_normal": 145200,
-      "tiene_descuento": false,
-      "origen": "Falabella Direct Variants",
-      "volumen_ml": 50,
-      "formato": "regular",
-      "en_stock": true
+      "rotacion": 1,
+      "scraping_run_id": 14,
+      "perfumes": 1,
+      "actualizaciones": 0,
+      "duracion_segundos": 46.39,
+      "estado": "EXITOSO"
     },
     {
-      "perfume": "Bleu de Chanel",
-      "tienda": "Falabella",
-      "precio_actual": 225500,
-      "precio_normal": 225500,
-      "tiene_descuento": false,
-      "origen": "Falabella Direct Variants",
-      "volumen_ml": 150,
-      "formato": "regular",
-      "en_stock": true
-    },
-    {
-      "perfume": "Bleu de Chanel",
-      "tienda": "Falabella",
-      "precio_actual": 181500,
-      "precio_normal": 181500,
-      "tiene_descuento": false,
-      "origen": "Falabella Direct Variants",
-      "volumen_ml": 100,
-      "formato": "regular",
-      "en_stock": true
-    },
-    {
-      "perfume": "Bleu de Chanel",
-      "tienda": "Paris",
-      "precio_actual": 181500,
-      "precio_normal": 181500,
-      "tiene_descuento": false,
-      "origen": "Paris Schema.org Direct",
-      "volumen_ml": 100,
-      "formato": "regular",
-      "en_stock": true
-    },
-    {
-      "perfume": "Bleu de Chanel",
-      "tienda": "Ripley",
-      "precio_actual": 145200,
-      "precio_normal": 145200,
-      "tiene_descuento": false,
-      "origen": "Ripley Live PDP Variants",
-      "volumen_ml": 50,
-      "formato": "regular",
-      "en_stock": false
-    },
-    {
-      "perfume": "Bleu de Chanel",
-      "tienda": "Ripley",
-      "precio_actual": 181500,
-      "precio_normal": 181500,
-      "tiene_descuento": false,
-      "origen": "Ripley Live PDP Variants",
-      "volumen_ml": 100,
-      "formato": "regular",
-      "en_stock": true
-    },
-    {
-      "perfume": "Bleu de Chanel",
-      "tienda": "Ripley",
-      "precio_actual": 225500,
-      "precio_normal": 225500,
-      "tiene_descuento": false,
-      "origen": "Ripley Live PDP Variants",
-      "volumen_ml": 150,
-      "formato": "regular",
-      "en_stock": true
-    },
-    {
-      "perfume": "YSL Libre",
-      "tienda": "Falabella",
-      "precio_actual": 86990,
-      "precio_normal": 86990,
-      "tiene_descuento": false,
-      "origen": "Falabella Direct Variants",
-      "volumen_ml": 30,
-      "formato": "regular",
-      "en_stock": true
-    },
-    {
-      "perfume": "YSL Libre",
-      "tienda": "Falabella",
-      "precio_actual": 125990,
-      "precio_normal": 125990,
-      "tiene_descuento": false,
-      "origen": "Falabella Direct Variants",
-      "volumen_ml": 50,
-      "formato": "regular",
-      "en_stock": true
-    },
-    {
-      "perfume": "YSL Libre",
-      "tienda": "Falabella",
-      "precio_actual": 176990,
-      "precio_normal": 176990,
-      "tiene_descuento": false,
-      "origen": "Falabella Direct Variants",
-      "volumen_ml": 90,
-      "formato": "regular",
-      "en_stock": true
-    },
-    {
-      "perfume": "YSL Libre",
-      "tienda": "Paris",
-      "precio_actual": 176990,
-      "precio_normal": 176990,
-      "tiene_descuento": false,
-      "origen": "Paris Schema.org Direct",
-      "volumen_ml": 90,
-      "formato": "regular",
-      "en_stock": true
-    },
-    {
-      "perfume": "YSL Libre",
-      "tienda": "Ripley",
-      "precio_actual": 187990,
-      "precio_normal": 187990,
-      "tiene_descuento": false,
-      "origen": "Ripley Live PDP Variants",
-      "volumen_ml": 90,
-      "formato": "regular",
-      "en_stock": true
-    },
-    {
-      "perfume": "YSL Libre",
-      "tienda": "Silk Perfumes",
-      "precio_actual": 106990,
-      "precio_normal": 235390,
-      "tiene_descuento": true,
-      "origen": "Shopify Multi-Suggest",
-      "volumen_ml": 90,
-      "formato": "regular",
-      "en_stock": true
-    },
-    {
-      "perfume": "YSL Libre",
-      "tienda": "Silk Perfumes",
-      "precio_actual": 55990,
-      "precio_normal": 123190,
-      "tiene_descuento": true,
-      "origen": "Shopify Multi-Suggest",
-      "volumen_ml": 30,
-      "formato": "regular",
-      "en_stock": true
-    },
-    {
-      "perfume": "YSL Libre",
-      "tienda": "Yauras Perfumes",
-      "precio_actual": 128990,
-      "precio_normal": 128990,
-      "tiene_descuento": false,
-      "origen": "Shopify Multi-Suggest",
-      "volumen_ml": 90,
-      "formato": "regular",
-      "en_stock": true
+      "rotacion": 2,
+      "scraping_run_id": 15,
+      "perfumes": 1,
+      "actualizaciones": 0,
+      "duracion_segundos": 31.11,
+      "estado": "EXITOSO"
     }
   ],
   "errores": []

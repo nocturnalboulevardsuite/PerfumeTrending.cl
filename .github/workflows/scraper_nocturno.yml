@@ -4,7 +4,20 @@ on:
   schedule:
     # Se ejecuta todos los dias a las 04:00 AM hora de Chile (07:00 UTC)
     - cron: '0 7 * * *'
-  workflow_dispatch: # Permite ejecutar manualmente en cualquier momento desde GitHub
+  workflow_dispatch:
+    inputs:
+      batch_size:
+        description: 'Cantidad de perfumes por rotacion (lote)'
+        required: false
+        default: '500'
+      rotations:
+        description: 'Numero de rotaciones a ejecutar (0 = todas las necesarias para cubrir el catalogo)'
+        required: false
+        default: '0'
+      delay:
+        description: 'Segundos de cooldown entre rotaciones'
+        required: false
+        default: '10'
 
 permissions:
   contents: write
@@ -16,7 +29,7 @@ concurrency:
 jobs:
   actualizar-precios:
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 360
     steps:
       - name: Descargar codigo del repositorio
         uses: actions/checkout@v4
@@ -34,11 +47,14 @@ jobs:
           pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Ejecutar Scraper Periodico de Precios y Stock
+      - name: Ejecutar Scraper Periodico de Precios y Stock (Rotaciones LRU)
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SCRAPER_BATCH_SIZE: ${{ inputs.batch_size || '500' }}
+          SCRAPER_ROTATIONS: ${{ inputs.rotations || '0' }}
+          SCRAPER_DELAY_ROTATIONS: ${{ inputs.delay || '10' }}
         run: |
           python APP/backend/scraper_periodico.py
 

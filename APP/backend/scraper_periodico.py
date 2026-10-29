@@ -21,9 +21,11 @@ Características de Ingeniería:
 - Generación de informes de auditoría estructurados en data/reportes/ultimo_scraping.json.
 """
 
+import argparse
 from datetime import datetime
 import json
 import logging
+import math
 import os
 import random
 import re
@@ -1396,119 +1398,61 @@ def obtener_ultimo_reporte_scraping() -> Optional[Dict[str, Any]]:
             logger.warning(f"No se pudo leer el reporte de auditoría: {e}")
     return None
 
-
 # =============================================================================
-# MOTOR PRINCIPAL DE EJECUCIÓN ETL
+# MOTOR PRINCIPAL DE EJECUCIÓN ETL (ARQUITECTURA DE ROTACIONES LRU)
 # =============================================================================
 
-def ejecutar_ciclo_scraping_y_descubrimiento() -> Dict[str, Any]:
+def _combinar_tiendas_stats(
+    stats_list: List[Dict[str, Dict[str, Any]]],
+    tiendas_db: List[Dict[str, Any]],
+) -> Dict[str, Dict[str, Any]]:
+    """Combina métricas agregadas de comercios auditados a lo largo de múltiples rotaciones."""
+    consolidado = {
+        t["nombre"]: {
+            "consultas": 0,
+            "exitos_en_vivo": 0,
+            "fallbacks_seguridad": 0,
+            "bloqueos_waf": 0,
+            "trust_score": t.get("trust_score", 90),
+        }
+        for t in tiendas_db
+    }
+    for st in stats_list:
+        for t_nom, vals in st.items():
+            if t_nom in consolidado:
+                consolidado[t_nom]["consultas"] += vals.get("consultas", 0)
+                consolidado[t_nom]["exitos_en_vivo"] += vals.get("exitos_en_vivo", 0)
+                consolidado[t_nom]["fallbacks_seguridad"] += vals.get("fallbacks_seguridad", 0)
+                consolidado[t_nom]["bloqueos_waf"] += vals.get("bloqueos_waf", 0)
+    return consolidado
+
+
+def auditar_lote_perfumes(
+    perfumes_lote: List[Dict[str, Any]],
+    tiendas_db: List[Dict[str, Any]],
+    urls_conocidas_map: Dict[Tuple[int, int], Tuple[str, int]],
+    session: requests.Session,
+    rotacion_idx: int = 1,
+    total_rotaciones: int = 1,
+    total_catalogo: int = 0,
+) -> Dict[str, Any]:
     """
-    Orquesta el ciclo de extracción ETL, auditoría periódica y persistencia transaccional:
-    1. Recupera catálogo completo paginado (>1.000 filas) incluyendo `tipo` (concentración) y `precio_referencia`.
-    2. Precarga ofertas vivas conocidas (`ofertas_actuales`) para consultar URLs directas sin N+1 queries.
-    3. Ejecuta los extractores de los comercios auditados activando las 12 capas de resolución de entidad,
-       separando formatos `'regular'` vs `'tester'` y descartando decants `< 25 ml` y terceros no auditados.
-    4. Distingue bloqueos temporales WAF (`HTTP 403/429`) de falta de disponibilidad real para no degradar ofertas sanas.
-    5. Registra el inicio y cierre en `scraping_runs` y genera `data/reportes/ultimo_scraping.json`.
+    Ejecuta la auditoría en vivo para un subconjunto (lote/rotación) específico de perfumes.
+    Cada lote crea y cierra su propio `scraping_run_id` para trazabilidad atómica y persistencia
+    resiliente ante desconexiones, cancelaciones o timeouts en runners de CI/CD.
     """
-    init_db()
     inicio = time.time()
     ahora = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    logger.info("Iniciando ciclo de scraping ETL profesional con precios 100% reales")
+    msg_inicio = (
+        f"Rotación {rotacion_idx}/{total_rotaciones}: auditando lote de {len(perfumes_lote)} perfumes "
+        f"(catálogo total: {total_catalogo})"
+    )
+    logger.info(f"Iniciando {msg_inicio}")
     run_id = iniciar_scraping_run(
         tipo_scraper="Scraper Periódico Precios y Stock",
-        mensaje_detalle="Inicio de auditoría periódica multitienda",
+        mensaje_detalle=msg_inicio,
     )
-
-    session = crear_sesion_robusta()
-
-    perfumes_db: List[Dict[str, Any]] = []
-    tiendas_db: List[Dict[str, Any]] = []
-    urls_conocidas_map: Dict[Tuple[int, int], Tuple[str, int]] = {}
-
-    sb = get_supabase(use_service_role=True)
-    if sb and is_supabase_disponible():
-        try:
-            perfumes_db = _fetch_all_rows(
-                lambda off, lim: (
-                    sb.table("perfumes")
-                    .select("id, nombre, marca, genero, tipo, precio_referencia, es_arabe")
-                    .order("id", desc=False)
-                    .range(off, off + lim - 1)
-                ),
-                page_size=1000,
-            )
-            resp_t = sb.table("tiendas").select("id, nombre, url_base, trust_score").order("id").execute()
-            tiendas_db = resp_t.data or []
-
-            variantes_rows = _fetch_all_rows(
-                lambda off, lim: (
-                    sb.table("variantes_perfume")
-                    .select("id, perfume_id, volumen_ml, formato")
-                    .order("id", desc=False)
-                    .range(off, off + lim - 1)
-                ),
-                page_size=1000,
-            )
-            var_to_perf: Dict[int, Tuple[int, int, str]] = {}
-            for vr in variantes_rows:
-                try:
-                    var_to_perf[int(vr["id"])] = (
-                        int(vr["perfume_id"]),
-                        int(round(float(vr.get("volumen_ml") or 100))),
-                        str(vr.get("formato") or "regular").lower(),
-                    )
-                except Exception:
-                    pass
-
-            ofertas_rows = _fetch_all_rows(
-                lambda off, lim: (
-                    sb.table("ofertas_actuales")
-                    .select("variante_id, tienda_id, url_producto, estado")
-                    .neq("estado", "requiere_revision")
-                    .order("id", desc=False)
-                    .range(off, off + lim - 1)
-                ),
-                page_size=1000,
-            )
-            for oa in ofertas_rows:
-                u_prod = str(oa.get("url_producto") or "").strip()
-                v_info = var_to_perf.get(int(oa.get("variante_id") or 0))
-                if u_prod.startswith("http") and v_info and v_info[2] != "tester":
-                    k_pt = (v_info[0], int(oa["tienda_id"]))
-                    if k_pt not in urls_conocidas_map:
-                        urls_conocidas_map[k_pt] = (u_prod, v_info[1])
-
-            logger.info(
-                f"Catálogo cargado desde Supabase Cloud: {len(perfumes_db)} perfumes, "
-                f"{len(tiendas_db)} tiendas, {len(urls_conocidas_map)} enlaces directos en caché."
-            )
-        except Exception as e:
-            logger.warning(f"Aviso consultando catálogo en Supabase ({e}), recurriendo a SQLite local.")
-
-    if not perfumes_db or not tiendas_db:
-        init_db()
-        conn = get_connection()
-        cursor = conn.cursor()
-        cursor.execute("SELECT id, nombre, marca, genero, tipo, precio_referencia, es_arabe FROM perfumes ORDER BY id ASC;")
-        perfumes_db = [dict(r) for r in cursor.fetchall()]
-        cursor.execute("SELECT id, nombre, url_base, trust_score FROM tiendas ORDER BY id ASC;")
-        tiendas_db = [dict(r) for r in cursor.fetchall()]
-        cursor.execute(
-            """
-            SELECT vp.perfume_id, oa.tienda_id, oa.url_producto, CAST(ROUND(COALESCE(vp.volumen_ml, 100)) AS INTEGER) as vol_ml
-            FROM ofertas_actuales oa
-            JOIN variantes_perfume vp ON vp.id = oa.variante_id
-            WHERE oa.url_producto IS NOT NULL AND oa.estado != 'requiere_revision' AND COALESCE(vp.formato, 'regular') != 'tester';
-            """
-        )
-        for r in cursor.fetchall():
-            k_pt = (int(r["perfume_id"]), int(r["tienda_id"]))
-            if k_pt not in urls_conocidas_map and str(r["url_producto"]).startswith("http"):
-                urls_conocidas_map[k_pt] = (str(r["url_producto"]), int(r["vol_ml"] or 100))
-        conn.close()
-        logger.info(f"Catálogo cargado desde SQLite local: {len(perfumes_db)} perfumes, {len(tiendas_db)} tiendas.")
 
     actualizaciones = 0
     ofertas_nuevas = 0
@@ -1525,21 +1469,12 @@ def ejecutar_ciclo_scraping_y_descubrimiento() -> Dict[str, Any]:
             "exitos_en_vivo": 0,
             "fallbacks_seguridad": 0,
             "bloqueos_waf": 0,
-            "trust_score": t["trust_score"],
+            "trust_score": t.get("trust_score", 90),
         }
         for t in tiendas_db
     }
 
-    limit_env = os.environ.get("SCRAPER_LIMIT_PERFUMES")
-    if limit_env and limit_env.isdigit():
-        max_p = int(limit_env)
-        perfumes_a_auditar = perfumes_db[:max_p]
-        logger.info(f"Modo de prueba activo: auditando los primeros {len(perfumes_a_auditar)} perfumes.")
-    else:
-        perfumes_a_auditar = perfumes_db
-        logger.info(f"Modo completo activo: auditando catálogo entero ({len(perfumes_a_auditar)} perfumes).")
-
-    for p in perfumes_a_auditar:
+    for p in perfumes_lote:
         p_id = p["id"]
         p_nom = p["nombre"]
         p_marca = p["marca"]
@@ -1547,7 +1482,7 @@ def ejecutar_ciclo_scraping_y_descubrimiento() -> Dict[str, Any]:
         p_tipo = p.get("tipo") or ""
         p_ref = p.get("precio_referencia")
 
-        logger.info(f"Auditando fragancia: {p_nom} ({p_marca}) [{p_tipo or 'N/A'} · {p_genero}]")
+        logger.info(f"[Rotación {rotacion_idx}/{total_rotaciones}] Auditando: {p_nom} ({p_marca}) [{p_tipo or 'N/A'} · {p_genero}]")
         _GENERO_ESPERADO_CTX.set(p_genero)
 
         for tienda in tiendas_db:
@@ -1727,33 +1662,35 @@ def ejecutar_ciclo_scraping_y_descubrimiento() -> Dict[str, Any]:
     finalizar_scraping_run(
         run_id=run_id,
         estado="completado" if estado_general == "EXITOSO" else estado_general.lower(),
-        productos_procesados=len(perfumes_a_auditar),
+        productos_procesados=len(perfumes_lote),
         ofertas_nuevas=ofertas_nuevas,
         cambios_precio=cambios_precio,
         cambios_stock=cambios_stock,
         cambios_url=cambios_url,
         errores=len(errores),
         mensaje_detalle=(
-            f"Auditados {len(perfumes_a_auditar)} perfumes en {duracion}s: "
+            f"Rotación {rotacion_idx}/{total_rotaciones}: auditados {len(perfumes_lote)} perfumes en {duracion}s: "
             f"{actualizaciones} actualizaciones, {bloqueos_waf} bloqueos WAF."
         ),
     )
 
-    reporte = {
+    return {
         "actualizaciones": actualizaciones,
         "fecha": ahora,
         "duracion_segundos": duracion,
         "metadata": {
-            "version_etl": "3.2.0",
-            "sistema": "PerfumeTrending Professional Anti-Bot ETL",
+            "version_etl": "3.3.0",
+            "sistema": "PerfumeTrending Professional Anti-Bot ETL (Batch)",
             "fecha_ejecucion": ahora,
             "duracion_segundos": duracion,
             "estado": estado_general,
             "scraping_run_id": run_id,
+            "rotacion_idx": rotacion_idx,
+            "total_rotaciones": total_rotaciones,
         },
         "metricas": {
-            "total_perfumes_catalogo": len(perfumes_db),
-            "perfumes_auditados": len(perfumes_a_auditar),
+            "total_perfumes_catalogo": total_catalogo,
+            "perfumes_auditados": len(perfumes_lote),
             "total_tiendas_registradas": len(tiendas_db),
             "precios_actualizados": actualizaciones,
             "ofertas_nuevas": ofertas_nuevas,
@@ -1769,16 +1706,329 @@ def ejecutar_ciclo_scraping_y_descubrimiento() -> Dict[str, Any]:
         "errores": errores,
     }
 
-    guardar_reporte_auditoria(reporte)
-    logger.info(f"Ciclo ETL completado en {duracion}s | {actualizaciones} precios sincronizados | Estado: {estado_general}")
-    return reporte
+
+def ejecutar_ciclo_scraping_y_descubrimiento(
+    batch_size: Optional[int] = None,
+    rotations: Optional[int] = None,
+    delay_between_rotations: Optional[int] = None,
+) -> Dict[str, Any]:
+    """
+    Orquesta el ciclo de extracción ETL en rotaciones sucesivas priorizadas mediante cola LRU:
+    1. Recupera catálogo completo y el mapa de última verificación exitosa (`ultima_verificacion_exitosa`).
+    2. Ordena los perfumes con política LRU (los nunca auditados o con auditoría más antigua primero).
+    3. Segmenta el catálogo en lotes de tamaño `batch_size` (por defecto 500 o variable de entorno `SCRAPER_BATCH_SIZE`).
+    4. Ejecuta consecutivamente las rotaciones solicitadas (o todas las necesarias si `rotations` es 0 o None).
+       Entre cada rotación, realiza una pausa configurable de cooldown (`delay_between_rotations` segundos).
+    5. Cada lote registra su propia transacción en `scraping_runs` y actualiza inmediatamente la BD,
+       asegurando tolerancia absoluta a timeouts y cero pérdida de trabajo.
+    """
+    init_db()
+    inicio_global = time.time()
+    ahora_global = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    # Resolución de parámetros (CLI / argumento / entorno / defecto)
+    try:
+        bs_cfg = batch_size if batch_size is not None else int(os.environ.get("SCRAPER_BATCH_SIZE", 500))
+    except (ValueError, TypeError):
+        bs_cfg = 500
+    effective_batch_size = max(1, bs_cfg)
+
+    try:
+        rot_cfg = rotations if rotations is not None else int(os.environ.get("SCRAPER_ROTATIONS", 0))
+    except (ValueError, TypeError):
+        rot_cfg = 0
+
+    try:
+        delay_cfg = delay_between_rotations if delay_between_rotations is not None else int(os.environ.get("SCRAPER_DELAY_ROTATIONS", 10))
+    except (ValueError, TypeError):
+        delay_cfg = 10
+
+    session = crear_sesion_robusta()
+
+    perfumes_db: List[Dict[str, Any]] = []
+    tiendas_db: List[Dict[str, Any]] = []
+    urls_conocidas_map: Dict[Tuple[int, int], Tuple[str, int]] = {}
+    perfume_last_verified: Dict[int, str] = {}
+
+    sb = get_supabase(use_service_role=True)
+    if sb and is_supabase_disponible():
+        try:
+            perfumes_db = _fetch_all_rows(
+                lambda off, lim: (
+                    sb.table("perfumes")
+                    .select("id, nombre, marca, genero, tipo, precio_referencia, es_arabe")
+                    .order("id", desc=False)
+                    .range(off, off + lim - 1)
+                ),
+                page_size=1000,
+            )
+            resp_t = sb.table("tiendas").select("id, nombre, url_base, trust_score").order("id").execute()
+            tiendas_db = resp_t.data or []
+
+            variantes_rows = _fetch_all_rows(
+                lambda off, lim: (
+                    sb.table("variantes_perfume")
+                    .select("id, perfume_id, volumen_ml, formato")
+                    .order("id", desc=False)
+                    .range(off, off + lim - 1)
+                ),
+                page_size=1000,
+            )
+            var_to_perf: Dict[int, Tuple[int, int, str]] = {}
+            for vr in variantes_rows:
+                try:
+                    var_to_perf[int(vr["id"])] = (
+                        int(vr["perfume_id"]),
+                        int(round(float(vr.get("volumen_ml") or 100))),
+                        str(vr.get("formato") or "regular").lower(),
+                    )
+                except Exception:
+                    pass
+
+            ofertas_rows = _fetch_all_rows(
+                lambda off, lim: (
+                    sb.table("ofertas_actuales")
+                    .select("variante_id, tienda_id, url_producto, estado, ultima_verificacion_exitosa")
+                    .neq("estado", "requiere_revision")
+                    .order("id", desc=False)
+                    .range(off, off + lim - 1)
+                ),
+                page_size=1000,
+            )
+            for oa in ofertas_rows:
+                v_info = var_to_perf.get(int(oa.get("variante_id") or 0))
+                if v_info:
+                    pid = v_info[0]
+                    ts = oa.get("ultima_verificacion_exitosa")
+                    if ts:
+                        if pid not in perfume_last_verified or ts > perfume_last_verified[pid]:
+                            perfume_last_verified[pid] = ts
+                    u_prod = str(oa.get("url_producto") or "").strip()
+                    if u_prod.startswith("http") and v_info[2] != "tester":
+                        k_pt = (pid, int(oa["tienda_id"]))
+                        if k_pt not in urls_conocidas_map:
+                            urls_conocidas_map[k_pt] = (u_prod, v_info[1])
+
+            logger.info(
+                f"Catálogo cargado desde Supabase Cloud: {len(perfumes_db)} perfumes, "
+                f"{len(tiendas_db)} tiendas, {len(urls_conocidas_map)} enlaces directos en caché."
+            )
+        except Exception as e:
+            logger.warning(f"Aviso consultando catálogo en Supabase ({e}), recurriendo a SQLite local.")
+
+    if not perfumes_db or not tiendas_db:
+        init_db()
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, nombre, marca, genero, tipo, precio_referencia, es_arabe FROM perfumes ORDER BY id ASC;")
+        perfumes_db = [dict(r) for r in cursor.fetchall()]
+        cursor.execute("SELECT id, nombre, url_base, trust_score FROM tiendas ORDER BY id ASC;")
+        tiendas_db = [dict(r) for r in cursor.fetchall()]
+        cursor.execute(
+            """
+            SELECT vp.perfume_id, oa.tienda_id, oa.url_producto, 
+                   CAST(ROUND(COALESCE(vp.volumen_ml, 100)) AS INTEGER) as vol_ml,
+                   oa.ultima_verificacion_exitosa
+            FROM ofertas_actuales oa
+            JOIN variantes_perfume vp ON vp.id = oa.variante_id
+            WHERE oa.url_producto IS NOT NULL AND oa.estado != 'requiere_revision' AND COALESCE(vp.formato, 'regular') != 'tester';
+            """
+        )
+        for r in cursor.fetchall():
+            pid = int(r["perfume_id"])
+            k_pt = (pid, int(r["tienda_id"]))
+            if k_pt not in urls_conocidas_map and str(r["url_producto"]).startswith("http"):
+                urls_conocidas_map[k_pt] = (str(r["url_producto"]), int(r["vol_ml"] or 100))
+            ts = r["ultima_verificacion_exitosa"] if isinstance(r, dict) else r.get("ultima_verificacion_exitosa")
+            if ts:
+                if pid not in perfume_last_verified or ts > perfume_last_verified[pid]:
+                    perfume_last_verified[pid] = ts
+        conn.close()
+        logger.info(f"Catálogo cargado desde SQLite local: {len(perfumes_db)} perfumes, {len(tiendas_db)} tiendas.")
+
+    # Priorización inteligente mediante cola LRU:
+    # 1. Perfumes sin verificación previa o nuevos (False, "")
+    # 2. Perfumes con auditoría más lejana en el tiempo (True, "2026-10-14...")
+    # 3. Perfumes auditados recientemente quedan al final de la cola (True, "2026-10-28...")
+    perfumes_db.sort(
+        key=lambda p: (
+            perfume_last_verified.get(p["id"]) is not None,
+            perfume_last_verified.get(p["id"]) or "",
+        )
+    )
+
+    limit_env = os.environ.get("SCRAPER_LIMIT_PERFUMES")
+    if limit_env and limit_env.isdigit():
+        max_p = int(limit_env)
+        perfumes_db = perfumes_db[:max_p]
+        logger.info(f"Modo de prueba activo (SCRAPER_LIMIT_PERFUMES={max_p}): auditando {len(perfumes_db)} perfumes.")
+
+    total_perfumes = len(perfumes_db)
+    max_posibles_rotaciones = max(1, math.ceil(total_perfumes / effective_batch_size))
+    if rot_cfg <= 0:
+        num_rotaciones = max_posibles_rotaciones
+    else:
+        num_rotaciones = min(rot_cfg, max_posibles_rotaciones)
+
+    logger.info(
+        f"Planificando ejecución ETL por rotaciones: {total_perfumes} perfumes totales, "
+        f"{num_rotaciones} rotación(es) planificada(s) de hasta {effective_batch_size} perfumes c/u "
+        f"(cooldown entre rotaciones: {delay_cfg}s)."
+    )
+
+    consolidado_reportes: List[Dict[str, Any]] = []
+    total_actualizaciones = 0
+    total_ofertas_nuevas = 0
+    total_cambios_precio = 0
+    total_cambios_stock = 0
+    total_cambios_url = 0
+    total_bloqueos_waf = 0
+    total_exclusiones = 0
+    total_errores: List[str] = []
+    muestras_consolidadas: List[Dict[str, Any]] = []
+    reporte_resultado: Dict[str, Any] = {}
+
+    for rot_idx in range(1, num_rotaciones + 1):
+        idx_start = (rot_idx - 1) * effective_batch_size
+        idx_end = min(idx_start + effective_batch_size, total_perfumes)
+        lote = perfumes_db[idx_start:idx_end]
+
+        sep_line = "=" * 70
+        logger.info(
+            f"\n{sep_line}\n"
+            f"INICIANDO ROTACIÓN {rot_idx}/{num_rotaciones} "
+            f"({len(lote)} perfumes: rango [{idx_start}:{idx_end}] de {total_perfumes})\n"
+            f"{sep_line}"
+        )
+
+        rep_lote = auditar_lote_perfumes(
+            perfumes_lote=lote,
+            tiendas_db=tiendas_db,
+            urls_conocidas_map=urls_conocidas_map,
+            session=session,
+            rotacion_idx=rot_idx,
+            total_rotaciones=num_rotaciones,
+            total_catalogo=total_perfumes,
+        )
+
+        consolidado_reportes.append(rep_lote)
+        m_lote = rep_lote["metricas"]
+        total_actualizaciones += m_lote["precios_actualizados"]
+        total_ofertas_nuevas += m_lote["ofertas_nuevas"]
+        total_cambios_precio += m_lote["cambios_precio"]
+        total_cambios_stock += m_lote["cambios_stock"]
+        total_cambios_url += m_lote["cambios_url"]
+        total_bloqueos_waf += m_lote["bloqueos_waf"]
+        total_exclusiones += m_lote.get("exclusiones_marca", 0)
+        total_errores.extend(rep_lote.get("errores", []))
+        muestras_consolidadas.extend(rep_lote.get("muestra_capturas", []))
+
+        duracion_parcial = round(time.time() - inicio_global, 2)
+        estado_global = "EXITOSO" if not total_errores else ("DEGRADADO" if total_actualizaciones > 0 else "FALLIDO")
+
+        # Guardar reporte consolidado intermedio de auditoría tras cada rotación
+        reporte_resultado = {
+            "actualizaciones": total_actualizaciones,
+            "fecha": ahora_global,
+            "duracion_segundos": duracion_parcial,
+            "metadata": {
+                "version_etl": "3.3.0",
+                "sistema": "PerfumeTrending Professional Anti-Bot ETL (Multi-Rotation LRU)",
+                "fecha_ejecucion": ahora_global,
+                "duracion_segundos": duracion_parcial,
+                "estado": estado_global,
+                "rotaciones_completadas": rot_idx,
+                "total_rotaciones_planificadas": num_rotaciones,
+                "tamano_lote": effective_batch_size,
+            },
+            "metricas": {
+                "total_perfumes_catalogo": total_perfumes,
+                "perfumes_auditados": idx_end,
+                "total_tiendas_registradas": len(tiendas_db),
+                "precios_actualizados": total_actualizaciones,
+                "ofertas_nuevas": total_ofertas_nuevas,
+                "cambios_precio": total_cambios_precio,
+                "cambios_stock": total_cambios_stock,
+                "cambios_url": total_cambios_url,
+                "bloqueos_waf": total_bloqueos_waf,
+                "exclusiones_marca": total_exclusiones,
+                "errores_totales": len(total_errores),
+            },
+            "estadisticas_tiendas": _combinar_tiendas_stats(
+                [r["estadisticas_tiendas"] for r in consolidado_reportes], tiendas_db
+            ),
+            "muestra_capturas": muestras_consolidadas[:25],
+            "rotaciones_detalle": [
+                {
+                    "rotacion": r["metadata"].get("rotacion_idx", i + 1),
+                    "scraping_run_id": r["metadata"].get("scraping_run_id"),
+                    "perfumes": r["metricas"]["perfumes_auditados"],
+                    "actualizaciones": r["metricas"]["precios_actualizados"],
+                    "duracion_segundos": r["duracion_segundos"],
+                    "estado": r["metadata"]["estado"],
+                }
+                for i, r in enumerate(consolidado_reportes)
+            ],
+            "errores": total_errores[:20],
+        }
+        guardar_reporte_auditoria(reporte_resultado)
+
+        logger.info(
+            f"=== ROTACIÓN {rot_idx}/{num_rotaciones} COMPLETADA "
+            f"({m_lote['precios_actualizados']} precios actualizados en {rep_lote['duracion_segundos']}s) ==="
+        )
+
+        if rot_idx < num_rotaciones:
+            logger.info(f"Cooldown de {delay_cfg}s antes de iniciar la rotación {rot_idx + 1}/{num_rotaciones}...")
+            time.sleep(delay_cfg)
+
+    duracion_final = round(time.time() - inicio_global, 2)
+    sep_line = "=" * 70
+    logger.info(
+        f"\n{sep_line}\n"
+        f"CICLO ETL COMPLETO: {num_rotaciones} rotación(es) en {duracion_final}s | "
+        f"{total_actualizaciones} precios sincronizados | Estado: {reporte_resultado.get('metadata', {}).get('estado', 'EXITOSO')}\n"
+        f"{sep_line}"
+    )
+    return reporte_resultado
 
 
 if __name__ == "__main__":
-    resultado = ejecutar_ciclo_scraping_y_descubrimiento()
-    print("\n" + "=" * 60)
-    print("RESUMEN DE EJECUCIÓN ETL DE SCRAPING:")
-    print(f"Estado: {resultado['metadata']['estado']}")
-    print(f"Precios actualizados: {resultado['metricas']['precios_actualizados']}")
-    print(f"Duración: {resultado['metadata']['duracion_segundos']}s")
-    print("=" * 60)
+    parser = argparse.ArgumentParser(
+        description="PerfumeTrending.cl — Motor de Scraping Periódico por Rotaciones LRU"
+    )
+    parser.add_argument(
+        "--batch-size",
+        type=int,
+        default=int(os.environ.get("SCRAPER_BATCH_SIZE", 500)),
+        help="Cantidad de perfumes por rotación (lote). Por defecto 500.",
+    )
+    parser.add_argument(
+        "--rotations",
+        type=int,
+        default=int(os.environ.get("SCRAPER_ROTATIONS", 0)),
+        help="Número de rotaciones a ejecutar (0 = todas las necesarias para cubrir el catálogo).",
+    )
+    parser.add_argument(
+        "--delay",
+        type=int,
+        default=int(os.environ.get("SCRAPER_DELAY_ROTATIONS", 10)),
+        help="Segundos de cooldown entre rotaciones consecutivas. Por defecto 10s.",
+    )
+    args = parser.parse_args()
+
+    resultado = ejecutar_ciclo_scraping_y_descubrimiento(
+        batch_size=args.batch_size,
+        rotations=args.rotations,
+        delay_between_rotations=args.delay,
+    )
+    sep_box = "=" * 60
+    print("\n" + sep_box)
+    print("RESUMEN DE EJECUCIÓN ETL DE SCRAPING (ROTACIONES LRU):")
+    print(f"Estado General: {resultado.get('metadata', {}).get('estado', 'EXITOSO')}")
+    print(f"Rotaciones ejecutadas: {resultado.get('metadata', {}).get('rotaciones_completadas', 1)} / {resultado.get('metadata', {}).get('total_rotaciones_planificadas', 1)}")
+    print(f"Perfumes auditados: {resultado.get('metricas', {}).get('perfumes_auditados', 0)} / {resultado.get('metricas', {}).get('total_perfumes_catalogo', 0)}")
+    print(f"Precios actualizados: {resultado.get('metricas', {}).get('precios_actualizados', 0)}")
+    print(f"Ofertas nuevas: {resultado.get('metricas', {}).get('ofertas_nuevas', 0)}")
+    print(f"Duración total: {resultado.get('metadata', {}).get('duracion_segundos', 0)}s")
+    print(sep_box)
