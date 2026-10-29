@@ -95,114 +95,167 @@ user_icon_svg = pal.user_icon_svg
 settings_icon_svg = pal.settings_icon_svg
 logout_icon_svg = pal.logout_icon_svg
 
-# 2. CSS ADAPTABLE Y ESTILOS DE LA PÁGINA
+# Paleta clara reforzada: fondo blanco y texto oscuro legible en todos los componentes.
+# El modo oscuro conserva exactamente los valores de la paleta compartida.
+if not is_dark:
+    app_bg = "#ffffff"
+    app_bg_css = "background: #ffffff !important; background-color: #ffffff !important;"
+    card_bg = "#ffffff"
+    border_color = "#e6e1db"
+    text_color = "#1c1917"
+    subtext_color = "#6b6159"
+    btn_bg = "#ffffff"
+    btn_text = "#1c1917"
+    btn_border = "#d6cec5"
+    input_bg = "#ffffff"
+    input_text = "#1c1917"
+    input_border = "#d6cec5"
+
+# Tokens visuales compartidos con el resto del sitio
+accent = "#d83737"
+accent_hover = "#b92d2d"
+accent_soft = "rgba(216, 55, 55, 0.14)" if is_dark else "rgba(216, 55, 55, 0.07)"
+gold = "#d4c2a5" if is_dark else "#8c7b6d"
+gold_soft = "rgba(212, 194, 165, 0.16)" if is_dark else "rgba(140, 123, 109, 0.14)"
+ok_green = "#4ade80" if is_dark else "#15803d"
+risk_red = "#f87171" if is_dark else "#dc2626"
+surface_soft = "rgba(255, 255, 255, 0.035)" if is_dark else "#faf8f5"
+img_stage_bg = "radial-gradient(circle at 50% 45%, #1d222c 0%, #11141a 100%)" if is_dark else "radial-gradient(circle at 50% 45%, #ffffff 0%, #f6f4f1 100%)"
+shadow_sm = "0 1px 2px rgba(0,0,0,0.35)" if is_dark else "0 1px 2px rgba(40,30,20,0.06)"
+shadow_hover = "0 6px 16px rgba(0,0,0,0.35)" if is_dark else "0 6px 16px rgba(60,45,35,0.10)"
+font_sans = "'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+
+_search_svg = (
+    f'<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" '
+    f'stroke="{subtext_color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
+    f'<circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.2" y2="16.2"/></svg>'
+)
+search_icon_svg = "data:image/svg+xml;base64," + base64.b64encode(_search_svg.encode("utf-8")).decode("ascii")
+
+# 2. CSS ADAPTABLE Y ESTILOS DE LA PÁGINA (MISMO SISTEMA VISUAL QUE EL RESTO DEL SITIO)
 st.markdown(f"""
     <style>
-    header[data-testid="stHeader"] {{ display: none !important; }}
-    
-    .block-container {{ 
-        padding-top: 1.2rem !important; 
-        padding-bottom: 2rem !important; 
-        max-width: 1200px !important;
-    }}
-    
-    .stApp {{ {app_bg_css} color: {text_color} !important; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }}
+    @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap');
 
-    .stApp p, .stApp span, .stApp label, .stMarkdown p {{
+    header[data-testid="stHeader"] {{ display: none !important; }}
+    div[data-testid="stAppViewContainer"] {{ padding-top: 0px !important; }}
+
+    html, body {{ background-color: {app_bg} !important; }}
+    .stApp {{
+        {app_bg_css}
+        color: {text_color} !important;
+        font-family: {font_sans};
+        color-scheme: {"dark" if is_dark else "light"};
+    }}
+    [data-testid="stMain"],
+    [data-testid="stMainBlockContainer"],
+    [data-testid="stBottom"] > div {{
+        background: transparent !important;
+        background-color: transparent !important;
+    }}
+
+    .block-container {{
+        padding-top: 1.4rem !important;
+        padding-bottom: 2rem !important;
+        max-width: 1180px !important;
+        zoom: 0.92;
+    }}
+
+    .stApp p, .stApp label, .stApp li, .stApp input, .stApp textarea, .stApp button,
+    div[data-testid="stPopoverBody"] p {{
+        font-family: {font_sans} !important;
+    }}
+
+    .stApp p, .stApp span:not([class*="pt-"]), .stApp label, .stMarkdown p {{
         color: {text_color} !important;
         text-shadow: none !important;
     }}
 
-    /* BOTONES GENERALES SOBRIOS (IGUAL A APP.PY) */
+    /* Textos nativos y modales (login) */
+    .stApp h1, .stApp h2, .stApp h3, .stApp strong, .stApp b,
+    [data-testid="stWidgetLabel"] p,
+    button[data-baseweb="tab"] p {{
+        color: {text_color} !important;
+    }}
+    [data-testid="stCaptionContainer"], [data-testid="stCaptionContainer"] p {{ color: {subtext_color} !important; }}
+    button[data-baseweb="tab"] {{ background: transparent !important; }}
+    div[data-baseweb="tab-highlight"] {{ background-color: {accent} !important; }}
+    div[role="dialog"] {{
+        background-color: {card_bg} !important;
+        color: {text_color} !important;
+        border: 1px solid {border_color} !important;
+        border-radius: 16px !important;
+    }}
+    div[role="dialog"] h2, div[role="dialog"] h2 *, div[role="dialog"] p, div[role="dialog"] label {{
+        color: {text_color} !important;
+    }}
+    div[role="dialog"] button[aria-label="Close"] svg {{ color: {text_color} !important; fill: {text_color} !important; }}
+
+    /* Campos de texto (modal de ingreso), versiones antiguas y nuevas de Streamlit */
+    div[data-baseweb="input"],
+    [data-testid="stTextInputRootElement"] {{
+        background-color: {input_bg} !important;
+        border: 1px solid {input_border} !important;
+        border-radius: 10px !important;
+        box-shadow: none !important;
+    }}
+    div[data-baseweb="base-input"] {{ background-color: transparent !important; border: none !important; }}
+    div[data-baseweb="input"] input,
+    [data-testid="stTextInputRootElement"] input {{
+        background-color: transparent !important;
+        color: {input_text} !important;
+    }}
+    div[data-baseweb="input"]:focus-within,
+    [data-testid="stTextInputRootElement"]:focus-within {{
+        border-color: {gold} !important;
+        box-shadow: 0 0 0 3px {gold_soft} !important;
+    }}
+    input::placeholder {{ color: {subtext_color} !important; opacity: 1 !important; }}
+
+    /* ---------- BOTONES BASE ---------- */
     div.stButton > button {{
         background-color: {btn_bg} !important;
         border: 1px solid {btn_border} !important;
         color: {btn_text} !important;
-        border-radius: 8px !important;
-        transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.15s ease, border-color 0.15s ease !important;
+        border-radius: 10px !important;
+        min-height: 42px;
+        box-shadow: {shadow_sm} !important;
+        transition: background-color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease !important;
         outline: none !important;
     }}
 
     div.stButton > button p {{
         color: {btn_text} !important;
         font-weight: 600 !important;
+        font-size: 0.92rem !important;
     }}
 
-    /* BOTONES DE ACCIÓN ROJOS EXCLUSIVOS PARA LAS TARJETAS DE REMATES */
-    div[data-testid="stElementContainer"] div.stButton button[key*="btn_remate_"],
-    div.stButton > button[key*="btn_remate_"] {{
-        background-color: #d83737 !important;
-        color: #ffffff !important;
-        border: 1px solid #d83737 !important;
-        border-radius: 8px !important;
-        font-weight: 700 !important;
-        font-size: 0.9rem !important;
-        box-shadow: 0 4px 12px rgba(216, 55, 55, 0.25) !important;
-        transition: transform 0.25s ease, background-color 0.2s ease, box-shadow 0.25s ease !important;
+    div.stButton > button:hover {{
+        border-color: {gold} !important;
+        box-shadow: {shadow_hover} !important;
     }}
 
-    div[data-testid="stElementContainer"] div.stButton button[key*="btn_remate_"] p,
-    div.stButton > button[key*="btn_remate_"] p {{
-        color: #ffffff !important;
-        font-weight: 700 !important;
+    div.stButton > button:focus-visible,
+    a[data-testid="stPageLink-NavLink"]:focus-visible {{
+        outline: 2px solid {accent} !important;
+        outline-offset: 2px !important;
     }}
 
-    div[data-testid="stElementContainer"] div.stButton button[key*="btn_remate_"]:hover,
-    div.stButton > button[key*="btn_remate_"]:hover {{
-        background-color: #be2e2e !important;
-        border-color: #be2e2e !important;
-        color: #ffffff !important;
-        transform: scale(1.03) translateY(-2px) !important;
-        box-shadow: 0 6px 16px rgba(216, 55, 55, 0.38) !important;
-    }}
-
-    /* BOTÓN INGRESAR Y CABECERA */
-    .st-key-login_btn, .st-key-theme_toggle {{
-        display: flex !important;
-        align-items: center !important;
-        height: 100% !important;
-    }}
-
-    .st-key-login_btn button {{
-        background-color: {btn_bg} !important;
-        color: {btn_text} !important;
-        border: 1px solid {btn_border} !important;
-        border-radius: 8px !important;
-        height: 44px !important;
-        min-height: 44px !important;
-        padding: 0 0.8rem 0 2.2rem !important;
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        background-image: url("{user_icon_svg}") !important;
-        background-repeat: no-repeat !important;
-        background-position: 10px center !important;
-        background-size: 18px 18px !important;
-        font-size: 0.95rem !important;
-        margin: 0 !important;
-        white-space: nowrap !important;
-    }}
-
-    .st-key-login_btn button p {{
-        font-size: 0.95rem !important;
-        line-height: 1 !important;
-        margin: 0 !important;
-        color: {btn_text} !important;
-        font-weight: 600 !important;
-        white-space: nowrap !important;
-    }}
-
-    /* ESTILO PARA BOTÓN POPOVER Y DESPLEGABLE DE PERFIL */
-    div[data-testid="stPopover"],
-    div[data-testid="stPopover"] > button,
+    /* ---------- POPOVERS (perfil y filtro de período) ---------- */
     button[data-testid="stPopoverButton"],
-    div[data-testid="stPopover"] button {{
+    div[data-testid="stPopover"] > button {{
         background-color: {btn_bg} !important;
         color: {btn_text} !important;
         border: 1px solid {btn_border} !important;
-        border-radius: 8px !important;
-        min-height: 44px !important;
-        transition: transform 0.22s ease, background-color 0.15s ease !important;
+        border-radius: 999px !important;
+        min-height: 38px !important;
+        box-shadow: {shadow_sm} !important;
+        transition: border-color 0.18s ease, box-shadow 0.18s ease !important;
+    }}
+    button[data-testid="stPopoverButton"]:hover,
+    div[data-testid="stPopover"] > button:hover {{
+        border-color: {gold} !important;
+        box-shadow: {shadow_hover} !important;
     }}
 
     div[data-testid="stPopover"] button p,
@@ -218,49 +271,111 @@ st.markdown(f"""
     div[data-testid="stPopoverContent"] {{
         background-color: {input_bg} !important;
         border: 1px solid {btn_border} !important;
-        border-radius: 8px !important;
+        border-radius: 14px !important;
         color: {text_color} !important;
+        box-shadow: {shadow_hover} !important;
     }}
 
-    .user-popover-container div[data-testid="stPopover"],
-    .user-popover-container div[data-testid="stPopover"] > button,
-    .user-popover-container button[data-testid="stPopoverButton"] {{
-        padding-left: 2.3rem !important;
+    /* Popover de usuario con icono */
+    div[data-testid="stColumn"]:has(.user-popover-container) button[data-testid="stPopoverButton"] {{
+        padding-left: 2.4rem !important;
         background-image: url("{user_icon_svg}") !important;
         background-repeat: no-repeat !important;
-        background-position: 12px center !important;
-        background-size: 18px 18px !important;
+        background-position: 14px center !important;
+        background-size: 17px 17px !important;
     }}
 
-    /* BOTONES DENTRO DEL POPOVER DE PERFIL */
-    .st-key-btn_go_profile button {{
-        background-color: {btn_bg} !important;
-        border: 1px solid {btn_border} !important;
-        color: {btn_text} !important;
-        padding-left: 2.5rem !important;
-        background-image: url("{settings_icon_svg}") !important;
+    /* Mi Perfil / Cerrar sesión */
+    div.st-key-btn_go_profile div.stButton > button,
+    div.st-key-btn_logout div.stButton > button {{
+        justify-content: flex-start !important;
+        padding-left: 2.6rem !important;
         background-repeat: no-repeat !important;
         background-position: 14px center !important;
-        background-size: 18px 18px !important;
+        background-size: 17px 17px !important;
+        box-shadow: none !important;
+    }}
+    div.st-key-btn_go_profile div.stButton > button {{ background-image: url("{settings_icon_svg}") !important; }}
+    div.st-key-btn_logout div.stButton > button {{ background-image: url("{logout_icon_svg}") !important; }}
+
+    /* ---------- BOTÓN INGRESAR Y CABECERA ---------- */
+    .st-key-login_btn, .st-key-theme_toggle {{
+        display: flex !important;
+        align-items: center !important;
+        height: 100% !important;
     }}
 
-    .st-key-btn_go_profile button p {{
-        color: {btn_text} !important;
+    .st-key-login_btn,
+    .st-key-login_btn div[data-testid="stButton"] {{
+        justify-content: flex-end !important;
+        width: 100% !important;
+        display: flex !important;
     }}
 
-    .st-key-btn_logout button {{
+    div.st-key-login_btn div.stButton > button {{
         background-color: {btn_bg} !important;
-        border: 1px solid {btn_border} !important;
         color: {btn_text} !important;
-        padding-left: 2.5rem !important;
-        background-image: url("{logout_icon_svg}") !important;
+        border: 1px solid {btn_border} !important;
+        border-radius: 999px !important;
+        width: auto !important;
+        min-width: max-content !important;
+        height: auto !important;
+        min-height: 38px !important;
+        padding: 6px 18px 6px 38px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        overflow: visible !important;
+        background-image: url("{user_icon_svg}") !important;
         background-repeat: no-repeat !important;
         background-position: 14px center !important;
-        background-size: 18px 18px !important;
+        background-size: 16px 16px !important;
+        box-shadow: {shadow_sm} !important;
+        margin: 0 !important;
+        white-space: nowrap !important;
+    }}
+    div.st-key-login_btn div.stButton > button > div,
+    div.st-key-login_btn div.stButton > button div[data-testid="stMarkdownContainer"] {{
+        overflow: visible !important;
+        width: auto !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        display: block !important;
+    }}
+    div.st-key-login_btn div.stButton > button p {{
+        font-size: 0.92rem !important;
+        line-height: 1.35 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        color: {btn_text} !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.2px !important;
+        white-space: nowrap !important;
+        overflow: visible !important;
+        text-overflow: clip !important;
+    }}
+    div[data-testid="stColumn"]:has(.user-popover-container) button[data-testid="stPopoverButton"] {{
+        min-height: 38px !important;
+        height: auto !important;
     }}
 
-    .st-key-btn_logout button p {{
-        color: {btn_text} !important;
+    /* El switch conserva exactamente el comportamiento visual que tenía en esta página */
+    div.st-key-theme_toggle div.stButton > button {{
+        background-color: {btn_bg} !important;
+        border: 1px solid {btn_border} !important;
+        border-radius: 8px !important;
+        box-shadow: none !important;
+        outline: none !important;
+        transform: none !important;
+    }}
+    div.st-key-theme_toggle div.stButton > button:hover,
+    div.st-key-theme_toggle div.stButton > button:focus,
+    div.st-key-theme_toggle div.stButton > button:focus-visible {{
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        outline: none !important;
+        transform: none !important;
     }}
 
     /* SWITCH DE TEMA BOTELLA */
@@ -307,15 +422,15 @@ st.markdown(f"""
         z-index: 2 !important;
     }}
 
-    /* CHIPS DE NAVEGACIÓN Y PAGE LINKS CON DIBUJOS ROJOS */
+    /* ---------- ACCESOS RÁPIDOS (CHIPS) ---------- */
     a[data-testid="stPageLink-NavLink"] {{
-        background-color: {btn_bg} !important;
+        background-color: transparent !important;
         border: 1px solid {btn_border} !important;
-        border-radius: 20px !important;
-        padding: 0.45rem 1rem !important;
+        border-radius: 999px !important;
+        padding: 0.45rem 1.1rem !important;
         box-shadow: none !important;
         width: 100% !important;
-        min-height: 0px !important;
+        min-height: 40px !important;
         height: auto !important;
         filter: none !important;
         text-decoration: none !important;
@@ -323,195 +438,56 @@ st.markdown(f"""
         align-items: center !important;
         justify-content: center !important;
         box-sizing: border-box !important;
+        transition: background-color 0.18s ease, border-color 0.18s ease !important;
     }}
-    
+    a[data-testid="stPageLink-NavLink"]:hover {{
+        background-color: {btn_bg} !important;
+        border-color: {gold} !important;
+    }}
     a[data-testid="stPageLink-NavLink"] p,
     a[data-testid="stPageLink-NavLink"] span {{
-        font-size: 0.85rem !important;
+        font-size: 0.87rem !important;
         font-weight: 600 !important;
         color: {btn_text} !important;
-        letter-spacing: 0.2px;
         white-space: nowrap !important;
         text-overflow: clip !important;
         overflow: visible !important;
         margin: 0 !important;
     }}
-
     a[data-testid="stPageLink-NavLink"][href*="trendhype"],
     a[data-testid="stPageLink-NavLink"][href*="trustpage"],
     a[data-testid="stPageLink-NavLink"][href*="compararprecios"],
-    a[data-testid="stPageLink-NavLink"][href*="remates"],
     a[data-testid="stPageLink-NavLink"][href$="app.py"],
     a[data-testid="stPageLink-NavLink"][href="/"] {{
         position: relative !important;
-        padding-left: 2.7rem !important;
+        padding-left: 2.6rem !important;
         padding-right: 1.1rem !important;
         overflow: hidden !important;
     }}
-
-    a[data-testid="stPageLink-NavLink"][href*="trendhype"]::before {{
-        content: '' !important; position: absolute !important; left: 14px !important; top: 50% !important;
-        transform: translateY(-50%) !important; width: 17px !important; height: 17px !important;
-        background-image: url("{trend_red_svg}") !important; background-repeat: no-repeat !important;
-        background-size: contain !important; background-position: center !important; z-index: 1 !important;
-    }}
-
-    a[data-testid="stPageLink-NavLink"][href*="trustpage"]::before {{
-        content: '' !important; position: absolute !important; left: 14px !important; top: 50% !important;
-        transform: translateY(-50%) !important; width: 17px !important; height: 17px !important;
-        background-image: url("{shield_red_svg}") !important; background-repeat: no-repeat !important;
-        background-size: contain !important; background-position: center !important; z-index: 1 !important;
-    }}
-
-    a[data-testid="stPageLink-NavLink"][href*="compararprecios"]::before {{
-        content: '' !important; position: absolute !important; left: 14px !important; top: 50% !important;
-        transform: translateY(-50%) !important; width: 17px !important; height: 17px !important;
-        background-image: url("{tag_red_svg}") !important; background-repeat: no-repeat !important;
-        background-size: contain !important; background-position: center !important; z-index: 1 !important;
-    }}
-
-    a[data-testid="stPageLink-NavLink"][href*="remates"]::before {{
-        content: '' !important; position: absolute !important; left: 14px !important; top: 50% !important;
-        transform: translateY(-50%) !important; width: 17px !important; height: 17px !important;
-        background-image: url("{flame_red_svg}") !important; background-repeat: no-repeat !important;
-        background-size: contain !important; background-position: center !important; z-index: 1 !important;
-    }}
-
+    a[data-testid="stPageLink-NavLink"][href*="trendhype"]::before,
+    a[data-testid="stPageLink-NavLink"][href*="trustpage"]::before,
+    a[data-testid="stPageLink-NavLink"][href*="compararprecios"]::before,
     a[data-testid="stPageLink-NavLink"][href$="app.py"]::before,
     a[data-testid="stPageLink-NavLink"][href="/"]::before {{
-        content: '' !important; position: absolute !important; left: 14px !important; top: 50% !important;
-        transform: translateY(-50%) !important; width: 17px !important; height: 17px !important;
-        background-image: url("{home_red_svg}") !important; background-repeat: no-repeat !important;
-        background-size: contain !important; background-position: center !important; z-index: 1 !important;
+        content: '' !important;
+        position: absolute !important;
+        left: 15px !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        width: 16px !important;
+        height: 16px !important;
+        background-repeat: no-repeat !important;
+        background-size: contain !important;
+        background-position: center !important;
+        z-index: 1 !important;
     }}
+    a[data-testid="stPageLink-NavLink"][href*="trendhype"]::before {{ background-image: url("{trend_red_svg}") !important; }}
+    a[data-testid="stPageLink-NavLink"][href*="trustpage"]::before {{ background-image: url("{shield_red_svg}") !important; }}
+    a[data-testid="stPageLink-NavLink"][href*="compararprecios"]::before {{ background-image: url("{tag_red_svg}") !important; }}
+    a[data-testid="stPageLink-NavLink"][href$="app.py"]::before,
+    a[data-testid="stPageLink-NavLink"][href="/"]::before {{ background-image: url("{home_red_svg}") !important; }}
 
-    /* TARJETAS DEDICADAS DE REMATE */
-    .remate-card {{
-        background-color: {card_bg};
-        border: 2px solid {border_color};
-        border-radius: 14px;
-        padding: 16px;
-        position: relative;
-        margin-bottom: 20px;
-        box-shadow: 0 4px 14px rgba(0,0,0,0.12);
-        transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), border-color 0.3s ease, box-shadow 0.3s ease;
-    }}
-
-    .remate-card:hover {{
-        transform: translateY(-6px);
-        border-color: #d83737;
-        box-shadow: 0 12px 24px rgba(216, 55, 55, 0.22);
-    }}
-
-    .badge-discount {{
-        position: absolute;
-        top: 12px;
-        left: 12px;
-        background: linear-gradient(135deg, #d83737 0%, #a81722 100%);
-        color: #ffffff;
-        font-weight: 900;
-        font-size: 0.85rem;
-        padding: 4px 10px;
-        border-radius: 6px;
-        letter-spacing: 0.5px;
-        box-shadow: 0 2px 6px rgba(216, 55, 55, 0.4);
-        z-index: 2;
-    }}
-
-    .badge-timer {{
-        position: absolute;
-        top: 12px;
-        right: 12px;
-        background-color: {app_bg};
-        border: 1px solid {border_color};
-        color: #eab308;
-        font-weight: 700;
-        font-size: 0.78rem;
-        padding: 3px 8px;
-        border-radius: 6px;
-        display: flex;
-        align-items: center;
-        gap: 4px;
-        z-index: 2;
-    }}
-
-    .remate-img-box {{
-        width: 100%;
-        height: 150px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-top: 24px;
-        margin-bottom: 12px;
-    }}
-
-    .remate-img-box img {{
-        max-height: 100%;
-        max-width: 100%;
-        object-fit: contain;
-        transition: transform 0.3s ease;
-    }}
-
-    .remate-card:hover .remate-img-box img {{
-        transform: scale(1.08);
-    }}
-
-    .remate-title {{
-        font-size: 1.05rem;
-        font-weight: 700;
-        color: {text_color};
-        margin-bottom: 4px;
-        text-align: center;
-    }}
-
-    .remate-brand {{
-        font-size: 0.8rem;
-        color: {subtext_color};
-        text-transform: uppercase;
-        letter-spacing: 0.8px;
-        text-align: center;
-        margin-bottom: 12px;
-    }}
-
-    .remate-store-row {{
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        background-color: {app_bg};
-        padding: 8px 12px;
-        border-radius: 8px;
-        border: 1px solid {border_color};
-        margin-bottom: 12px;
-        font-size: 0.82rem;
-    }}
-
-    .price-box {{
-        text-align: center;
-        margin-bottom: 14px;
-    }}
-
-    .old-price-line {{
-        text-decoration: line-through;
-        color: {subtext_color};
-        font-size: 0.9rem;
-        margin-right: 8px;
-    }}
-
-    .deal-price {{
-        font-size: 1.35rem;
-        font-weight: 900;
-        color: #22c55e;
-    }}
-
-    .stock-badge {{
-        font-size: 0.75rem;
-        color: #ef4444;
-        font-weight: 700;
-        text-align: center;
-        margin-bottom: 10px;
-    }}
-
-    /* BRAND LOGO INTERACTIVO NATIVO 100% LIMPIO Y TRANSPARENTE */
+    /* ---------- LOGO ---------- */
     a.brand-logo-clean,
     a.brand-logo-clean:visited,
     a.brand-logo-clean:hover,
@@ -522,7 +498,6 @@ st.markdown(f"""
         gap: 12px !important;
         text-decoration: none !important;
         background: transparent !important;
-        background-color: transparent !important;
         border: none !important;
         box-shadow: none !important;
         outline: none !important;
@@ -530,56 +505,368 @@ st.markdown(f"""
         margin: 0 !important;
         cursor: pointer !important;
         user-select: none !important;
-        transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
-    }}
-    a.brand-logo-clean:hover {{
-        transform: scale(1.02) !important;
-        background: transparent !important;
-        background-color: transparent !important;
-        border: none !important;
-        box-shadow: none !important;
     }}
     .brand-logo-text {{
-        font-size: 1.55rem !important;
+        font-family: {font_sans} !important;
+        font-size: 1.6rem !important;
         color: {text_color} !important;
-        letter-spacing: 0.3px !important;
+        letter-spacing: -0.02em !important;
         font-weight: 300 !important;
         line-height: 1 !important;
         display: inline-block !important;
-        text-decoration: none !important;
     }}
-    .brand-logo-text strong {{
-        font-weight: 700 !important;
+    .brand-logo-text strong {{ font-weight: 800 !important; color: {text_color} !important; }}
+
+    /* ---------- PIE DE PÁGINA ---------- */
+    .pt-footer {{
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 22px 0 26px 0;
+        margin-top: 40px;
+        border-top: 1px solid {btn_border};
+    }}
+    .pt-footer-mark {{ font-size: 1.1rem; font-weight: 300; color: {text_color}; }}
+    .pt-footer-mark strong {{ font-weight: 800; color: {text_color}; }}
+    .pt-footer-copy {{ font-size: 0.85rem; color: {subtext_color}; }}
+
+    a[data-testid="stPageLink-NavLink"][href*="remates"] {{
+        border-color: {accent} !important;
+        background-color: {accent_soft} !important;
+    }}
+    a[data-testid="stPageLink-NavLink"][href*="remates"] {{
+        position: relative !important;
+        padding-left: 2.6rem !important;
+        padding-right: 1.1rem !important;
+        overflow: hidden !important;
+    }}
+    a[data-testid="stPageLink-NavLink"][href*="remates"]::before {{
+        content: '' !important;
+        position: absolute !important;
+        left: 15px !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        width: 16px !important;
+        height: 16px !important;
+        background-image: url("{flame_red_svg}") !important;
+        background-repeat: no-repeat !important;
+        background-size: contain !important;
+        background-position: center !important;
+        z-index: 1 !important;
+    }}
+
+    /* ---------- ENCABEZADO DE SECCIÓN ---------- */
+    .pt-title {{
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-family: {font_sans};
+        font-weight: 800;
+        font-size: clamp(1.6rem, 3vw, 2.2rem);
+        letter-spacing: -0.025em;
+        line-height: 1.1;
+        color: {text_color};
+    }}
+    .pt-title-icon {{
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        background: {accent_soft};
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }}
+    .pt-lede {{
+        font-size: 0.98rem;
+        color: {subtext_color};
+        margin-top: 10px;
+        max-width: 62ch;
+        line-height: 1.55;
+    }}
+    .pt-meta {{
+        font-size: 0.9rem;
+        color: {subtext_color};
+        margin-bottom: 16px;
+    }}
+    .pt-meta b {{ color: {text_color}; font-weight: 700; }}
+
+    /* ---------- FILTROS ---------- */
+    div[data-baseweb="select"] > div,
+    [data-testid="stSelectbox"] div[role="group"] {{
+        background-color: {input_bg} !important;
+        border: 1px solid {input_border} !important;
+        border-radius: 999px !important;
+        min-height: 46px !important;
+        box-shadow: none !important;
+        color: {input_text} !important;
+        padding-left: 6px !important;
+    }}
+    div[data-baseweb="select"] > div:focus-within,
+    [data-testid="stSelectbox"] div[role="group"]:focus-within {{
+        border-color: {gold} !important;
+        box-shadow: 0 0 0 3px {gold_soft} !important;
+    }}
+    div[data-baseweb="select"] div,
+    div[data-baseweb="select"] input,
+    [data-testid="stSelectbox"] input {{
+        color: {input_text} !important;
+        background-color: transparent !important;
+    }}
+    div[data-baseweb="select"] svg,
+    [data-testid="stSelectbox"] button svg {{ color: {subtext_color} !important; fill: {subtext_color} !important; }}
+    div[data-baseweb="popover"] ul,
+    [role="listbox"] {{
+        background-color: {input_bg} !important;
+        border: 1px solid {border_color} !important;
+        border-radius: 10px !important;
+    }}
+    div[data-baseweb="popover"] li, div[data-baseweb="popover"] li *,
+    [role="listbox"] [role="option"], [role="listbox"] [role="option"] * {{ color: {input_text} !important; }}
+    div[data-baseweb="popover"] li:hover,
+    div[data-baseweb="popover"] li[aria-selected="true"],
+    [role="listbox"] [role="option"]:hover,
+    [role="listbox"] [role="option"][aria-selected="true"] {{ background-color: {gold_soft} !important; }}
+    div[data-testid="stTextInput"]:has(input[placeholder*="Filtrar"]) div[data-baseweb="input"],
+    div[data-testid="stTextInput"]:has(input[placeholder*="Filtrar"]) [data-testid="stTextInputRootElement"] {{
+        border-radius: 999px !important;
+        min-height: 46px !important;
+        padding-left: 30px !important;
+        background-image: url("{search_icon_svg}") !important;
+        background-repeat: no-repeat !important;
+        background-position: 16px center !important;
+        background-size: 17px 17px !important;
+    }}
+    div[data-testid="stAlert"] > div {{ border-radius: 12px !important; }}
+
+    /* ---------- TARJETAS DE REMATE ---------- */
+    .remate-card {{
+        background-color: {card_bg};
+        border: 1px solid {border_color};
+        border-bottom: none;
+        border-radius: 16px 16px 0 0;
+        padding: 14px 14px 18px 14px;
+        position: relative;
+        margin-bottom: 0;
+        transition: border-color 0.2s ease;
+    }}
+    div[data-testid="stColumn"]:has(.remate-card) {{ margin-bottom: 18px; }}
+    div[data-testid="stColumn"]:has(.remate-card):hover .remate-card {{ border-color: {gold}; }}
+
+    .remate-img-box {{
+        position: relative;
+        width: 100%;
+        height: 170px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+        background: {img_stage_bg};
+        margin-bottom: 14px;
+        overflow: hidden;
+    }}
+    .remate-img-box img {{
+        max-height: 140px;
+        max-width: 72%;
+        object-fit: contain;
+        transition: transform 0.35s ease;
+        filter: {"drop-shadow(0 10px 18px rgba(0,0,0,0.45))" if is_dark else "drop-shadow(0 8px 14px rgba(60,45,35,0.12))"};
+    }}
+    div[data-testid="stColumn"]:has(.remate-card):hover .remate-img-box img {{ transform: scale(1.05); }}
+
+    .badge-discount {{
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: {accent};
+        color: #ffffff;
+        font-weight: 800;
+        font-size: 0.85rem;
+        padding: 4px 11px;
+        border-radius: 999px;
+        font-variant-numeric: tabular-nums;
+        z-index: 2;
+    }}
+    .badge-timer {{
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background-color: {card_bg};
+        border: 1px solid {border_color};
+        color: {text_color};
+        font-weight: 700;
+        font-size: 0.74rem;
+        padding: 3px 10px;
+        border-radius: 999px;
+        z-index: 2;
+    }}
+
+    .remate-title {{
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: {text_color};
+        line-height: 1.3;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }}
+    .remate-brand {{
+        font-size: 0.84rem;
+        color: {subtext_color};
+        margin: 2px 0 12px 0;
+    }}
+    .remate-store-row {{
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        background-color: {surface_soft};
+        padding: 8px 12px;
+        border-radius: 10px;
+        border: 1px solid {border_color};
+        margin-bottom: 12px;
+        font-size: 0.82rem;
+        color: {subtext_color};
+    }}
+    .remate-store-row b {{ color: {text_color}; }}
+    .remate-stock {{
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: {ok_green};
+        font-weight: 700;
+        white-space: nowrap;
+    }}
+    .remate-stock-dot {{ width: 7px; height: 7px; border-radius: 50%; background: {ok_green}; }}
+
+    .price-box {{
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 8px;
+        padding-top: 10px;
+        border-top: 1px dashed {border_color};
+    }}
+    .old-price-line {{
+        text-decoration: line-through;
+        color: {subtext_color};
+        font-size: 0.86rem;
+        font-variant-numeric: tabular-nums;
+    }}
+    .deal-price {{
+        font-size: 1.3rem;
+        font-weight: 800;
+        color: {ok_green};
+        font-variant-numeric: tabular-nums;
+        letter-spacing: -0.01em;
+    }}
+    .stock-badge {{
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.8rem;
+        color: {accent};
+        font-weight: 700;
+        margin-bottom: 10px;
+        font-variant-numeric: tabular-nums;
+    }}
+    a.remate-buy-btn,
+    a.remate-buy-btn:visited {{
+        display: block;
+        margin-top: 14px;
+        text-align: center;
+        background: {accent};
+        color: #ffffff !important;
+        font-weight: 700;
+        font-size: 0.9rem;
+        padding: 11px 14px;
+        border-radius: 999px;
+        text-decoration: none !important;
+        transition: background-color 0.18s ease;
+    }}
+    a.remate-buy-btn:hover {{ background: {accent_hover}; color: #ffffff !important; }}
+    a.remate-buy-btn:focus-visible {{ outline: 2px solid {accent}; outline-offset: 2px; }}
+
+    /* Botón "Comparar en todas las tiendas" unido a la base de la tarjeta */
+    div[class*="st-key-btn_remate_comp_"] {{ margin-top: -1rem !important; }}
+    div[class*="st-key-btn_remate_comp_"] div.stButton > button {{
+        background-color: {surface_soft} !important;
+        border: 1px solid {border_color} !important;
+        border-radius: 0 0 16px 16px !important;
+        min-height: 44px !important;
+        box-shadow: none !important;
+    }}
+    div[class*="st-key-btn_remate_comp_"] div.stButton > button p {{
         color: {text_color} !important;
+        font-weight: 700 !important;
+        font-size: 0.88rem !important;
+    }}
+    div[class*="st-key-btn_remate_comp_"] div.stButton > button:hover {{
+        border-color: {gold} !important;
+        background-color: {gold_soft} !important;
+    }}
+    div[data-testid="stColumn"]:has(.remate-card):hover div[class*="st-key-btn_remate_comp_"] div.stButton > button {{
+        border-color: {gold} !important;
+    }}
+
+    /* ---------- MÓVIL ---------- */
+    @media (max-width: 768px) {{
+        .block-container {{
+            padding-top: 0.4rem !important;
+            padding-left: 0.8rem !important;
+            padding-right: 0.8rem !important;
+        }}
+        div[data-testid="stHorizontalBlock"] {{ flex-wrap: wrap !important; gap: 6px !important; }}
+        div[data-testid="stColumn"] {{ width: 100% !important; flex: 1 1 100% !important; min-width: 0 !important; }}
+        div[data-testid="stHorizontalBlock"]:has(.st-key-login_btn, .st-key-theme_toggle) {{
+            flex-wrap: nowrap !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+        }}
+        div[data-testid="stColumn"]:has(a[data-testid="stPageLink-NavLink"]) {{
+            flex: 1 1 calc(50% - 4px) !important;
+            width: calc(50% - 4px) !important;
+        }}
+        a[data-testid="stPageLink-NavLink"] {{ justify-content: flex-start !important; padding-left: 2.2rem !important; }}
+        a[data-testid="stPageLink-NavLink"] p,
+        a[data-testid="stPageLink-NavLink"] span {{ font-size: 0.8rem !important; white-space: normal !important; line-height: 1.15 !important; }}
+        a[data-testid="stPageLink-NavLink"]::before {{ left: 11px !important; }}
+        .brand-logo-text {{ font-size: 1.35rem !important; }}
+        div.st-key-login_btn div.stButton > button {{
+            min-height: 36px !important;
+            padding: 5px 14px 5px 32px !important;
+            background-position: 11px center !important;
+        }}
     }}
     </style>
 """, unsafe_allow_html=True)
+
 
 # 3. ENCABEZADO SUPERIOR: LOGO, PERFIL Y SWITCH DE TEMA
 if st.session_state['logged_in']:
     col_logo, col_espacio, col_actions = st.columns([4.0, 0.5, 4.5], vertical_alignment="center")
     btn_col1, btn_col2 = col_actions.columns([3.5, 1.0], vertical_alignment="center")
 else:
-    col_logo, col_espacio, col_actions = st.columns([5.5, 0.8, 2.7], vertical_alignment="center")
-    btn_col1, btn_col2 = col_actions.columns([1.8, 1.0], vertical_alignment="center")
+    col_logo, col_espacio, col_actions = st.columns([5.6, 1.2, 2.4], vertical_alignment="center")
+    btn_col1, btn_col2 = col_actions.columns([2.0, 0.8], vertical_alignment="center", gap="small")
 
 with col_logo:
-    st.markdown(f"""
+    st.markdown(clean_html(f"""
     <a href="/" target="_self" class="brand-logo-clean" title="PerfumeTrending">
         <svg width="34" height="34" viewBox="0 0 36 36" fill="none" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M 6.8 21 L 29.2 21 C 30 25 27 32 18 32 C 9 32 6 25 6.8 21 Z" fill="#8c7b6d" />
+            <path d="M 6.8 21 L 29.2 21 C 30 25 27 32 18 32 C 9 32 6 25 6.8 21 Z" fill="{gold}" />
             <line x1="6.8" y1="21" x2="29.2" y2="21" stroke="{text_color}" stroke-width="1.5" />
             <line x1="18" y1="10" x2="18" y2="30" stroke="{text_color}" stroke-width="1" />
             <path d="M 18 32 C 9 32 5 24 7.5 17 C 9 12 13 10 15 10 L 21 10 C 23 10 27 12 28.5 17 C 31 24 27 32 18 32 Z" stroke="{text_color}" stroke-width="2" />
             <rect x="15" y="7" width="6" height="3" stroke="{text_color}" stroke-width="1.5" />
             <rect x="13" y="3" width="10" height="4" rx="1" stroke="{text_color}" stroke-width="1.5" />
-            <rect x="16" y="0" width="4" height="3" rx="1" fill="#8c7b6d" stroke="{text_color}" stroke-width="1" />
+            <rect x="16" y="0" width="4" height="3" rx="1" fill="{gold}" stroke="{text_color}" stroke-width="1" />
         </svg>
-        <span class="brand-logo-text">
-            Perfume<strong>Trending</strong>
-        </span>
+        <span class="brand-logo-text">Perfume<strong>Trending</strong></span>
     </a>
-    """, unsafe_allow_html=True)
+    """), unsafe_allow_html=True)
 
 with btn_col1:
     if st.session_state['logged_in']:
@@ -611,7 +898,7 @@ if st.session_state.get('show_login_modal', False):
     st.session_state['show_login_modal'] = False
     modal_autenticacion()
 
-st.markdown("<div style='margin-top: 14px;'></div>", unsafe_allow_html=True)
+st.markdown("<div style='margin-top: 22px;'></div>", unsafe_allow_html=True)
 
 # 4. CHIPS DE NAVEGACIÓN RÁPIDA
 col_chip_home, col_chip1, col_chip2, col_chip3, col_chip4 = st.columns([1.6, 1.5, 2.0, 1.7, 1.6], vertical_alignment="center")
@@ -627,27 +914,27 @@ with col_chip3:
 with col_chip4:
     st.page_link("pages/remates.py", label="Remates & Flash", use_container_width=True)
 
-st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
+st.markdown("<div style='margin-top: 34px;'></div>", unsafe_allow_html=True)
 
 # 5. TITULO PRINCIPAL DE LA SECCIÓN
 col_title_text, col_title_back = st.columns([7, 3], vertical_alignment="center")
 with col_title_text:
-    st.markdown(f"""
-    <div style='display: flex; align-items: center; gap: 10px;'>
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#d83737" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
-        </svg>
-        <h1 style='color: {text_color}; font-size: 1.5rem; font-weight: 800; margin: 0; letter-spacing: 0.5px;'>REMATES DE ÚLTIMO MINUTO Y LIQUIDACIONES</h1>
+    st.markdown(clean_html(f"""
+    <div class="pt-title">
+        <span class="pt-title-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="{accent}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+            </svg>
+        </span>
+        Remates y liquidaciones
     </div>
-    <div style='color: {subtext_color}; font-size: 0.9rem; margin-top: 4px;'>
-        Ofertas relámpago con stock limitado y descuentos excepcionales auditados en tiendas chilenas.
-    </div>
-    """, unsafe_allow_html=True)
+    <div class="pt-lede">Ofertas relámpago con stock limitado y descuentos excepcionales auditados en tiendas chilenas.</div>
+    """), unsafe_allow_html=True)
 
 with col_title_back:
-    st.page_link("app.py", label="← Volver al Catálogo")
+    st.page_link("app.py", label="Volver al catálogo")
 
-st.markdown("<div style='margin-top: 18px;'></div>", unsafe_allow_html=True)
+st.markdown("<div style='margin-top: 22px;'></div>", unsafe_allow_html=True)
 
 # =============================================================================
 # BLOQUE 3: FILTRADO MULTI-VARIABLE Y CONTROLES DE BÚSQUEDA
@@ -706,7 +993,7 @@ if not items_filtrados:
     st.info("No se encontraron ofertas con descuento real verificado para los filtros actuales.")
 else:
     st.markdown(
-        f"<div style='font-size: 0.88rem; color: {subtext_color}; margin-bottom: 14px;'>"
+        f"<div class='pt-meta'>"
         f"Mostrando <b>{len(items_filtrados)}</b> liquidaciones reales en stock verificadas sobre botellas selladas (&ge; 25 ml)</div>",
         unsafe_allow_html=True,
     )
@@ -740,29 +1027,34 @@ else:
                 with cols[i]:
                     html_card = f"""
                     <div class="remate-card">
-                        <div class="badge-discount">-{pct_val}% OFF</div>
-                        <div class="badge-timer">{vol_ml} ML</div>
                         <div class="remate-img-box">
+                            <div class="badge-discount">-{pct_val}%</div>
+                            <div class="badge-timer">{vol_ml} ml</div>
                             <img src="{img_safe}" alt="{nombre_safe}" loading="lazy">
                         </div>
                         <div class="remate-title" title="{nombre_safe}">{nombre_safe}</div>
                         <div class="remate-brand">{marca_safe}</div>
                         <div class="remate-store-row">
-                            <span>Vendido por: <b>{tienda_safe}</b></span>
-                            <span style="color: #4ade80; font-weight: 700;">Stock Activo</span>
+                            <div>Vendido por <b>{tienda_safe}</b></div>
+                            <div class="remate-stock"><div class="remate-stock-dot"></div>En stock</div>
                         </div>
-                        <div class="stock-badge">Ahorro real verificado: {ahorro_str} CLP</div>
+                        <div class="stock-badge">Ahorras {ahorro_str} CLP</div>
                         <div class="price-box">
-                            <span class="old-price-line">{p_norm_str} CLP</span>
-                            <span class="deal-price">{p_rem_str} CLP</span>
+                            <div class="old-price-line">{p_norm_str} CLP</div>
+                            <div class="deal-price">{p_rem_str} CLP</div>
                         </div>
-                        <a href="{safe_url}" target="_blank" rel="noopener noreferrer"
-                           style="display:block; margin-top:10px; text-align:center; background:#d83737; color:#ffffff !important; font-weight:700; font-size:0.9rem; padding:10px 14px; border-radius:8px; text-decoration:none;">
-                           Ir a la Oferta en {tienda_safe} ↗
-                        </a>
+                        <a href="{safe_url}" target="_blank" rel="noopener noreferrer" class="remate-buy-btn">Ir a la oferta en {tienda_safe} ↗</a>
                     </div>
                     """
                     st.markdown(clean_html(html_card), unsafe_allow_html=True)
                     if st.button("Comparar en todas las tiendas", key=f"btn_remate_comp_{item['perfume_id']}_{idx}", use_container_width=True):
                         st.session_state['selected_perfume'] = item['perfume_id']
                         st.switch_page("pages/compararprecios.py")
+
+# PIE DE PÁGINA
+st.markdown(clean_html("""
+    <div class="pt-footer">
+        <div class="pt-footer-mark">Perfume<strong>Trending</strong></div>
+        <div class="pt-footer-copy">© 2026 Perfume Trending. Todos los derechos reservados.</div>
+    </div>
+"""), unsafe_allow_html=True)
