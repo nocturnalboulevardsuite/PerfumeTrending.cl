@@ -71,6 +71,7 @@ try:
     from backend.database import (
         _fetch_all_rows,
         finalizar_scraping_run,
+        precargar_cache_variantes_supabase,
         guardar_o_actualizar_perfume_scraped,
         get_connection,
         iniciar_scraping_run,
@@ -98,6 +99,7 @@ except ImportError:
     from database import (
         _fetch_all_rows,
         finalizar_scraping_run,
+        precargar_cache_variantes_supabase,
         guardar_o_actualizar_perfume_scraped,
         get_connection,
         iniciar_scraping_run,
@@ -1774,6 +1776,7 @@ def ejecutar_ciclo_scraping_y_descubrimiento(
                 ),
                 page_size=1000,
             )
+            precargar_cache_variantes_supabase(variantes_rows)
             var_to_perf: Dict[int, Tuple[int, int, str]] = {}
             for vr in variantes_rows:
                 try:

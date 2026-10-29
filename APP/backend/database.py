@@ -87,6 +87,38 @@ _CATALOGO_MASTER: Optional[Tuple[float, List[Dict[str, Any]]]] = None
 CATALOGO_CACHE_TTL_SECONDS = 300.0
 
 
+# Caché en memoria para evitar consultas repetitivas N+1 a variantes_perfume en Supabase
+_CACHE_VARIANTE_SUPABASE_POR_TUPLA: Dict[Tuple[int, int, str], int] = {}
+_CACHE_VARIANTE_DEFECTO_SUPABASE: Dict[int, int] = {}
+
+
+def limpiar_cache_variantes() -> None:
+    """Invalida la caché en memoria de variantes de Supabase."""
+    _CACHE_VARIANTE_SUPABASE_POR_TUPLA.clear()
+    _CACHE_VARIANTE_DEFECTO_SUPABASE.clear()
+
+
+def precargar_cache_variantes_supabase(filas: List[Dict[str, Any]]) -> int:
+    """
+    Precarga la caché de variantes desde una lista de registros de variantes_perfume.
+    Permite reutilizar consultas ya hechas por el scraper y reduce round-trips a cero.
+    """
+    cargadas = 0
+    for vr in filas:
+        try:
+            vid = int(vr["id"])
+            pid = int(vr["perfume_id"])
+            vol = int(round(float(vr.get("volumen_ml") or 100)))
+            fmt = str(vr.get("formato") or "regular").strip().lower()
+            _CACHE_VARIANTE_SUPABASE_POR_TUPLA[(pid, vol, fmt)] = vid
+            if pid not in _CACHE_VARIANTE_DEFECTO_SUPABASE:
+                _CACHE_VARIANTE_DEFECTO_SUPABASE[pid] = vid
+            cargadas += 1
+        except Exception:
+            continue
+    return cargadas
+
+
 def limpiar_cache_catalogo() -> None:
     """Invalida la caché en memoria del catálogo tras escrituras o actualizaciones."""
     global _CATALOGO_MASTER
@@ -1645,44 +1677,54 @@ def registrar_observacion_oferta(observacion: Optional[Dict[str, Any]] = None, *
         vol_int = int(round(float(volumen_ml))) if volumen_ml else 100
 
         if not sb_variante_id and sb_perfume_id:
-            r_v = (
-                sb.table("variantes_perfume")
-                .select("id")
-                .eq("perfume_id", sb_perfume_id)
-                .eq("volumen_ml", vol_int)
-                .eq("formato", formato_raw)
-                .limit(1)
-                .execute()
-            )
-            if r_v.data:
-                sb_variante_id = r_v.data[0]["id"]
+            k_var = (int(sb_perfume_id), vol_int, str(formato_raw).strip().lower())
+            if k_var in _CACHE_VARIANTE_SUPABASE_POR_TUPLA:
+                sb_variante_id = _CACHE_VARIANTE_SUPABASE_POR_TUPLA[k_var]
             else:
-                r_p = sb.table("perfumes").select("id, tipo, nombre").eq("id", sb_perfume_id).limit(1).execute()
-                if not r_p.data:
-                    raise ValueError(f"El perfume_id {sb_perfume_id} no existe en Supabase.")
-                tipo_p = r_p.data[0].get("tipo") or "Eau de Parfum"
-                slug_v = (
-                    f"perfume-{sb_perfume_id}-{vol_int}ml"
-                    if formato_raw == "regular"
-                    else f"perfume-{sb_perfume_id}-{vol_int}ml-{formato_raw}"
+                r_v = (
+                    sb.table("variantes_perfume")
+                    .select("id")
+                    .eq("perfume_id", sb_perfume_id)
+                    .eq("volumen_ml", vol_int)
+                    .eq("formato", formato_raw)
+                    .limit(1)
+                    .execute()
                 )
-                r_ins = sb.table("variantes_perfume").upsert(
-                    {
-                        "perfume_id": sb_perfume_id,
-                        "concentracion": tipo_p,
-                        "volumen_ml": vol_int,
-                        "formato": formato_raw,
-                        "slug": slug_v,
-                        "activa": True,
-                    },
-                    on_conflict="slug",
-                ).execute()
-                if r_ins.data:
-                    sb_variante_id = r_ins.data[0]["id"]
+                if r_v.data:
+                    sb_variante_id = r_v.data[0]["id"]
+                    _CACHE_VARIANTE_SUPABASE_POR_TUPLA[k_var] = sb_variante_id
+                    _CACHE_VARIANTE_DEFECTO_SUPABASE.setdefault(int(sb_perfume_id), sb_variante_id)
                 else:
-                    r_recheck = sb.table("variantes_perfume").select("id").eq("slug", slug_v).limit(1).execute()
-                    if r_recheck.data:
-                        sb_variante_id = r_recheck.data[0]["id"]
+                    r_p = sb.table("perfumes").select("id, tipo, nombre").eq("id", sb_perfume_id).limit(1).execute()
+                    if not r_p.data:
+                        raise ValueError(f"El perfume_id {sb_perfume_id} no existe en Supabase.")
+                    tipo_p = r_p.data[0].get("tipo") or "Eau de Parfum"
+                    slug_v = (
+                        f"perfume-{sb_perfume_id}-{vol_int}ml"
+                        if formato_raw == "regular"
+                        else f"perfume-{sb_perfume_id}-{vol_int}ml-{formato_raw}"
+                    )
+                    r_ins = sb.table("variantes_perfume").upsert(
+                        {
+                            "perfume_id": sb_perfume_id,
+                            "concentracion": tipo_p,
+                            "volumen_ml": vol_int,
+                            "formato": formato_raw,
+                            "slug": slug_v,
+                            "activa": True,
+                        },
+                        on_conflict="slug",
+                    ).execute()
+                    if r_ins.data:
+                        sb_variante_id = r_ins.data[0]["id"]
+                    else:
+                        r_recheck = sb.table("variantes_perfume").select("id").eq("slug", slug_v).limit(1).execute()
+                        if r_recheck.data:
+                            sb_variante_id = r_recheck.data[0]["id"]
+
+                    if sb_variante_id:
+                        _CACHE_VARIANTE_SUPABASE_POR_TUPLA[k_var] = sb_variante_id
+                        _CACHE_VARIANTE_DEFECTO_SUPABASE.setdefault(int(sb_perfume_id), sb_variante_id)
 
         if not sb_variante_id:
             raise ValueError(f"No fue posible resolver variante_id en Supabase para perfume_id={sb_perfume_id}.")
@@ -1926,12 +1968,17 @@ def registrar_fallo_scraping(
     sb = get_supabase(use_service_role=True)
     if sb and is_supabase_disponible():
         if not variante_id and perfume_id:
-            try:
-                r_v = sb.table("variantes_perfume").select("id").eq("perfume_id", perfume_id).limit(1).execute()
-                if r_v.data:
-                    variante_id = r_v.data[0]["id"]
-            except Exception as e:
-                logger.debug(f"Error resolviendo variante en Supabase: {e}")
+            pid = int(perfume_id)
+            if pid in _CACHE_VARIANTE_DEFECTO_SUPABASE:
+                variante_id = _CACHE_VARIANTE_DEFECTO_SUPABASE[pid]
+            else:
+                try:
+                    r_v = sb.table("variantes_perfume").select("id").eq("perfume_id", pid).limit(1).execute()
+                    if r_v.data:
+                        variante_id = r_v.data[0]["id"]
+                        _CACHE_VARIANTE_DEFECTO_SUPABASE[pid] = variante_id
+                except Exception as e:
+                    logger.debug(f"Error resolviendo variante en Supabase: {e}")
 
         if not variante_id:
             return {"resultado": "fallo_sin_variante", "mensaje": msg_clean}
