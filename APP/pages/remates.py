@@ -44,10 +44,16 @@ from ui import (
     get_image_src,
     get_theme_palette,
     init_common_session_state,
-    modal_autenticacion,
     resolver_url_oferta,
     sanitize_external_url,
     toggle_theme,
+)
+from auth_email import modal_autenticacion
+from perfume_actions import (
+    boton_abrir_perfume,
+    boton_corazon,
+    estilos_tarjetas_cliqueables,
+    mostrar_aviso_favoritos,
 )
 
 
@@ -180,16 +186,16 @@ st.markdown(f"""
     [data-testid="stCaptionContainer"], [data-testid="stCaptionContainer"] p {{ color: {subtext_color} !important; }}
     button[data-baseweb="tab"] {{ background: transparent !important; }}
     div[data-baseweb="tab-highlight"] {{ background-color: {accent} !important; }}
-    div[role="dialog"] {{
+    [role="dialog"] {{
         background-color: {card_bg} !important;
         color: {text_color} !important;
         border: 1px solid {border_color} !important;
         border-radius: 16px !important;
     }}
-    div[role="dialog"] h2, div[role="dialog"] h2 *, div[role="dialog"] p, div[role="dialog"] label {{
+    [role="dialog"] h2, [role="dialog"] h2 *, [role="dialog"] p, [role="dialog"] label {{
         color: {text_color} !important;
     }}
-    div[role="dialog"] button[aria-label="Close"] svg {{ color: {text_color} !important; fill: {text_color} !important; }}
+    [role="dialog"] button[aria-label="Close"] svg {{ color: {text_color} !important; fill: {text_color} !important; }}
 
     /* Campos de texto (modal de ingreso), versiones antiguas y nuevas de Streamlit */
     div[data-baseweb="input"],
@@ -691,7 +697,7 @@ st.markdown(f"""
     }}
     .badge-timer {{
         position: absolute;
-        top: 10px;
+        bottom: 10px;
         right: 10px;
         background-color: {card_bg};
         border: 1px solid {border_color};
@@ -844,6 +850,16 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 
+# Tarjetas de perfume cliqueables y corazón de favoritos (compartido con todas las páginas)
+st.markdown(estilos_tarjetas_cliqueables(accent, card_bg, border_color, subtext_color, is_dark), unsafe_allow_html=True)
+st.markdown(f"""
+    <style>
+    div[class*="st-key-pcard_rem_"] {{ --heart-top: 22px; --heart-right: 22px; }}
+    div[class*="st-key-pcard_rem_"] div[class*="st-key-open_"] {{ bottom: 64px !important; height: auto !important; }}
+    div[class*="st-key-pcard_rem_"]:hover .remate-card {{ border-color: {gold}; }}
+    </style>
+""", unsafe_allow_html=True)
+
 # 3. ENCABEZADO SUPERIOR: LOGO, PERFIL Y SWITCH DE TEMA
 if st.session_state['logged_in']:
     col_logo, col_espacio, col_actions = st.columns([4.0, 0.5, 4.5], vertical_alignment="center")
@@ -897,6 +913,7 @@ with btn_col2:
 if st.session_state.get('show_login_modal', False):
     st.session_state['show_login_modal'] = False
     modal_autenticacion()
+mostrar_aviso_favoritos()
 
 st.markdown("<div style='margin-top: 22px;'></div>", unsafe_allow_html=True)
 
@@ -1046,7 +1063,12 @@ else:
                         <a href="{safe_url}" target="_blank" rel="noopener noreferrer" class="remate-buy-btn">Ir a la oferta en {tienda_safe} ↗</a>
                     </div>
                     """
-                    st.markdown(clean_html(html_card), unsafe_allow_html=True)
+                    # Toda la tarjeta abre el perfume (el botón "Ir a la oferta" sigue llevando a la tienda);
+                    # el corazón lo guarda en favoritos
+                    with st.container(key=f"pcard_rem_{idx}_{item['perfume_id']}"):
+                        st.markdown(clean_html(html_card), unsafe_allow_html=True)
+                        boton_abrir_perfume(item['perfume_id'], f"rem{idx}")
+                        boton_corazon(item['perfume_id'], f"rem{idx}", item.get("nombre", ""))
                     if st.button("Comparar en todas las tiendas", key=f"btn_remate_comp_{item['perfume_id']}_{idx}", use_container_width=True):
                         st.session_state['selected_perfume'] = item['perfume_id']
                         st.switch_page("pages/compararprecios.py")
