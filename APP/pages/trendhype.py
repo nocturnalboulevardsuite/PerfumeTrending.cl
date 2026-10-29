@@ -1093,8 +1093,9 @@ st.markdown(f"""
 
 # 4. ENCABEZADO SUPERIOR: LOGO, BOTÓN "INGRESAR" / PERFIL Y SWITCH DE TEMA
 if st.session_state['logged_in']:
-    col_logo, col_espacio, col_actions = st.columns([4.0, 0.5, 4.5], vertical_alignment="center")
-    btn_col1, btn_col2 = col_actions.columns([3.5, 1.0], vertical_alignment="center")
+    # Mismo tamaño del botón de usuario en todas las páginas: ni muy chico ni muy grande
+    col_logo, col_espacio, col_actions = st.columns([5.2, 0.6, 3.2], vertical_alignment="center")
+    btn_col1, btn_col2 = col_actions.columns([2.4, 0.8], vertical_alignment="center", gap="small")
 else:
     col_logo, col_espacio, col_actions = st.columns([5.6, 1.2, 2.4], vertical_alignment="center")
     btn_col1, btn_col2 = col_actions.columns([2.0, 0.8], vertical_alignment="center", gap="small")
@@ -1149,7 +1150,7 @@ mostrar_aviso_favoritos()
 st.markdown("<div style='margin-top: 22px;'></div>", unsafe_allow_html=True)
 
 # CHIPS DE NAVEGACIÓN RÁPIDA
-col_chip_home, col_chip1, col_chip2, col_chip3, col_chip_space = st.columns([1.6, 1.5, 2.0, 1.7, 2.2], vertical_alignment="center")
+col_chip_home, col_chip1, col_chip2, col_chip3, col_chip_remates = st.columns([1.6, 1.5, 2.0, 1.7, 1.8], vertical_alignment="center")
 
 with col_chip_home:
     st.page_link("app.py", label="Inicio / Catálogo", use_container_width=True)
@@ -1159,6 +1160,8 @@ with col_chip2:
     st.page_link("pages/trustpage.py", label="Páginas de Confianza", use_container_width=True)
 with col_chip3:
     st.page_link("pages/compararprecios.py", label="Comparar Precios", use_container_width=True)
+with col_chip_remates:
+    st.page_link("pages/remates.py", label="Remates & Flash", use_container_width=True)
 
 # 5. SECCIÓN DEL TÍTULO Y NAVEGACIÓN
 st.markdown("<div style='margin-top: 34px;'></div>", unsafe_allow_html=True)
