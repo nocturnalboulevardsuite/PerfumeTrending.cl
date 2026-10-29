@@ -420,64 +420,35 @@ _search_svg = (
 )
 search_icon_svg = "data:image/svg+xml;base64," + base64.b64encode(_search_svg.encode("utf-8")).decode("ascii")
 
-# Dibujos del switch de tema: frasco facetado (perilla) + sol / luna con estrellas (riel)
+# Dibujo perfeccionado del frasco del switch de tema (mismo switch, mismo riel e ícono)
 def _svg_uri(svg: str) -> str:
     return "data:image/svg+xml;base64," + base64.b64encode(svg.encode("utf-8")).decode("ascii")
 
 if is_dark:
-    _liq_a, _liq_b, _glass = "#b9a4ff", "#6d5bd0", "#eef1ff"
+    _liq_a, _liq_b, _glass_a, _glass_b, _outline = "#e6cfa6", "#a88a5f", "#f4f1ec", "#d9d3ca", "#5b4f45"
 else:
-    _liq_a, _liq_b, _glass = "#ffcf73", "#e8873a", "#ffffff"
+    _liq_a, _liq_b, _glass_a, _glass_b, _outline = "#d9bf95", "#8c7b6d", "#ffffff", "#e9e4dd", "#4a4038"
 
-switch_bottle_svg = _svg_uri(f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 34 40">
+switch_bottle_svg = _svg_uri(f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 46">
 <defs>
-<linearGradient id="cap" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f1d79a"/><stop offset="0.55" stop-color="#c9a24f"/><stop offset="1" stop-color="#8f6a26"/></linearGradient>
+<linearGradient id="cap" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f3dc9f"/><stop offset="0.5" stop-color="#c9a24f"/><stop offset="1" stop-color="#8a6524"/></linearGradient>
+<linearGradient id="glass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="{_glass_a}"/><stop offset="1" stop-color="{_glass_b}"/></linearGradient>
 <linearGradient id="liq" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="{_liq_a}"/><stop offset="1" stop-color="{_liq_b}"/></linearGradient>
-<linearGradient id="gl" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="{_glass}" stop-opacity="0.98"/><stop offset="1" stop-color="{_glass}" stop-opacity="0.82"/></linearGradient>
+<linearGradient id="shine" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ffffff" stop-opacity="0.9"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></linearGradient>
 </defs>
-<rect x="11" y="1" width="12" height="7" rx="2" fill="url(#cap)" stroke="#7a5a1f" stroke-width="0.8"/>
-<rect x="13" y="2.2" width="2" height="4.6" rx="1" fill="#fff" opacity="0.5"/>
-<rect x="14" y="8" width="6" height="3.5" fill="#d8cfc2" stroke="#9c8f7f" stroke-width="0.6"/>
-<path d="M7 11.5 H27 L31 16 V34 Q31 38.5 26.5 38.5 H7.5 Q3 38.5 3 34 V16 Z" fill="url(#gl)" stroke="#8c7b6d" stroke-width="1.1" stroke-linejoin="round"/>
-<path d="M5.2 21 Q11 19.2 17 21 T28.8 21 V33.6 Q28.8 36.4 26 36.4 H8 Q5.2 36.4 5.2 33.6 Z" fill="url(#liq)"/>
-<path d="M5.2 21 Q11 19.2 17 21 T28.8 21" fill="none" stroke="#ffffff" stroke-opacity="0.55" stroke-width="0.8"/>
-<rect x="11" y="24.5" width="12" height="7" rx="1.2" fill="#ffffff" fill-opacity="0.82" stroke="#c9a24f" stroke-width="0.6"/>
-<line x1="13.5" y1="27" x2="20.5" y2="27" stroke="#8c7b6d" stroke-width="0.9" stroke-linecap="round"/>
-<line x1="14.8" y1="29.2" x2="19.2" y2="29.2" stroke="#8c7b6d" stroke-width="0.7" stroke-linecap="round"/>
-<path d="M6.4 15.5 V31" stroke="#ffffff" stroke-width="1.6" stroke-linecap="round" opacity="0.8"/>
+<rect x="14" y="1.2" width="12" height="8.6" rx="2.2" fill="url(#cap)" stroke="{_outline}" stroke-width="0.9"/>
+<rect x="15.8" y="2.6" width="2" height="5.8" rx="1" fill="#ffffff" opacity="0.55"/>
+<line x1="14.6" y1="6.6" x2="25.4" y2="6.6" stroke="#8a6524" stroke-width="0.6" opacity="0.6"/>
+<rect x="16.6" y="9.8" width="6.8" height="3.6" fill="#cfc6ba" stroke="{_outline}" stroke-width="0.8"/>
+<path d="M9.5 13.4 H30.5 Q35.5 13.4 35.5 18.6 V38.4 Q35.5 44.4 29.5 44.4 H10.5 Q4.5 44.4 4.5 38.4 V18.6 Q4.5 13.4 9.5 13.4 Z" fill="url(#glass)" stroke="{_outline}" stroke-width="1.3"/>
+<path d="M7 24.5 Q13.5 22.6 20 24.5 T33 24.5 V38.2 Q33 41.9 29.3 41.9 H10.7 Q7 41.9 7 38.2 Z" fill="url(#liq)"/>
+<path d="M7 24.5 Q13.5 22.6 20 24.5 T33 24.5" fill="none" stroke="#ffffff" stroke-opacity="0.6" stroke-width="0.9"/>
+<rect x="12.5" y="27.6" width="15" height="8.6" rx="1.4" fill="#ffffff" fill-opacity="0.88" stroke="#c9a24f" stroke-width="0.7"/>
+<line x1="15.4" y1="30.6" x2="24.6" y2="30.6" stroke="{_outline}" stroke-width="1" stroke-linecap="round"/>
+<line x1="17" y1="33.2" x2="23" y2="33.2" stroke="{_outline}" stroke-width="0.8" stroke-linecap="round" opacity="0.7"/>
+<rect x="6.6" y="16" width="3.2" height="22" rx="1.6" fill="url(#shine)"/>
+<circle cx="31" cy="18" r="1" fill="#ffffff" opacity="0.8"/>
 </svg>""")
-
-if is_dark:
-    switch_track_icon = _svg_uri("""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 30 18">
-<path d="M10.5 2.2 A6.8 6.8 0 1 0 17 11.6 A5.4 5.4 0 1 1 10.5 2.2 Z" fill="#f6e7b4"/>
-<circle cx="21.5" cy="4" r="0.9" fill="#ffffff"/>
-<circle cx="26" cy="9" r="0.7" fill="#ffffff" opacity="0.8"/>
-<path d="M23.5 12.2 l0.6 1.4 1.4 0.6 -1.4 0.6 -0.6 1.4 -0.6 -1.4 -1.4 -0.6 1.4 -0.6 Z" fill="#ffffff" opacity="0.9"/>
-</svg>""")
-    switch_icon_pos = "left 7px center"
-    switch_icon_size = "30px 18px"
-    switch_track_gradient = "linear-gradient(135deg, #1b1f3b 0%, #2c2f63 100%)"
-    switch_track_border = "#3b3f7a"
-    switch_track_inset = "rgba(0,0,0,0.55)"
-    switch_bottle_left = "40px"
-    switch_bottle_shadow = "rgba(120,100,255,0.45)"
-    switch_tilt = "6deg"
-else:
-    switch_track_icon = _svg_uri("""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#e58a12" stroke-width="2" stroke-linecap="round">
-<circle cx="12" cy="12" r="4.2" fill="#ffbf3c" stroke="#e58a12"/>
-<line x1="12" y1="2" x2="12" y2="4.3"/><line x1="12" y1="19.7" x2="12" y2="22"/>
-<line x1="2" y1="12" x2="4.3" y2="12"/><line x1="19.7" y1="12" x2="22" y2="12"/>
-<line x1="4.9" y1="4.9" x2="6.5" y2="6.5"/><line x1="17.5" y1="17.5" x2="19.1" y2="19.1"/>
-<line x1="4.9" y1="19.1" x2="6.5" y2="17.5"/><line x1="17.5" y1="6.5" x2="19.1" y2="4.9"/>
-</svg>""")
-    switch_icon_pos = "right 9px center"
-    switch_icon_size = "18px 18px"
-    switch_track_gradient = "linear-gradient(135deg, #fff4dc 0%, #ffd9a0 100%)"
-    switch_track_border = "#efc98a"
-    switch_track_inset = "rgba(180,120,40,0.18)"
-    switch_bottle_left = "0px"
-    switch_bottle_shadow = "rgba(120,80,30,0.30)"
-    switch_tilt = "-6deg"
 
 # 6. CSS ADAPTABLE Y ESTILOS
 st.markdown(f"""
@@ -787,7 +758,7 @@ st.markdown(f"""
         height: 36px !important;
     }}
 
-    /* ---------- SWITCH DE TEMA (frasco de perfume día / noche) ---------- */
+    /* SWITCH TEMA */
     .st-key-theme_toggle,
     .st-key-theme_toggle div[data-testid="stButton"] {{
         background: transparent !important;
@@ -810,9 +781,9 @@ st.markdown(f"""
         box-shadow: none !important;
         outline: none !important;
         padding: 0 !important;
-        width: 76px !important;
-        height: 44px !important;
-        min-height: 44px !important;
+        width: 82px !important;
+        height: 48px !important;
+        min-height: 48px !important;
         position: relative !important;
         cursor: pointer !important;
         overflow: visible !important;
@@ -823,47 +794,36 @@ st.markdown(f"""
     }}
 
     .st-key-theme_toggle button * {{ display: none !important; }}
-
-    /* Riel: cielo cálido de día, cielo nocturno con estrellas de noche */
+    
     .st-key-theme_toggle button::before {{
         content: '' !important;
         position: absolute !important;
-        top: 6px !important; left: 2px !important;
-        width: 72px !important; height: 32px !important;
-        border-radius: 999px !important;
+        top: 7px !important; left: 0 !important;
+        width: 80px !important; height: 36px !important;
+        background-color: #2b2c34 !important;
+        border: 2px solid #1a1b20 !important;
+        border-radius: 20px !important;
+        box-shadow: inset 0 2px 5px rgba(0,0,0,0.4) !important;
         box-sizing: border-box !important;
-        border: 1px solid {switch_track_border} !important;
-        background-image: url("{switch_track_icon}"), {switch_track_gradient} !important;
-        background-repeat: no-repeat, no-repeat !important;
-        background-position: {switch_icon_pos}, 0 0 !important;
-        background-size: {switch_icon_size}, 100% 100% !important;
-        box-shadow: inset 0 2px 5px {switch_track_inset} !important;
-        transition: border-color 0.3s ease, box-shadow 0.25s ease !important;
+        background-image: url("{static_icon_svg}") !important;
+        background-repeat: no-repeat !important;
+        background-position: {static_icon_pos} !important;
+        background-size: 18px 18px !important;
+        transition: all 0.3s ease !important;
     }}
-
-    /* Perilla: frasco de perfume que se desliza */
+    
     .st-key-theme_toggle button::after {{
         content: '' !important;
         position: absolute !important;
-        top: 2px !important;
-        left: {switch_bottle_left} !important;
-        width: 34px !important; height: 40px !important;
+        top: -1px !important;
+        left: {bottle_left_pos} !important;
+        width: 40px !important; height: 46px !important;
         background-image: url("{switch_bottle_svg}") !important;
         background-repeat: no-repeat !important;
-        background-position: center !important;
         background-size: contain !important;
-        transition: left 0.38s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.2s ease !important;
-        filter: drop-shadow(0 3px 4px {switch_bottle_shadow}) !important;
+        transition: left 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+        filter: drop-shadow(2px 3px 4px rgba(0,0,0,0.3)) !important;
         z-index: 2 !important;
-    }}
-    .st-key-theme_toggle button:hover::after {{
-        transform: translateY(-1px) rotate({switch_tilt}) !important;
-    }}
-    .st-key-theme_toggle button:hover::before {{
-        box-shadow: inset 0 2px 5px {switch_track_inset}, 0 0 0 3px {gold_soft} !important;
-    }}
-    .st-key-theme_toggle button:focus-visible::before {{
-        box-shadow: inset 0 2px 5px {switch_track_inset}, 0 0 0 2px {accent} !important;
     }}
 
     /* ---------- NAVEGACIÓN PRINCIPAL (PESTAÑAS) ---------- */
@@ -1506,10 +1466,10 @@ st.markdown(f"""
             width: auto !important;
         }}
 
-        div[data-testid="stElementContainer"].st-key-theme_toggle button,
-        div[data-testid="stElementContainer"].st-key-theme_toggle button:hover {{
-            transform: scale(0.85) !important;
+        .st-key-theme_toggle button {{
+            transform: scale(0.72) !important;
             transform-origin: right center !important;
+            width: 60px !important;
             margin: 0 !important;
         }}
 
