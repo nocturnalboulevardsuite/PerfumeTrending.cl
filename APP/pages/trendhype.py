@@ -35,8 +35,14 @@ from ui import (
     get_image_src,
     get_theme_palette,
     init_common_session_state,
-    modal_autenticacion,
     toggle_theme,
+)
+from auth_email import modal_autenticacion
+from perfume_actions import (
+    boton_abrir_perfume,
+    boton_corazon,
+    estilos_tarjetas_cliqueables,
+    mostrar_aviso_favoritos,
 )
 
 
@@ -161,7 +167,7 @@ js_color_script = f"""
     }};
 
     function attachCardEvents() {{
-        const essenceCards = doc.querySelectorAll('.hype-card');
+        const essenceCards = doc.querySelectorAll('.hype-card, [class*="st-key-pcard_hype_"]');
         essenceCards.forEach(card => {{
             if (!card.dataset.soundAttached) {{
                 card.dataset.soundAttached = 'true';
@@ -235,16 +241,16 @@ st.markdown(f"""
     [data-testid="stCaptionContainer"], [data-testid="stCaptionContainer"] p {{ color: {subtext_color} !important; }}
     button[data-baseweb="tab"] {{ background: transparent !important; }}
     div[data-baseweb="tab-highlight"] {{ background-color: {accent} !important; }}
-    div[role="dialog"] {{
+    [role="dialog"] {{
         background-color: {card_bg} !important;
         color: {text_color} !important;
         border: 1px solid {border_color} !important;
         border-radius: 16px !important;
     }}
-    div[role="dialog"] h2, div[role="dialog"] h2 *, div[role="dialog"] p, div[role="dialog"] label {{
+    [role="dialog"] h2, [role="dialog"] h2 *, [role="dialog"] p, [role="dialog"] label {{
         color: {text_color} !important;
     }}
-    div[role="dialog"] button[aria-label="Close"] svg {{ color: {text_color} !important; fill: {text_color} !important; }}
+    [role="dialog"] button[aria-label="Close"] svg {{ color: {text_color} !important; fill: {text_color} !important; }}
 
     /* Campos de texto (modal de ingreso), versiones antiguas y nuevas de Streamlit */
     div[data-baseweb="input"],
@@ -1076,6 +1082,15 @@ st.markdown(f"""
     </style>
 """, unsafe_allow_html=True)
 
+# Tarjetas de perfume cliqueables y corazón de favoritos (compartido con todas las páginas)
+st.markdown(estilos_tarjetas_cliqueables(accent, card_bg, border_color, subtext_color, is_dark), unsafe_allow_html=True)
+st.markdown(f"""
+    <style>
+    div[class*="st-key-pcard_hype_"] {{ --heart-top: 106px; --heart-right: 26px; }}
+    div[class*="st-key-pcard_hype_"]:hover .hype-card {{ border-color: {gold}; }}
+    </style>
+""", unsafe_allow_html=True)
+
 # 4. ENCABEZADO SUPERIOR: LOGO, BOTÓN "INGRESAR" / PERFIL Y SWITCH DE TEMA
 if st.session_state['logged_in']:
     col_logo, col_espacio, col_actions = st.columns([4.0, 0.5, 4.5], vertical_alignment="center")
@@ -1129,6 +1144,7 @@ with btn_col2:
 if st.session_state.get('show_login_modal', False):
     st.session_state['show_login_modal'] = False
     modal_autenticacion()
+mostrar_aviso_favoritos()
 
 st.markdown("<div style='margin-top: 22px;'></div>", unsafe_allow_html=True)
 
@@ -1387,7 +1403,11 @@ for row in range(0, len(hype_data), cols_per_row):
                     <div class="price-text"><div>Mejor precio hoy</div><b>{price_disp}</b></div>
                 </div>
                 """
-                st.markdown(clean_html(html_card), unsafe_allow_html=True)
+                # Toda la tarjeta abre el perfume; el corazón lo guarda en favoritos
+                with st.container(key=f"pcard_hype_{idx}_{resolved_pid}"):
+                    st.markdown(clean_html(html_card), unsafe_allow_html=True)
+                    boton_abrir_perfume(resolved_pid, f"hype{idx}")
+                    boton_corazon(resolved_pid, f"hype{idx}", data['name'])
                 if st.button("Comparar Precios", key=f"btn_compare_{idx}", use_container_width=True):
                     st.session_state['selected_perfume'] = resolved_pid
                     st.switch_page("pages/compararprecios.py")
