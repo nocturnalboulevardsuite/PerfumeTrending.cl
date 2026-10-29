@@ -41,6 +41,7 @@ from auth_email import modal_autenticacion
 from perfume_actions import (
     boton_abrir_perfume,
     boton_corazon,
+    estilos_moviles,
     estilos_tarjetas_cliqueables,
     mostrar_aviso_favoritos,
 )
@@ -1084,6 +1085,8 @@ st.markdown(f"""
 
 # Tarjetas de perfume cliqueables y corazón de favoritos (compartido con todas las páginas)
 st.markdown(estilos_tarjetas_cliqueables(accent, card_bg, border_color, subtext_color, is_dark), unsafe_allow_html=True)
+# Diseño responsivo para celulares (común a todas las páginas)
+st.markdown(estilos_moviles(accent, border_color, is_dark), unsafe_allow_html=True)
 st.markdown(f"""
     <style>
     div[class*="st-key-pcard_hype_"] {{ --heart-top: 106px; --heart-right: 26px; }}
