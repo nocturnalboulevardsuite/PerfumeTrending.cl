@@ -19,6 +19,7 @@ Las tarjetas se envuelven así:
 """
 
 import streamlit as st
+import streamlit.components.v1 as components
 
 from backend.database import (
     agregar_favorito,
@@ -35,6 +36,11 @@ try:
     from ui import get_image_src
 except Exception:  # pragma: no cover
     get_image_src = None
+
+try:
+    from ui import FLAME_RED_SVG as _flame_red_svg
+except Exception:  # pragma: no cover
+    _flame_red_svg = ""
 
 
 def _ident_usuario():
@@ -119,13 +125,39 @@ def boton_abrir_perfume(pid, contexto: str, misma_pagina: bool = False):
     if st.button("Ver perfume", key=f"open_{contexto}_{pid}"):
         st.session_state["selected_perfume"] = pid
         if misma_pagina:
-            try:
-                st.query_params["id"] = str(pid)
-            except Exception:
-                pass
+            # No se escribe en st.query_params (crearía entradas extra en el historial del navegador);
+            # el comparador actualiza la dirección con sincronizar_id_en_url().
             st.rerun()
         else:
             st.switch_page("pages/compararprecios.py")
+
+
+def sincronizar_id_en_url(pid):
+    """Pone ?id=<pid> en la dirección del navegador REEMPLAZANDO la entrada actual del historial.
+
+    `st.query_params[...] = ...` agrega una entrada nueva cada vez y eso hacía que el botón
+    "Atrás" pareciera no funcionar (había que pulsarlo dos veces). Aquí se usa replaceState.
+    """
+    pid = str(pid)
+    st.session_state["_cp_id_en_url"] = pid
+    script = f"""
+    <script>
+    (function() {{
+        try {{
+            const w = window.parent || window;
+            const url = new URL(w.location.href);
+            if (url.searchParams.get("id") !== "{pid}") {{
+                url.searchParams.set("id", "{pid}");
+                w.history.replaceState(w.history.state, "", url.toString());
+            }}
+        }} catch (e) {{}}
+    }})();
+    </script>
+    """
+    try:
+        st.html(script, unsafe_allow_javascript=True)
+    except Exception:
+        components.html(script, height=0, width=0)
 
 
 def mostrar_aviso_favoritos():
@@ -221,6 +253,37 @@ def estilos_tarjetas_cliqueables(accent: str, card_bg: str, border_color: str, s
     div[class*="st-key-favline_on_"] button p {{ color: {accent} !important; }}
     div[class*="st-key-favbtn_on_"] button,
     div[class*="st-key-favline_on_"] button {{ border-color: {accent} !important; }}
+
+    /* Acceso rápido "Remates & Flash" con su ícono de llama */
+    a[data-testid="stPageLink-NavLink"][href*="remates"] {{
+        position: relative !important;
+        padding-left: 2.6rem !important;
+        padding-right: 1.1rem !important;
+        overflow: hidden !important;
+    }}
+    a[data-testid="stPageLink-NavLink"][href*="remates"]::before {{
+        content: '' !important;
+        position: absolute !important;
+        left: 15px !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        width: 16px !important;
+        height: 16px !important;
+        background-image: url("{_flame_red_svg}") !important;
+        background-repeat: no-repeat !important;
+        background-size: contain !important;
+        background-position: center !important;
+        z-index: 1 !important;
+    }}
+
+    /* Botón del usuario: el nombre no choca con la flecha del menú */
+    html body div[data-testid="stHorizontalBlock"]:has(.st-key-theme_toggle) div[data-testid="stColumn"] button[data-testid="stPopoverButton"] {{
+        padding-right: 1rem !important;
+    }}
+    html body div[data-testid="stHorizontalBlock"]:has(.st-key-theme_toggle) div[data-testid="stColumn"] button[data-testid="stPopoverButton"] p {{
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }}
     </style>
     """ + estilos_avatar_usuario("#d4c2a5" if is_dark else "#8c7b6d")
 
@@ -269,10 +332,17 @@ def _foto_perfil_usuario() -> str:
 
 def estilos_avatar_usuario(borde: str = "#8c7b6d") -> str:
     """CSS que reemplaza el ícono genérico del botón de usuario por su foto en un círculo."""
+    base = """
+    <style>
+    html body div[data-testid="stHorizontalBlock"]:has(.st-key-theme_toggle) div[data-testid="stColumn"] button[data-testid="stPopoverButton"] {
+        padding-right: 1rem !important;
+    }
+    </style>
+    """
     src = _foto_perfil_usuario()
     if not src:
-        return ""
-    return f"""
+        return base if st.session_state.get("logged_in") else ""
+    return base + f"""
     <style>
     html body div[data-testid="stHorizontalBlock"]:has(.st-key-theme_toggle) div[data-testid="stColumn"] button[data-testid="stPopoverButton"] {{
         position: relative !important;
