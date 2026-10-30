@@ -108,17 +108,24 @@ if 'selected_order_label' not in st.session_state:
     st.session_state['selected_order_label'] = 'Destacados'
 
 
+# - ¿Qué hace esta función?:
+#   Restaura los estados booleanos de la sesión para asegurar que ningún modal
+#   (login, búsqueda visual) quede abierto accidentalmente al cambiar de vista.
 def reset_modals():
     """Función para garantizar que ningún modal emergente quede abierto por error."""
     st.session_state['show_login_modal'] = False
     st.session_state['show_visual_modal'] = False
 
 
+# - ¿Qué hace esta función?:
+#   Alterna la paleta de colores de toda la aplicación entre modo oscuro (Dark Mode) y modo claro (Light Mode).
 def toggle_theme():
     _shared_toggle_theme()
     reset_modals()
 
 
+# - ¿Qué hace esta función?:
+#   Orquesta la navegación reactiva entre pantallas del sistema, actualizando st.session_state['current_page'].
 def navigate_to(page, perfume_data=None):
     st.session_state['current_page'] = page
     reset_modals()
@@ -126,6 +133,8 @@ def navigate_to(page, perfume_data=None):
         st.session_state['selected_perfume'] = perfume_data
 
 
+# - ¿Qué hace esta función?:
+#   Restablece la vista al Home inicial, reiniciando filtros, paginación a la página 1 y selección de perfumes.
 def reset_to_home():
     st.session_state['current_page'] = 'home'
     st.session_state['selected_perfume'] = None
@@ -1654,6 +1663,9 @@ st.markdown(estilos_tarjetas_cliqueables(accent, card_bg, border_color, subtext_
 # Diseño responsivo para celulares (común a todas las páginas)
 st.markdown(estilos_moviles(accent, border_color, is_dark), unsafe_allow_html=True)
 
+# - ¿Qué hace esta sección (Cabecera y Barra Superior)?:
+#   Renderiza la identidad visual de PerfumeTrending (logo vectorial), el switch de tema día/noche
+#   y el botón de ingreso o menú desplegable de perfil/alertas según si el usuario inició sesión.
 # 7. CABECERA CON LOGO COMPACTO E INTERACTIVO
 if st.session_state['logged_in']:
     # Mismo tamaño del botón de usuario en todas las páginas: ni muy chico ni muy grande
@@ -1709,6 +1721,8 @@ with col_actions:
     with btn_col2:
         st.button(" ", key="theme_toggle", on_click=toggle_theme)
 
+# - ¿Qué hace este bloque (Pestañas de Navegación)?:
+#   Permite alternar entre la vista principal de 'Perfumes' y la vista de 'Esencias'.
 # 8. NAVEGACIÓN PRINCIPAL (PESTAÑAS)
 active_nav_key = "n_perfumes" if st.session_state['current_page'] == 'home' else "n_esencias"
 st.markdown(f"""
@@ -1728,6 +1742,9 @@ with nav_cols[1]:
 
 st.markdown("<div class='pt-tabs-rule'></div>", unsafe_allow_html=True)
 
+# - ¿Qué hace este bloque (Buscador Semántico y Filtro de Notas)?:
+#   Captura la búsqueda de texto del usuario (nombre de perfume o marca) y permite filtrar
+#   por esencias olfativas seleccionadas (ej. vainilla, cuero, bergamota, oud).
 # 9. BÚSQUEDA Y FILTRO DE ESENCIAS
 col_search, col_filter = st.columns([7.8, 2.2], vertical_alignment="center")
 
@@ -1761,6 +1778,8 @@ with col_filter:
             label_visibility="collapsed"
         )
 
+# - ¿Qué hace este bloque (Chips de Acceso Directo)?:
+#   Botones de navegación rápida para saltar a 'Trend Del Hype', 'Páginas de Confianza', 'Comparar Precios' o 'Remates'.
 # 10. CHIPS DE ENLACE RÁPIDO (5 ACCESOS DIRECTOS)
 st.markdown("<div style='margin-top: 12px;'></div>", unsafe_allow_html=True)
 c_chip0, c_chip1, c_chip2, c_chip3, c_chip4 = st.columns([1.7, 1.6, 2.0, 1.8, 1.8], vertical_alignment="center")

@@ -652,6 +652,9 @@ def extraer_precio_woocommerce(
     return {"exito": False}
 
 
+# - ¿Qué hace esta función (Extractor Falabella)?:
+#   Descarga el HTML de Falabella y parsea la etiqueta incrustada <script id="__NEXT_DATA__"> de Next.js.
+#   Extrae precios, tallas/volúmenes y stock directamente del JSON de hidratación de React sin usar un navegador pesado.
 def extraer_variedades_falabella(
     session: requests.Session,
     url_directa: Optional[str],
@@ -915,6 +918,9 @@ def extraer_precio_falabella(
     return {"exito": False}
 
 
+# - ¿Qué hace esta función (Extractor Paris)?:
+#   Consulta los endpoints de búsqueda de Paris (VTEX) o parsea los metadatos Schema.org (JSON-LD)
+#   para obtener el precio vigente, descuento y disponibilidad en stock.
 def extraer_variedades_paris(
     session: requests.Session,
     url_directa: Optional[str],
@@ -1093,6 +1099,9 @@ def extraer_precio_paris(
     return {"exito": False}
 
 
+# - ¿Qué hace esta función (Extractor Ripley)?:
+#   Consume la API interna de catálogo de Ripley en formato JSON estructurado,
+#   extrayendo SKU, variantes de tamaño y precios oficiales de la tienda.
 def extraer_variedades_ripley(
     session: requests.Session,
     url_directa: Optional[str],
@@ -1734,6 +1743,9 @@ class CatalogoTiendaBulk:
         return variedades
 
 
+# - ¿Qué hace esta función (Precarga Ráfaga en Memoria)?:
+#   Descarga en paralelo los catálogos completos de las 13 tiendas especializadas Shopify/WooCommerce.
+#   Puebla las instancias de CatalogoTiendaBulk en RAM en solo 15-20 segundos antes de comenzar a auditar perfumes.
 def precargar_catalogos_bulk_tiendas(
     session: requests.Session,
     tiendas_db: List[Dict[str, Any]],

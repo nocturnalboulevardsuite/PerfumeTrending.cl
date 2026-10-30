@@ -80,12 +80,16 @@ def get_cached_catalogo():
     return obtener_catalogo()
 
 
+# - ¿Qué hace esta función?:
+#   Obtiene las ofertas en stock y precios vigentes en cada comercio para el perfume seleccionado (en caché de 120s).
 @st.cache_data(ttl=120, show_spinner=False)
 def get_cached_precios(perfume_id):
     """Consulta los precios vigentes en cada tienda para el perfume seleccionado."""
     return obtener_precios_actuales(perfume_id)
 
 
+# - ¿Qué hace esta función?:
+#   Extrae la serie histórica temporal de observaciones de precios en la base de datos para graficar la evolución.
 @st.cache_data(ttl=120, show_spinner=False)
 def get_cached_historico(perfume_id, volumen_ml=None):
     """Consulta la serie de tiempo de precios históricos filtrada por presentación."""
@@ -98,6 +102,8 @@ def get_cached_minimo_historico(perfume_id, volumen_ml=None):
     return obtener_minimo_historico(perfume_id, volumen_ml=volumen_ml)
 
 
+# - ¿Qué hace esta función?:
+#   Recupera la ficha técnica oficial del perfume: marca, concentración (EDP/EDT), notas olfativas e imagen.
 @st.cache_data(ttl=120, show_spinner=False)
 def get_cached_detalle(perfume_id):
     """Retorna la ficha técnica completa del perfume (notas, género, concentración)."""
@@ -1137,6 +1143,9 @@ st.markdown("<div style='margin-top: 34px;'></div>", unsafe_allow_html=True)
 
 # 5. SECCIÓN PRINCIPAL: COMPARADOR DE PRECIOS
 # =============================================================================
+# - ¿Qué hace este bloque (Ficha Técnica y Búsqueda de Perfume)?:
+#   Permite buscar cualquier perfume con autocompletado en tiempo real (selectbox)
+#   y despliega el banner visual con su frasco oficial, notas de salida/corazón/fondo y botón de favoritos.
 # BLOQUE 4: SELECCIÓN DEL PERFUME Y FICHA TÉCNICA OLFATIVA
 # -----------------------------------------------------------------------------
 # ¿QUÉ HACE ESTE BLOQUE?
@@ -1344,6 +1353,10 @@ st.markdown("<div class='pt-section-row'><div class='pt-section-title'>Ofertas e
 
 
 # =============================================================================
+# - ¿Qué hace este bloque (Comparativa Multitienda en Vivo)?:
+#   1. Agrupa y filtra las ofertas activas por tamaño de botella (ej. 50ml, 100ml, 200ml).
+#   2. Ordena las tiendas de menor a mayor precio, colocando siempre primero las ofertas con stock.
+#   3. Identifica la mejor oferta, calcula el costo por mililitro ($/ml) y destaca los Mínimos Históricos.
 # BLOQUE 5: COMPARATIVA EN VIVO, CÁLCULO $/ML Y BADGE "MEJOR PRECIO"
 # -----------------------------------------------------------------------------
 # ¿QUÉ HACE ESTE BLOQUE?
@@ -1646,6 +1659,9 @@ else:
 
 
 # =============================================================================
+# - ¿Qué hace este bloque (Gráfico Histórico de Precios)?:
+#   Transforma las observaciones históricas en una tabla pivotada (fecha vs tienda)
+#   y dibuja la curva temporal de precios para comprobar si la fragancia ha subido o bajado.
 # BLOQUE 6: GRÁFICO INTERACTIVO DE EVOLUCIÓN HISTÓRICA DE PRECIOS POR VOLUMEN
 # =============================================================================
 st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)

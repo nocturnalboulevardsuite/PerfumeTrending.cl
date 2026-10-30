@@ -266,6 +266,9 @@ def _norm_ascii(texto: str) -> str:
     return re.sub(r"\s+", " ", t).strip()
 
 
+# - ¿Qué hace esta función (Canonización de Marcas)?:
+#   Convierte variantes ortográficas o mayúsculas de marcas (ej. 'lataffa', 'MAISON AL HAMBRA', 'dior')
+#   a su nombre canónico oficial ('Lattafa', 'Maison Alhambra', 'Dior') usando un mapa hash indexado.
 def normalizar_marca_canonica(marca: str) -> str:
     """
     Convierte cualquier variante de casing u ortografía de marca en su nombre canónico oficial.
@@ -290,6 +293,8 @@ def normalizar_marca_canonica(marca: str) -> str:
     return re.sub(r"\s+", " ", raw)
 
 
+# - ¿Qué hace esta función (Detección de Formato)?:
+#   Identifica si una oferta corresponde a una botella sellada comercial ('regular') o a una unidad de prueba ('tester').
 def detectar_formato_oferta(titulo: str, url: str = "") -> str:
     """Clasifica si una oferta corresponde a frasco comercial sellado ('regular') o 'tester'."""
     combo = f"{titulo or ''} {url or ''}".lower()
@@ -302,6 +307,8 @@ def detectar_formato_oferta(titulo: str, url: str = "") -> str:
 # 2. EXTRACCIÓN DE METADATOS (VOLUMEN, CONCENTRACIÓN, GÉNERO, SANIDAD)
 # =============================================================================
 
+# - ¿Qué hace esta función (Extracción de Volumen)?:
+#   Aplica expresiones regulares sobre el título y descripción para extraer la capacidad en mililitros (ej. 100ml, 3.4 oz).
 def extraer_volumen_ml(texto: str, default: int = 100) -> int:
     """
     Extrae la capacidad en mililitros (ml) desde el título, URL o etiqueta de variante.
@@ -337,6 +344,8 @@ def extraer_volumen_ml(texto: str, default: int = 100) -> int:
     return default
 
 
+# - ¿Qué hace esta función (Clasificación de Concentración)?:
+#   Identifica la concentración de la fragancia: Parfum / Extrait, Eau de Parfum (EDP), Eau de Toilette (EDT) o Eau de Cologne (EDC).
 def extraer_concentracion(texto: str) -> str:
     """Identifica y normaliza la concentración olfativa del perfume."""
     t = (texto or "").lower()
@@ -436,6 +445,8 @@ def extraer_genero(texto: str) -> str:
     return "Unisex"
 
 
+# - ¿Qué hace esta función (Detección de Perfumería Oriental)?:
+#   Determina si una marca o perfume pertenece a la perfumería árabe (ej. Lattafa, Armaf, Afnan, Rasasi).
 def es_arabe(marca: str, nombre: str = "") -> bool:
     """Indica si una fragancia pertenece a perfumería oriental / árabe."""
     m_canon = normalizar_marca_canonica(marca).lower()
@@ -446,6 +457,8 @@ def es_arabe(marca: str, nombre: str = "") -> bool:
     return any(k in texto for k in lineas_iconicas)
 
 
+# - ¿Qué hace esta función (Filtro Antianomalías de Precio)?:
+#   Verifica que el precio sea un número entero razonable en pesos chilenos (>= $5.000 CLP), descartando muestras o errores de tipeo.
 def es_precio_valido(precio: Optional[Any], min_clp: int = 5000) -> bool:
     """
     Validador de sanidad comercial para precios de perfumes de frasco completo en CLP.
@@ -466,6 +479,9 @@ def es_precio_valido(precio: Optional[Any], min_clp: int = 5000) -> bool:
     return True
 
 
+# - ¿Qué hace esta función (Firewall Anti-Accesorios)?:
+#   Comprueba que el producto sea verdaderamente un frasco de perfume y no un desodorante, loción corporal,
+#   estuche vacío, reloj, maleta, cartera, vapeador ni cosmético en gramos.
 def es_producto_perfume_valido(
     titulo: str,
     tags: Optional[List[str]] = None,
@@ -530,6 +546,9 @@ def eliminar_palabras_duplicadas(texto: str) -> str:
     return " ".join(resultado)
 
 
+# - ¿Qué hace esta función (Limpieza de Título)?:
+#   Remueve del título del producto palabras de relleno (ej. 'Vaporizador', 'Spray', 'Original', '100ml')
+#   dejando únicamente el nombre puro de la fragancia.
 def limpiar_nombre_perfume(titulo: str, marca: str = "") -> str:
     """
     Limpia el título comercial de e-commerce para obtener el nombre canónico del perfume
@@ -825,6 +844,10 @@ def _aliases_marca(marca_norm: str) -> List[str]:
     return [marca_norm]
 
 
+# - ¿Qué hace esta función (Motor Determinista de Resolución de Entidades en 12 Capas)?:
+#   Compara el título raspado contra el perfume auditado verificando deterministamente:
+#   1. Marca oficial, 2. Ausencia de palabras de exclusión, 3. Nombre base, 4. Concentración (EDT vs EDP) y 5. Género.
+#   Previene falsos positivos, clones, dupes y cruces entre flankers (ej. 'Eros' vs 'Eros Flame').
 def coincide_entidad_detallada(
     titulo: str,
     perfume_nombre: str,
@@ -1268,6 +1291,8 @@ def coincide_entidad_detallada(
     )
 
 
+# - ¿Qué hace esta función (Wrapper de Coincidencia)?:
+#   Función de alto nivel que invoca 'coincide_entidad_detallada' y retorna un booleano rápido (True/False).
 def coincide_con_perfume(
     titulo: str,
     perfume_nombre: str,

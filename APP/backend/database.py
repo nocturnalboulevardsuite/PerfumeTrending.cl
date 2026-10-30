@@ -744,6 +744,9 @@ def _normalizar_usuario_cloud(user_obj) -> Dict[str, Any]:
     }
 
 
+# - ¿Qué hace esta función (Registro de Usuarios)?:
+#   Crea un nuevo usuario en el sistema. Hashea la contraseña con PBKDF2-HMAC-SHA256,
+#   valida que el email no esté duplicado y guarda el perfil en Supabase (o SQLite local).
 def crear_usuario(
     nombre: str,
     email: str,
@@ -886,6 +889,9 @@ def crear_usuario(
         return True, "Cuenta creada exitosamente."
 
 
+# - ¿Qué hace esta función (Autenticación y Login)?:
+#   Verifica las credenciales del usuario comparando el hash PBKDF2 de la contraseña ingresada
+#   contra el hash seguro almacenado en la base de datos.
 def verificar_usuario(email: str, password: str) -> Tuple[bool, Optional[Dict[str, Any]]]:
     """
     Autentica al usuario verificando sus credenciales:
@@ -1566,6 +1572,9 @@ def tienda_comercializa_marca(tienda_nombre: str, marca: str, es_arabe_flag: Opt
 # =============================================================================
 # BLOQUE 11: PERSISTENCIA TRANSACCIONAL ATÓMICA Y CONTROL DE RUNS / ERRORES
 # =============================================================================
+# - ¿Qué hace esta función (Trazabilidad de Auditorías)?:
+#   Registra el inicio de una sesión de scraping en la tabla 'scraping_runs'.
+#   Devuelve un run_id único para asociar cada precio extraído con su lote y trazar auditorías.
 def iniciar_scraping_run(
     tipo_scraper: str,
     tienda_id: Optional[int] = None,
@@ -1598,6 +1607,9 @@ def iniciar_scraping_run(
         return int(cursor.lastrowid) if cursor.lastrowid else None
 
 
+# - ¿Qué hace esta función (Cierre de Lote ETL)?:
+#   Cierra la sesión de scraping en 'scraping_runs', registrando el estado final, la duración,
+#   la cantidad de precios actualizados, ofertas nuevas, cambios de stock y errores detectados.
 def finalizar_scraping_run(
     run_id: Optional[int],
     estado: str = "exitoso",
@@ -2206,6 +2218,9 @@ def _obtener_catalogo_master_supabase(force_refresh: bool = False) -> List[Dict[
     return [dict(p) for p in perfumes]
 
 
+# - ¿Qué hace esta función (Motor del Catálogo)?:
+#   Es la consulta principal del catálogo: aplica filtros de texto, notas olfativas, categorías (árabes, remates)
+#   y ordenamiento por precio o relevancia, calculando en tiempo real el mejor precio de cada fragancia.
 def obtener_catalogo(
     busqueda: Optional[str] = None,
     esencias: Optional[List[str]] = None,
@@ -2361,6 +2376,9 @@ def obtener_detalle_perfume(perfume_id: int) -> Optional[Dict[str, Any]]:
         return dict(row) if row else None
 
 
+# - ¿Qué hace esta función (Ofertas Vigentes)?:
+#   Consulta las ofertas en stock en cada tienda para un perfume, ordenándolas por precio
+#   e identificando el formato ('regular' vs 'tester') y el trust_score de cada comercio.
 def obtener_precios_actuales(perfume_id: int) -> List[Dict[str, Any]]:
     """
     Retorna las ofertas vigentes por tienda y presentación para el perfume dado,
@@ -2472,6 +2490,8 @@ def obtener_precios_actuales(perfume_id: int) -> List[Dict[str, Any]]:
         return res_legacy
 
 
+# - ¿Qué hace esta función (Serie Temporal Histórica)?:
+#   Extrae las observaciones pasadas de precio y fecha para construir la curva del gráfico en la ficha del perfume.
 def obtener_historico_precios(perfume_id: int, volumen_ml: Optional[int] = None) -> List[Dict[str, Any]]:
     """
     Retorna la serie temporal histórica de precios filtrada opcionalmente por `volumen_ml`
@@ -2707,6 +2727,9 @@ def obtener_mayores_bajadas_recientes(dias: int = 7, limite: int = 12) -> List[D
 
 
 
+# - ¿Qué hace esta función (Algoritmo de Remates y Gangas)?:
+#   Filtra ofertas donde precio_normal > precio_actual con al menos un 12% de descuento real demostrable.
+#   Descarta automáticamente productos tester o miniaturas < 25ml para evitar ofertas engañosas.
 def obtener_remates_reales(limite: int = 60, descuento_min_pct: int = 12) -> List[Dict[str, Any]]:
     """
     Consulta ofertas activas y verificadas en stock con descuento real comprobable

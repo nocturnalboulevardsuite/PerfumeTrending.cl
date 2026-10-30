@@ -60,11 +60,16 @@ from perfume_actions import (
 )
 
 
+# - ¿Qué hace esta función?:
+#   Limpia espacios en blanco y saltos de línea para renderizar HTML limpio sin bloques de código no deseados en Streamlit.
 def clean_html(html_str: str) -> str:
     """Limpia espacios iniciales y elimina saltos de línea para evitar bloques de código accidentales."""
     return _shared_clean_html(html_str, join_char=" ")
 
 
+# - ¿Qué hace esta función (Filtrado de Gangas Reales)?:
+#   Consulta ofertas activas en stock que tienen un descuento real comprobable (precio_normal > precio_actual, descuento >= 12%).
+#   Elimina falsas rebajas y frascos testers para ofrecer solo gangas legítimas en comercios verificados.
 @st.cache_data(ttl=120, show_spinner=False)
 def get_cached_remates():
     return obtener_remates_reales(limite=60, descuento_min_pct=12)
