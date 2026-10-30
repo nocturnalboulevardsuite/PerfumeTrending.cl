@@ -59,5 +59,41 @@ class TestSortingAndVols(unittest.TestCase):
         )
         self.assertEqual(bleu['mejor_precio'], esperado_min)
 
+    def test_busqueda_insensible_a_tildes(self):
+        """Verifica que la normalización de búsqueda soporte tildes y diacríticos transparentemente."""
+        from backend.database import normalizar_texto_busqueda, obtener_catalogo
+        self.assertEqual(normalizar_texto_busqueda("Chloé Nomade"), "chloe nomade")
+        self.assertEqual(normalizar_texto_busqueda("Ramón Monegal Flamenco"), "ramon monegal flamenco")
+        res_chloe = obtener_catalogo(busqueda="chloe")
+        if res_chloe:
+            self.assertTrue(any("chlo" in normalizar_texto_busqueda(p.get("marca") or "") or "chlo" in normalizar_texto_busqueda(p.get("nombre") or "") for p in res_chloe))
+
+    def test_inmutabilidad_catalogo_master(self):
+        """Verifica que ordenar el catálogo por precio en una vista no altere el orden base del catálogo."""
+        from backend.database import obtener_catalogo
+        cat_por_precio = obtener_catalogo(orden="precio_asc")
+        cat_por_id = obtener_catalogo(orden="id_asc")
+        self.assertEqual(len(cat_por_precio), len(cat_por_id))
+        ids = [p["id"] for p in cat_por_id[:10]]
+        self.assertEqual(ids, sorted(ids))
+
+    def test_remates_reales_estructura_y_cache(self):
+        """Verifica que obtener_remates_reales devuelva los campos requeridos y opere en microsegundos vía caché."""
+        import time
+        from backend.database import obtener_remates_reales
+        remates = obtener_remates_reales(limite=10)
+        self.assertTrue(len(remates) > 0)
+        primer_remate = remates[0]
+        campos_esperados = ["precio_remate", "precio_normal", "ahorro_clp", "descuento_pct", "tienda", "url"]
+        for campo in campos_esperados:
+            self.assertIn(campo, primer_remate, f"Falta campo {campo} en remate")
+        self.assertGreater(primer_remate["precio_normal"], primer_remate["precio_remate"])
+
+        t0 = time.time()
+        remates_cached = obtener_remates_reales(limite=10)
+        t_duracion = time.time() - t0
+        self.assertLess(t_duracion, 0.05, f"Caché de remates demoró {t_duracion:.4f}s, esperado < 0.05s")
+        self.assertEqual(len(remates_cached), len(remates))
+
 if __name__ == '__main__':
     unittest.main()
