@@ -1396,13 +1396,14 @@ def extraer_precio_ripley(
 # PERSISTENCIA DEL REPORTE DE AUDITORÍA
 # =============================================================================
 
-def guardar_reporte_auditoria(reporte: Dict[str, Any]) -> str:
+def guardar_reporte_auditoria(reporte: Dict[str, Any], ruta_destino: Optional[str] = None) -> str:
     """Guarda el reporte consolidado de la última ejecución en formato JSON auditable."""
     os.makedirs(REPORTES_DIR, exist_ok=True)
-    with open(REPORTE_ULTIMO_PATH, "w", encoding="utf-8") as f:
+    target_path = ruta_destino or REPORTE_ULTIMO_PATH
+    with open(target_path, "w", encoding="utf-8") as f:
         json.dump(reporte, f, ensure_ascii=False, indent=2)
-    logger.info(f"Reporte de auditoría generado exitosamente en: {REPORTE_ULTIMO_PATH}")
-    return REPORTE_ULTIMO_PATH
+    logger.info(f"Reporte de auditoría generado exitosamente en: {target_path}")
+    return target_path
 
 
 def obtener_ultimo_reporte_scraping() -> Optional[Dict[str, Any]]:
@@ -1781,11 +1782,115 @@ def auditar_lote_perfumes(
         p_tipo = p.get("tipo") or ""
         p_ref = p.get("precio_referencia")
 
-        logger.info(f"[Rotación {rotacion_idx}/{total_rotaciones}] Auditando: {p_nom} ({p_marca}) [{p_tipo or 'N/A'} · {p_genero}]")
+        logger.info(f"[Rotación {rotacion_idx}/{total_rotaciones}] Auditando: {p_nom} ({p_marca}) [{p_tipo or 'N/A'} • {p_genero}]")
         _GENERO_ESPERADO_CTX.set(p_genero)
 
+        def _procesar_resultado_tienda(tienda_item, u_directa, v_base, lista_vars, diag_dict, err_item):
+            nonlocal actualizaciones, ofertas_nuevas, cambios_precio, cambios_stock, cambios_url, bloqueos_waf
+            t_id = tienda_item["id"]
+            t_nom = tienda_item["nombre"]
+
+            if err_item is not None:
+                err_msg = f"Error en ciclo para {p_nom} en {t_nom}: {err_item}"
+                logger.error(err_msg)
+                errores.append(err_msg)
+                try:
+                    registrar_fallo_scraping(
+                        tienda_id=t_id,
+                        perfume_id=p_id,
+                        mensaje=str(err_item),
+                    )
+                except Exception:
+                    pass
+                return
+
+            if lista_vars:
+                for var_data in lista_vars:
+                    if not var_data.get("exito"):
+                        continue
+                    precio_actual_final = int(var_data["precio_actual"])
+                    if not es_precio_valido(precio_actual_final):
+                        continue
+                    precio_normal_final = int(var_data.get("precio_normal") or precio_actual_final)
+                    url_final = var_data["url"]
+                    vol_final = int(var_data.get("volumen_ml") or v_base or 100)
+                    if vol_final < 25:
+                        continue
+                    stock_final = bool(var_data.get("en_stock", True))
+                    formato_final = str(var_data.get("formato") or detectar_formato_oferta(p_nom, url_final))
+
+                    res_obs = registrar_observacion_oferta({
+                        "perfume_id": p_id,
+                        "tienda_id": t_id,
+                        "precio_actual": precio_actual_final,
+                        "precio_normal": precio_normal_final,
+                        "en_stock": stock_final,
+                        "url_producto": url_final,
+                        "volumen_ml": vol_final,
+                        "formato": formato_final,
+                        "scraping_run_id": run_id,
+                    })
+                    res_tipo = res_obs.get("resultado")
+                    if res_tipo in ("creada", "actualizada"):
+                        actualizaciones += 1
+                        if res_tipo == "creada":
+                            ofertas_nuevas += 1
+                        c_mods = res_obs.get("campos_modificados") or []
+                        if "precio_actual" in c_mods:
+                            cambios_precio += 1
+                        if "en_stock" in c_mods:
+                            cambios_stock += 1
+                        if "url_producto" in c_mods:
+                            cambios_url += 1
+
+                    tiendas_stats[t_nom]["exitos_en_vivo"] += 1
+                    detalle_precios.append({
+                        "perfume": p_nom,
+                        "tienda": t_nom,
+                        "precio_actual": precio_actual_final,
+                        "precio_normal": precio_normal_final,
+                        "tiene_descuento": bool(precio_normal_final > precio_actual_final),
+                        "origen": var_data.get("metodo", "Extracción en Vivo"),
+                        "volumen_ml": vol_final,
+                        "formato": formato_final,
+                        "en_stock": stock_final,
+                    })
+                    logger.info(
+                        f"  -> [{t_nom}] EN VIVO: ${precio_actual_final:,} "
+                        f"(Normal: ${precio_normal_final:,}) | {vol_final}ml ({formato_final}) | stock: {stock_final}"
+                    )
+            elif diag_dict.get("waf_bloqueado"):
+                bloqueos_waf += 1
+                tiendas_stats[t_nom]["bloqueos_waf"] += 1
+                logger.info(
+                    f"  -> [{t_nom}] Bloqueo temporal WAF (HTTP {diag_dict.get('http_status', 403)}). "
+                    "Se preserva última oferta sin penalizar fallos consecutivos."
+                )
+            else:
+                motivo_fallo = f"Sin disponibilidad confirmada en {t_nom}"
+                tiene_oferta_previa = False
+                if ofertas_activas_set is not None:
+                    tiene_oferta_previa = (int(p_id), int(t_id)) in ofertas_activas_set
+                else:
+                    tiene_oferta_previa = (
+                        (int(p_id), int(t_id)) in urls_conocidas_map
+                        or bool(u_directa)
+                    )
+
+                if tiene_oferta_previa:
+                    registrar_fallo_scraping(
+                        tienda_id=t_id,
+                        perfume_id=p_id,
+                        mensaje=motivo_fallo,
+                    )
+                tiendas_stats[t_nom]["fallbacks_seguridad"] += 1
+                logger.debug(f"  -> [{t_nom}] FALLO SCRAPING: {motivo_fallo}. No se altera precio ni stock.")
+
+        # 1. Separar tiendas bulk (en RAM instantáneo) de tiendas de red (Network)
+        tiendas_bulk_items = []
+        tiendas_network_items = []
+
         for tienda in tiendas_db:
-            t_id = tienda["id"]
             t_nom = tienda["nombre"]
 
             if not tienda_comercializa_marca(t_nom, p_marca, es_arabe_flag=p.get("es_arabe")):
@@ -1806,188 +1911,116 @@ def auditar_lote_perfumes(
             if url_directa_info:
                 url_directa_guardada = url_directa_info[0]
                 vol_ml_base = url_directa_info[3] or 100
-            elif (int(p_id), int(t_id)) in urls_conocidas_map:
-                url_directa_guardada, vol_ml_base = urls_conocidas_map[(int(p_id), int(t_id))]
+            elif (int(p_id), int(tienda["id"])) in urls_conocidas_map:
+                url_directa_guardada, vol_ml_base = urls_conocidas_map[(int(p_id), int(tienda["id"]))]
             else:
                 url_directa_guardada = None
                 vol_ml_base = 100
 
+            item = (tienda, url_directa_guardada, vol_ml_base)
+            if cache_tiendas_bulk and t_nom in cache_tiendas_bulk:
+                tiendas_bulk_items.append(item)
+            else:
+                tiendas_network_items.append(item)
+
+        # 2. Procesamiento instantáneo en memoria para tiendas especializadas (RAM < 0.5ms)
+        for tienda, url_directa_guardada, vol_ml_base in tiendas_bulk_items:
+            t_nom = tienda["nombre"]
             tiendas_stats[t_nom]["consultas"] += 1
+            diag = {}
+            lista_variedades = cache_tiendas_bulk[t_nom].extraer_variedades(
+                perfume_nombre=p_nom,
+                marca=p_marca,
+                volumen_ml_defecto=vol_ml_base,
+                concentracion=p_tipo,
+                precio_referencia=p_ref,
+                diagnostico=diag,
+            )
+            _procesar_resultado_tienda(tienda, url_directa_guardada, vol_ml_base, lista_variedades, diag, None)
 
-            diag: Dict[str, Any] = {}
-            try:
-                lista_variedades: List[Dict[str, Any]] = []
-
-                # Si la tienda está precargada en memoria (Shopify / WooCommerce masivo)
-                if cache_tiendas_bulk and t_nom in cache_tiendas_bulk:
-                    lista_variedades = cache_tiendas_bulk[t_nom].extraer_variedades(
-                        perfume_nombre=p_nom,
-                        marca=p_marca,
-                        volumen_ml_defecto=vol_ml_base,
-                        concentracion=p_tipo,
-                        precio_referencia=p_ref,
-                        diagnostico=diag,
-                    )
-                elif t_nom in TIENDAS_SHOPIFY:
-                    time.sleep(random.uniform(0.18, 0.45))
-                    dominio = TIENDAS_SHOPIFY[t_nom]
-                    lista_variedades = extraer_variedades_shopify(
-                        session=session,
-                        dominio=dominio,
-                        perfume_nombre=p_nom,
-                        marca=p_marca,
-                        volumen_ml_defecto=vol_ml_base,
-                        concentracion=p_tipo,
-                        precio_referencia=p_ref,
-                        diagnostico=diag,
-                    )
-                elif t_nom in TIENDAS_WOOCOMMERCE:
-                    time.sleep(random.uniform(0.18, 0.45))
-                    dominio = TIENDAS_WOOCOMMERCE[t_nom]
-                    lista_variedades = extraer_variedades_woocommerce(
-                        session=session,
-                        dominio=dominio,
-                        perfume_nombre=p_nom,
-                        marca=p_marca,
-                        volumen_ml_defecto=vol_ml_base,
-                        concentracion=p_tipo,
-                        precio_referencia=p_ref,
-                        diagnostico=diag,
-                    )
-                elif "falabella" in t_nom.lower():
-                    time.sleep(random.uniform(0.18, 0.45))
-                    lista_variedades = extraer_variedades_falabella(
-                        session=session,
-                        url_directa=url_directa_guardada,
-                        perfume_nombre=p_nom,
-                        marca=p_marca,
-                        volumen_ml_defecto=vol_ml_base,
-                        concentracion=p_tipo,
-                        precio_referencia=p_ref,
-                        diagnostico=diag,
-                    )
-                elif "paris" in t_nom.lower():
-                    time.sleep(random.uniform(0.18, 0.45))
-                    lista_variedades = extraer_variedades_paris(
-                        session=session,
-                        url_directa=url_directa_guardada,
-                        perfume_nombre=p_nom,
-                        marca=p_marca,
-                        volumen_ml_defecto=vol_ml_base,
-                        concentracion=p_tipo,
-                        precio_referencia=p_ref,
-                        diagnostico=diag,
-                    )
-                elif "ripley" in t_nom.lower():
-                    time.sleep(random.uniform(0.18, 0.45))
-                    lista_variedades = extraer_variedades_ripley(
-                        session=session,
-                        url_directa=url_directa_guardada,
-                        perfume_nombre=p_nom,
-                        marca=p_marca,
-                        volumen_ml_defecto=vol_ml_base,
-                        concentracion=p_tipo,
-                        precio_referencia=p_ref,
-                        diagnostico=diag,
-                    )
-                else:
-                    omitidos += 1
-                    continue
-
-                if lista_variedades:
-                    for var_data in lista_variedades:
-                        if not var_data.get("exito"):
-                            continue
-                        precio_actual_final = int(var_data["precio_actual"])
-                        if not es_precio_valido(precio_actual_final):
-                            continue
-                        precio_normal_final = int(var_data.get("precio_normal") or precio_actual_final)
-                        url_final = var_data["url"]
-                        vol_final = int(var_data.get("volumen_ml") or vol_ml_base or 100)
-                        if vol_final < 25:
-                            continue
-                        stock_final = bool(var_data.get("en_stock", True))
-                        formato_final = str(var_data.get("formato") or detectar_formato_oferta(p_nom, url_final))
-
-                        res_obs = registrar_observacion_oferta({
-                            "perfume_id": p_id,
-                            "tienda_id": t_id,
-                            "precio_actual": precio_actual_final,
-                            "precio_normal": precio_normal_final,
-                            "en_stock": stock_final,
-                            "url_producto": url_final,
-                            "volumen_ml": vol_final,
-                            "formato": formato_final,
-                            "scraping_run_id": run_id,
-                        })
-                        res_tipo = res_obs.get("resultado")
-                        if res_tipo in ("creada", "actualizada"):
-                            actualizaciones += 1
-                            if res_tipo == "creada":
-                                ofertas_nuevas += 1
-                            c_mods = res_obs.get("campos_modificados") or []
-                            if "precio_actual" in c_mods:
-                                cambios_precio += 1
-                            if "en_stock" in c_mods:
-                                cambios_stock += 1
-                            if "url_producto" in c_mods:
-                                cambios_url += 1
-
-                        tiendas_stats[t_nom]["exitos_en_vivo"] += 1
-                        detalle_precios.append({
-                            "perfume": p_nom,
-                            "tienda": t_nom,
-                            "precio_actual": precio_actual_final,
-                            "precio_normal": precio_normal_final,
-                            "tiene_descuento": bool(precio_normal_final > precio_actual_final),
-                            "origen": var_data.get("metodo", "Extracción en Vivo"),
-                            "volumen_ml": vol_final,
-                            "formato": formato_final,
-                            "en_stock": stock_final,
-                        })
-                        logger.info(
-                            f"  -> [{t_nom}] EN VIVO: ${precio_actual_final:,} "
-                            f"(Normal: ${precio_normal_final:,}) | {vol_final}ml ({formato_final}) | stock: {stock_final}"
-                        )
-                elif diag.get("waf_bloqueado"):
-                    bloqueos_waf += 1
-                    tiendas_stats[t_nom]["bloqueos_waf"] += 1
-                    logger.info(
-                        f"  -> [{t_nom}] Bloqueo temporal WAF (HTTP {diag.get('http_status', 403)}). "
-                        "Se preserva última oferta sin penalizar fallos consecutivos."
-                    )
-                else:
-                    motivo_fallo = f"Sin disponibilidad confirmada en {t_nom}"
-                    tiene_oferta_previa = False
-                    if ofertas_activas_set is not None:
-                        tiene_oferta_previa = (int(p_id), int(t_id)) in ofertas_activas_set
-                    else:
-                        tiene_oferta_previa = (
-                            (int(p_id), int(t_id)) in urls_conocidas_map
-                            or bool(url_directa_guardada)
-                        )
-
-                    if tiene_oferta_previa:
-                        registrar_fallo_scraping(
-                            tienda_id=t_id,
-                            perfume_id=p_id,
-                            mensaje=motivo_fallo,
-                        )
-                    tiendas_stats[t_nom]["fallbacks_seguridad"] += 1
-                    logger.debug(f"  -> [{t_nom}] FALLO SCRAPING: {motivo_fallo}. No se altera precio ni stock.")
-
-            except Exception as ex:
-                err_msg = f"Error en ciclo para {p_nom} en {t_nom}: {ex}"
-                logger.error(err_msg)
-                errores.append(err_msg)
+        # 3. Procesamiento concurrente en paralelo para tiendas de red (Falabella, Paris, Ripley)
+        if tiendas_network_items:
+            def _ejecutar_extraccion_network(net_item):
+                t_obj, u_directa, v_base = net_item
+                t_name = t_obj["nombre"]
+                d_diag: Dict[str, Any] = {}
+                err_ex = None
+                vars_res: List[Dict[str, Any]] = []
                 try:
-                    registrar_fallo_scraping(
-                        tienda_id=t_id,
-                        perfume_id=p_id,
-                        mensaje=str(ex),
-                    )
-                except Exception:
-                    pass
+                    if "falabella" in t_name.lower():
+                        time.sleep(random.uniform(0.12, 0.28))
+                        vars_res = extraer_variedades_falabella(
+                            session=session,
+                            url_directa=u_directa,
+                            perfume_nombre=p_nom,
+                            marca=p_marca,
+                            volumen_ml_defecto=v_base,
+                            concentracion=p_tipo,
+                            precio_referencia=p_ref,
+                            diagnostico=d_diag,
+                        )
+                    elif "paris" in t_name.lower():
+                        time.sleep(random.uniform(0.12, 0.28))
+                        vars_res = extraer_variedades_paris(
+                            session=session,
+                            url_directa=u_directa,
+                            perfume_nombre=p_nom,
+                            marca=p_marca,
+                            volumen_ml_defecto=v_base,
+                            concentracion=p_tipo,
+                            precio_referencia=p_ref,
+                            diagnostico=d_diag,
+                        )
+                    elif "ripley" in t_name.lower():
+                        time.sleep(random.uniform(0.12, 0.28))
+                        vars_res = extraer_variedades_ripley(
+                            session=session,
+                            url_directa=u_directa,
+                            perfume_nombre=p_nom,
+                            marca=p_marca,
+                            volumen_ml_defecto=v_base,
+                            concentracion=p_tipo,
+                            precio_referencia=p_ref,
+                            diagnostico=d_diag,
+                        )
+                    elif t_name in TIENDAS_SHOPIFY:
+                        time.sleep(random.uniform(0.12, 0.28))
+                        dom = TIENDAS_SHOPIFY[t_name]
+                        vars_res = extraer_variedades_shopify(
+                            session=session,
+                            dominio=dom,
+                            perfume_nombre=p_nom,
+                            marca=p_marca,
+                            volumen_ml_defecto=v_base,
+                            concentracion=p_tipo,
+                            precio_referencia=p_ref,
+                            diagnostico=d_diag,
+                        )
+                    elif t_name in TIENDAS_WOOCOMMERCE:
+                        time.sleep(random.uniform(0.12, 0.28))
+                        dom = TIENDAS_WOOCOMMERCE[t_name]
+                        vars_res = extraer_variedades_woocommerce(
+                            session=session,
+                            dominio=dom,
+                            perfume_nombre=p_nom,
+                            marca=p_marca,
+                            volumen_ml_defecto=v_base,
+                            concentracion=p_tipo,
+                            precio_referencia=p_ref,
+                            diagnostico=d_diag,
+                        )
+                except Exception as ex:
+                    err_ex = ex
+                return (t_obj, u_directa, v_base, vars_res, d_diag, err_ex)
+
+            max_w = min(3, len(tiendas_network_items))
+            with ThreadPoolExecutor(max_workers=max_w) as executor:
+                net_results = list(executor.map(_ejecutar_extraccion_network, tiendas_network_items))
+
+            for t_obj, u_directa, v_base, vars_res, d_diag, err_ex in net_results:
+                t_nom = t_obj["nombre"]
+                tiendas_stats[t_nom]["consultas"] += 1
+                _procesar_resultado_tienda(t_obj, u_directa, v_base, vars_res, d_diag, err_ex)
 
     duracion = round(time.time() - inicio, 2)
     estado_general = "EXITOSO" if not errores else ("DEGRADADO" if actualizaciones > 0 else "FALLIDO")
@@ -2044,6 +2077,8 @@ def ejecutar_ciclo_scraping_y_descubrimiento(
     batch_size: Optional[int] = None,
     rotations: Optional[int] = None,
     delay_between_rotations: Optional[int] = None,
+    shard: Optional[int] = None,
+    total_shards: Optional[int] = None,
 ) -> Dict[str, Any]:
     """
     Orquesta el ciclo de extracción ETL en rotaciones sucesivas priorizadas mediante cola LRU:
@@ -2075,6 +2110,16 @@ def ejecutar_ciclo_scraping_y_descubrimiento(
         delay_cfg = delay_between_rotations if delay_between_rotations is not None else int(os.environ.get("SCRAPER_DELAY_ROTATIONS", 10))
     except (ValueError, TypeError):
         delay_cfg = 10
+
+    try:
+        sh_cfg = shard if shard is not None else int(os.environ.get("SCRAPER_SHARD", 0))
+    except (ValueError, TypeError):
+        sh_cfg = 0
+
+    try:
+        t_sh_cfg = total_shards if total_shards is not None else int(os.environ.get("SCRAPER_TOTAL_SHARDS", 0))
+    except (ValueError, TypeError):
+        t_sh_cfg = 0
 
     session = crear_sesion_robusta()
 
@@ -2196,6 +2241,17 @@ def ejecutar_ciclo_scraping_y_descubrimiento(
         )
     )
 
+    if sh_cfg > 0 and t_sh_cfg > 1:
+        if sh_cfg > t_sh_cfg:
+            logger.warning(f"Shard {sh_cfg} es mayor que total_shards {t_sh_cfg}. Ajustando a {t_sh_cfg}.")
+            sh_cfg = t_sh_cfg
+        perfumes_antes = len(perfumes_db)
+        perfumes_db = [p for idx, p in enumerate(perfumes_db) if idx % t_sh_cfg == (sh_cfg - 1)]
+        logger.info(
+            f"Horizontal Sharding activo: Shard {sh_cfg}/{t_sh_cfg} asignado. "
+            f"Procesando {len(perfumes_db)} de {perfumes_antes} perfumes del catálogo."
+        )
+
     limit_env = os.environ.get("SCRAPER_LIMIT_PERFUMES")
     if limit_env and limit_env.isdigit():
         max_p = int(limit_env)
@@ -2294,6 +2350,8 @@ def ejecutar_ciclo_scraping_y_descubrimiento(
                 "rotaciones_completadas": rot_idx,
                 "total_rotaciones_planificadas": num_rotaciones,
                 "tamano_lote": effective_batch_size,
+                "shard": sh_cfg,
+                "total_shards": t_sh_cfg,
             },
             "metricas": {
                 "total_perfumes_catalogo": total_perfumes,
@@ -2325,7 +2383,13 @@ def ejecutar_ciclo_scraping_y_descubrimiento(
             ],
             "errores": total_errores[:20],
         }
-        guardar_reporte_auditoria(reporte_resultado)
+        if sh_cfg > 0 and t_sh_cfg > 1:
+            target_reporte = os.path.join(REPORTES_DIR, f"ultimo_scraping_shard_{sh_cfg}.json")
+            guardar_reporte_auditoria(reporte_resultado, ruta_destino=target_reporte)
+            if sh_cfg == 1:
+                guardar_reporte_auditoria(reporte_resultado, ruta_destino=REPORTE_ULTIMO_PATH)
+        else:
+            guardar_reporte_auditoria(reporte_resultado)
 
         logger.info(
             f"=== ROTACIÓN {rot_idx}/{num_rotaciones} COMPLETADA "
@@ -2374,6 +2438,18 @@ if __name__ == "__main__":
         action="store_true",
         help="Desactivar precarga masiva JSON y forzar modo HTTP individual secuencial.",
     )
+    parser.add_argument(
+        "--shard",
+        type=int,
+        default=int(os.environ.get("SCRAPER_SHARD", 0)),
+        help="Índice de partición horizontal (1-based, e.g. 1 o 2). Por defecto 0 (sin partición).",
+    )
+    parser.add_argument(
+        "--total-shards",
+        type=int,
+        default=int(os.environ.get("SCRAPER_TOTAL_SHARDS", 0)),
+        help="Total de particiones horizontales en ejecución paralela (e.g. 2). Por defecto 0.",
+    )
     args = parser.parse_args()
 
     if args.no_bulk:
@@ -2383,6 +2459,8 @@ if __name__ == "__main__":
         batch_size=args.batch_size,
         rotations=args.rotations,
         delay_between_rotations=args.delay,
+        shard=args.shard,
+        total_shards=args.total_shards,
     )
     sep_box = "=" * 60
     print("\n" + sep_box)

@@ -1519,14 +1519,34 @@ def generar_url_tienda(tienda_nombre: str, perfume_nombre: str, url_directa: Opt
     return None
 
 
+MARCAS_NO_RETAIL_TRADICIONAL: Set[str] = {
+    # Marcas nicho, de autor, independientes o clones que no se comercializan en tienda oficial de grandes almacenes chilenos
+    "lorenzo pazzaglia", "ajmal", "naseem", "mirada", "mykonos", "arabiyat prestige",
+    "jo milano", "jo milano paris", "bon parfumeur", "ramon monegal", "ramón monegal",
+    "argos", "le falcone", "bharara", "stephane humbert lucas", "stéphane humbert lucas",
+    "mast perfume", "mancera", "riiffs", "tubbees", "parfums de marly", "creed",
+    "eight & bob", "cuba", "coleccion exclusiva", "just jack", "rave", "tauer perfumes",
+    "xerjoff", "rue broca", "ahmed al maghribi", "fujiyama", "fcuk", "mpf",
+    "lomani", "head", "bentley", "risala", "nike", "zippo", "sospiro", "atralia",
+    "king of kings", "beauty & scent", "savia auraa", "giorgio beverly hills",
+    "laboratorio olfattivo", "kajal", "pastor prive", "pastor privé", "m. micallef",
+    "juliette has a gun", "jovoy paris", "nishane", "thameen", "auraa desire",
+    "montale", "borouj", "silk perfumes", "auraa", "ferrari", "carrera",
+    "kim kardashian", "amaran", "halston", "fred hayman", "disney", "cosmopolitan",
+    "pharrell williams", "per'king", "rebecca minkoff", "blauer", "jacques bogart", "devsana",
+}
+
+
 def tienda_comercializa_marca(tienda_nombre: str, marca: str, es_arabe_flag: Optional[bool] = None) -> bool:
     t_nom = (tienda_nombre or "").lower()
-    m = (marca or "").lower()
+    m = (marca or "").lower().strip()
     if "chanel" in m or "maison francis" in m or "tom ford" in m:
         return any(retail in t_nom for retail in ["falabella", "paris", "ripley"])
-    # Los grandes retailers tradicionales y farmacias no comercializan perfumería árabe en tienda oficial (solo marketplace)
+    # Los grandes retailers tradicionales y farmacias no comercializan perfumería árabe ni marcas de nicho/indie en tienda oficial
     if any(retail in t_nom for retail in ["falabella", "paris", "ripley", "dbs"]):
         if es_arabe_flag is True:
+            return False
+        if m in MARCAS_NO_RETAIL_TRADICIONAL:
             return False
         try:
             from backend.normalizador import es_arabe
