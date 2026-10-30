@@ -1,66 +1,72 @@
 {
-  "actualizaciones": 112,
-  "fecha": "2026-10-30 12:55:52",
-  "duracion_segundos": 1843.6,
+  "actualizaciones": 0,
+  "fecha": "2026-10-30 16:33:28",
+  "duracion_segundos": 849.22,
   "metadata": {
     "version_etl": "3.3.0",
     "sistema": "PerfumeTrending Professional Anti-Bot ETL (Multi-Rotation LRU)",
-    "fecha_ejecucion": "2026-10-30 12:55:52",
-    "duracion_segundos": 1843.6,
+    "fecha_ejecucion": "2026-10-30 16:33:28",
+    "duracion_segundos": 849.22,
     "estado": "EXITOSO",
     "rotaciones_completadas": 1,
     "total_rotaciones_planificadas": 1,
-    "tamano_lote": 500,
+    "tamano_lote": 25,
     "shard": 0,
     "total_shards": 0
   },
   "metricas": {
-    "total_perfumes_catalogo": 3250,
-    "perfumes_auditados": 500,
+    "total_perfumes_catalogo": 3366,
+    "perfumes_auditados": 25,
     "total_tiendas_registradas": 17,
-    "precios_actualizados": 112,
-    "ofertas_nuevas": 24,
-    "cambios_precio": 91,
-    "cambios_stock": 37,
-    "cambios_url": 74,
+    "precios_actualizados": 0,
+    "ofertas_nuevas": 0,
+    "cambios_precio": 0,
+    "cambios_stock": 0,
+    "cambios_url": 0,
     "bloqueos_waf": 0,
-    "exclusiones_marca": 1202,
+    "exclusiones_marca": 86,
+    "omitidos_circuit_breaker": 0,
     "errores_totales": 0
   },
   "estadisticas_tiendas": {
     "Falabella": {
-      "consultas": 318,
-      "exitos_en_vivo": 130,
-      "fallbacks_seguridad": 210,
+      "consultas": 9,
+      "exitos_en_vivo": 0,
+      "fallbacks_seguridad": 9,
       "bloqueos_waf": 0,
+      "omitidos_circuit_breaker": 0,
       "trust_score": 96
     },
     "Paris": {
-      "consultas": 318,
-      "exitos_en_vivo": 115,
-      "fallbacks_seguridad": 204,
+      "consultas": 9,
+      "exitos_en_vivo": 0,
+      "fallbacks_seguridad": 9,
       "bloqueos_waf": 0,
+      "omitidos_circuit_breaker": 0,
       "trust_score": 95
     },
     "Ripley": {
-      "consultas": 318,
-      "exitos_en_vivo": 134,
-      "fallbacks_seguridad": 234,
+      "consultas": 9,
+      "exitos_en_vivo": 0,
+      "fallbacks_seguridad": 9,
       "bloqueos_waf": 0,
+      "omitidos_circuit_breaker": 0,
       "trust_score": 94
     },
     "Silk Perfumes": {
-      "consultas": 488,
-      "exitos_en_vivo": 292,
-      "fallbacks_seguridad": 258,
+      "consultas": 24,
+      "exitos_en_vivo": 0,
+      "fallbacks_seguridad": 24,
       "bloqueos_waf": 0,
+      "omitidos_circuit_breaker": 0,
       "trust_score": 92
     },
     "Elite Perfumes": {
-      "consultas": 488,
-      "exitos_en_vivo": 48,
-      "fallbacks_seguridad": 440,
+      "consultas": 24,
+      "exitos_en_vivo": 0,
+      "fallbacks_seguridad": 24,
       "bloqueos_waf": 0,
+      "omitidos_circuit_breaker": 0,
       "trust_score": 89
     },
     "DBS Beauty Store": {
@@ -68,260 +74,351 @@
       "exitos_en_vivo": 0,
       "fallbacks_seguridad": 0,
       "bloqueos_waf": 0,
+      "omitidos_circuit_breaker": 0,
       "trust_score": 91
     },
     "Alisha Perfumes": {
-      "consultas": 488,
-      "exitos_en_vivo": 96,
-      "fallbacks_seguridad": 403,
+      "consultas": 24,
+      "exitos_en_vivo": 0,
+      "fallbacks_seguridad": 24,
       "bloqueos_waf": 0,
+      "omitidos_circuit_breaker": 0,
       "trust_score": 88
     },
     "Yauras Perfumes": {
-      "consultas": 488,
-      "exitos_en_vivo": 151,
-      "fallbacks_seguridad": 359,
+      "consultas": 24,
+      "exitos_en_vivo": 0,
+      "fallbacks_seguridad": 24,
       "bloqueos_waf": 0,
+      "omitidos_circuit_breaker": 0,
       "trust_score": 88
     },
     "Oferta Perfumes": {
-      "consultas": 488,
-      "exitos_en_vivo": 141,
-      "fallbacks_seguridad": 351,
+      "consultas": 24,
+      "exitos_en_vivo": 0,
+      "fallbacks_seguridad": 24,
       "bloqueos_waf": 0,
+      "omitidos_circuit_breaker": 0,
       "trust_score": 90
     },
     "L'Odoro": {
-      "consultas": 488,
-      "exitos_en_vivo": 139,
-      "fallbacks_seguridad": 380,
+      "consultas": 24,
+      "exitos_en_vivo": 0,
+      "fallbacks_seguridad": 24,
       "bloqueos_waf": 0,
+      "omitidos_circuit_breaker": 0,
       "trust_score": 92
     },
     "Chile Perfume": {
-      "consultas": 488,
-      "exitos_en_vivo": 87,
-      "fallbacks_seguridad": 432,
+      "consultas": 24,
+      "exitos_en_vivo": 0,
+      "fallbacks_seguridad": 24,
       "bloqueos_waf": 0,
+      "omitidos_circuit_breaker": 0,
       "trust_score": 91
     },
     "Mundo Aromas": {
-      "consultas": 488,
-      "exitos_en_vivo": 78,
-      "fallbacks_seguridad": 418,
+      "consultas": 24,
+      "exitos_en_vivo": 0,
+      "fallbacks_seguridad": 24,
       "bloqueos_waf": 0,
+      "omitidos_circuit_breaker": 0,
       "trust_score": 90
     },
     "Cosmetic": {
-      "consultas": 488,
-      "exitos_en_vivo": 90,
-      "fallbacks_seguridad": 419,
+      "consultas": 24,
+      "exitos_en_vivo": 0,
+      "fallbacks_seguridad": 24,
       "bloqueos_waf": 0,
+      "omitidos_circuit_breaker": 0,
       "trust_score": 90
     },
     "Fragante": {
-      "consultas": 488,
-      "exitos_en_vivo": 21,
-      "fallbacks_seguridad": 476,
+      "consultas": 24,
+      "exitos_en_vivo": 0,
+      "fallbacks_seguridad": 24,
       "bloqueos_waf": 0,
+      "omitidos_circuit_breaker": 0,
       "trust_score": 90
     },
     "ComprarEnChile": {
-      "consultas": 488,
-      "exitos_en_vivo": 97,
-      "fallbacks_seguridad": 403,
+      "consultas": 24,
+      "exitos_en_vivo": 0,
+      "fallbacks_seguridad": 24,
       "bloqueos_waf": 0,
+      "omitidos_circuit_breaker": 0,
       "trust_score": 88
     },
     "Portal del Perfume": {
-      "consultas": 488,
-      "exitos_en_vivo": 1,
-      "fallbacks_seguridad": 487,
+      "consultas": 24,
+      "exitos_en_vivo": 0,
+      "fallbacks_seguridad": 24,
       "bloqueos_waf": 0,
+      "omitidos_circuit_breaker": 0,
       "trust_score": 89
     },
     "Aromata": {
-      "consultas": 488,
-      "exitos_en_vivo": 1,
-      "fallbacks_seguridad": 487,
+      "consultas": 24,
+      "exitos_en_vivo": 0,
+      "fallbacks_seguridad": 24,
       "bloqueos_waf": 0,
+      "omitidos_circuit_breaker": 0,
       "trust_score": 89
     }
   },
-  "muestra_capturas": [
-    {
-      "perfume": "So Candid Jpg So Scandal",
-      "tienda": "Yauras Perfumes",
-      "precio_actual": 16990,
-      "precio_normal": 27990,
-      "tiene_descuento": true,
-      "origen": "Yauras Perfumes Bulk Cache",
-      "volumen_ml": 100,
-      "formato": "regular",
-      "en_stock": false
+  "muestra_capturas": [],
+  "descubrimiento": {
+    "metadata": {
+      "version": "3.3.0 (In-Memory Bulk Stream Discovery)",
+      "sistema": "PerfumeTrending Autonomous Discovery Engine",
+      "fecha_ejecucion": "2026-10-30 16:34:02",
+      "duracion_segundos": 778.09,
+      "estado": "EXITOSO",
+      "destino": "Supabase Cloud + SQLite Local"
     },
-    {
-      "perfume": "Ege Ailaio Extrait De",
-      "tienda": "Oferta Perfumes",
-      "precio_actual": 289900,
-      "precio_normal": 376987,
-      "tiene_descuento": true,
-      "origen": "Oferta Perfumes Bulk Cache",
-      "volumen_ml": 100,
-      "formato": "regular",
-      "en_stock": false
+    "metricas": {
+      "total_productos_analizados": 3434,
+      "descartados_no_perfume": 682,
+      "nuevos_perfumes_descubiertos": 579,
+      "precios_variantes_registrados": 579,
+      "errores_totales": 0
     },
-    {
-      "perfume": "Beas Dahar",
-      "tienda": "Oferta Perfumes",
-      "precio_actual": 27810,
-      "precio_normal": 36258,
-      "tiene_descuento": true,
-      "origen": "Oferta Perfumes Bulk Cache",
-      "volumen_ml": 100,
-      "formato": "tester",
-      "en_stock": false
-    },
-    {
-      "perfume": "Beas More Wanted",
-      "tienda": "Oferta Perfumes",
-      "precio_actual": 27810,
-      "precio_normal": 36258,
-      "tiene_descuento": true,
-      "origen": "Oferta Perfumes Bulk Cache",
-      "volumen_ml": 100,
-      "formato": "tester",
-      "en_stock": false
-    },
-    {
-      "perfume": "R2b2 Ai",
-      "tienda": "Oferta Perfumes",
-      "precio_actual": 29610,
-      "precio_normal": 38598,
-      "tiene_descuento": true,
-      "origen": "Oferta Perfumes Bulk Cache",
-      "volumen_ml": 100,
-      "formato": "regular",
-      "en_stock": false
-    },
-    {
-      "perfume": "Insurrection II Pure",
-      "tienda": "Oferta Perfumes",
-      "precio_actual": 24210,
-      "precio_normal": 31578,
-      "tiene_descuento": true,
-      "origen": "Oferta Perfumes Bulk Cache",
-      "volumen_ml": 100,
-      "formato": "regular",
-      "en_stock": false
-    },
-    {
-      "perfume": "Chocolate Makes Me Happy Extrait De",
-      "tienda": "Oferta Perfumes",
-      "precio_actual": 152900,
-      "precio_normal": 198887,
-      "tiene_descuento": true,
-      "origen": "Oferta Perfumes Bulk Cache",
-      "volumen_ml": 100,
-      "formato": "regular",
-      "en_stock": false
-    },
-    {
-      "perfume": "Drifter",
-      "tienda": "Oferta Perfumes",
-      "precio_actual": 26910,
-      "precio_normal": 35088,
-      "tiene_descuento": true,
-      "origen": "Oferta Perfumes Bulk Cache",
-      "volumen_ml": 100,
-      "formato": "regular",
-      "en_stock": false
-    },
-    {
-      "perfume": "Tesoro Rose Nuit",
-      "tienda": "Oferta Perfumes",
-      "precio_actual": 12510,
-      "precio_normal": 16368,
-      "tiene_descuento": true,
-      "origen": "Oferta Perfumes Bulk Cache",
-      "volumen_ml": 100,
-      "formato": "regular",
-      "en_stock": false
-    },
-    {
-      "perfume": "Tony Iommi Deified",
-      "tienda": "Oferta Perfumes",
-      "precio_actual": 251900,
-      "precio_normal": 327587,
-      "tiene_descuento": true,
-      "origen": "Oferta Perfumes Bulk Cache",
-      "volumen_ml": 100,
-      "formato": "regular",
-      "en_stock": false
-    },
-    {
-      "perfume": "Raheek",
-      "tienda": "Oferta Perfumes",
-      "precio_actual": 25110,
-      "precio_normal": 32748,
-      "tiene_descuento": true,
-      "origen": "Oferta Perfumes Bulk Cache",
-      "volumen_ml": 100,
-      "formato": "regular",
-      "en_stock": false
-    },
-    {
-      "perfume": "Dastoor Lil Rijal",
-      "tienda": "Oferta Perfumes",
-      "precio_actual": 24210,
-      "precio_normal": 31578,
-      "tiene_descuento": true,
-      "origen": "Oferta Perfumes Bulk Cache",
-      "volumen_ml": 100,
-      "formato": "regular",
-      "en_stock": false
-    },
-    {
-      "perfume": "Tubbees Lychee Lush",
-      "tienda": "Oferta Perfumes",
-      "precio_actual": 7510,
-      "precio_normal": 12990,
-      "tiene_descuento": true,
-      "origen": "Oferta Perfumes Bulk Cache",
-      "volumen_ml": 100,
-      "formato": "regular",
-      "en_stock": false
-    },
-    {
-      "perfume": "Paradise Gorgeous Girl",
-      "tienda": "Oferta Perfumes",
-      "precio_actual": 12510,
-      "precio_normal": 16368,
-      "tiene_descuento": true,
-      "origen": "Oferta Perfumes Bulk Cache",
-      "volumen_ml": 100,
-      "formato": "regular",
-      "en_stock": false
-    },
-    {
-      "perfume": "Donna Karan Be Tempted",
-      "tienda": "Oferta Perfumes",
-      "precio_actual": 37710,
-      "precio_normal": 47958,
-      "tiene_descuento": true,
-      "origen": "Oferta Perfumes Bulk Cache",
-      "volumen_ml": 100,
-      "formato": "regular",
-      "en_stock": false
-    }
-  ],
+    "muestras_nuevas": [
+      {
+        "nombre": "Imperia",
+        "marca": "Rayhaan",
+        "tipo": "Eau de Parfum",
+        "es_arabe": true,
+        "tienda": "Silk Perfumes",
+        "precio": 16990,
+        "volumen_ml": 100
+      },
+      {
+        "nombre": "Donna Born In Roma Intense",
+        "marca": "Valentino",
+        "tipo": "Eau de Parfum",
+        "es_arabe": false,
+        "tienda": "Silk Perfumes",
+        "precio": 164990,
+        "volumen_ml": 100
+      },
+      {
+        "nombre": "Pride Peace & Love",
+        "marca": "Lattafa",
+        "tipo": "Eau de Parfum",
+        "es_arabe": true,
+        "tienda": "Silk Perfumes",
+        "precio": 26990,
+        "volumen_ml": 100
+      },
+      {
+        "nombre": "Niche Emarati Remas",
+        "marca": "Lattafa",
+        "tipo": "Eau de Parfum",
+        "es_arabe": true,
+        "tienda": "Silk Perfumes",
+        "precio": 29990,
+        "volumen_ml": 100
+      },
+      {
+        "nombre": "Lancome La Vie Est Belle Vanille Nude",
+        "marca": "Lancôme",
+        "tipo": "Eau de Parfum",
+        "es_arabe": false,
+        "tienda": "Silk Perfumes",
+        "precio": 99990,
+        "volumen_ml": 100
+      },
+      {
+        "nombre": "Crystal Noir Parfum",
+        "marca": "Versace",
+        "tipo": "Eau de Parfum",
+        "es_arabe": false,
+        "tienda": "Silk Perfumes",
+        "precio": 79990,
+        "volumen_ml": 90
+      },
+      {
+        "nombre": "Armani Stronger With You Powerfully",
+        "marca": "Giorgio Armani",
+        "tipo": "Eau de Parfum",
+        "es_arabe": false,
+        "tienda": "Silk Perfumes",
+        "precio": 89990,
+        "volumen_ml": 50
+      },
+      {
+        "nombre": "Delilah Pour Femme All Over Perfume",
+        "marca": "Maison Alhambra",
+        "tipo": "Eau de Parfum",
+        "es_arabe": true,
+        "tienda": "Silk Perfumes",
+        "precio": 5990,
+        "volumen_ml": 150
+      },
+      {
+        "nombre": "Rome Extradose Pour Femme",
+        "marca": "Mast Perfume",
+        "tipo": "Eau de Parfum",
+        "es_arabe": false,
+        "tienda": "Silk Perfumes",
+        "precio": 29990,
+        "volumen_ml": 100
+      },
+      {
+        "nombre": "Dylan Blue Pour Homme",
+        "marca": "Versace",
+        "tipo": "Eau de Toilette",
+        "es_arabe": false,
+        "tienda": "Silk Perfumes",
+        "precio": 37990,
+        "volumen_ml": 30
+      },
+      {
+        "nombre": "Million Gold Elixir Intense",
+        "marca": "Paco Rabanne",
+        "tipo": "Elixir",
+        "es_arabe": false,
+        "tienda": "Silk Perfumes",
+        "precio": 129990,
+        "volumen_ml": 200
+      },
+      {
+        "nombre": "Paloma Picasso Tester Edp 30 Ml",
+        "marca": "Paloma Picasso",
+        "tipo": "Eau de Parfum",
+        "es_arabe": false,
+        "tienda": "Silk Perfumes",
+        "precio": 14990,
+        "volumen_ml": 30
+      },
+      {
+        "nombre": "Terre D'Hermes Intense",
+        "marca": "Hermès",
+        "tipo": "Eau de Parfum",
+        "es_arabe": false,
+        "tienda": "Silk Perfumes",
+        "precio": 99990,
+        "volumen_ml": 100
+      },
+      {
+        "nombre": "9 Pm Rebel",
+        "marca": "Afnan",
+        "tipo": "Eau de Parfum",
+        "es_arabe": true,
+        "tienda": "Silk Perfumes",
+        "precio": 36990,
+        "volumen_ml": 100
+      },
+      {
+        "nombre": "9am",
+        "marca": "Afnan",
+        "tipo": "Eau de Parfum",
+        "es_arabe": true,
+        "tienda": "Silk Perfumes",
+        "precio": 25990,
+        "volumen_ml": 100
+      },
+      {
+        "nombre": "One Million Elixir Parfum Intense",
+        "marca": "Paco Rabanne",
+        "tipo": "Elixir",
+        "es_arabe": false,
+        "tienda": "Silk Perfumes",
+        "precio": 133990,
+        "volumen_ml": 200
+      },
+      {
+        "nombre": "Le Male Le Parfum Intense",
+        "marca": "Jean Paul Gaultier",
+        "tipo": "Eau de Parfum Intense",
+        "es_arabe": false,
+        "tienda": "Silk Perfumes",
+        "precio": 86990,
+        "volumen_ml": 125
+      },
+      {
+        "nombre": "Ralph'S Club Elixir Parfum",
+        "marca": "Ralph Lauren",
+        "tipo": "Elixir",
+        "es_arabe": false,
+        "tienda": "Silk Perfumes",
+        "precio": 44990,
+        "volumen_ml": 75
+      },
+      {
+        "nombre": "Ecstatic Peche",
+        "marca": "Asten",
+        "tipo": "Eau de Parfum",
+        "es_arabe": false,
+        "tienda": "Silk Perfumes",
+        "precio": 9990,
+        "volumen_ml": 80
+      },
+      {
+        "nombre": "Hayaati Royale",
+        "marca": "Fragrance World",
+        "tipo": "Eau de Parfum",
+        "es_arabe": true,
+        "tienda": "Silk Perfumes",
+        "precio": 14990,
+        "volumen_ml": 100
+      },
+      {
+        "nombre": "9pm Night Out",
+        "marca": "Afnan",
+        "tipo": "Extrait de Parfum",
+        "es_arabe": true,
+        "tienda": "Silk Perfumes",
+        "precio": 54990,
+        "volumen_ml": 100
+      },
+      {
+        "nombre": "Teriaq Intense",
+        "marca": "Lattafa",
+        "tipo": "Eau de Parfum",
+        "es_arabe": true,
+        "tienda": "Silk Perfumes",
+        "precio": 21990,
+        "volumen_ml": 100
+      },
+      {
+        "nombre": "Your Touch Extrait",
+        "marca": "Maison Alhambra",
+        "tipo": "Extrait de Parfum",
+        "es_arabe": true,
+        "tienda": "Silk Perfumes",
+        "precio": 14990,
+        "volumen_ml": 100
+      },
+      {
+        "nombre": "Nocturno Elixir",
+        "marca": "Rayhaan",
+        "tipo": "Elixir",
+        "es_arabe": true,
+        "tienda": "Silk Perfumes",
+        "precio": 31990,
+        "volumen_ml": 100
+      },
+      {
+        "nombre": "Fuking Fabulous",
+        "marca": "Jessica Twain",
+        "tipo": "Eau de Parfum",
+        "es_arabe": false,
+        "tienda": "Silk Perfumes",
+        "precio": 6990,
+        "volumen_ml": 100
+      }
+    ],
+    "errores": []
+  },
   "rotaciones_detalle": [
     {
       "rotacion": 1,
-      "scraping_run_id": 39,
-      "perfumes": 500,
-      "actualizaciones": 112,
-      "duracion_segundos": 1812.05,
+      "scraping_run_id": 44,
+      "perfumes": 25,
+      "actualizaciones": 0,
+      "duracion_segundos": 36.28,
       "estado": "EXITOSO"
     }
   ],

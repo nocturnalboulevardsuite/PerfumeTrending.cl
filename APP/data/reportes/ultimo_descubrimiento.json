@@ -1,219 +1,244 @@
 {
   "metadata": {
-    "version": "2.1.0 (Cloud Supabase Multi-Tienda Masivo)",
-    "sistema": "PerfumeTrending Autonomous Discovery Crawler",
-    "fecha_ejecucion": "2026-10-28 16:33:04",
-    "duracion_segundos": 2487.35,
+    "version": "3.3.0 (In-Memory Bulk Stream Discovery)",
+    "sistema": "PerfumeTrending Autonomous Discovery Engine",
+    "fecha_ejecucion": "2026-10-30 16:34:02",
+    "duracion_segundos": 778.09,
     "estado": "EXITOSO",
-    "destino": "Supabase PostgreSQL + SQLite"
+    "destino": "Supabase Cloud + SQLite Local"
   },
   "metricas": {
-    "total_productos_analizados": 1500,
-    "descartados_no_perfume": 327,
-    "nuevos_perfumes_descubiertos": 706,
-    "precios_variantes_registrados": 1171,
+    "total_productos_analizados": 3434,
+    "descartados_no_perfume": 682,
+    "nuevos_perfumes_descubiertos": 579,
+    "precios_variantes_registrados": 579,
     "errores_totales": 0
   },
   "muestras_nuevas": [
     {
-      "nombre": "Fakhar Perfume Mist",
-      "marca": "Lattafa",
+      "nombre": "Imperia",
+      "marca": "Rayhaan",
       "tipo": "Eau de Parfum",
       "es_arabe": true,
       "tienda": "Silk Perfumes",
-      "precio": 6990
+      "precio": 16990,
+      "volumen_ml": 100
     },
     {
-      "nombre": "Yara Tous Perfume Mist",
-      "marca": "Lattafa",
-      "tipo": "Eau de Parfum",
-      "es_arabe": true,
-      "tienda": "Silk Perfumes",
-      "precio": 6990
-    },
-    {
-      "nombre": "Mayar Natural Intense Perfume Mist",
-      "marca": "Lattafa",
-      "tipo": "Eau de Parfum",
-      "es_arabe": true,
-      "tienda": "Silk Perfumes",
-      "precio": 6990
-    },
-    {
-      "nombre": "Sehr Perfume Mist",
-      "marca": "Lattafa",
-      "tipo": "Eau de Parfum",
-      "es_arabe": true,
-      "tienda": "Silk Perfumes",
-      "precio": 6990
-    },
-    {
-      "nombre": "Teriaq Perfume Mist",
-      "marca": "Lattafa",
-      "tipo": "Eau de Parfum",
-      "es_arabe": true,
-      "tienda": "Silk Perfumes",
-      "precio": 6990
-    },
-    {
-      "nombre": "Yara Perfume Mist",
-      "marca": "Lattafa",
-      "tipo": "Eau de Parfum",
-      "es_arabe": true,
-      "tienda": "Silk Perfumes",
-      "precio": 6990
-    },
-    {
-      "nombre": "Mayar Cherry Intense Perfume Mist",
-      "marca": "Lattafa",
-      "tipo": "Eau de Parfum",
-      "es_arabe": true,
-      "tienda": "Silk Perfumes",
-      "precio": 6990
-    },
-    {
-      "nombre": "Haya Perfume Mist",
-      "marca": "Lattafa",
-      "tipo": "Eau de Parfum",
-      "es_arabe": true,
-      "tienda": "Silk Perfumes",
-      "precio": 6990
-    },
-    {
-      "nombre": "Eclaire Perfume Mist",
-      "marca": "Lattafa",
-      "tipo": "Eau de Parfum",
-      "es_arabe": true,
-      "tienda": "Silk Perfumes",
-      "precio": 6990
-    },
-    {
-      "nombre": "Badee Al Oud Noble Blush Perfume Mist",
-      "marca": "Lattafa",
-      "tipo": "Eau de Parfum",
-      "es_arabe": true,
-      "tienda": "Silk Perfumes",
-      "precio": 6990
-    },
-    {
-      "nombre": "YSL Y",
-      "marca": "Yves Saint Laurent",
+      "nombre": "Donna Born In Roma Intense",
+      "marca": "Valentino",
       "tipo": "Eau de Parfum",
       "es_arabe": false,
       "tienda": "Silk Perfumes",
-      "precio": 83990
+      "precio": 164990,
+      "volumen_ml": 100
     },
     {
-      "nombre": "Invictus Parfum Elixir",
+      "nombre": "Pride Peace & Love",
+      "marca": "Lattafa",
+      "tipo": "Eau de Parfum",
+      "es_arabe": true,
+      "tienda": "Silk Perfumes",
+      "precio": 26990,
+      "volumen_ml": 100
+    },
+    {
+      "nombre": "Niche Emarati Remas",
+      "marca": "Lattafa",
+      "tipo": "Eau de Parfum",
+      "es_arabe": true,
+      "tienda": "Silk Perfumes",
+      "precio": 29990,
+      "volumen_ml": 100
+    },
+    {
+      "nombre": "Lancome La Vie Est Belle Vanille Nude",
+      "marca": "Lancôme",
+      "tipo": "Eau de Parfum",
+      "es_arabe": false,
+      "tienda": "Silk Perfumes",
+      "precio": 99990,
+      "volumen_ml": 100
+    },
+    {
+      "nombre": "Crystal Noir Parfum",
+      "marca": "Versace",
+      "tipo": "Eau de Parfum",
+      "es_arabe": false,
+      "tienda": "Silk Perfumes",
+      "precio": 79990,
+      "volumen_ml": 90
+    },
+    {
+      "nombre": "Armani Stronger With You Powerfully",
+      "marca": "Giorgio Armani",
+      "tipo": "Eau de Parfum",
+      "es_arabe": false,
+      "tienda": "Silk Perfumes",
+      "precio": 89990,
+      "volumen_ml": 50
+    },
+    {
+      "nombre": "Delilah Pour Femme All Over Perfume",
+      "marca": "Maison Alhambra",
+      "tipo": "Eau de Parfum",
+      "es_arabe": true,
+      "tienda": "Silk Perfumes",
+      "precio": 5990,
+      "volumen_ml": 150
+    },
+    {
+      "nombre": "Rome Extradose Pour Femme",
+      "marca": "Mast Perfume",
+      "tipo": "Eau de Parfum",
+      "es_arabe": false,
+      "tienda": "Silk Perfumes",
+      "precio": 29990,
+      "volumen_ml": 100
+    },
+    {
+      "nombre": "Dylan Blue Pour Homme",
+      "marca": "Versace",
+      "tipo": "Eau de Toilette",
+      "es_arabe": false,
+      "tienda": "Silk Perfumes",
+      "precio": 37990,
+      "volumen_ml": 30
+    },
+    {
+      "nombre": "Million Gold Elixir Intense",
       "marca": "Paco Rabanne",
       "tipo": "Elixir",
       "es_arabe": false,
       "tienda": "Silk Perfumes",
-      "precio": 154990
+      "precio": 129990,
+      "volumen_ml": 200
     },
     {
-      "nombre": "One Million Gold Intense",
+      "nombre": "Paloma Picasso Tester Edp 30 Ml",
+      "marca": "Paloma Picasso",
+      "tipo": "Eau de Parfum",
+      "es_arabe": false,
+      "tienda": "Silk Perfumes",
+      "precio": 14990,
+      "volumen_ml": 30
+    },
+    {
+      "nombre": "Terre D'Hermes Intense",
+      "marca": "Hermès",
+      "tipo": "Eau de Parfum",
+      "es_arabe": false,
+      "tienda": "Silk Perfumes",
+      "precio": 99990,
+      "volumen_ml": 100
+    },
+    {
+      "nombre": "9 Pm Rebel",
+      "marca": "Afnan",
+      "tipo": "Eau de Parfum",
+      "es_arabe": true,
+      "tienda": "Silk Perfumes",
+      "precio": 36990,
+      "volumen_ml": 100
+    },
+    {
+      "nombre": "9am",
+      "marca": "Afnan",
+      "tipo": "Eau de Parfum",
+      "es_arabe": true,
+      "tienda": "Silk Perfumes",
+      "precio": 25990,
+      "volumen_ml": 100
+    },
+    {
+      "nombre": "One Million Elixir Parfum Intense",
       "marca": "Paco Rabanne",
+      "tipo": "Elixir",
+      "es_arabe": false,
+      "tienda": "Silk Perfumes",
+      "precio": 133990,
+      "volumen_ml": 200
+    },
+    {
+      "nombre": "Le Male Le Parfum Intense",
+      "marca": "Jean Paul Gaultier",
       "tipo": "Eau de Parfum Intense",
       "es_arabe": false,
       "tienda": "Silk Perfumes",
-      "precio": 63990
+      "precio": 86990,
+      "volumen_ml": 125
     },
     {
-      "nombre": "Very Irresistible",
-      "marca": "Givenchy",
-      "tipo": "Eau de Toilette",
+      "nombre": "Ralph'S Club Elixir Parfum",
+      "marca": "Ralph Lauren",
+      "tipo": "Elixir",
       "es_arabe": false,
       "tienda": "Silk Perfumes",
-      "precio": 64990
+      "precio": 44990,
+      "volumen_ml": 75
     },
     {
-      "nombre": "YSL Libre Berry Crush Fruitée",
-      "marca": "Yves Saint Laurent",
+      "nombre": "Ecstatic Peche",
+      "marca": "Asten",
       "tipo": "Eau de Parfum",
       "es_arabe": false,
       "tienda": "Silk Perfumes",
-      "precio": 139990
+      "precio": 9990,
+      "volumen_ml": 80
     },
     {
-      "nombre": "Ô Oui",
-      "marca": "Lancôme",
-      "tipo": "Eau de Toilette",
-      "es_arabe": false,
-      "tienda": "Silk Perfumes",
-      "precio": 59990
-    },
-    {
-      "nombre": "Idôle Peach'N Roses Fruitée",
-      "marca": "Lancôme",
-      "tipo": "Eau de Parfum",
-      "es_arabe": false,
-      "tienda": "Silk Perfumes",
-      "precio": 68990
-    },
-    {
-      "nombre": "Armani Acqua Di Gio Intense",
-      "marca": "Giorgio Armani",
-      "tipo": "Eau de Parfum",
-      "es_arabe": false,
-      "tienda": "Silk Perfumes",
-      "precio": 83990
-    },
-    {
-      "nombre": "Club De Nuit Intenso Fuego",
-      "marca": "Armaf",
+      "nombre": "Hayaati Royale",
+      "marca": "Fragrance World",
       "tipo": "Eau de Parfum",
       "es_arabe": true,
       "tienda": "Silk Perfumes",
-      "precio": 49990
+      "precio": 14990,
+      "volumen_ml": 100
     },
     {
-      "nombre": "Freeze",
-      "marca": "Riiffs",
+      "nombre": "9pm Night Out",
+      "marca": "Afnan",
       "tipo": "Extrait de Parfum",
       "es_arabe": true,
       "tienda": "Silk Perfumes",
-      "precio": 29990
+      "precio": 54990,
+      "volumen_ml": 100
     },
     {
-      "nombre": "Armani Si Passione",
-      "marca": "Giorgio Armani",
+      "nombre": "Teriaq Intense",
+      "marca": "Lattafa",
+      "tipo": "Eau de Parfum",
+      "es_arabe": true,
+      "tienda": "Silk Perfumes",
+      "precio": 21990,
+      "volumen_ml": 100
+    },
+    {
+      "nombre": "Your Touch Extrait",
+      "marca": "Maison Alhambra",
+      "tipo": "Extrait de Parfum",
+      "es_arabe": true,
+      "tienda": "Silk Perfumes",
+      "precio": 14990,
+      "volumen_ml": 100
+    },
+    {
+      "nombre": "Nocturno Elixir",
+      "marca": "Rayhaan",
+      "tipo": "Elixir",
+      "es_arabe": true,
+      "tienda": "Silk Perfumes",
+      "precio": 31990,
+      "volumen_ml": 100
+    },
+    {
+      "nombre": "Fuking Fabulous",
+      "marca": "Jessica Twain",
       "tipo": "Eau de Parfum",
       "es_arabe": false,
       "tienda": "Silk Perfumes",
-      "precio": 57990
-    },
-    {
-      "nombre": "Agua Brava",
-      "marca": "Puig",
-      "tipo": "Eau de Cologne",
-      "es_arabe": false,
-      "tienda": "Silk Perfumes",
-      "precio": 8490
-    },
-    {
-      "nombre": "Euphoria Intense",
-      "marca": "Calvin Klein",
-      "tipo": "Eau de Parfum",
-      "es_arabe": false,
-      "tienda": "Silk Perfumes",
-      "precio": 36990
-    },
-    {
-      "nombre": "Sauvage Parfum",
-      "marca": "Dior",
-      "tipo": "Parfum",
-      "es_arabe": false,
-      "tienda": "Silk Perfumes",
-      "precio": 174990
-    },
-    {
-      "nombre": "Victoria Secret Colonia Love Spell Cashmere",
-      "marca": "Victoria's Secret",
-      "tipo": "Eau de Cologne",
-      "es_arabe": false,
-      "tienda": "Silk Perfumes",
-      "precio": 13990
+      "precio": 6990,
+      "volumen_ml": 100
     }
   ],
   "errores": []
