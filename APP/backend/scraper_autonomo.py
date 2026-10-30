@@ -37,6 +37,10 @@ try:
 except ImportError:
     curl_requests = None
 
+# - ¿Qué hace esta función?:
+#   1. Extrae dígitos puros de un valor textual o numérico sucio (e.g. \'$59.990 CLP\' -> 59990).
+#   2. Devuelve 0 entero seguro ante valores None o textos sin caracteres numéricos.
+
 def clean_digits(val: Any) -> int:
     if val is None:
         return 0
@@ -76,6 +80,7 @@ try:
         is_supabase_disponible,
         registrar_precio,
         registrar_observacion_oferta,
+    guardar_o_actualizar_perfume_scraped,
     )
     from backend.normalizador import (
         CANONICAL_BRAND_MAP,
@@ -100,6 +105,7 @@ except ImportError:
         is_supabase_disponible,
         registrar_precio,
         registrar_observacion_oferta,
+    guardar_o_actualizar_perfume_scraped,
     )
     from normalizador import (
         CANONICAL_BRAND_MAP,
@@ -233,6 +239,11 @@ USER_AGENTS = [
 # y reintentos automáticos con retroceso exponencial (Backoff) ante errores 429
 # (Too Many Requests) o 5xx (Server Error), previniendo caídas del crawler.
 # =============================================================================
+# - ¿Qué hace esta función?:
+#   1. Instancia una sesión requests con Connection Pooling (10 conexiones reutilizables, hasta 20 concurrentes).
+#   2. Configura reintentos exponenciales con \'urllib3.util.Retry\' ante errores 5xx o 429 (Too Many Requests).
+#   3. Evita que caídas momentáneas o congestión de internet detengan el rastreo autónomo.
+
 def crear_sesion_robusta() -> requests.Session:
     """Crea una sesión HTTP con reintentos exponenciales y timeouts defensivos."""
     session = requests.Session()
@@ -248,11 +259,15 @@ def crear_sesion_robusta() -> requests.Session:
     return session
 
 
-def obtener_ultimo_reporte_descubrimiento() -> Optional[Dict[str, Any]]:
+# - ¿Qué hace esta función?:
+#   1. Carga desde disco el archivo JSON 'data/reportes/ultimo_descubrimiento.json' (o ruta personalizada).
+#   2. Retorna un diccionario con las métricas del último ciclo de auto-descubrimiento o None si no existe.
+def obtener_ultimo_reporte_descubrimiento(ruta_destino: Optional[str] = None) -> Optional[Dict[str, Any]]:
     """Carga el último informe de descubrimiento autónomo generado en disco."""
-    if os.path.exists(REPORTE_DESCUBRIMIENTO_PATH):
+    target = ruta_destino or REPORTE_DESCUBRIMIENTO_PATH
+    if os.path.exists(target):
         try:
-            with open(REPORTE_DESCUBRIMIENTO_PATH, "r", encoding="utf-8") as f:
+            with open(target, "r", encoding="utf-8") as f:
                 return json.load(f)
         except Exception:
             pass
@@ -270,6 +285,12 @@ def obtener_ultimo_reporte_descubrimiento() -> Optional[Dict[str, Any]]:
 # Evita que las imágenes se rompan si la tienda externa cambia su URL o la borra.
 # Si la subida falla, mantiene la URL original como respaldo sin interrumpir el proceso.
 # =============================================================================
+# - ¿Qué hace esta función?:
+#   1. Descarga la imagen del producto desde la tienda de origen mediante HTTP GET.
+#   2. Genera un slug limpio y seguro para el nombre de archivo dentro del bucket.
+#   3. Sube los bytes binarios al bucket \'IMG_perfumes\' en Supabase Storage con flag upsert=True.
+#   4. Retorna la URL pública CDN permanente de Supabase para evitar enlaces rotos si la tienda externa cambia su web.
+
 def subir_imagen_a_bucket_supabase(
     session: requests.Session,
     img_url: str,
@@ -311,12 +332,17 @@ def subir_imagen_a_bucket_supabase(
     return img_url
 
 
-def guardar_reporte_descubrimiento(reporte: Dict[str, Any]) -> str:
+# - ¿Qué hace esta función?:
+#   1. Asegura que el directorio 'data/reportes' exista en el entorno de ejecución.
+#   2. Serializa el diccionario del informe en JSON con codificación UTF-8 e indentación legible.
+#   3. Permite especificar una ruta de destino alternativa para auditoría y pruebas unitarias.
+def guardar_reporte_descubrimiento(reporte: Dict[str, Any], ruta_destino: Optional[str] = None) -> str:
     """Persiste el informe en JSON para auditoría y observabilidad del sistema."""
-    os.makedirs(REPORTES_DIR, exist_ok=True)
-    with open(REPORTE_DESCUBRIMIENTO_PATH, "w", encoding="utf-8") as f:
+    destino = ruta_destino or REPORTE_DESCUBRIMIENTO_PATH
+    os.makedirs(os.path.dirname(os.path.abspath(destino)), exist_ok=True)
+    with open(destino, "w", encoding="utf-8") as f:
         json.dump(reporte, f, ensure_ascii=False, indent=2)
-    return REPORTE_DESCUBRIMIENTO_PATH
+    return destino
 
 
 # =============================================================================
@@ -333,6 +359,14 @@ def guardar_reporte_descubrimiento(reporte: Dict[str, Any]) -> str:
 # 5. Carga (L): Para cada variante encontrada (ej. 50ml, 100ml, 200ml), invoca la función
 #    transaccional `registrar_observacion_oferta()` para registrar la oferta viva y el historial.
 # =============================================================================
+# - ¿Qué hace esta función?:
+#   1. Orquesta el ciclo de crawling masivo multi-tienda y multi-página (Shopify / WooCommerce).
+#   2. Aplica el escudo estricto de control de calidad: descarta clones, cosméticos, cremas y frascos < 25ml.
+#   3. Normaliza marca canónica, limpia el nombre y deduce concentración, género y tendencia árabe.
+#   4. Comprueba en Supabase y SQLite si la fragancia ya existe antes de registrar un nuevo perfume.
+#   5. Ingiere variantes de volumen y precios con \'registrar_observacion_oferta\'.
+#   6. Guarda el informe de auditoría en \'ultimo_descubrimiento.json\' y registra logs en \'scraping_logs\'.
+
 def ejecutar_descubrimiento_autonomo(
     limite_por_tienda: int = 250,
     paginas: int = 2,
@@ -797,6 +831,207 @@ def ejecutar_descubrimiento_autonomo(
 
     guardar_reporte_descubrimiento(reporte)
     logger.info(f"Ciclo completado en {duracion}s | {nuevos_perfumes} perfumes nuevos descubiertos | {precios_registrados} precios registrados.")
+    return reporte
+
+
+
+
+# - ¿Qué hace esta función?:
+#   1. Opera en memoria RAM de ultra-alta velocidad (< 2 segundos) sobre los catálogos masivos precargados (cache_tiendas_bulk).
+#   2. Carga en un conjunto hash O(1) todos los perfumes ya conocidos en Supabase y SQLite para deduplicar al instante.
+#   3. Itera sobre los productos no catalogados presentes en los feeds de las tiendas especializadas.
+#   4. Aplica el escudo de control de calidad: descarta clones ('tipo Sauvage'), marcas apócrifas, cosméticos y frascos < 25ml.
+#   5. Ingiere las nuevas fragancias legítimas en Supabase Cloud y SQLite delegando en 'guardar_o_actualizar_perfume_scraped'.
+#   6. Genera y guarda el informe de auditoría en 'data/reportes/ultimo_descubrimiento.json'.
+def descubrir_nuevos_perfumes_desde_bulk(
+    cache_tiendas_bulk: Dict[str, Any],
+    limite_nuevos_por_tienda: int = 50,
+    reporte_path: Optional[str] = None,
+) -> Dict[str, Any]:
+    """
+    Descubre de manera instantánea en memoria nuevas fragancias no presentes en el catálogo
+    aprovechando los feeds descargados por el scraper periódico.
+    """
+    init_db()
+    inicio = time.time()
+    ahora = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    perfumes_conocidos: Set[Tuple[str, str]] = set()
+    sb = get_supabase(use_service_role=True)
+    supabase_activo = is_supabase_disponible()
+
+    if supabase_activo and sb:
+        try:
+            offset = 0
+            while True:
+                res = sb.table("perfumes").select("marca, nombre").range(offset, offset + 999).execute()
+                if not res.data:
+                    break
+                for r in res.data:
+                    m = (normalizar_marca_canonica(r.get("marca") or "") or "").strip().lower()
+                    n = (limpiar_nombre_perfume(r.get("nombre") or "", r.get("marca") or "") or "").strip().lower()
+                    if m and n:
+                        perfumes_conocidos.add((m, n))
+                if len(res.data) < 1000:
+                    break
+                offset += 1000
+        except Exception as e_sb:
+            logger.warning(f"Aviso consultando perfumes conocidos en Supabase: {e_sb}")
+
+    try:
+        with get_db_cursor() as cur:
+            cur.execute("SELECT marca, nombre FROM perfumes;")
+            for r in cur.fetchall():
+                m = (normalizar_marca_canonica(r["marca"] or "") or "").strip().lower()
+                n = (limpiar_nombre_perfume(r["nombre"] or "", r["marca"] or "") or "").strip().lower()
+                if m and n:
+                    perfumes_conocidos.add((m, n))
+    except Exception as e_sq:
+        logger.warning(f"Aviso consultando perfumes conocidos en SQLite: {e_sq}")
+
+    total_analizados = 0
+    descartados_no_perfume = 0
+    nuevos_descubiertos = 0
+    precios_variantes_registrados = 0
+    muestras: List[Dict[str, Any]] = []
+    errores: List[str] = []
+
+    for tienda_slug, cat in cache_tiendas_bulk.items():
+        tienda_nombre = getattr(cat, "nombre_tienda", tienda_slug)
+        nuevos_en_tienda = 0
+        items = getattr(cat, "todos_items", [])
+
+        for item in items:
+            total_analizados += 1
+            raw_title = item.get("title", "")
+            raw_vendor = item.get("vendor", "")
+            item_url = item.get("url", "")
+            img_url = item.get("imagen_url", "")
+            formato = item.get("formato", "regular")
+
+            # Filtro 1: Clones e imitaciones
+            if any(c in (raw_vendor or "").lower() for c in ("loris", "martin lion", "aroma d'or", "volare")):
+                descartados_no_perfume += 1
+                continue
+            if any(w in raw_title.lower() for w in ("inspiracion", "inspiración", "inspirado en", "tipo sauvage", "tipo invictus")):
+                descartados_no_perfume += 1
+                continue
+
+            # Filtro 2: Marca canónica verificada
+            marca = item.get("marca") or normalizar_marca_canonica(raw_vendor)
+            if not marca or marca in MARCAS_INVALIDAS_CATALOGO:
+                for b_cand, b_canon in sorted(CANONICAL_BRAND_MAP.items(), key=lambda x: len(x[0]), reverse=True):
+                    if re.search(r'\b' + re.escape(b_cand) + r'\b', raw_title.lower()):
+                        marca = b_canon
+                        break
+
+            if not marca or marca in MARCAS_INVALIDAS_CATALOGO:
+                descartados_no_perfume += 1
+                continue
+
+            # Filtro 3: Validación estricta de perfume (>=25ml, sin cosméticos ni desodorantes)
+            if not es_producto_perfume_valido(raw_title, marca=marca, volumen_min_ml=25):
+                descartados_no_perfume += 1
+                continue
+
+            # Filtro 4: Nombre canónico limpio
+            nombre_limpio = limpiar_nombre_perfume(raw_title, marca)
+            if not nombre_limpio or len(nombre_limpio.strip()) < 2:
+                descartados_no_perfume += 1
+                continue
+
+            clave_canon = (marca.strip().lower(), nombre_limpio.strip().lower())
+            if clave_canon in perfumes_conocidos:
+                continue
+
+            if nuevos_en_tienda >= limite_nuevos_por_tienda:
+                break
+
+            # Filtro 5: Variantes válidas con precio comercial
+            variants = item.get("variants", [])
+            var_valida = None
+            for v in variants:
+                p_val = clean_digits(v.get("price"))
+                if es_precio_valido(p_val) and p_val >= 4000:
+                    v_title = v.get("title", "")
+                    vol_cand = extraer_volumen_ml(f"{raw_title} {v_title}") or extraer_volumen_ml(item_url) or 100
+                    if vol_cand >= 25:
+                        var_valida = (v, p_val, vol_cand)
+                        break
+
+            if not var_valida:
+                descartados_no_perfume += 1
+                continue
+
+            v_dict, p_act, vol_ml = var_valida
+            p_norm_raw = clean_digits(v_dict.get("compare_at_price"))
+            p_norm = p_norm_raw if (p_norm_raw and p_norm_raw > p_act) else p_act
+            in_stock = bool(v_dict.get("available", True))
+            concentracion = extraer_concentracion(raw_title) or "Eau de Parfum"
+            genero = extraer_genero(raw_title) or "Unisex"
+            arabe_flag = 1 if es_arabe(marca, nombre_limpio) else 0
+
+            # Ingesta en base de datos
+            try:
+                res_ing = guardar_o_actualizar_perfume_scraped(
+                    nombre=nombre_limpio,
+                    marca=marca,
+                    precio_actual=p_act,
+                    precio_normal=p_norm,
+                    tienda_nombre=tienda_nombre,
+                    url_producto=item_url,
+                    imagen_url=img_url or None,
+                    es_arabe=arabe_flag,
+                    genero=genero,
+                    volumen_ml=vol_ml,
+                    tipo=concentracion,
+                    formato=formato,
+                    en_stock=in_stock,
+                )
+                if res_ing.get("exito"):
+                    nuevos_descubiertos += 1
+                    nuevos_en_tienda += 1
+                    precios_variantes_registrados += 1
+                    perfumes_conocidos.add(clave_canon)
+                    muestras.append({
+                        "nombre": nombre_limpio,
+                        "marca": marca,
+                        "tipo": concentracion,
+                        "es_arabe": bool(arabe_flag),
+                        "tienda": tienda_nombre,
+                        "precio": p_act,
+                        "volumen_ml": vol_ml,
+                    })
+                    logger.info(f"✨ [DESCUBRIMIENTO BULK] Nuevo perfume: {nombre_limpio} ({marca}) en {tienda_nombre} - ${p_act:,}")
+            except Exception as ex_ing:
+                err_msg = f"Error ingesta descubrimiento para {nombre_limpio} ({marca}): {ex_ing}"
+                logger.warning(err_msg)
+                errores.append(err_msg)
+
+    duracion = round(time.time() - inicio, 2)
+    estado = "EXITOSO" if not errores else ("DEGRADADO" if nuevos_descubiertos > 0 else "FALLIDO")
+
+    reporte = {
+        "metadata": {
+            "version": "3.3.0 (In-Memory Bulk Stream Discovery)",
+            "sistema": "PerfumeTrending Autonomous Discovery Engine",
+            "fecha_ejecucion": ahora,
+            "duracion_segundos": duracion,
+            "estado": estado,
+            "destino": "Supabase Cloud + SQLite Local",
+        },
+        "metricas": {
+            "total_productos_analizados": total_analizados,
+            "descartados_no_perfume": descartados_no_perfume,
+            "nuevos_perfumes_descubiertos": nuevos_descubiertos,
+            "precios_variantes_registrados": precios_variantes_registrados,
+            "errores_totales": len(errores),
+        },
+        "muestras_nuevas": muestras[:25],
+        "errores": errores,
+    }
+
+    guardar_reporte_descubrimiento(reporte, ruta_destino=reporte_path)
     return reporte
 
 

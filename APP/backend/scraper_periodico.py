@@ -152,6 +152,21 @@ def registrar_resultado_circuit_breaker(
 
 
 
+try:
+    from backend.scraper_autonomo import (
+        descubrir_nuevos_perfumes_desde_bulk,
+        obtener_ultimo_reporte_descubrimiento,
+    )
+except ImportError:
+    try:
+        from scraper_autonomo import (
+            descubrir_nuevos_perfumes_desde_bulk,
+            obtener_ultimo_reporte_descubrimiento,
+        )
+    except ImportError:
+        descubrir_nuevos_perfumes_desde_bulk = None
+        obtener_ultimo_reporte_descubrimiento = None
+
 # Importación de capa de persistencia y normalización
 try:
     from backend.database import (
@@ -1566,6 +1581,8 @@ class CatalogoTiendaBulk:
         handle = prod.get("handle", "")
         clean_url = f"{self.url_base}/products/{handle}" if handle else ""
         formato_prod = detectar_formato_oferta(raw_title, clean_url)
+        images_raw = prod.get("images", [])
+        img_url = images_raw[0].get("src", "") if (images_raw and isinstance(images_raw, list) and isinstance(images_raw[0], dict)) else ""
 
         marca = normalizar_marca_canonica(raw_vendor) if len(raw_vendor) > 1 else ""
         if not marca or marca in MARCAS_INVALIDAS_CATALOGO:
@@ -1581,6 +1598,7 @@ class CatalogoTiendaBulk:
             "marca": marca,
             "url": clean_url,
             "formato": formato_prod,
+            "imagen_url": img_url,
             "variants": prod.get("variants", []),
             "tipo": "shopify",
         }
@@ -1618,6 +1636,8 @@ class CatalogoTiendaBulk:
 
         clean_url = prod.get("permalink", "")
         formato_prod = detectar_formato_oferta(raw_title, clean_url)
+        images_raw = prod.get("images", [])
+        img_url = images_raw[0].get("src", "") if (images_raw and isinstance(images_raw, list) and isinstance(images_raw[0], dict)) else ""
         prices = prod.get("prices", {})
         p_act = clean_digits(prices.get("price")) or clean_digits(prod.get("price"))
         p_norm = clean_digits(prices.get("regular_price")) or clean_digits(prod.get("regular_price")) or p_act
@@ -1630,6 +1650,7 @@ class CatalogoTiendaBulk:
             "marca": marca,
             "url": clean_url,
             "formato": formato_prod,
+            "imagen_url": img_url,
             "variants": [{
                 "title": f"{vol_ml}ml",
                 "price": p_act,
@@ -2198,6 +2219,7 @@ def ejecutar_ciclo_scraping_y_descubrimiento(
     delay_between_rotations: Optional[int] = None,
     shard: Optional[int] = None,
     total_shards: Optional[int] = None,
+    descubrir: Optional[bool] = None,
 ) -> Dict[str, Any]:
     """
     Orquesta el ciclo de extracción ETL en rotaciones sucesivas priorizadas mediante cola LRU:
@@ -2420,6 +2442,25 @@ def ejecutar_ciclo_scraping_y_descubrimiento(
             logger.warning(f"Aviso en precarga masiva de tiendas ({e_bulk}), continuando con modo estándar individual.")
             cache_tiendas_bulk = None
 
+    descubrir_activo = (
+        descubrir if descubrir is not None
+        else os.environ.get("SCRAPER_AUTO_DISCOVER", "false").lower() in ("true", "1", "yes")
+    )
+    reporte_descubrimiento: Optional[Dict[str, Any]] = None
+    if descubrir_activo and cache_tiendas_bulk and descubrir_nuevos_perfumes_desde_bulk:
+        logger.info("\n" + "=" * 70)
+        logger.info("INICIANDO FASE DE AUTO-DESCUBRIMIENTO DE NUEVOS PERFUMES EN MEMORIA")
+        logger.info("=" * 70)
+        try:
+            reporte_descubrimiento = descubrir_nuevos_perfumes_desde_bulk(cache_tiendas_bulk)
+            nuevos_desc = (
+                reporte_descubrimiento.get("metricas", {}).get("nuevos_perfumes_descubiertos", 0)
+                if reporte_descubrimiento else 0
+            )
+            logger.info(f"Fase de auto-descubrimiento completada: {nuevos_desc} nuevas fragancias incorporadas a la base de datos.")
+        except Exception as e_desc:
+            logger.warning(f"Aviso en fase de auto-descubrimiento en bulk: {e_desc}")
+
     for rot_idx in range(1, num_rotaciones + 1):
         idx_start = (rot_idx - 1) * effective_batch_size
         idx_end = min(idx_start + effective_batch_size, total_perfumes)
@@ -2498,6 +2539,7 @@ def ejecutar_ciclo_scraping_y_descubrimiento(
                 [r["estadisticas_tiendas"] for r in consolidado_reportes], tiendas_db
             ),
             "muestra_capturas": muestras_consolidadas[:25],
+            "descubrimiento": reporte_descubrimiento,
             "rotaciones_detalle": [
                 {
                     "rotacion": r["metadata"].get("rotacion_idx", i + 1),
@@ -2583,6 +2625,11 @@ if __name__ == "__main__":
         action="store_true",
         help="Reiniciar archivo de cooldown/circuit breaker para tiendas retail.",
     )
+    parser.add_argument(
+        "--descubrir",
+        action="store_true",
+        help="Activar auto-descubrimiento en memoria de nuevas fragancias en los feeds de tiendas.",
+    )
     args = parser.parse_args()
 
     if args.no_bulk:
@@ -2600,6 +2647,7 @@ if __name__ == "__main__":
         delay_between_rotations=args.delay,
         shard=args.shard,
         total_shards=args.total_shards,
+        descubrir=args.descubrir,
     )
     sep_box = "=" * 60
     print("\n" + sep_box)
@@ -2609,5 +2657,8 @@ if __name__ == "__main__":
     print(f"Perfumes auditados: {resultado.get('metricas', {}).get('perfumes_auditados', 0)} / {resultado.get('metricas', {}).get('total_perfumes_catalogo', 0)}")
     print(f"Precios actualizados: {resultado.get('metricas', {}).get('precios_actualizados', 0)}")
     print(f"Ofertas nuevas: {resultado.get('metricas', {}).get('ofertas_nuevas', 0)}")
+    if resultado.get("descubrimiento"):
+        d_met = resultado["descubrimiento"].get("metricas", {})
+        print(f"Nuevos perfumes descubiertos: {d_met.get('nuevos_perfumes_descubiertos', 0)}")
     print(f"Duración total: {resultado.get('metadata', {}).get('duracion_segundos', 0)}s")
     print(sep_box)

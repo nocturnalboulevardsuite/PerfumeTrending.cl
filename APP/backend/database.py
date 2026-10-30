@@ -294,6 +294,8 @@ def get_supabase_credentials(prefer_service_role: bool = False) -> Tuple[Optiona
 # =============================================================================
 def get_supabase(use_service_role: bool = False):
     """Retorna una instancia singleton del cliente Supabase."""
+    if os.environ.get("SUPABASE_DISABLE", "").lower() in ("true", "1", "yes"):
+        return None
     global _SUPABASE_CLIENT, _SUPABASE_SERVICE_CLIENT
     if use_service_role:
         if _SUPABASE_SERVICE_CLIENT is not None:
@@ -321,6 +323,8 @@ def get_supabase(use_service_role: bool = False):
 
 def is_supabase_disponible() -> bool:
     """Verifica si Supabase está alcanzable y tiene las tablas creadas."""
+    if os.environ.get("SUPABASE_DISABLE", "").lower() in ("true", "1", "yes"):
+        return False
     global _SUPABASE_VERIFICADO
     if _SUPABASE_VERIFICADO:
         return True

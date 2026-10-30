@@ -1106,6 +1106,57 @@ with right_col:
     """
     st.markdown(clean_html(table_html), unsafe_allow_html=True)
 
+    # - ¿Qué hace esta sección?:
+    #   Muestra las métricas del pipeline de auto-descubrimiento continuo de fragancias:
+    #   cuántos productos se inspeccionaron en los feeds de tiendas, cuántos fueron filtrados
+    #   por calidad (cremas/testers/clones) y cuántas fragancias nuevas legítimas fueron incorporadas.
+    try:
+        from backend.scraper_autonomo import obtener_ultimo_reporte_descubrimiento
+        rep_desc = obtener_ultimo_reporte_descubrimiento()
+    except Exception:
+        rep_desc = None
+
+    if rep_desc and isinstance(rep_desc, dict):
+        m_desc = rep_desc.get("metricas", {})
+        meta_desc = rep_desc.get("metadata", {})
+        total_analizados = m_desc.get("total_productos_analizados", 0)
+        descartados_qa = m_desc.get("descartados_no_perfume", 0)
+        nuevos_perfumes = m_desc.get("nuevos_perfumes_descubiertos", 0)
+        fecha_desc = meta_desc.get("fecha_ejecucion", "")
+        
+        st.markdown(
+            clean_html(f"""
+            <div style="margin-top: 20px; padding: 18px 22px; border-radius: 12px; background: {card_bg}; border: 1px solid {border_color}; box-shadow: {shadow_sm};">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 1.1rem;">📡</span>
+                        <strong style="font-size: 0.95rem; color: {text_color};">Pipeline Autónomo de Expansión de Catálogo</strong>
+                        <span style="font-size: 0.72rem; padding: 2px 8px; border-radius: 999px; background: rgba(74, 222, 128, 0.15); color: {ok_green}; font-weight: 600;">ACTIVO</span>
+                    </div>
+                    <span style="font-size: 0.76rem; color: {subtext_color};">Última ejecución: {fecha_desc}</span>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; text-align: center;">
+                    <div style="padding: 10px; background: {surface_soft}; border-radius: 8px; border: 1px solid {border_color};">
+                        <div style="font-size: 1.25rem; font-weight: 700; color: {text_color};">{total_analizados:,}</div>
+                        <div style="font-size: 0.72rem; color: {subtext_color};">Ítems Analizados</div>
+                    </div>
+                    <div style="padding: 10px; background: {surface_soft}; border-radius: 8px; border: 1px solid {border_color};">
+                        <div style="font-size: 1.25rem; font-weight: 700; color: {warn_amber};">{descartados_qa:,}</div>
+                        <div style="font-size: 0.72rem; color: {subtext_color};">Filtrados por Calidad</div>
+                    </div>
+                    <div style="padding: 10px; background: {surface_soft}; border-radius: 8px; border: 1px solid {border_color};">
+                        <div style="font-size: 1.25rem; font-weight: 700; color: {accent};">+{nuevos_perfumes:,}</div>
+                        <div style="font-size: 0.72rem; color: {subtext_color};">Nuevas Fragancias</div>
+                    </div>
+                </div>
+                <div style="margin-top: 10px; font-size: 0.72rem; color: {subtext_color}; text-align: right;">
+                    Auditado y saneado con normalizador canónico, detección de imitaciones y verificación de volumen comercial (≥ 25ml).
+                </div>
+            </div>
+            """),
+            unsafe_allow_html=True
+        )
+
     st.markdown("<div style='margin-top: 26px;'></div>", unsafe_allow_html=True)
     with st.form("form_auditar_url_tienda", clear_on_submit=False):
         st.markdown(
