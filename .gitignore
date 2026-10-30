@@ -226,3 +226,6 @@ APP/data/*.db
 data/*.db
 scratch/
 
+
+APP/data/cache/
+data/cache/
