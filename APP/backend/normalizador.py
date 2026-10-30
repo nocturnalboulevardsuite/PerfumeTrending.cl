@@ -237,7 +237,9 @@ PALABRAS_EXCLUSION: List[str] = [
     # Imitaciones, clones explícitos y equivalencias
     "inspirado en", "inspirada en", "inspiracion", "inspiración", "tipo ", "dupe",
     "equivalencia", "imitacion", "imitación", "clon", "alternativo",
-    # Artículos ajenos a perfumería (cosméticos, cabello, hogar, puericultura)
+    # Artículos ajenos a perfumería (relojes, maletas, carteras, vapes, cosméticos, hogar)
+    "reloj", "relojes", "watch", "maleta", "maletas", "valija", "cartera", "carteras",
+    "bolso", "bolsos", "bandolera", "billetera", "mochila", "vapeador", "vape", "puffs",
     "repelente", "roedores", "extractor", "extractor de leche", "brillo labial", "voluminizador",
     "lip gloss", "suero", "serum", "difusor", "ambientador", "home spray",
     "tinte", "nutrisse", "maquillaje", "aclarante", "facial", "capilar", "mascarilla",
