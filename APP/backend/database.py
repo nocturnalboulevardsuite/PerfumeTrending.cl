@@ -1648,6 +1648,11 @@ def finalizar_scraping_run(
         ))
 
 
+# - ¿Qué hace esta función (Transacción Atómica ACID en Base de Datos)?:
+#   Es el núcleo de persistencia del sistema. Invoca la función almacenada sb.rpc("registrar_observacion_oferta") en PostgreSQL:
+#   1. Actualiza o crea la oferta en la tabla 'ofertas_actuales' con su precio, stock y timestamp.
+#   2. Si el precio cambió, registra automáticamente una entrada histórica en 'precios_registro' (tipo_evento='cambio_precio').
+#   3. Si la extracción falló, preserva el precio anterior sin inventar stock falso (Regla de Oro ADR 001).
 def registrar_observacion_oferta(observacion: Optional[Dict[str, Any]] = None, **kwargs) -> Dict[str, Any]:
     """
     Persistencia transaccional de una observación de precio/stock:
@@ -2524,6 +2529,9 @@ def obtener_historico_precios(perfume_id: int, volumen_ml: Optional[int] = None)
         return [dict(row) for row in cursor.fetchall()]
 
 
+# - ¿Qué hace esta función (Cálculo de Mínimo Histórico)?:
+#   Ejecuta una consulta agregada [SELECT MIN(precio_actual)] en 'precios_registro' filtrando por volumen (ej. 100ml)
+#   para determinar cuál ha sido el precio récord más bajo alcanzado por ese perfume en las tiendas de Chile.
 def obtener_minimo_historico(perfume_id: int, volumen_ml: Optional[int] = None) -> Optional[int]:
     """
     Retorna el precio mínimo histórico registrado (en stock y > 0) para un perfume determinado,

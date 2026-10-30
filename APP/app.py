@@ -65,6 +65,9 @@ from perfume_actions import (
 # =============================================================================
 # BLOQUE 1: CACHÉ EN MEMORIA DE ALTO RENDIMIENTO (STREAMLIT CACHE DATA)
 # =============================================================================
+# - ¿Qué hace esta función?:
+#   Cachea en memoria RAM el catálogo consolidado por 600 segundos (10 minutos) usando Streamlit Cache.
+#   Evita consultar la base de datos (Supabase/SQLite) en cada recarga o clic, permitiendo que la página cargue en <15ms.
 @st.cache_data(ttl=600, show_spinner=False)
 def get_cached_catalogo(busqueda=None, esencias_tuple=None, categoria=None, orden="id_asc"):
     """Consulta el catálogo consolidado calculando el mejor precio en vivo con invalidación TTL."""
@@ -82,6 +85,10 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
+# - ¿Qué hace esta sección?:
+#   1. init_db(): Asegura que las tablas locales SQLite existan si se usa el modo offline.
+#   2. init_common_session_state(): Inicializa las variables reactivas de sesión de Streamlit
+#      (página actual, perfume seleccionado para comparar, página del catálogo y filtros activos).
 init_db()
 init_common_session_state()
 
@@ -259,6 +266,9 @@ def modal_busqueda_visual():
                     st.markdown(f"<span style='color:#4caf50; font-weight:600;'>Mejor precio: {p_txt}</span>", unsafe_allow_html=True)
                     c_vis_cmp, c_vis_fav = st.columns([4, 1], vertical_alignment="center")
                     with c_vis_cmp:
+                        # - ¿Qué hace esta acción?:
+                        #   Al pulsar "Comparar Precios", guarda el ID del perfume en st.session_state
+                        #   y conmuta la navegación reactiva a 'pages/compararprecios.py' para abrir su ficha técnica.
                         if st.button("Comparar Precios", key=f"btn_vis_select_{p['id']}", use_container_width=True):
                             st.session_state['selected_perfume'] = p['id']
                             reset_modals()

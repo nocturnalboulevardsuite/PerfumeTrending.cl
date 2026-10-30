@@ -1522,6 +1522,9 @@ else:
         vol_ml = extraer_volumen(item)
         en_stock = esta_en_stock(item)
         es_tester = es_tester_item(item)
+        # - ¿Qué hace esta lógica (Detección de la Mejor Oferta)?:
+        #   Determina si esta tienda tiene el precio más bajo del mercado en stock,
+        #   priorizando frascos sellados estándar sobre unidades tester para no engañar al usuario.
         is_best_deal = (
             p_act == min_precio
             and p_act > 0
@@ -1566,6 +1569,9 @@ else:
             if es_tester else ""
         )
 
+        # - ¿Qué hace esta lógica (Insignia de Mínimo Histórico)?:
+        #   Compara el precio en vivo contra el mínimo histórico registrado en Supabase/SQLite para esa presentación.
+        #   Si es igual o menor, activa el badge visual '🔥 Mínimo Histórico' para avisar que es el mejor momento para comprar.
         min_historico_vol = get_cached_minimo_historico(selected_id, vol_ml)
         es_min_hist = (
             en_stock
