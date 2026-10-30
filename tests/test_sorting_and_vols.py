@@ -59,6 +59,9 @@ class TestSortingAndVols(unittest.TestCase):
         )
         self.assertEqual(bleu['mejor_precio'], esperado_min)
 
+    # - ¿Qué hace este test?:
+    #   Verifica que la normalización diacrítica con unicodedata funcione correctamente
+    #   y que buscar sin tildes (ej. 'chloe') encuentre marcas o perfumes con tildes ('Chloé').
     def test_busqueda_insensible_a_tildes(self):
         """Verifica que la normalización de búsqueda soporte tildes y diacríticos transparentemente."""
         from backend.database import normalizar_texto_busqueda, obtener_catalogo
@@ -68,6 +71,9 @@ class TestSortingAndVols(unittest.TestCase):
         if res_chloe:
             self.assertTrue(any("chlo" in normalizar_texto_busqueda(p.get("marca") or "") or "chlo" in normalizar_texto_busqueda(p.get("nombre") or "") for p in res_chloe))
 
+    # - ¿Qué hace este test?:
+    #   Verifica que ordenar el catálogo por precio en una vista no altere ni mute
+    #   el orden base por ID del catálogo maestro almacenado en memoria RAM.
     def test_inmutabilidad_catalogo_master(self):
         """Verifica que ordenar el catálogo por precio en una vista no altere el orden base del catálogo."""
         from backend.database import obtener_catalogo
@@ -77,6 +83,9 @@ class TestSortingAndVols(unittest.TestCase):
         ids = [p["id"] for p in cat_por_id[:10]]
         self.assertEqual(ids, sorted(ids))
 
+    # - ¿Qué hace este test?:
+    #   Verifica que obtener_remates_reales retorne los campos esperados por la UI
+    #   y comprueba que la segunda consulta se resuelva en microsegundos (<0.05s) mediante caché RAM.
     def test_remates_reales_estructura_y_cache(self):
         """Verifica que obtener_remates_reales devuelva los campos requeridos y opere en microsegundos vía caché."""
         import time

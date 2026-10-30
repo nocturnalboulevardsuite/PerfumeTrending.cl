@@ -2182,7 +2182,7 @@ def registrar_precio(
 
 
 # =============================================================================
-# - ¿Qué hace esta función?:
+# - ¿Qué hace esta función (Normalizador Diacrítico de Búsqueda)?:
 #   Normaliza cadenas de texto eliminando diacríticos, acentos y mayúsculas
 #   (ej. 'Chloé' -> 'chloe', 'Ramón' -> 'ramon') para búsquedas de alta velocidad O(1).
 def normalizar_texto_busqueda(txt: Any) -> str:
@@ -2196,6 +2196,11 @@ def normalizar_texto_busqueda(txt: Any) -> str:
 
 # BLOQUE 12: CONSULTAS DE CATÁLOGO Y OFERTAS CON PAGINACIÓN AUTOMÁTICA (>1.000)
 # =============================================================================
+# - ¿Qué hace esta función (Consolidación de Catálogo Maestro en RAM)?:
+#   1. Descarga el catálogo completo y sus ofertas vigentes con paginación concurrente multihilo.
+#   2. Precalcula el mejor precio por perfume (priorizando frascos regulares sobre testers) y marca remates reales.
+#   3. Precalcula el índice _search_index libre de tildes para búsquedas ultra-rápidas en memoria RAM.
+#   4. Preserva el catálogo en memoria con TTL de 5 minutos, eliminando clonaciones redundantes de memoria.
 def _obtener_catalogo_master_supabase(force_refresh: bool = False) -> List[Dict[str, Any]]:
     """
     Carga y consolida el catálogo maestro completo en memoria RAM con TTL de 5 minutos:
@@ -2795,9 +2800,10 @@ def obtener_mayores_bajadas_recientes(dias: int = 7, limite: int = 12) -> List[D
 
 
 
-# - ¿Qué hace esta función (Algoritmo de Remates y Gangas)?:
-#   Filtra ofertas donde precio_normal > precio_actual con al menos un 12% de descuento real demostrable.
-#   Descarta automáticamente productos tester o miniaturas < 25ml para evitar ofertas engañosas.
+# - ¿Qué hace esta función (Algoritmo de Remates y Gangas Reales)?:
+#   1. Filtra ofertas donde precio_normal > precio_actual con al menos un 12% de descuento real demostrable.
+#   2. Descarta automáticamente productos tester o miniaturas < 25ml para evitar ofertas engañosas.
+#   3. Almacena los remates validados en caché de memoria RAM (_REMATES_MASTER) por 5 minutos, respondiendo en < 2 ms.
 def obtener_remates_reales(
     limite: int = 60,
     descuento_min_pct: int = 12,
