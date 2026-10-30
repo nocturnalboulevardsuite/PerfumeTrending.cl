@@ -29,10 +29,12 @@ if APP_DIR not in sys.path:
 from backend.database import (
     agregar_favorito,
     eliminar_favorito,
+    es_minimo_historico,
     obtener_catalogo,
     obtener_detalle_perfume,
     obtener_favoritos_Ids_usuario,
     obtener_historico_precios,
+    obtener_minimo_historico,
     obtener_precios_actuales,
 )
 from backend.normalizador import es_precio_valido
@@ -88,6 +90,12 @@ def get_cached_precios(perfume_id):
 def get_cached_historico(perfume_id, volumen_ml=None):
     """Consulta la serie de tiempo de precios históricos filtrada por presentación."""
     return obtener_historico_precios(perfume_id, volumen_ml=volumen_ml)
+
+
+@st.cache_data(ttl=120, show_spinner=False)
+def get_cached_minimo_historico(perfume_id, volumen_ml=None):
+    """Retorna el menor precio histórico registrado para este perfume y volumen."""
+    return obtener_minimo_historico(perfume_id, volumen_ml=volumen_ml)
 
 
 @st.cache_data(ttl=120, show_spinner=False)
@@ -797,6 +805,7 @@ st.markdown(f"""
     span.pt-tag-out {{ background: rgba(239, 68, 68, 0.10); border-color: rgba(239, 68, 68, 0.30); color: {risk_red} !important; font-weight: 700; }}
     span.pt-tag-ml {{ background: rgba(59, 130, 246, 0.12); border-color: rgba(96, 165, 250, 0.35); color: {info_blue} !important; font-weight: 700; }}
     span.pt-tag-tester {{ background: rgba(245, 158, 11, 0.12); border-color: rgba(251, 191, 36, 0.35); color: {warn_amber} !important; font-weight: 700; }}
+    span.pt-tag-alltime {{ background: rgba(220, 38, 38, 0.15); border-color: rgba(220, 38, 38, 0.40); color: #ef4444 !important; font-weight: 800; }}
 
     .price-card-right {{
         display: flex;
@@ -1557,6 +1566,18 @@ else:
             if es_tester else ""
         )
 
+        min_historico_vol = get_cached_minimo_historico(selected_id, vol_ml)
+        es_min_hist = (
+            en_stock
+            and p_act > 0
+            and min_historico_vol is not None
+            and p_act <= min_historico_vol
+        )
+        badge_minimo_hist = (
+            "<span class='pt-tag pt-tag-alltime' title='Precio más bajo jamás registrado para este perfume'>🔥 Mínimo Histórico</span>"
+            if es_min_hist else ""
+        )
+
         precio_actual_str = f"${p_act:,.0f}".replace(",", ".")
         precio_ant_str = f"${p_norm:,.0f}".replace(",", ".") if p_norm and p_norm > p_act else ""
         old_price_html = f"<span class='pt-old-price'>{precio_ant_str}</span>" if (precio_ant_str and en_stock) else ""
@@ -1607,6 +1628,7 @@ else:
                 {badge_vol}
                 {badge_tester}
                 {status_badge}
+                {badge_minimo_hist}
             </div>
             <div class="price-card-right">
                 {price_display_html}

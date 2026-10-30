@@ -68,6 +68,85 @@ if BASE_DIR not in sys.path:
     sys.path.insert(0, BASE_DIR)
 REPORTES_DIR = os.path.join(BASE_DIR, "data", "reportes")
 REPORTE_ULTIMO_PATH = os.path.join(REPORTES_DIR, "ultimo_scraping.json")
+CACHE_DIR = os.path.join(BASE_DIR, "data", "cache")
+CIRCUIT_BREAKER_PATH = os.path.join(CACHE_DIR, "circuit_breaker_retail.json")
+
+
+def cargar_circuit_breaker() -> Dict[str, Dict[str, Any]]:
+    """Carga el estado persistido de backoff/circuit breaker para búsquedas dinámicas sin URL directa."""
+    if os.path.exists(CIRCUIT_BREAKER_PATH):
+        try:
+            with open(CIRCUIT_BREAKER_PATH, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception as e:
+            logger.debug(f"Aviso leyendo circuit breaker: {e}")
+    return {}
+
+
+def guardar_circuit_breaker(cb_data: Dict[str, Dict[str, Any]]) -> None:
+    """Persiste el estado de enfriamiento/circuit breaker en disco."""
+    try:
+        os.makedirs(CACHE_DIR, exist_ok=True)
+        with open(CIRCUIT_BREAKER_PATH, "w", encoding="utf-8") as f:
+            json.dump(cb_data, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        logger.debug(f"Aviso guardando circuit breaker: {e}")
+
+
+def es_circuit_breaker_activo(
+    perfume_id: int,
+    tienda_id: int,
+    cb_data: Optional[Dict[str, Dict[str, Any]]],
+    umbral_fallos: int = 3,
+    dias_enfriamiento: int = 7,
+) -> bool:
+    """
+    Retorna True si un perfume sin URL directa en esta tienda ha fallado repetidamente (>= umbral)
+    y se encuentra en período de enfriamiento (cooldown de 7 días).
+    Permite reintentos periódicos (half-open) una vez cumplido el plazo de enfriamiento.
+    """
+    if not cb_data:
+        return False
+    clave = f"{int(perfume_id)}:{int(tienda_id)}"
+    info = cb_data.get(clave)
+    if not info:
+        return False
+    fallos = int(info.get("fallos_consecutivos", 0))
+    if fallos < umbral_fallos:
+        return False
+    ultimo_intento_str = info.get("ultimo_intento")
+    if not ultimo_intento_str:
+        return False
+    try:
+        ultimo_dt = datetime.fromisoformat(ultimo_intento_str)
+        if (datetime.now() - ultimo_dt).total_seconds() < dias_enfriamiento * 86400:
+            return True
+    except Exception:
+        pass
+    return False
+
+
+def registrar_resultado_circuit_breaker(
+    perfume_id: int,
+    tienda_id: int,
+    exito: bool,
+    cb_data: Optional[Dict[str, Dict[str, Any]]],
+) -> None:
+    """Actualiza el contador de fallos consecutivos o lo remueve de cooldown si se encontró oferta."""
+    if cb_data is None:
+        return
+    clave = f"{int(perfume_id)}:{int(tienda_id)}"
+    ahora_iso = datetime.now().isoformat()
+    if exito:
+        if clave in cb_data:
+            del cb_data[clave]
+    else:
+        info = cb_data.get(clave, {"fallos_consecutivos": 0})
+        info["fallos_consecutivos"] = int(info.get("fallos_consecutivos", 0)) + 1
+        info["ultimo_intento"] = ahora_iso
+        cb_data[clave] = info
+
+
 
 # Importación de capa de persistencia y normalización
 try:
@@ -1431,6 +1510,7 @@ def _combinar_tiendas_stats(
             "exitos_en_vivo": 0,
             "fallbacks_seguridad": 0,
             "bloqueos_waf": 0,
+            "omitidos_circuit_breaker": 0,
             "trust_score": t.get("trust_score", 90),
         }
         for t in tiendas_db
@@ -1442,6 +1522,7 @@ def _combinar_tiendas_stats(
                 consolidado[t_nom]["exitos_en_vivo"] += vals.get("exitos_en_vivo", 0)
                 consolidado[t_nom]["fallbacks_seguridad"] += vals.get("fallbacks_seguridad", 0)
                 consolidado[t_nom]["bloqueos_waf"] += vals.get("bloqueos_waf", 0)
+                consolidado[t_nom]["omitidos_circuit_breaker"] = consolidado[t_nom].get("omitidos_circuit_breaker", 0) + vals.get("omitidos_circuit_breaker", 0)
     return consolidado
 
 
@@ -1735,6 +1816,7 @@ def auditar_lote_perfumes(
     total_catalogo: int = 0,
     cache_tiendas_bulk: Optional[Dict[str, CatalogoTiendaBulk]] = None,
     ofertas_activas_set: Optional[Set[Tuple[int, int]]] = None,
+    cb_cache: Optional[Dict[str, Dict[str, Any]]] = None,
 ) -> Dict[str, Any]:
     """
     Ejecuta la auditoría en vivo para un subconjunto (lote/rotación) específico de perfumes.
@@ -1760,6 +1842,7 @@ def auditar_lote_perfumes(
     cambios_stock = 0
     cambios_url = 0
     omitidos = 0
+    omitidos_cb = 0
     bloqueos_waf = 0
     errores: List[str] = []
     detalle_precios: List[Dict[str, Any]] = []
@@ -1769,6 +1852,7 @@ def auditar_lote_perfumes(
             "exitos_en_vivo": 0,
             "fallbacks_seguridad": 0,
             "bloqueos_waf": 0,
+            "omitidos_circuit_breaker": 0,
             "trust_score": t.get("trust_score", 90),
         }
         for t in tiendas_db
@@ -1844,6 +1928,7 @@ def auditar_lote_perfumes(
                             cambios_url += 1
 
                     tiendas_stats[t_nom]["exitos_en_vivo"] += 1
+                    registrar_resultado_circuit_breaker(p_id, t_id, exito=True, cb_data=cb_cache)
                     detalle_precios.append({
                         "perfume": p_nom,
                         "tienda": t_nom,
@@ -1884,6 +1969,8 @@ def auditar_lote_perfumes(
                         mensaje=motivo_fallo,
                     )
                 tiendas_stats[t_nom]["fallbacks_seguridad"] += 1
+                if not u_directa:
+                    registrar_resultado_circuit_breaker(p_id, t_id, exito=False, cb_data=cb_cache)
                 logger.debug(f"  -> [{t_nom}] FALLO SCRAPING: {motivo_fallo}. No se altera precio ni stock.")
 
         # 1. Separar tiendas bulk (en RAM instantáneo) de tiendas de red (Network)
@@ -1921,6 +2008,13 @@ def auditar_lote_perfumes(
             if cache_tiendas_bulk and t_nom in cache_tiendas_bulk:
                 tiendas_bulk_items.append(item)
             else:
+                # Circuito abierto / cooldown para búsquedas dinámicas sin URL que fallaron repetidamente
+                if not url_directa_guardada and es_circuit_breaker_activo(p_id, int(tienda["id"]), cb_cache):
+                    omitidos_cb += 1
+                    tiendas_stats[t_nom]["omitidos_circuit_breaker"] = (
+                        tiendas_stats[t_nom].get("omitidos_circuit_breaker", 0) + 1
+                    )
+                    continue
                 tiendas_network_items.append(item)
 
         # 2. Procesamiento instantáneo en memoria para tiendas especializadas (RAM < 0.5ms)
@@ -2065,6 +2159,7 @@ def auditar_lote_perfumes(
             "cambios_url": cambios_url,
             "bloqueos_waf": bloqueos_waf,
             "exclusiones_marca": omitidos,
+            "omitidos_circuit_breaker": omitidos_cb,
             "errores_totales": len(errores),
         },
         "estadisticas_tiendas": tiendas_stats,
@@ -2122,6 +2217,7 @@ def ejecutar_ciclo_scraping_y_descubrimiento(
         t_sh_cfg = 0
 
     session = crear_sesion_robusta()
+    cb_cache = cargar_circuit_breaker()
 
     perfumes_db: List[Dict[str, Any]] = []
     tiendas_db: List[Dict[str, Any]] = []
@@ -2279,6 +2375,7 @@ def ejecutar_ciclo_scraping_y_descubrimiento(
     total_cambios_url = 0
     total_bloqueos_waf = 0
     total_exclusiones = 0
+    total_omitidos_cb = 0
     total_errores: List[str] = []
     muestras_consolidadas: List[Dict[str, Any]] = []
     reporte_resultado: Dict[str, Any] = {}
@@ -2319,7 +2416,9 @@ def ejecutar_ciclo_scraping_y_descubrimiento(
             total_catalogo=total_perfumes,
             cache_tiendas_bulk=cache_tiendas_bulk,
             ofertas_activas_set=ofertas_activas_set,
+            cb_cache=cb_cache,
         )
+        guardar_circuit_breaker(cb_cache)
 
         consolidado_reportes.append(rep_lote)
         m_lote = rep_lote["metricas"]
@@ -2330,6 +2429,7 @@ def ejecutar_ciclo_scraping_y_descubrimiento(
         total_cambios_url += m_lote["cambios_url"]
         total_bloqueos_waf += m_lote["bloqueos_waf"]
         total_exclusiones += m_lote.get("exclusiones_marca", 0)
+        total_omitidos_cb += m_lote.get("omitidos_circuit_breaker", 0)
         total_errores.extend(rep_lote.get("errores", []))
         muestras_consolidadas.extend(rep_lote.get("muestra_capturas", []))
 
@@ -2364,6 +2464,7 @@ def ejecutar_ciclo_scraping_y_descubrimiento(
                 "cambios_url": total_cambios_url,
                 "bloqueos_waf": total_bloqueos_waf,
                 "exclusiones_marca": total_exclusiones,
+                "omitidos_circuit_breaker": total_omitidos_cb,
                 "errores_totales": len(total_errores),
             },
             "estadisticas_tiendas": _combinar_tiendas_stats(
@@ -2450,10 +2551,21 @@ if __name__ == "__main__":
         default=int(os.environ.get("SCRAPER_TOTAL_SHARDS", 0)),
         help="Total de particiones horizontales en ejecución paralela (e.g. 2). Por defecto 0.",
     )
+    parser.add_argument(
+        "--reset-circuit-breaker",
+        action="store_true",
+        help="Reiniciar archivo de cooldown/circuit breaker para tiendas retail.",
+    )
     args = parser.parse_args()
 
     if args.no_bulk:
         os.environ["SCRAPER_ENABLE_BULK"] = "false"
+    if args.reset_circuit_breaker and os.path.exists(CIRCUIT_BREAKER_PATH):
+        try:
+            os.remove(CIRCUIT_BREAKER_PATH)
+            logger.info("Circuit breaker reiniciado exitosamente.")
+        except Exception as e_cb_rm:
+            logger.warning(f"Error reiniciando circuit breaker: {e_cb_rm}")
 
     resultado = ejecutar_ciclo_scraping_y_descubrimiento(
         batch_size=args.batch_size,

@@ -27,7 +27,9 @@ if APP_DIR not in sys.path:
     sys.path.append(APP_DIR)
 
 from backend.database import (
+    es_minimo_historico,
     obtener_catalogo,
+    obtener_minimo_historico,
     obtener_remates_reales,
     obtener_tiendas,
 )
@@ -66,6 +68,11 @@ def clean_html(html_str: str) -> str:
 @st.cache_data(ttl=120, show_spinner=False)
 def get_cached_remates():
     return obtener_remates_reales(limite=60, descuento_min_pct=12)
+
+
+@st.cache_data(ttl=120, show_spinner=False)
+def get_cached_minimo_historico(perfume_id, volumen_ml=None):
+    return obtener_minimo_historico(perfume_id, volumen_ml=volumen_ml)
 
 
 # 1. CONFIGURACIÓN DE LA PÁGINA Y ESTADO COMPARTIDO
@@ -1045,12 +1052,21 @@ else:
                     )
                 )
 
+                min_h = get_cached_minimo_historico(item['perfume_id'], vol_ml)
+                p_rem_val = int(item['precio_remate'])
+                es_alltime = bool(min_h is not None and p_rem_val <= min_h)
+                badge_alltime_html = (
+                    '<div class="badge-alltime" style="position: absolute; bottom: 8px; left: 8px; background: rgba(220, 38, 38, 0.92); color: #ffffff; font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.3); text-transform: uppercase;">🔥 Mínimo Histórico</div>'
+                    if es_alltime else ""
+                )
+
                 with cols[i]:
                     html_card = f"""
                     <div class="remate-card">
                         <div class="remate-img-box">
                             <div class="badge-discount">-{pct_val}%</div>
                             <div class="badge-timer">{vol_ml} ml</div>
+                            {badge_alltime_html}
                             <img src="{img_safe}" alt="{nombre_safe}" loading="lazy">
                         </div>
                         <div class="remate-title" title="{nombre_safe}">{nombre_safe}</div>

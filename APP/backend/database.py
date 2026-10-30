@@ -2524,6 +2524,181 @@ def obtener_historico_precios(perfume_id: int, volumen_ml: Optional[int] = None)
         return [dict(row) for row in cursor.fetchall()]
 
 
+def obtener_minimo_historico(perfume_id: int, volumen_ml: Optional[int] = None) -> Optional[int]:
+    """
+    Retorna el precio mínimo histórico registrado (en stock y > 0) para un perfume determinado,
+    filtrando opcionalmente por volumen (ml) para respetar la presentación.
+    """
+    sb = get_supabase()
+    if sb and is_supabase_disponible():
+        try:
+            q = (
+                sb.table("precios_registro")
+                .select("precio_actual")
+                .eq("perfume_id", perfume_id)
+                .eq("en_stock", True)
+                .gt("precio_actual", 0)
+            )
+            if volumen_ml is not None:
+                q = q.eq("volumen_ml", int(volumen_ml))
+            res = q.order("precio_actual", desc=False).limit(1).execute()
+            if res.data and len(res.data) > 0:
+                return int(res.data[0]["precio_actual"])
+        except Exception as e:
+            logger.warning(f"Error en Supabase obtener_minimo_historico ({e}), usando SQLite.")
+
+    init_db()
+    params: List[Any] = [perfume_id]
+    filtro_vol = ""
+    if volumen_ml is not None:
+        filtro_vol = " AND ABS(COALESCE(pr.volumen_ml, 100) - ?) < 2"
+        params.append(int(volumen_ml))
+
+    with get_db_cursor() as cursor:
+        cursor.execute(f"""
+            SELECT MIN(pr.precio_actual) as min_p
+            FROM precios_registro pr
+            WHERE pr.perfume_id = ?
+              AND pr.en_stock = 1
+              AND pr.precio_actual > 0
+              {filtro_vol};
+        """, params)
+        row = cursor.fetchone()
+        if row and row["min_p"] is not None:
+            return int(row["min_p"])
+
+        # Fallback a ofertas_actuales si aún no hay observaciones históricas acumuladas
+        params_oa: List[Any] = [perfume_id]
+        filtro_vol_oa = ""
+        if volumen_ml is not None:
+            filtro_vol_oa = " AND ABS(COALESCE(vp.volumen_ml, 100) - ?) < 2"
+            params_oa.append(int(volumen_ml))
+
+        cursor.execute(f"""
+            SELECT MIN(oa.precio_actual) as min_p
+            FROM ofertas_actuales oa
+            JOIN variantes_perfume vp ON vp.id = oa.variante_id
+            WHERE vp.perfume_id = ?
+              AND oa.en_stock = 1
+              AND oa.precio_actual > 0
+              {filtro_vol_oa};
+        """, params_oa)
+        row_oa = cursor.fetchone()
+        if row_oa and row_oa["min_p"] is not None:
+            return int(row_oa["min_p"])
+
+    return None
+
+
+def es_minimo_historico(perfume_id: int, precio_actual: int, volumen_ml: Optional[int] = None) -> bool:
+    """
+    Retorna True si `precio_actual` iguala o supera el precio más bajo registrado
+    para este perfume (y volumen si se especifica).
+    """
+    if precio_actual <= 0:
+        return False
+    min_h = obtener_minimo_historico(perfume_id, volumen_ml=volumen_ml)
+    if min_h is None or min_h <= 0:
+        return False
+    return bool(precio_actual <= min_h)
+
+
+def obtener_mayores_bajadas_recientes(dias: int = 7, limite: int = 12) -> List[Dict[str, Any]]:
+    """
+    Retorna las mayores bajadas de precio confirmadas en los últimos días
+    (observaciones con rebajas reales en stock).
+    """
+    sb = get_supabase()
+    if sb and is_supabase_disponible():
+        try:
+            res = (
+                sb.table("precios_registro")
+                .select(
+                    "id, perfume_id, tienda_id, precio_actual, precio_normal, en_stock, volumen_ml, url_producto, fecha_registro, "
+                    "tiendas(id, nombre, url_base, trust_score, badge), "
+                    "perfumes(id, nombre, marca, tipo, notas, imagen_url, es_arabe)"
+                )
+                .eq("en_stock", True)
+                .gt("precio_actual", 0)
+                .order("fecha_registro", desc=True)
+                .limit(100)
+                .execute()
+            )
+            filas = res.data or []
+            bajadas = []
+            vistos = set()
+            for r in filas:
+                perf = r.get("perfumes") or {}
+                t = r.get("tiendas") or {}
+                pid = perf.get("id") or r.get("perfume_id")
+                if not pid or pid in vistos:
+                    continue
+                p_act = int(r.get("precio_actual") or 0)
+                p_norm = int(r.get("precio_normal") or 0)
+                if p_act <= 0 or p_norm <= p_act:
+                    continue
+                ahorro = p_norm - p_act
+                pct = int(round((ahorro * 100.0) / p_norm))
+                vistos.add(pid)
+                bajadas.append({
+                    "perfume_id": pid,
+                    "nombre": perf.get("nombre", ""),
+                    "marca": perf.get("marca", ""),
+                    "tipo": perf.get("tipo", "Eau de Parfum"),
+                    "imagen_url": perf.get("imagen_url", ""),
+                    "tienda": t.get("nombre", "Tienda"),
+                    "url_base": t.get("url_base", ""),
+                    "url": r.get("url_producto", ""),
+                    "volumen_ml": int(r.get("volumen_ml") or 100),
+                    "precio_actual": p_act,
+                    "precio_normal": p_norm,
+                    "ahorro_clp": ahorro,
+                    "descuento_pct": pct,
+                    "fecha_registro": r.get("fecha_registro", ""),
+                })
+                if len(bajadas) >= limite:
+                    break
+            if bajadas:
+                return bajadas
+        except Exception as e:
+            logger.warning(f"Error consultando mayores bajadas en Supabase ({e}), usando fallback.")
+
+    init_db()
+    with get_db_cursor() as cursor:
+        cursor.execute("""
+            SELECT pr.id, pr.perfume_id, pr.tienda_id, pr.precio_actual, pr.precio_normal,
+                   pr.en_stock, COALESCE(pr.volumen_ml, 100) as volumen_ml, pr.url_producto as url,
+                   pr.fecha_registro,
+                   t.nombre as tienda, t.url_base,
+                   p.nombre, p.marca, p.tipo, p.imagen_url
+            FROM precios_registro pr
+            JOIN tiendas t ON pr.tienda_id = t.id
+            JOIN perfumes p ON pr.perfume_id = p.id
+            WHERE pr.en_stock = 1
+              AND pr.precio_actual > 0
+              AND pr.precio_normal > pr.precio_actual
+            ORDER BY pr.fecha_registro DESC
+            LIMIT ?;
+        """, (limite * 2,))
+        rows = [dict(r) for r in cursor.fetchall()]
+        vistos = set()
+        bajadas = []
+        for r in rows:
+            pid = r["perfume_id"]
+            if pid in vistos:
+                continue
+            vistos.add(pid)
+            ahorro = int(r["precio_normal"] - r["precio_actual"])
+            pct = int(round((ahorro * 100.0) / r["precio_normal"]))
+            r["ahorro_clp"] = ahorro
+            r["descuento_pct"] = pct
+            bajadas.append(r)
+            if len(bajadas) >= limite:
+                break
+        return bajadas
+
+
+
 def obtener_remates_reales(limite: int = 60, descuento_min_pct: int = 12) -> List[Dict[str, Any]]:
     """
     Consulta ofertas activas y verificadas en stock con descuento real comprobable

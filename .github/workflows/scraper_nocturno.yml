@@ -25,11 +25,11 @@ permissions:
 jobs:
   actualizar-precios:
     runs-on: ubuntu-latest
-    timeout-minutes: 180
+    timeout-minutes: 90
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2]
+        shard: [1, 2, 3, 4]
     concurrency:
       group: scraper-nocturno-precios-shard-${{ matrix.shard }}
       cancel-in-progress: false
@@ -50,7 +50,7 @@ jobs:
           pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Ejecutar Scraper Periodico de Precios y Stock (Rotaciones LRU - Shard ${{ matrix.shard }}/2)
+      - name: Ejecutar Scraper Periodico de Precios y Stock (Rotaciones LRU - Shard ${{ matrix.shard }}/4)
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
@@ -59,19 +59,22 @@ jobs:
           SCRAPER_ROTATIONS: ${{ inputs.rotations || '0' }}
           SCRAPER_DELAY_ROTATIONS: ${{ inputs.delay || '10' }}
           SCRAPER_SHARD: ${{ matrix.shard }}
-          SCRAPER_TOTAL_SHARDS: 2
+          SCRAPER_TOTAL_SHARDS: 4
         run: |
-          python APP/backend/scraper_periodico.py --shard ${{ matrix.shard }} --total-shards 2
+          python APP/backend/scraper_periodico.py --shard ${{ matrix.shard }} --total-shards 4
 
       - name: Sincronizar reporte de auditoria en GitHub si hubo cambios
         run: |
           git config --global user.name "PerfumeTrending Bot"
           git config --global user.email "bot@perfumetrending.cl"
           git add APP/data/reportes/
+          if [ -d "APP/data/cache" ]; then
+            git add APP/data/cache/
+          fi
           if git diff --staged --quiet; then
             echo "No se registraron cambios de reporte en esta ejecucion (shard ${{ matrix.shard }})."
           else
-            git commit -m "chore(etl): reporte auditoria shard ${{ matrix.shard }}/2 [skip ci]"
+            git commit -m "chore(etl): reporte auditoria shard ${{ matrix.shard }}/4 [skip ci]"
             for i in {1..5}; do
               git pull --rebase origin main && git push origin main && break || sleep 5
             done
