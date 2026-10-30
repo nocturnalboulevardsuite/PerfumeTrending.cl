@@ -1,63 +1,63 @@
 {
-  "actualizaciones": 13,
-  "fecha": "2026-10-29 15:47:45",
-  "duracion_segundos": 327.78,
+  "actualizaciones": 8769,
+  "fecha": "2026-10-29 16:34:23",
+  "duracion_segundos": 24166.82,
   "metadata": {
     "version_etl": "3.3.0",
     "sistema": "PerfumeTrending Professional Anti-Bot ETL (Multi-Rotation LRU)",
-    "fecha_ejecucion": "2026-10-29 15:47:45",
-    "duracion_segundos": 327.78,
+    "fecha_ejecucion": "2026-10-29 16:34:23",
+    "duracion_segundos": 24166.82,
     "estado": "EXITOSO",
-    "rotaciones_completadas": 1,
-    "total_rotaciones_planificadas": 1,
-    "tamano_lote": 50
+    "rotaciones_completadas": 7,
+    "total_rotaciones_planificadas": 7,
+    "tamano_lote": 500
   },
   "metricas": {
     "total_perfumes_catalogo": 3250,
-    "perfumes_auditados": 50,
+    "perfumes_auditados": 3250,
     "total_tiendas_registradas": 17,
-    "precios_actualizados": 13,
-    "ofertas_nuevas": 13,
-    "cambios_precio": 13,
-    "cambios_stock": 13,
-    "cambios_url": 13,
-    "bloqueos_waf": 0,
-    "exclusiones_marca": 114,
+    "precios_actualizados": 8769,
+    "ofertas_nuevas": 7854,
+    "cambios_precio": 8628,
+    "cambios_stock": 8156,
+    "cambios_url": 8651,
+    "bloqueos_waf": 7,
+    "exclusiones_marca": 6824,
     "errores_totales": 0
   },
   "estadisticas_tiendas": {
     "Falabella": {
-      "consultas": 33,
-      "exitos_en_vivo": 0,
-      "fallbacks_seguridad": 33,
+      "consultas": 2154,
+      "exitos_en_vivo": 992,
+      "fallbacks_seguridad": 1390,
       "bloqueos_waf": 0,
       "trust_score": 96
     },
     "Paris": {
-      "consultas": 33,
-      "exitos_en_vivo": 0,
-      "fallbacks_seguridad": 33,
+      "consultas": 2154,
+      "exitos_en_vivo": 1202,
+      "fallbacks_seguridad": 1174,
       "bloqueos_waf": 0,
       "trust_score": 95
     },
     "Ripley": {
-      "consultas": 33,
-      "exitos_en_vivo": 0,
-      "fallbacks_seguridad": 33,
-      "bloqueos_waf": 0,
+      "consultas": 2154,
+      "exitos_en_vivo": 872,
+      "fallbacks_seguridad": 1598,
+      "bloqueos_waf": 7,
       "trust_score": 94
     },
     "Silk Perfumes": {
-      "consultas": 49,
-      "exitos_en_vivo": 1,
-      "fallbacks_seguridad": 48,
+      "consultas": 3228,
+      "exitos_en_vivo": 1633,
+      "fallbacks_seguridad": 1866,
       "bloqueos_waf": 0,
       "trust_score": 92
     },
     "Elite Perfumes": {
-      "consultas": 49,
-      "exitos_en_vivo": 0,
-      "fallbacks_seguridad": 49,
+      "consultas": 3228,
+      "exitos_en_vivo": 752,
+      "fallbacks_seguridad": 2485,
       "bloqueos_waf": 0,
       "trust_score": 89
     },
@@ -69,165 +69,88 @@
       "trust_score": 91
     },
     "Alisha Perfumes": {
-      "consultas": 49,
-      "exitos_en_vivo": 18,
-      "fallbacks_seguridad": 32,
+      "consultas": 3228,
+      "exitos_en_vivo": 1238,
+      "fallbacks_seguridad": 2077,
       "bloqueos_waf": 0,
       "trust_score": 88
     },
     "Yauras Perfumes": {
-      "consultas": 49,
-      "exitos_en_vivo": 1,
-      "fallbacks_seguridad": 48,
+      "consultas": 3228,
+      "exitos_en_vivo": 1060,
+      "fallbacks_seguridad": 2317,
       "bloqueos_waf": 0,
       "trust_score": 88
     },
     "Oferta Perfumes": {
-      "consultas": 49,
-      "exitos_en_vivo": 0,
-      "fallbacks_seguridad": 49,
+      "consultas": 3228,
+      "exitos_en_vivo": 1407,
+      "fallbacks_seguridad": 1865,
       "bloqueos_waf": 0,
       "trust_score": 90
     },
     "L'Odoro": {
-      "consultas": 49,
-      "exitos_en_vivo": 3,
-      "fallbacks_seguridad": 46,
+      "consultas": 3228,
+      "exitos_en_vivo": 1256,
+      "fallbacks_seguridad": 2182,
       "bloqueos_waf": 0,
       "trust_score": 92
     },
     "Chile Perfume": {
-      "consultas": 49,
-      "exitos_en_vivo": 1,
-      "fallbacks_seguridad": 48,
+      "consultas": 3228,
+      "exitos_en_vivo": 822,
+      "fallbacks_seguridad": 2624,
       "bloqueos_waf": 0,
       "trust_score": 91
     },
     "Mundo Aromas": {
-      "consultas": 49,
-      "exitos_en_vivo": 0,
-      "fallbacks_seguridad": 49,
+      "consultas": 3228,
+      "exitos_en_vivo": 872,
+      "fallbacks_seguridad": 2420,
       "bloqueos_waf": 0,
       "trust_score": 90
     },
     "Cosmetic": {
-      "consultas": 49,
-      "exitos_en_vivo": 0,
-      "fallbacks_seguridad": 49,
+      "consultas": 3228,
+      "exitos_en_vivo": 764,
+      "fallbacks_seguridad": 2538,
       "bloqueos_waf": 0,
       "trust_score": 90
     },
     "Fragante": {
-      "consultas": 49,
-      "exitos_en_vivo": 0,
-      "fallbacks_seguridad": 49,
+      "consultas": 3228,
+      "exitos_en_vivo": 221,
+      "fallbacks_seguridad": 3083,
       "bloqueos_waf": 0,
       "trust_score": 90
     },
     "ComprarEnChile": {
-      "consultas": 49,
-      "exitos_en_vivo": 0,
-      "fallbacks_seguridad": 49,
+      "consultas": 3228,
+      "exitos_en_vivo": 880,
+      "fallbacks_seguridad": 2444,
       "bloqueos_waf": 0,
       "trust_score": 88
     },
     "Portal del Perfume": {
-      "consultas": 49,
-      "exitos_en_vivo": 0,
-      "fallbacks_seguridad": 49,
+      "consultas": 3228,
+      "exitos_en_vivo": 81,
+      "fallbacks_seguridad": 3149,
       "bloqueos_waf": 0,
       "trust_score": 89
     },
     "Aromata": {
-      "consultas": 49,
-      "exitos_en_vivo": 0,
-      "fallbacks_seguridad": 49,
+      "consultas": 3228,
+      "exitos_en_vivo": 49,
+      "fallbacks_seguridad": 3179,
       "bloqueos_waf": 0,
       "trust_score": 89
     }
   },
   "muestra_capturas": [
     {
-      "perfume": "Fatale Rose",
+      "perfume": "The King Of Seduction",
       "tienda": "Alisha Perfumes",
-      "precio_actual": 55990,
-      "precio_normal": 56550,
-      "tiene_descuento": true,
-      "origen": "Alisha Perfumes Bulk Cache",
-      "volumen_ml": 100,
-      "formato": "tester",
-      "en_stock": true
-    },
-    {
-      "perfume": "Fatale Rose",
-      "tienda": "Alisha Perfumes",
-      "precio_actual": 32990,
-      "precio_normal": 33320,
-      "tiene_descuento": true,
-      "origen": "Alisha Perfumes Bulk Cache",
-      "volumen_ml": 100,
-      "formato": "regular",
-      "en_stock": true
-    },
-    {
-      "perfume": "360 Collection",
-      "tienda": "Alisha Perfumes",
-      "precio_actual": 25990,
-      "precio_normal": 49990,
-      "tiene_descuento": true,
-      "origen": "Alisha Perfumes Bulk Cache",
-      "volumen_ml": 100,
-      "formato": "regular",
-      "en_stock": false
-    },
-    {
-      "perfume": "Oud Al Layl",
-      "tienda": "Alisha Perfumes",
-      "precio_actual": 9990,
-      "precio_normal": 18990,
-      "tiene_descuento": true,
-      "origen": "Alisha Perfumes Bulk Cache",
-      "volumen_ml": 100,
-      "formato": "regular",
-      "en_stock": false
-    },
-    {
-      "perfume": "Woman Sweet Blossom",
-      "tienda": "Alisha Perfumes",
-      "precio_actual": 9990,
-      "precio_normal": 18990,
-      "tiene_descuento": true,
-      "origen": "Alisha Perfumes Bulk Cache",
-      "volumen_ml": 100,
-      "formato": "regular",
-      "en_stock": false
-    },
-    {
-      "perfume": "Woman Sweet Blossom",
-      "tienda": "L'Odoro",
-      "precio_actual": 6990,
-      "precio_normal": 9990,
-      "tiene_descuento": true,
-      "origen": "L'Odoro Bulk Cache",
-      "volumen_ml": 100,
-      "formato": "regular",
-      "en_stock": false
-    },
-    {
-      "perfume": "XS Excess Nueva Presentacion",
-      "tienda": "Alisha Perfumes",
-      "precio_actual": 39990,
-      "precio_normal": 79990,
-      "tiene_descuento": true,
-      "origen": "Alisha Perfumes Bulk Cache",
-      "volumen_ml": 100,
-      "formato": "regular",
-      "en_stock": false
-    },
-    {
-      "perfume": "Lapidus Creation De Minuit",
-      "tienda": "Alisha Perfumes",
-      "precio_actual": 16990,
+      "precio_actual": 18990,
       "precio_normal": 32990,
       "tiene_descuento": true,
       "origen": "Alisha Perfumes Bulk Cache",
@@ -236,10 +159,21 @@
       "en_stock": false
     },
     {
-      "perfume": "Fantasy Candied",
+      "perfume": "The King Of Seduction",
+      "tienda": "Chile Perfume",
+      "precio_actual": 22990,
+      "precio_normal": 34990,
+      "tiene_descuento": true,
+      "origen": "Chile Perfume Bulk Cache",
+      "volumen_ml": 200,
+      "formato": "regular",
+      "en_stock": true
+    },
+    {
+      "perfume": "Kyoto Selective",
       "tienda": "Alisha Perfumes",
-      "precio_actual": 24990,
-      "precio_normal": 48990,
+      "precio_actual": 13990,
+      "precio_normal": 39990,
       "tiene_descuento": true,
       "origen": "Alisha Perfumes Bulk Cache",
       "volumen_ml": 100,
@@ -247,10 +181,87 @@
       "en_stock": false
     },
     {
-      "perfume": "Fantasy Candied",
+      "perfume": "Gharaam",
+      "tienda": "Alisha Perfumes",
+      "precio_actual": 23990,
+      "precio_normal": 46990,
+      "tiene_descuento": true,
+      "origen": "Alisha Perfumes Bulk Cache",
+      "volumen_ml": 100,
+      "formato": "tester",
+      "en_stock": false
+    },
+    {
+      "perfume": "Eau My Gold",
+      "tienda": "Alisha Perfumes",
+      "precio_actual": 64990,
+      "precio_normal": 86990,
+      "tiene_descuento": true,
+      "origen": "Alisha Perfumes Bulk Cache",
+      "volumen_ml": 100,
+      "formato": "regular",
+      "en_stock": false
+    },
+    {
+      "perfume": "Men Uomo Acqua",
+      "tienda": "Paris",
+      "precio_actual": 70369,
+      "precio_normal": 70369,
+      "tiene_descuento": false,
+      "origen": "Paris Live Schema.org",
+      "volumen_ml": 100,
+      "formato": "regular",
+      "en_stock": true
+    },
+    {
+      "perfume": "Men Uomo Acqua",
+      "tienda": "Ripley",
+      "precio_actual": 71990,
+      "precio_normal": 71990,
+      "tiene_descuento": false,
+      "origen": "Ripley Live PDP Variants",
+      "volumen_ml": 100,
+      "formato": "regular",
+      "en_stock": true
+    },
+    {
+      "perfume": "Men Uomo Acqua",
+      "tienda": "Ripley",
+      "precio_actual": 44990,
+      "precio_normal": 44990,
+      "tiene_descuento": false,
+      "origen": "Ripley Live PDP Variants",
+      "volumen_ml": 30,
+      "formato": "regular",
+      "en_stock": true
+    },
+    {
+      "perfume": "Men Uomo Acqua",
+      "tienda": "Alisha Perfumes",
+      "precio_actual": 33990,
+      "precio_normal": 67990,
+      "tiene_descuento": true,
+      "origen": "Alisha Perfumes Bulk Cache",
+      "volumen_ml": 100,
+      "formato": "tester",
+      "en_stock": false
+    },
+    {
+      "perfume": "Men Uomo Acqua",
+      "tienda": "Alisha Perfumes",
+      "precio_actual": 41990,
+      "precio_normal": 76990,
+      "tiene_descuento": true,
+      "origen": "Alisha Perfumes Bulk Cache",
+      "volumen_ml": 100,
+      "formato": "regular",
+      "en_stock": true
+    },
+    {
+      "perfume": "Men Uomo Acqua",
       "tienda": "L'Odoro",
-      "precio_actual": 17900,
-      "precio_normal": 39990,
+      "precio_actual": 25990,
+      "precio_normal": 55990,
       "tiene_descuento": true,
       "origen": "L'Odoro Bulk Cache",
       "volumen_ml": 100,
@@ -258,42 +269,9 @@
       "en_stock": false
     },
     {
-      "perfume": "Hugo Cantimplora",
+      "perfume": "Bint Hooran Rose Passion",
       "tienda": "Alisha Perfumes",
-      "precio_actual": 26990,
-      "precio_normal": 63990,
-      "tiene_descuento": true,
-      "origen": "Alisha Perfumes Bulk Cache",
-      "volumen_ml": 100,
-      "formato": "regular",
-      "en_stock": false
-    },
-    {
-      "perfume": "Hugo Cantimplora",
-      "tienda": "Yauras Perfumes",
-      "precio_actual": 10990,
-      "precio_normal": 18990,
-      "tiene_descuento": true,
-      "origen": "Yauras Perfumes Bulk Cache",
-      "volumen_ml": 100,
-      "formato": "regular",
-      "en_stock": false
-    },
-    {
-      "perfume": "Victorioso Myth Legend",
-      "tienda": "Alisha Perfumes",
-      "precio_actual": 14990,
-      "precio_normal": 60990,
-      "tiene_descuento": true,
-      "origen": "Alisha Perfumes Bulk Cache",
-      "volumen_ml": 100,
-      "formato": "regular",
-      "en_stock": false
-    },
-    {
-      "perfume": "The King Of Seduction Absolute",
-      "tienda": "Alisha Perfumes",
-      "precio_actual": 14990,
+      "precio_actual": 13990,
       "precio_normal": 26990,
       "tiene_descuento": true,
       "origen": "Alisha Perfumes Bulk Cache",
@@ -302,13 +280,145 @@
       "en_stock": false
     },
     {
-      "perfume": "The King Of Seduction Absolute",
+      "perfume": "Bloom Deluxe Edition",
+      "tienda": "Alisha Perfumes",
+      "precio_actual": 105990,
+      "precio_normal": 146990,
+      "tiene_descuento": true,
+      "origen": "Alisha Perfumes Bulk Cache",
+      "volumen_ml": 100,
+      "formato": "regular",
+      "en_stock": false
+    },
+    {
+      "perfume": "Golden Oud",
+      "tienda": "Alisha Perfumes",
+      "precio_actual": 45990,
+      "precio_normal": 86990,
+      "tiene_descuento": true,
+      "origen": "Alisha Perfumes Bulk Cache",
+      "volumen_ml": 100,
+      "formato": "tester",
+      "en_stock": false
+    },
+    {
+      "perfume": "Golden Oud",
+      "tienda": "Alisha Perfumes",
+      "precio_actual": 59990,
+      "precio_normal": 87990,
+      "tiene_descuento": true,
+      "origen": "Alisha Perfumes Bulk Cache",
+      "volumen_ml": 100,
+      "formato": "regular",
+      "en_stock": true
+    },
+    {
+      "perfume": "Al Ameed",
+      "tienda": "Elite Perfumes",
+      "precio_actual": 17990,
+      "precio_normal": 22990,
+      "tiene_descuento": true,
+      "origen": "Elite Perfumes Bulk Cache",
+      "volumen_ml": 100,
+      "formato": "regular",
+      "en_stock": true
+    },
+    {
+      "perfume": "Al Ameed",
+      "tienda": "Oferta Perfumes",
+      "precio_actual": 19710,
+      "precio_normal": 25728,
+      "tiene_descuento": true,
+      "origen": "Oferta Perfumes Bulk Cache",
+      "volumen_ml": 100,
+      "formato": "regular",
+      "en_stock": true
+    },
+    {
+      "perfume": "Al Ameed",
       "tienda": "Chile Perfume",
-      "precio_actual": 22990,
-      "precio_normal": 39900,
+      "precio_actual": 39990,
+      "precio_normal": 69900,
       "tiene_descuento": true,
       "origen": "Chile Perfume Bulk Cache",
-      "volumen_ml": 200,
+      "volumen_ml": 100,
+      "formato": "regular",
+      "en_stock": true
+    },
+    {
+      "perfume": "Awraq Al Oud",
+      "tienda": "Elite Perfumes",
+      "precio_actual": 14990,
+      "precio_normal": 17990,
+      "tiene_descuento": true,
+      "origen": "Elite Perfumes Bulk Cache",
+      "volumen_ml": 100,
+      "formato": "regular",
+      "en_stock": true
+    },
+    {
+      "perfume": "Awraq Al Oud",
+      "tienda": "Alisha Perfumes",
+      "precio_actual": 12990,
+      "precio_normal": 24990,
+      "tiene_descuento": true,
+      "origen": "Alisha Perfumes Bulk Cache",
+      "volumen_ml": 100,
+      "formato": "regular",
+      "en_stock": true
+    },
+    {
+      "perfume": "Awraq Al Oud",
+      "tienda": "Oferta Perfumes",
+      "precio_actual": 10710,
+      "precio_normal": 14028,
+      "tiene_descuento": true,
+      "origen": "Oferta Perfumes Bulk Cache",
+      "volumen_ml": 100,
+      "formato": "regular",
+      "en_stock": true
+    },
+    {
+      "perfume": "Pride Afaq",
+      "tienda": "Elite Perfumes",
+      "precio_actual": 20990,
+      "precio_normal": 27990,
+      "tiene_descuento": true,
+      "origen": "Elite Perfumes Bulk Cache",
+      "volumen_ml": 100,
+      "formato": "regular",
+      "en_stock": true
+    },
+    {
+      "perfume": "Treasure",
+      "tienda": "Elite Perfumes",
+      "precio_actual": 15990,
+      "precio_normal": 21990,
+      "tiene_descuento": true,
+      "origen": "Elite Perfumes Bulk Cache",
+      "volumen_ml": 100,
+      "formato": "regular",
+      "en_stock": true
+    },
+    {
+      "perfume": "Treasure",
+      "tienda": "Alisha Perfumes",
+      "precio_actual": 17990,
+      "precio_normal": 59990,
+      "tiene_descuento": true,
+      "origen": "Alisha Perfumes Bulk Cache",
+      "volumen_ml": 100,
+      "formato": "regular",
+      "en_stock": true
+    },
+    {
+      "perfume": "Liquid Brun Limited Edition",
+      "tienda": "Elite Perfumes",
+      "precio_actual": 45990,
+      "precio_normal": 61990,
+      "tiene_descuento": true,
+      "origen": "Elite Perfumes Bulk Cache",
+      "volumen_ml": 100,
       "formato": "regular",
       "en_stock": true
     }
@@ -316,10 +426,58 @@
   "rotaciones_detalle": [
     {
       "rotacion": 1,
-      "scraping_run_id": 26,
-      "perfumes": 50,
-      "actualizaciones": 13,
-      "duracion_segundos": 296.28,
+      "scraping_run_id": 27,
+      "perfumes": 500,
+      "actualizaciones": 1316,
+      "duracion_segundos": 3852.17,
+      "estado": "EXITOSO"
+    },
+    {
+      "rotacion": 2,
+      "scraping_run_id": 28,
+      "perfumes": 500,
+      "actualizaciones": 1428,
+      "duracion_segundos": 3343.23,
+      "estado": "EXITOSO"
+    },
+    {
+      "rotacion": 3,
+      "scraping_run_id": 29,
+      "perfumes": 500,
+      "actualizaciones": 2330,
+      "duracion_segundos": 4719.67,
+      "estado": "EXITOSO"
+    },
+    {
+      "rotacion": 4,
+      "scraping_run_id": 30,
+      "perfumes": 500,
+      "actualizaciones": 1087,
+      "duracion_segundos": 2937.32,
+      "estado": "EXITOSO"
+    },
+    {
+      "rotacion": 5,
+      "scraping_run_id": 31,
+      "perfumes": 500,
+      "actualizaciones": 981,
+      "duracion_segundos": 3591.11,
+      "estado": "EXITOSO"
+    },
+    {
+      "rotacion": 6,
+      "scraping_run_id": 32,
+      "perfumes": 500,
+      "actualizaciones": 1069,
+      "duracion_segundos": 3777.94,
+      "estado": "EXITOSO"
+    },
+    {
+      "rotacion": 7,
+      "scraping_run_id": 33,
+      "perfumes": 250,
+      "actualizaciones": 558,
+      "duracion_segundos": 1883.93,
       "estado": "EXITOSO"
     }
   ],
