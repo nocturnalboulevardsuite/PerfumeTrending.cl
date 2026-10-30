@@ -30,6 +30,7 @@ from backend.database import (
     init_db,
     obtener_catalogo,
     obtener_detalle_perfume,
+    obtener_mayores_bajadas_recientes,
     obtener_precios_actuales,
     obtener_tiendas,
 )
@@ -68,6 +69,12 @@ from perfume_actions import (
 # - ¿Qué hace esta función?:
 #   Cachea en memoria RAM el catálogo consolidado por 600 segundos (10 minutos) usando Streamlit Cache.
 #   Evita consultar la base de datos (Supabase/SQLite) en cada recarga o clic, permitiendo que la página cargue en <15ms.
+@st.cache_data(ttl=300, show_spinner=False)
+def get_cached_bajadas():
+    """Consulta las mayores caídas de precio confirmadas en auditorías recientes."""
+    return obtener_mayores_bajadas_recientes(dias=7, limite=6)
+
+
 @st.cache_data(ttl=600, show_spinner=False)
 def get_cached_catalogo(busqueda=None, esencias_tuple=None, categoria=None, orden="id_asc"):
     """Consulta el catálogo consolidado calculando el mejor precio en vivo con invalidación TTL."""
@@ -1809,6 +1816,55 @@ if st.session_state['current_page'] == 'home':
             <div class="pt-lede">Compara el precio de cada fragancia entre tiendas chilenas y encuentra dónde comprarla al mejor precio.</div>
         </div>
     """), unsafe_allow_html=True)
+
+    # - ¿Qué hace esta sección (🔥 Mayores Caídas de Precio de la Semana)?:
+    #   Extrae automáticamente las mayores bajadas de precio reales detectadas por el scraper nocturno
+    #   y las presenta en una vitrina destacada de oportunidades antes del catálogo completo.
+    bajadas_semana = get_cached_bajadas()
+    if bajadas_semana and not search_query and not selected_essences and st.session_state.get('selected_category', 'todos') == 'todos':
+        st.markdown(clean_html(f"""
+            <div style="margin-top: 20px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;">
+                <div style="font-size: 1.15rem; font-weight: 800; color: {text_color}; display: flex; align-items: center; gap: 8px;">
+                    <span>🔥</span> Mayores Caídas de Precio de la Semana
+                </div>
+                <a href="pages/remates.py" style="font-size: 0.85rem; font-weight: 700; color: {accent}; text-decoration: none;">Ver todos los remates ↗</a>
+            </div>
+        """), unsafe_allow_html=True)
+
+        cols_bajadas = st.columns(min(len(bajadas_semana), 3), gap="small")
+        for idx_b, item_b in enumerate(bajadas_semana[:3]):
+            with cols_bajadas[idx_b]:
+                p_act_b_str = f"${int(item_b['precio_actual']):,.0f}".replace(",", ".")
+                p_norm_b_str = f"${int(item_b['precio_normal']):,.0f}".replace(",", ".")
+                ahorro_b_str = f"${int(item_b['ahorro_clp']):,.0f}".replace(",", ".")
+                pct_b = item_b['descuento_pct']
+                nom_b_safe = escape_html(item_b['nombre'])
+                marca_b_safe = escape_html(item_b['marca'])
+                tienda_b_safe = escape_html(item_b['tienda'])
+                img_b_safe = get_image_src(item_b.get('imagen_url'))
+
+                st.markdown(clean_html(f"""
+                    <div style="background: {card_bg}; border: 1px solid {border_color}; border-radius: 12px; padding: 12px; position: relative;">
+                        <div style="position: absolute; top: 10px; right: 10px; background: rgba(220, 38, 38, 0.95); color: #fff; font-size: 11px; font-weight: 800; padding: 2px 7px; border-radius: 6px;">-{pct_b}%</div>
+                        <div style="display: flex; gap: 12px; align-items: center;">
+                            <img src="{img_b_safe}" alt="{nom_b_safe}" style="width: 58px; height: 58px; object-fit: contain; border-radius: 6px; background: rgba(0,0,0,0.02);">
+                            <div style="overflow: hidden; flex: 1;">
+                                <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: {subtext_color}; letter-spacing: 0.5px;">{marca_b_safe}</div>
+                                <div style="font-size: 13px; font-weight: 700; color: {text_color}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{nom_b_safe}">{nom_b_safe}</div>
+                                <div style="display: flex; align-items: baseline; gap: 6px; margin-top: 4px;">
+                                    <span style="font-size: 14px; font-weight: 800; color: {accent};">{p_act_b_str} CLP</span>
+                                    <span style="font-size: 11px; text-decoration: line-through; color: {subtext_color};">{p_norm_b_str}</span>
+                                </div>
+                                <div style="font-size: 11px; color: #16a34a; font-weight: 700; margin-top: 2px;">En {tienda_b_safe} (Ahorro {ahorro_b_str})</div>
+                            </div>
+                        </div>
+                    </div>
+                """), unsafe_allow_html=True)
+                if st.button("Comparar Oferta", key=f"btn_baj_comp_{item_b['perfume_id']}_{idx_b}", use_container_width=True):
+                    st.session_state['selected_perfume'] = item_b['perfume_id']
+                    st.switch_page("pages/compararprecios.py")
+
+        st.markdown("<div style='margin-bottom: 24px;'></div>", unsafe_allow_html=True)
     
     # =========================================================================
     # BLOQUE 5: FILTRADO MULTI-FACÉTICO (CATEGORÍAS Y ORDENAMIENTO EN VIVO)

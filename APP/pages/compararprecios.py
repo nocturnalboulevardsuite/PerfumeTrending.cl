@@ -17,6 +17,11 @@ import os
 import base64
 import urllib.parse
 import random
+try:
+    import plotly.graph_objects as go
+    HAS_PLOTLY = True
+except ImportError:
+    HAS_PLOTLY = False
 
 # Configuración de rutas canónicas para importar backend
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -1690,8 +1695,78 @@ with st.expander(titulo_hist):
             df_hist['fecha'] = pd.to_datetime(df_hist['fecha'], errors='coerce')
             df_hist = df_hist.dropna(subset=['fecha', 'precio'])
             if not df_hist.empty:
-                df_pivot = df_hist.pivot_table(index='fecha', columns='tienda', values='precio', aggfunc='min')
-                st.line_chart(df_pivot)
+                if HAS_PLOTLY:
+                    fig = go.Figure()
+                    tiendas_series = list(df_hist['tienda'].unique())
+                    palette_colors = [
+                        "#e11d48", "#2563eb", "#16a34a", "#d97706",
+                        "#8b5cf6", "#06b6d4", "#ec4899", "#10b981",
+                        "#f97316", "#6366f1"
+                    ]
+
+                    for idx_t, t_nom in enumerate(tiendas_series):
+                        df_t = df_hist[df_hist['tienda'] == t_nom].sort_values('fecha')
+                        color_line = palette_colors[idx_t % len(palette_colors)]
+                        fig.add_trace(go.Scatter(
+                            x=df_t['fecha'],
+                            y=df_t['precio'],
+                            mode='lines+markers',
+                            name=t_nom,
+                            line=dict(width=2.5, color=color_line),
+                            marker=dict(size=7, color=color_line),
+                            hovertemplate=f"<b>{t_nom}</b><br>Fecha: %{{x|%d %b %Y}}<br>Precio: $%{{y:,.0f}} CLP<extra></extra>",
+                        ))
+
+                    # Línea horizontal del Mínimo Histórico
+                    min_record = get_cached_minimo_historico(selected_id, volumen_ml=vol_filtro_hist)
+                    if min_record and min_record > 0:
+                        fig.add_hline(
+                            y=min_record,
+                            line_dash="dot",
+                            line_color="#f59e0b",
+                            line_width=2,
+                            annotation_text=f"🔥 Récord Mínimo: ${min_record:,.0f} CLP",
+                            annotation_position="bottom right",
+                            annotation_font_color="#f59e0b",
+                            annotation_font_size=11,
+                        )
+
+                    text_color_plotly = "#f1f5f9" if is_dark else "#1e293b"
+                    grid_color_plotly = "rgba(255, 255, 255, 0.08)" if is_dark else "rgba(0, 0, 0, 0.06)"
+
+                    fig.update_layout(
+                        margin=dict(l=20, r=20, t=35, b=25),
+                        height=380,
+                        paper_bgcolor="rgba(0,0,0,0)",
+                        plot_bgcolor="rgba(0,0,0,0)",
+                        font=dict(family="system-ui, sans-serif", color=text_color_plotly, size=12),
+                        legend=dict(
+                            orientation="h",
+                            yanchor="bottom",
+                            y=1.03,
+                            xanchor="right",
+                            x=1,
+                            font=dict(size=11),
+                        ),
+                        xaxis=dict(
+                            showgrid=True,
+                            gridcolor=grid_color_plotly,
+                            tickformat="%d %b %Y",
+                            color=text_color_plotly,
+                        ),
+                        yaxis=dict(
+                            showgrid=True,
+                            gridcolor=grid_color_plotly,
+                            tickprefix="$",
+                            tickformat=",.0f",
+                            color=text_color_plotly,
+                        ),
+                        hovermode="closest",
+                    )
+                    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+                else:
+                    df_pivot = df_hist.pivot_table(index='fecha', columns='tienda', values='precio', aggfunc='min')
+                    st.line_chart(df_pivot)
             else:
                 st.caption("Aún no existen suficientes puntos temporales verificados para graficar esta presentación.")
         else:
