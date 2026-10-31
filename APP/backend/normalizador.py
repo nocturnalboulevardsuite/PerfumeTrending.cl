@@ -208,6 +208,25 @@ CANONICAL_BRAND_MAP: Dict[str, str] = {
     "rave": "Rave",
     "rayhaan": "Rayhaan",
     "just lychee": "Fragrance World",
+    "ted lapidus": "Ted Lapidus",
+    "aquolina": "Aquolina",
+    "simone andreoli": "Simone Andreoli",
+    "spirit of dubai": "The Spirit of Dubai",
+    "the spirit of dubai": "The Spirit of Dubai",
+    "baldessarini": "Baldessarini",
+    "milestone": "Milestone",
+    "beas": "Beas",
+    "vexes": "Vexes",
+    "perfumes vexes": "Vexes",
+    "yves saint lauren": "Yves Saint Laurent",
+    "lolita lempicka": "Lolita Lempicka",
+    "fcbarcelona": "FC Barcelona",
+    "fc barcelona": "FC Barcelona",
+    "colour me": "Colour Me",
+    "memento": "Memento",
+    "spiritica": "Spiritica",
+    "emper": "Emper",
+    "dumont": "Dumont",
 }
 
 MARCAS_INVALIDAS_CATALOGO: Set[str] = {
@@ -226,6 +245,9 @@ MARCAS_INVALIDAS_CATALOGO: Set[str] = {
 
 # Palabras clave de productos derivados, cosméticos o formatos que NO son frascos individuales de perfume
 PALABRAS_EXCLUSION: List[str] = [
+    # Formatos derivados que NO son perfumes frasco individual (sprays corporales, ambientales, desodorantes)
+    "all over spray", "all over", "desodorante ambiental", "perfume ambiental", "ambientador",
+    "air freshener", "difusor", "aromatizante", "scented candle",
     "desodorante", "deodorant", "body mist", "bodymist", "body spray", "bodyspray",
     "body splash", "bodysplash", "splash", "hair mist", "hairmist", "bruma", "leau brume", "l'eau brume",
     "body lotion", "crema", "locion corporal", "loción corporal", "locion ", "loción ",

@@ -2108,11 +2108,22 @@ def registrar_fallo_scraping(
                 "p_mensaje": msg_clean,
             }).execute()
             res_data = rpc_res.data or {"resultado": "fallo_registrado"}
-            # Si la migración 10 aún no se aplicó en SQL, asegurar retiro tras >= 5 fallos desde Python
-            if isinstance(res_data, dict) and int(res_data.get("fallos_consecutivos") or 0) >= 5:
+            # - ¿Qué hace esta mejora?:
+            # Si el fallo es un error 404 (página eliminada en tienda), desactiva de inmediato la oferta
+            # y marca en_stock = False para proteger la experiencia del usuario final.
+            # Si es un fallo transitorio (timeout, WAF temporal, 500), espera acumular >= 5 fallos consecutivos.
+            msg_lower = msg_clean.lower()
+            es_404 = ("404" in msg_clean or "no encontrada" in msg_lower or "not found" in msg_lower or "inexistente" in msg_lower)
+            limite_fallos = 1 if es_404 else 5
+            if isinstance(res_data, dict) and int(res_data.get("fallos_consecutivos") or 0) >= limite_fallos:
                 oferta_id_sb = res_data.get("oferta_id")
                 if oferta_id_sb:
-                    sb.table("ofertas_actuales").update({"estado": "requiere_revision"}).eq("id", oferta_id_sb).execute()
+                    up_data = {"estado": "requiere_revision"}
+                    res_data["estado"] = "requiere_revision"
+                    if es_404:
+                        up_data["en_stock"] = False
+                        res_data["en_stock"] = False
+                    sb.table("ofertas_actuales").update(up_data).eq("id", oferta_id_sb).execute()
                     limpiar_cache_catalogo()
             return res_data
         except Exception as e:
@@ -2141,13 +2152,16 @@ def registrar_fallo_scraping(
         if not row_oferta:
             return {"resultado": "fallo_sin_oferta", "mensaje": msg_clean}
 
+        msg_lower = msg_clean.lower()
+        es_404 = ("404" in msg_clean or "no encontrada" in msg_lower or "not found" in msg_lower or "inexistente" in msg_lower)
         nueva_cuenta = (row_oferta["fallos_consecutivos"] or 0) + 1
-        nuevo_estado = "requiere_revision" if nueva_cuenta >= 5 else row_oferta["estado"]
+        nuevo_estado = "requiere_revision" if (nueva_cuenta >= 5 or es_404) else row_oferta["estado"]
+        nuevo_stock = False if es_404 else bool(row_oferta["en_stock"])
         cursor.execute("""
         UPDATE ofertas_actuales
-        SET ultimo_intento = ?, fallos_consecutivos = ?, ultimo_error = ?, estado = ?, updated_at = ?
+        SET ultimo_intento = ?, fallos_consecutivos = ?, ultimo_error = ?, estado = ?, en_stock = ?, updated_at = ?
         WHERE id = ?;
-        """, (ahora, nueva_cuenta, msg_clean, nuevo_estado, ahora, row_oferta["id"]))
+        """, (ahora, nueva_cuenta, msg_clean, nuevo_estado, int(nuevo_stock), ahora, row_oferta["id"]))
 
         return {
             "resultado": "fallo_registrado",
@@ -2155,7 +2169,7 @@ def registrar_fallo_scraping(
             "fallos_consecutivos": nueva_cuenta,
             "estado": nuevo_estado,
             "precio_actual": row_oferta["precio_actual"],
-            "en_stock": bool(row_oferta["en_stock"]),
+            "en_stock": bool(nuevo_stock),
         }
 
 
