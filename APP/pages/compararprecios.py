@@ -62,6 +62,7 @@ except (ImportError, ModuleNotFoundError):
     )
 from backend.normalizador import es_precio_valido
 from ui import (
+    DEFAULT_PERFUME_IMAGE,
     HOME_RED_SVG as home_red_svg,
     PERFUME_SVG_FAVICON,
     SHIELD_RED_SVG as shield_red_svg,
@@ -1305,7 +1306,7 @@ with col_img:
     with st.container(key=f"pcard_main_{selected_id}"):
         st.markdown(clean_html(f"""
         <div class="perfume-header-stage">
-            <img src="{img_src}" alt="{nombre_safe}">
+            <img src="{img_src}" alt="{nombre_safe}" onerror="this.onerror=null;this.src='{DEFAULT_PERFUME_IMAGE}';">
         </div>
         """), unsafe_allow_html=True)
         boton_corazon(selected_id, "main", nombre_especifico_det)
@@ -1849,7 +1850,7 @@ if rel_final:
                     clean_html(f"""
                     <div class="rel-card">
                         <div class="rel-stage">
-                            <img src="{img_rel}" alt="{nom_rel_safe}">
+                            <img src="{img_rel}" alt="{nom_rel_safe}" onerror="this.onerror=null;this.src='{DEFAULT_PERFUME_IMAGE}';">
                         </div>
                         <div class="rel-brand">{marca_rel_safe}, {tipo_rel_safe}</div>
                         <div class="rel-name" title="{nom_rel_safe}">{nom_rel_safe}</div>

@@ -52,6 +52,7 @@ except (ImportError, ModuleNotFoundError):
 
 try:
     from ui import (
+        DEFAULT_PERFUME_IMAGE,
         DIAMOND_ICON_SVG as diamond_icon_svg,
         FLAME_RED_SVG as flame_red_svg,
         GRID_ICON_SVG as grid_icon_svg,
@@ -80,6 +81,7 @@ try:
     )
 except (ImportError, ModuleNotFoundError):
     from APP.ui import (
+        DEFAULT_PERFUME_IMAGE,
         DIAMOND_ICON_SVG as diamond_icon_svg,
         FLAME_RED_SVG as flame_red_svg,
         GRID_ICON_SVG as grid_icon_svg,
@@ -1892,7 +1894,7 @@ if st.session_state['current_page'] == 'home':
                     <div style="background: {card_bg}; border: 1px solid {border_color}; border-radius: 12px; padding: 12px; position: relative;">
                         <div style="position: absolute; top: 10px; right: 10px; background: rgba(220, 38, 38, 0.95); color: #fff; font-size: 11px; font-weight: 800; padding: 2px 7px; border-radius: 6px;">-{pct_b}%</div>
                         <div style="display: flex; gap: 12px; align-items: center;">
-                            <img src="{img_b_safe}" alt="{nom_b_safe}" style="width: 58px; height: 58px; object-fit: contain; border-radius: 6px; background: rgba(0,0,0,0.02);">
+                            <img src="{img_b_safe}" alt="{nom_b_safe}" style="width: 58px; height: 58px; object-fit: contain; border-radius: 6px; background: rgba(0,0,0,0.02);" onerror="this.onerror=null;this.src='{DEFAULT_PERFUME_IMAGE}';">
                             <div style="overflow: hidden; flex: 1;">
                                 <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: {subtext_color}; letter-spacing: 0.5px;">{marca_b_safe}</div>
                                 <div style="font-size: 13px; font-weight: 700; color: {text_color}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{nom_b_safe}">{nom_b_safe}</div>
@@ -2131,7 +2133,7 @@ if st.session_state['current_page'] == 'home':
                     card_html = f"""
                     <div class="catalog-card">
                         <div class="square-img-box">
-                            <img src="{img_src}" alt="{nombre_safe}" loading="lazy" decoding="async">
+                            <img src="{img_src}" alt="{nombre_safe}" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='{DEFAULT_PERFUME_IMAGE}';">
                             <div class="card-hover-overlay">
                                 <div class="overlay-title">{nombre_safe}</div>
                                 <div class="overlay-info"><b>Marca:</b> {marca_safe} ({tipo_safe}, {genero_safe})</div>

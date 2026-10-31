@@ -33,6 +33,7 @@ try:
 except (ImportError, ModuleNotFoundError):
     from APP.backend.database import obtener_catalogo
 from ui import (
+    DEFAULT_PERFUME_IMAGE,
     HOME_RED_SVG as home_red_svg,
     PERFUME_SVG_FAVICON,
     SHIELD_RED_SVG as shield_red_svg,
@@ -1515,7 +1516,7 @@ for row in range(0, len(hype_items), cols_per_row):
                         </div>
                     </div>
                     <div class="img-wrapper">
-                        <img src="{img_safe}" alt="{name_safe}" class="{img_class}" loading="lazy">
+                        <img src="{img_safe}" alt="{name_safe}" class="{img_class}" loading="lazy" onerror="this.onerror=null;this.src='{DEFAULT_PERFUME_IMAGE}';">
                         <div class="year-badge">{data['year']}</div>
                     </div>
                     <div class="perfume-title" title="{name_safe}">{name_safe}</div>

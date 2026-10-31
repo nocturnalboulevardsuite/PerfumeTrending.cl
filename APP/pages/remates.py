@@ -48,6 +48,7 @@ except (ImportError, ModuleNotFoundError):
         obtener_tiendas,
     )
 from ui import (
+    DEFAULT_PERFUME_IMAGE,
     FLAME_RED_SVG as flame_red_svg,
     HOME_RED_SVG as home_red_svg,
     PERFUME_SVG_FAVICON,
@@ -1086,7 +1087,7 @@ else:
                             <div class="badge-discount">-{pct_val}%</div>
                             <div class="badge-timer">{vol_ml} ml</div>
                             {badge_alltime_html}
-                            <img src="{img_safe}" alt="{nombre_safe}" loading="lazy">
+                            <img src="{img_safe}" alt="{nombre_safe}" loading="lazy" onerror="this.onerror=null;this.src='{DEFAULT_PERFUME_IMAGE}';">
                         </div>
                         <div class="remate-title" title="{nombre_safe}">{nombre_safe}</div>
                         <div class="remate-brand">{marca_safe}</div>
