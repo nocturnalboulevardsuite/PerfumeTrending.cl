@@ -670,6 +670,47 @@ def extraer_precio_woocommerce(
 # - ¿Qué hace esta función (Extractor Falabella)?:
 #   Descarga el HTML de Falabella y parsea la etiqueta incrustada <script id="__NEXT_DATA__"> de Next.js.
 #   Extrae precios, tallas/volúmenes y stock directamente del JSON de hidratación de React sin usar un navegador pesado.
+def _es_variante_falabella_agotada(v: Dict[str, Any], is_prod_out: bool) -> bool:
+    """
+    Determina si una variante de Falabella carece de disponibilidad real de compra.
+    En el JSON __NEXT_DATA__ de Falabella:
+    - Las tallas agotadas no siempre traen 'isOutOfStock: True'; en su lugar, omiten
+      'isPurchaseable' (None) y 'isOnlineSellable' (None), y sus 'availabilityLabels'
+      quedan con strings vacíos ("").
+    - Las variantes con stock activo siempre tienen al menos uno de los flags de compra
+      ('isPurchaseable', 'isOnlineSellable', 'isHDAvailable', 'isCCAvailable') en True,
+      o textos descriptivos de despacho válidos en 'availabilityLabels'.
+    """
+    if is_prod_out or bool(v.get("isOutOfStock", False)):
+        return True
+    if v.get("isPurchaseable") is False or v.get("isOnlineSellable") is False:
+        return True
+
+    # Indicadores positivos de stock
+    indicadores_positivos = (
+        bool(v.get("isPurchaseable"))
+        or bool(v.get("isOnlineSellable"))
+        or bool(v.get("isHDAvailable"))
+        or bool(v.get("isCCAvailable"))
+    )
+    if indicadores_positivos:
+        return False
+
+    labels = v.get("availabilityLabels")
+    if isinstance(labels, dict) and labels:
+        if any(bool(txt and str(txt).strip()) for txt in labels.values()):
+            return False
+        return True
+
+    # Si contiene claves de stock del payload Next.js pero ninguna fue positiva
+    claves_stock = {"isPurchaseable", "isOnlineSellable", "isHDAvailable", "isCCAvailable", "availabilityLabels"}
+    if any(k in v for k in claves_stock):
+        return True
+
+    # En caso de mocks o payloads sintéticos que no incluyan la estructura completa de Next.js
+    return False
+
+
 def extraer_variedades_falabella(
     session: requests.Session,
     url_directa: Optional[str],
@@ -758,7 +799,7 @@ def extraer_variedades_falabella(
                                 clave_var = (vol, formato_det)
                                 if clave_var in vols_vistos:
                                     continue
-                                is_out = bool(v.get("isOutOfStock", False)) or is_prod_out or (v.get("isPurchaseable") is False)
+                                is_out = _es_variante_falabella_agotada(v, is_prod_out)
                                 vols_vistos.add(clave_var)
                                 norm_valido = p_norm if (es_precio_valido(p_norm) and p_norm > p_act) else p_act
                                 variedades.append({
@@ -863,7 +904,7 @@ def extraer_variedades_falabella(
                                         clave_var = (vol, formato_det)
                                         if clave_var in vols_vistos:
                                             continue
-                                        is_out = bool(v.get("isOutOfStock", False)) or is_prod_out or (v.get("isPurchaseable") is False)
+                                        is_out = _es_variante_falabella_agotada(v, is_prod_out)
                                         vols_vistos.add(clave_var)
                                         norm_valido = p_norm if (es_precio_valido(p_norm) and p_norm > p_act) else p_act
                                         variedades.append({

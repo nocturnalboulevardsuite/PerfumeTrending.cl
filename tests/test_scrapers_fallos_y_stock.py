@@ -10,6 +10,7 @@ import shutil
 import tempfile
 import unittest
 from unittest.mock import MagicMock, patch
+import json
 
 # Configurar entorno de pruebas aislado
 TEST_DIR = tempfile.mkdtemp()
@@ -136,6 +137,64 @@ class TestScrapersFallosYStock(unittest.TestCase):
         self.assertTrue(res.get("exito"))
         self.assertEqual(res.get("precio_actual"), 89990)
         self.assertFalse(res.get("en_stock"), "El producto con isOutOfStock=True debe marcarse como en_stock=False")
+
+    def test_03b_falabella_variante_sin_ispurchaseable_detecta_agotado(self):
+        """Verifica que en Falabella Next.js, una talla sin isPurchaseable y con availabilityLabels vacíos se marque como agotada."""
+        mock_session = MagicMock()
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.text = json.dumps({
+            "props": {
+                "pageProps": {
+                    "productData": {
+                        "isOutOfStock": False,
+                        "name": "BLEU DE CHANEL Eau de Parfum Vaporizador",
+                        "variants": [
+                            {
+                                "id": "4192038",
+                                "name": "BLEU DE CHANEL Eau de Parfum Vaporizador 50ml",
+                                "attributes": {"size": "50"},
+                                "isOutOfStock": None,
+                                "isPurchaseable": None,
+                                "isOnlineSellable": None,
+                                "availabilityLabels": {"homeDeliveryShipping": "", "pickUpFromStoreShipping": ""},
+                                "prices": [{"type": "internetPrice", "price": ["145.200"]}]
+                            },
+                            {
+                                "id": "4192040",
+                                "name": "BLEU DE CHANEL Eau de Parfum Vaporizador 100ml",
+                                "attributes": {"size": "100"},
+                                "isOutOfStock": None,
+                                "isPurchaseable": True,
+                                "isOnlineSellable": True,
+                                "availabilityLabels": {"homeDeliveryShipping": "Despacho a domicilio"},
+                                "prices": [{"type": "internetPrice", "price": ["181.500"]}]
+                            }
+                        ]
+                    }
+                }
+            }
+        })
+        mock_resp.text = f"<html><script id=\"__NEXT_DATA__\" type=\"application/json\">{mock_resp.text}</script></html>"
+        mock_session.get.return_value = mock_resp
+
+        res_50 = extraer_precio_falabella(
+            session=mock_session,
+            url_directa="https://www.falabella.com/producto/123",
+            perfume_nombre="BLEU DE CHANEL",
+            volumen_ml=50
+        )
+        self.assertTrue(res_50.get("exito"))
+        self.assertFalse(res_50.get("en_stock"), "La variante de 50ml sin isPurchaseable debe quedar como en_stock=False")
+
+        res_100 = extraer_precio_falabella(
+            session=mock_session,
+            url_directa="https://www.falabella.com/producto/123",
+            perfume_nombre="BLEU DE CHANEL",
+            volumen_ml=100
+        )
+        self.assertTrue(res_100.get("exito"))
+        self.assertTrue(res_100.get("en_stock"), "La variante de 100ml con isPurchaseable=True debe quedar como en_stock=True")
 
     def test_04_paris_producto_agotado_detecta_stock_falso(self):
         """Verifica que si Paris reporta OutOfStock en Schema.org JSON-LD, en_stock es False."""
