@@ -216,6 +216,12 @@ MARCAS_INVALIDAS_CATALOGO: Set[str] = {
     "garnier", "vogue", "maybelline", "loreal paris", "l'oreal paris", "l'oréal paris",
     "nivea", "dove", "pantene", "head & shoulders", "sedal", "etienne", "petrizzio",
     "disenador", "diseñador", "nicho", "perfume", "perfumes",
+    # Categorías de tienda / etiquetas web que NO corresponden a una marca o fabricante real:
+    "perfumes femeninos", "perfumes masculinos", "perfumes unisex",
+    "perfume femenino", "perfume masculino", "perfume unisex",
+    "perfumes mujer", "perfumes hombre", "perfume mujer", "perfume hombre",
+    "tester", "testers", "tester mujer", "tester hombre", "tester unisex",
+    "fragancia", "fragancias", "dama", "damas", "mujer", "mujeres", "hombre", "hombres", "unisex",
 }
 
 # Palabras clave de productos derivados, cosméticos o formatos que NO son frascos individuales de perfume
@@ -274,10 +280,22 @@ def normalizar_marca_canonica(marca: str) -> str:
     Convierte cualquier variante de casing u ortografía de marca en su nombre canónico oficial.
     Ejemplo: 'MAISON AL HAMBRA' -> 'Maison Alhambra', 'CHRISTIAN DIOR' -> 'Dior'.
     """
+    # - ¿Qué hace esta sección / función?:
+    # Filtra y normaliza nombres de fabricantes. Si el valor ingresado es una categoría genérica
+    # de tienda web (ej. 'Perfumes femeninos', 'Tester'), se descarta retornando cadena vacía
+    # para forzar la búsqueda de la marca real en el título del producto.
     if not marca or not isinstance(marca, str):
         return ""
     raw = marca.strip()
     clave = _norm_ascii(raw)
+    if (
+        clave in MARCAS_INVALIDAS_CATALOGO
+        or clave.startswith("tester ")
+        or clave.endswith(" tester")
+        or clave.startswith("perfumes ")
+        or clave.startswith("perfume ")
+    ):
+        return ""
     if clave in CANONICAL_BRAND_MAP:
         return CANONICAL_BRAND_MAP[clave]
 
