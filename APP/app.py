@@ -18,49 +18,94 @@ import base64
 import random
 import time
 
-# Configurar rutas para importar backend
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# Configurar rutas para importar backend con máxima resiliencia en Streamlit Cloud y local
 APP_DIR = os.path.dirname(os.path.abspath(__file__))
-if BASE_DIR not in sys.path:
-    sys.path.append(BASE_DIR)
-if APP_DIR not in sys.path:
-    sys.path.append(APP_DIR)
+BASE_DIR = os.path.dirname(APP_DIR)
+for _p in (APP_DIR, BASE_DIR):
+    if _p not in sys.path:
+        sys.path.insert(0, _p)
+    elif sys.path[0] != _p:
+        try:
+            sys.path.remove(_p)
+        except ValueError:
+            pass
+        sys.path.insert(0, _p)
 
-from backend.database import (
-    init_db,
-    obtener_catalogo,
-    obtener_detalle_perfume,
-    obtener_mayores_bajadas_recientes,
-    obtener_precios_actuales,
-    obtener_tiendas,
-)
-from ui import (
-    DIAMOND_ICON_SVG as diamond_icon_svg,
-    FLAME_RED_SVG as flame_red_svg,
-    GRID_ICON_SVG as grid_icon_svg,
-    HOME_RED_SVG as home_red_svg,
-    PERFUME_SVG_FAVICON as perfume_svg_favicon,
-    SHIELD_RED_SVG as shield_red_svg,
-    TAG_RED_SVG as tag_red_svg,
-    TREND_RED_SVG as trend_red_svg,
-    cerrar_sesion_usuario,
-    clean_html,
-    escape_html,
-    formatear_nombre_especifico,
-    get_image_src,
-    get_theme_palette,
-    init_common_session_state,
-    toggle_theme as _shared_toggle_theme,
-)
-from auth_email import modal_autenticacion
-from perfume_actions import (
-    boton_abrir_perfume,
-    boton_corazon,
-    estilos_moviles,
-    estilos_tarjetas_cliqueables,
-    favoritos_ids,
-    mostrar_aviso_favoritos,
-)
+try:
+    from backend.database import (
+        init_db,
+        obtener_catalogo,
+        obtener_detalle_perfume,
+        obtener_mayores_bajadas_recientes,
+        obtener_precios_actuales,
+        obtener_tiendas,
+    )
+except (ImportError, ModuleNotFoundError):
+    from APP.backend.database import (
+        init_db,
+        obtener_catalogo,
+        obtener_detalle_perfume,
+        obtener_mayores_bajadas_recientes,
+        obtener_precios_actuales,
+        obtener_tiendas,
+    )
+
+try:
+    from ui import (
+        DIAMOND_ICON_SVG as diamond_icon_svg,
+        FLAME_RED_SVG as flame_red_svg,
+        GRID_ICON_SVG as grid_icon_svg,
+        HOME_RED_SVG as home_red_svg,
+        PERFUME_SVG_FAVICON as perfume_svg_favicon,
+        SHIELD_RED_SVG as shield_red_svg,
+        TAG_RED_SVG as tag_red_svg,
+        TREND_RED_SVG as trend_red_svg,
+        cerrar_sesion_usuario,
+        clean_html,
+        escape_html,
+        formatear_nombre_especifico,
+        get_image_src,
+        get_theme_palette,
+        init_common_session_state,
+        toggle_theme as _shared_toggle_theme,
+    )
+    from auth_email import modal_autenticacion
+    from perfume_actions import (
+        boton_abrir_perfume,
+        boton_corazon,
+        estilos_moviles,
+        estilos_tarjetas_cliqueables,
+        favoritos_ids,
+        mostrar_aviso_favoritos,
+    )
+except (ImportError, ModuleNotFoundError):
+    from APP.ui import (
+        DIAMOND_ICON_SVG as diamond_icon_svg,
+        FLAME_RED_SVG as flame_red_svg,
+        GRID_ICON_SVG as grid_icon_svg,
+        HOME_RED_SVG as home_red_svg,
+        PERFUME_SVG_FAVICON as perfume_svg_favicon,
+        SHIELD_RED_SVG as shield_red_svg,
+        TAG_RED_SVG as tag_red_svg,
+        TREND_RED_SVG as trend_red_svg,
+        cerrar_sesion_usuario,
+        clean_html,
+        escape_html,
+        formatear_nombre_especifico,
+        get_image_src,
+        get_theme_palette,
+        init_common_session_state,
+        toggle_theme as _shared_toggle_theme,
+    )
+    from APP.auth_email import modal_autenticacion
+    from APP.perfume_actions import (
+        boton_abrir_perfume,
+        boton_corazon,
+        estilos_moviles,
+        estilos_tarjetas_cliqueables,
+        favoritos_ids,
+        mostrar_aviso_favoritos,
+    )
 
 
 # =============================================================================

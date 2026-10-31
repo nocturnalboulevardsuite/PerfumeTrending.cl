@@ -16,14 +16,22 @@ import base64
 import random
 from datetime import timedelta, timezone
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 APP_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-if BASE_DIR not in sys.path:
-    sys.path.append(BASE_DIR)
-if APP_DIR not in sys.path:
-    sys.path.append(APP_DIR)
+BASE_DIR = os.path.dirname(APP_DIR)
+for _p in (APP_DIR, BASE_DIR):
+    if _p not in sys.path:
+        sys.path.insert(0, _p)
+    elif sys.path[0] != _p:
+        try:
+            sys.path.remove(_p)
+        except ValueError:
+            pass
+        sys.path.insert(0, _p)
 
-from backend.database import obtener_catalogo
+try:
+    from backend.database import obtener_catalogo
+except (ImportError, ModuleNotFoundError):
+    from APP.backend.database import obtener_catalogo
 from ui import (
     HOME_RED_SVG as home_red_svg,
     PERFUME_SVG_FAVICON,

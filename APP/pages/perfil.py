@@ -18,26 +18,44 @@ import urllib.parse
 import random
 
 # Configuración de rutas canónicas para importar backend
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 APP_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-if BASE_DIR not in sys.path:
-    sys.path.append(BASE_DIR)
-if APP_DIR not in sys.path:
-    sys.path.append(APP_DIR)
+BASE_DIR = os.path.dirname(APP_DIR)
+for _p in (APP_DIR, BASE_DIR):
+    if _p not in sys.path:
+        sys.path.insert(0, _p)
+    elif sys.path[0] != _p:
+        try:
+            sys.path.remove(_p)
+        except ValueError:
+            pass
+        sys.path.insert(0, _p)
 
 import hashlib
 
-from backend.database import (
-    actualizar_perfil_usuario,
-    actualizar_preferencias_notificacion,
-    eliminar_favorito,
-    obtener_catalogo,
-    obtener_detalle_perfume,
-    obtener_favoritos_usuario,
-    obtener_perfil_usuario,
-    obtener_precios_actuales,
-    subir_avatar_usuario,
-)
+try:
+    from backend.database import (
+        actualizar_perfil_usuario,
+        actualizar_preferencias_notificacion,
+        eliminar_favorito,
+        obtener_catalogo,
+        obtener_detalle_perfume,
+        obtener_favoritos_usuario,
+        obtener_perfil_usuario,
+        obtener_precios_actuales,
+        subir_avatar_usuario,
+    )
+except (ImportError, ModuleNotFoundError):
+    from APP.backend.database import (
+        actualizar_perfil_usuario,
+        actualizar_preferencias_notificacion,
+        eliminar_favorito,
+        obtener_catalogo,
+        obtener_detalle_perfume,
+        obtener_favoritos_usuario,
+        obtener_perfil_usuario,
+        obtener_precios_actuales,
+        subir_avatar_usuario,
+    )
 from ui import (
     DEFAULT_AVATAR_SVG,
     HOME_RED_SVG as home_red_svg,
