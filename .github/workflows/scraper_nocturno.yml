@@ -63,20 +63,30 @@ jobs:
         run: |
           python APP/backend/scraper_periodico.py --shard ${{ matrix.shard }} --total-shards 4
 
+      - name: Guardar reporte de auditoria como artefacto
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: reporte-auditoria-shard-${{ matrix.shard }}
+          path: APP/data/reportes/
+          retention-days: 7
+
       - name: Sincronizar reporte de auditoria en GitHub si hubo cambios
+        continue-on-error: true
         run: |
           git config --global user.name "PerfumeTrending Bot"
           git config --global user.email "bot@perfumetrending.cl"
-          git add APP/data/reportes/
-          if [ -d "APP/data/cache" ]; then
-            git add APP/data/cache/
-          fi
+          git add APP/data/reportes/ 2>/dev/null || true
           if git diff --staged --quiet; then
             echo "No se registraron cambios de reporte en esta ejecucion (shard ${{ matrix.shard }})."
           else
-            git commit -m "chore(etl): reporte auditoria shard ${{ matrix.shard }}/4 [skip ci]"
+            git commit -m "chore(etl): reporte auditoria shard ${{ matrix.shard }}/4 [skip ci]" || true
             for i in {1..5}; do
-              git pull --rebase origin main && git push origin main && break || sleep 5
+              git fetch origin main
+              git rebase -X theirs origin/main && git push origin main && break || {
+                git rebase --abort 2>/dev/null || true
+                sleep $((i * 3))
+              }
             done
             echo "Reporte shard ${{ matrix.shard }} sincronizado exitosamente con el repositorio."
           fi
