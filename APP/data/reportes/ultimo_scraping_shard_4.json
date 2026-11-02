@@ -1,0 +1,182 @@
+{
+  "actualizaciones": 0,
+  "fecha": "2026-11-02 17:53:11",
+  "duracion_segundos": 50.6,
+  "metadata": {
+    "version_etl": "3.3.0",
+    "sistema": "PerfumeTrending Professional Anti-Bot ETL (Multi-Rotation LRU)",
+    "fecha_ejecucion": "2026-11-02 17:53:11",
+    "duracion_segundos": 50.6,
+    "estado": "EXITOSO",
+    "rotaciones_completadas": 1,
+    "total_rotaciones_planificadas": 1,
+    "tamano_lote": 25,
+    "shard": 4,
+    "total_shards": 4
+  },
+  "metricas": {
+    "total_perfumes_catalogo": 955,
+    "perfumes_auditados": 25,
+    "total_tiendas_registradas": 17,
+    "precios_actualizados": 0,
+    "ofertas_nuevas": 0,
+    "cambios_precio": 0,
+    "cambios_stock": 0,
+    "cambios_url": 0,
+    "bloqueos_waf": 28,
+    "exclusiones_marca": 84,
+    "omitidos_circuit_breaker": 0,
+    "errores_totales": 0
+  },
+  "estadisticas_tiendas": {
+    "Falabella": {
+      "consultas": 14,
+      "exitos_en_vivo": 0,
+      "fallbacks_seguridad": 14,
+      "bloqueos_waf": 0,
+      "omitidos_circuit_breaker": 0,
+      "trust_score": 96
+    },
+    "Paris": {
+      "consultas": 14,
+      "exitos_en_vivo": 0,
+      "fallbacks_seguridad": 0,
+      "bloqueos_waf": 14,
+      "omitidos_circuit_breaker": 0,
+      "trust_score": 95
+    },
+    "Ripley": {
+      "consultas": 14,
+      "exitos_en_vivo": 0,
+      "fallbacks_seguridad": 0,
+      "bloqueos_waf": 14,
+      "omitidos_circuit_breaker": 0,
+      "trust_score": 94
+    },
+    "Silk Perfumes": {
+      "consultas": 23,
+      "exitos_en_vivo": 0,
+      "fallbacks_seguridad": 23,
+      "bloqueos_waf": 0,
+      "omitidos_circuit_breaker": 0,
+      "trust_score": 92
+    },
+    "Elite Perfumes": {
+      "consultas": 23,
+      "exitos_en_vivo": 0,
+      "fallbacks_seguridad": 23,
+      "bloqueos_waf": 0,
+      "omitidos_circuit_breaker": 0,
+      "trust_score": 89
+    },
+    "DBS Beauty Store": {
+      "consultas": 0,
+      "exitos_en_vivo": 0,
+      "fallbacks_seguridad": 0,
+      "bloqueos_waf": 0,
+      "omitidos_circuit_breaker": 0,
+      "trust_score": 91
+    },
+    "Alisha Perfumes": {
+      "consultas": 23,
+      "exitos_en_vivo": 0,
+      "fallbacks_seguridad": 23,
+      "bloqueos_waf": 0,
+      "omitidos_circuit_breaker": 0,
+      "trust_score": 88
+    },
+    "Yauras Perfumes": {
+      "consultas": 23,
+      "exitos_en_vivo": 0,
+      "fallbacks_seguridad": 23,
+      "bloqueos_waf": 0,
+      "omitidos_circuit_breaker": 0,
+      "trust_score": 88
+    },
+    "Oferta Perfumes": {
+      "consultas": 23,
+      "exitos_en_vivo": 0,
+      "fallbacks_seguridad": 23,
+      "bloqueos_waf": 0,
+      "omitidos_circuit_breaker": 0,
+      "trust_score": 90
+    },
+    "L'Odoro": {
+      "consultas": 23,
+      "exitos_en_vivo": 0,
+      "fallbacks_seguridad": 23,
+      "bloqueos_waf": 0,
+      "omitidos_circuit_breaker": 0,
+      "trust_score": 92
+    },
+    "Chile Perfume": {
+      "consultas": 23,
+      "exitos_en_vivo": 0,
+      "fallbacks_seguridad": 23,
+      "bloqueos_waf": 0,
+      "omitidos_circuit_breaker": 0,
+      "trust_score": 91
+    },
+    "Mundo Aromas": {
+      "consultas": 23,
+      "exitos_en_vivo": 0,
+      "fallbacks_seguridad": 23,
+      "bloqueos_waf": 0,
+      "omitidos_circuit_breaker": 0,
+      "trust_score": 90
+    },
+    "Cosmetic": {
+      "consultas": 23,
+      "exitos_en_vivo": 0,
+      "fallbacks_seguridad": 23,
+      "bloqueos_waf": 0,
+      "omitidos_circuit_breaker": 0,
+      "trust_score": 90
+    },
+    "Fragante": {
+      "consultas": 23,
+      "exitos_en_vivo": 0,
+      "fallbacks_seguridad": 23,
+      "bloqueos_waf": 0,
+      "omitidos_circuit_breaker": 0,
+      "trust_score": 90
+    },
+    "ComprarEnChile": {
+      "consultas": 23,
+      "exitos_en_vivo": 0,
+      "fallbacks_seguridad": 23,
+      "bloqueos_waf": 0,
+      "omitidos_circuit_breaker": 0,
+      "trust_score": 88
+    },
+    "Portal del Perfume": {
+      "consultas": 23,
+      "exitos_en_vivo": 0,
+      "fallbacks_seguridad": 23,
+      "bloqueos_waf": 0,
+      "omitidos_circuit_breaker": 0,
+      "trust_score": 89
+    },
+    "Aromata": {
+      "consultas": 23,
+      "exitos_en_vivo": 0,
+      "fallbacks_seguridad": 23,
+      "bloqueos_waf": 0,
+      "omitidos_circuit_breaker": 0,
+      "trust_score": 89
+    }
+  },
+  "muestra_capturas": [],
+  "descubrimiento": null,
+  "rotaciones_detalle": [
+    {
+      "rotacion": 1,
+      "scraping_run_id": 72,
+      "perfumes": 25,
+      "actualizaciones": 0,
+      "duracion_segundos": 26.6,
+      "estado": "EXITOSO"
+    }
+  ],
+  "errores": []
+}
