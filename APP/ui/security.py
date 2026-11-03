@@ -20,7 +20,19 @@ APP_DIR = Path(__file__).resolve().parent.parent
 ALLOWED_ASSETS_DIR = (APP_DIR / "assets").resolve()
 ALLOWED_IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".gif", ".svg"}
 
-DEFAULT_PERFUME_IMAGE = "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=500&q=80"
+DEFAULT_PERFUME_IMAGE = (
+    "data:image/svg+xml;utf8,"
+    "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200' fill='none'>"
+    "<rect width='200' height='200' rx='16' fill='%2314171f'/>"
+    "<rect x='80' y='28' width='40' height='24' rx='4' fill='%232a303f' stroke='%23d4af37' stroke-width='2'/>"
+    "<rect x='88' y='20' width='24' height='10' rx='2' fill='%23d4af37'/>"
+    "<rect x='48' y='52' width='104' height='120' rx='12' fill='%231c212d' stroke='%23d4af37' stroke-width='2'/>"
+    "<rect x='64' y='82' width='72' height='60' rx='6' fill='%23232938' stroke='rgba(212,175,55,0.4)' stroke-width='1'/>"
+    "<line x1='76' y1='102' x2='124' y2='102' stroke='%23d4af37' stroke-width='1.5' stroke-linecap='round'/>"
+    "<line x1='86' y1='114' x2='114' y2='114' stroke='rgba(255,255,255,0.3)' stroke-width='1' stroke-linecap='round'/>"
+    "<circle cx='100' cy='130' r='3' fill='%23d4af37'/>"
+    "</svg>"
+)
 DEFAULT_AVATAR_SVG = (
     "data:image/svg+xml;utf8,"
     "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80' fill='none'>"
