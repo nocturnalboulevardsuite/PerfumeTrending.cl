@@ -393,19 +393,22 @@ st.markdown(f"""
         height: auto !important;
     }}
 
-    /* El switch conserva exactamente el comportamiento visual que tenía en esta página */
-    div.st-key-theme_toggle div.stButton > button {{
-        background-color: {btn_bg} !important;
-        border: 1px solid {btn_border} !important;
-        border-radius: 8px !important;
+    /* Switch de tema: sin bordes, sin fondo y sin sombra en ningún estado (igual que app.py) */
+    div.st-key-theme_toggle,
+    div.st-key-theme_toggle div[data-testid="stButton"],
+    div.st-key-theme_toggle div.stButton {{
+        background: transparent !important;
+        border: none !important;
         box-shadow: none !important;
         outline: none !important;
-        transform: none !important;
     }}
+    div.st-key-theme_toggle div.stButton > button,
     div.st-key-theme_toggle div.stButton > button:hover,
+    div.st-key-theme_toggle div.stButton > button:active,
     div.st-key-theme_toggle div.stButton > button:focus,
     div.st-key-theme_toggle div.stButton > button:focus-visible {{
         background: transparent !important;
+        background-color: transparent !important;
         border: none !important;
         box-shadow: none !important;
         outline: none !important;
