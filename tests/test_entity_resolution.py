@@ -264,5 +264,37 @@ class TestEntityResolutionEngine(unittest.TestCase):
         )
 
 
+    # --- 13. PRODUCTOS DERIVADOS, COSMÉTICA Y ACCESORIOS ---
+    def test_sauvage_rechaza_limpiador_facial(self):
+        res = coincide_entidad_detallada(
+            titulo="LIMPIADOR FACIAL DIOR SAUVAGE 125 ML",
+            perfume_nombre="Sauvage",
+            marca="Dior",
+            url="https://simple.ripley.cl/2000401701948P",
+            volumen_esperado=100,
+        )
+        self.assertFalse(res.coincide)
+        self.assertIn("no ser perfume", res.motivo.lower())
+
+    def test_rechaza_accesorios_y_cosmetica_en_url(self):
+        # Mochila Asus con nombre de perfume en título
+        res_mochila = coincide_entidad_detallada(
+            titulo="Mochila ASUS Vigour para Portatil 15.6",
+            perfume_nombre="Vigour",
+            marca="Zimaya",
+            url="https://www.falabella.com/falabella-cl/product/151785256/mochila-asus-vigour-para-portatil",
+        )
+        self.assertFalse(res_mochila.coincide)
+
+        # Máscara de pestañas
+        res_mascara = coincide_entidad_detallada(
+            titulo="Mascara De Pestanas Lash Idole",
+            perfume_nombre="Idole Lancome",
+            marca="Lancome",
+            url="https://www.falabella.com/falabella-cl/product/80082363/Mascara-De-Pestanas-Lash-Idole",
+        )
+        self.assertFalse(res_mascara.coincide)
+
+
 if __name__ == "__main__":
     unittest.main()

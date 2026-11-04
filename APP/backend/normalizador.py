@@ -317,6 +317,7 @@ PALABRAS_EXCLUSION: List[str] = [
     "lip gloss", "suero", "serum", "difusor", "ambientador", "home spray",
     "tinte", "nutrisse", "maquillaje", "aclarante", "facial", "capilar", "mascarilla",
     "pestañina", "rubor", "polvo", "iluminador", "base liquida", "base líquida", "esmalte", "uñas",
+    "limpiador", "gel limpiador", "espuma limpiadora", "agua micelar",
 ]
 
 RE_PRODUCTO_INVALIDO = re.compile(
@@ -1134,6 +1135,28 @@ def coincide_entidad_detallada(
     m_norm = _normalizar_texto_match(m_canon or marca)
     c_norm = _normalizar_texto_match(concentracion)
     formato_det = detectar_formato_oferta(tit_raw, url_raw)
+
+    # 0.0 Validación estricta de perfume genuino (descarta limpiadores, cosméticos, cremas, accesorios)
+    vol_min_chk = min(25, int(volumen_esperado)) if (volumen_esperado and volumen_esperado > 0) else 25
+    if not es_producto_perfume_valido(tit_raw, marca=marca or None, volumen_min_ml=vol_min_chk):
+        return ResultadoCoincidencia(
+            coincide=False,
+            confianza=0.0,
+            motivo=f"Producto descartado por no ser perfume en título ('{tit_raw[:60]}')",
+            formato_detectado=formato_det,
+        )
+
+    if url_raw:
+        path_url = urllib.parse.urlparse(url_raw).path.replace("-", " ").replace("_", " ")
+        segments = [s.strip() for s in path_url.split("/") if len(s.strip()) > 2 and not s.strip().isdigit()]
+        for seg in segments:
+            if not es_producto_perfume_valido(seg, marca=marca or None, volumen_min_ml=0):
+                return ResultadoCoincidencia(
+                    coincide=False,
+                    confianza=0.0,
+                    motivo=f"Producto descartado por no ser perfume en URL ('{seg[:60]}')",
+                    formato_detectado=formato_det,
+                )
 
     # 0. Guardia de formato esperado ('regular' vs 'tester') si el llamador lo restringe explícitamente
     if formato_esperado and formato_esperado in ("regular", "tester") and formato_det != formato_esperado:
