@@ -2111,6 +2111,7 @@ if st.session_state['current_page'] == 'home':
                     img_src = get_image_src(p.get('imagen_url'))
 
                     mejor_p = p.get('mejor_precio')
+                    precio_sin_rev = p.get('precio_sin_reverificar')
                     es_solo_tester = bool(p.get('mejor_precio_es_tester'))
                     if mejor_p and mejor_p > 0:
                         precio_num_txt = f"${mejor_p:,.0f} CLP".replace(",", ".")
@@ -2122,6 +2123,15 @@ if st.session_state['current_page'] == 'home':
                         </div>
                         """
                         overlay_badge_html = f'<div class="overlay-price-badge">Mejor oferta: {precio_num_txt}</div>'
+                    elif precio_sin_rev and precio_sin_rev > 0:
+                        precio_ref_txt = f"${precio_sin_rev:,.0f} CLP".replace(",", ".")
+                        precio_html = f"""
+                        <div class="card-perfume-price">
+                            <div class="price-label" style="color: #f59e0b;">Sin reverificar</div>
+                            <div class="price-val" style="opacity: 0.85;">{precio_ref_txt}</div>
+                        </div>
+                        """
+                        overlay_badge_html = '<div class="overlay-price-badge" style="background: rgba(245, 158, 11, 0.16); border-color: rgba(251, 191, 36, 0.4); color: #fbbf24;">⚠️ Precio pendiente de reverificación</div>'
                     else:
                         precio_html = """
                         <div class="card-perfume-price out-of-stock-card-price">

@@ -1961,10 +1961,13 @@ def auditar_lote_perfumes(
                 logger.error(err_msg)
                 errores.append(err_msg)
                 try:
+                    err_low = str(err_item).lower()
+                    cod_err = "timeout" if (isinstance(err_item, TimeoutError) or "timeout" in err_low or "timed out" in err_low) else "parse_error"
                     registrar_fallo_scraping(
                         tienda_id=t_id,
                         perfume_id=p_id,
                         mensaje=str(err_item),
+                        motivo_codigo=cod_err,
                     )
                 except Exception:
                     pass
@@ -2034,7 +2037,8 @@ def auditar_lote_perfumes(
                     "Se preserva última oferta sin penalizar fallos consecutivos."
                 )
             else:
-                motivo_fallo = f"Sin disponibilidad confirmada en {t_nom}"
+                codigo_fallo = str(diag_dict.get("motivo_codigo") or "no_encontrado_en_feed").strip().lower()
+                motivo_fallo = str(diag_dict.get("detalle") or f"Sin disponibilidad confirmada en {t_nom}")
                 tiene_oferta_previa = False
                 if ofertas_activas_set is not None:
                     tiene_oferta_previa = (int(p_id), int(t_id)) in ofertas_activas_set
@@ -2044,11 +2048,12 @@ def auditar_lote_perfumes(
                         or bool(u_directa)
                     )
 
-                if tiene_oferta_previa:
+                if tiene_oferta_previa and codigo_fallo in ("no_encontrado_en_feed", "waf", "timeout", "parse_error"):
                     registrar_fallo_scraping(
                         tienda_id=t_id,
                         perfume_id=p_id,
                         mensaje=motivo_fallo,
+                        motivo_codigo=codigo_fallo,
                     )
                 tiendas_stats[t_nom]["fallbacks_seguridad"] += 1
                 if not u_directa:
