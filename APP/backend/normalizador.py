@@ -13,7 +13,9 @@ from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass
 import re
+import statistics
 import unicodedata
+import urllib.parse
 from typing import Any, Dict, Iterator, List, Optional, Set, Tuple
 
 # Género esperado del perfume que se está auditando en el hilo/tarea actual.
@@ -229,6 +231,33 @@ CANONICAL_BRAND_MAP: Dict[str, str] = {
     "dumont": "Dumont",
 }
 
+# Tabla declarativa de alias y sub-marcas comerciales para limpieza canónica de títulos (Fase 4).
+# Nota: Nunca incluir prefijos cortos que formen parte del nombre de fragancias (ej. 'Boss' en 'Boss Bottled', 'Polo' en 'Polo Blue', 'CH' en 'CH Men').
+ALIAS_MARCA: Dict[str, Tuple[str, ...]] = {
+    "Maison Alhambra": ("Maison Al Hambra", "Alhambra"),
+    "Dior": ("Christian Dior",),
+    "Giorgio Armani": ("Emporio Armani", "Armani"),
+    "Yves Saint Laurent": ("Saint Laurent", "YSL", "Yves Saint Lauren"),
+    "Dolce & Gabbana": ("Dolce Gabbana", "Dolce-Gabbana", "Dolce and Gabbana", "D&G"),
+    "Ard Al Zaafaran": ("Al Zaafaran",),
+    "Carolina Herrera": ("CH Carolina Herrera",),
+    "Jean Paul Gaultier": ("JPG",),
+    "Paco Rabanne": ("Rabanne",),
+    "Ralph Lauren": ("Polo Ralph Lauren",),
+    "Mugler": ("Thierry Mugler",),
+    "By Kilian": ("Kilian",),
+    "Roja Parfums": ("Roja Dove",),
+    "Initio Parfums Privés": ("Initio Parfums Prives", "Initio Parfums", "Initio"),
+    "Maison Francis Kurkdjian": ("Francis Kurkdjian", "MFK"),
+    "Al Haramain": ("Haramain",),
+    "Viktor & Rolf": ("Viktor and Rolf", "Viktor Rolf"),
+    "Lancôme": ("Lancome",),
+    "Jesús del Pozo": ("Jesus del Pozo",),
+    "Hermès": ("Hermes",),
+    "Chloé": ("Chloe",),
+    "Estée Lauder": ("Estee Lauder",),
+}
+
 MARCAS_INVALIDAS_CATALOGO: Set[str] = {
     "", "varios", "perfumero", "generico", "sin marca", "otros",
     "accesorios", "pack", "set", "muestra", "decant", "test", "s/m",
@@ -347,31 +376,35 @@ def detectar_formato_oferta(titulo: str, url: str = "") -> str:
 # 2. EXTRACCIÓN DE METADATOS (VOLUMEN, CONCENTRACIÓN, GÉNERO, SANIDAD)
 # =============================================================================
 
-# - ¿Qué hace esta función (Extracción de Volumen)?:
-#   Aplica expresiones regulares sobre el título y descripción para extraer la capacidad en mililitros (ej. 100ml, 3.4 oz).
-def extraer_volumen_ml(texto: str, default: int = 100) -> int:
+# - ¿Qué hace esta función (Extracción Estricta de Volumen Opcional)?:
+#   Busca capacidad explícita en mililitros u onzas fluidas en un texto (título, etiqueta de variante o slug URL)
+#   y retorna `None` cuando no existe evidencia explícita (por ejemplo en `"Default Title"`), evitando inventar 100 ml.
+def extraer_volumen_ml_opcional(texto: str) -> Optional[int]:
     """
     Extrae la capacidad en mililitros (ml) desde el título, URL o etiqueta de variante.
-    Soporta mililitros directos (2 a 1000 ml) y conversión desde fl oz.
+    Retorna `None` si no se encuentra un volumen explícito válido.
     """
     if not texto:
-        return default
+        return None
+    t_strip = urllib.parse.unquote(str(texto)).strip()
+    if not t_strip or t_strip.lower() in ("default title", "default", "unico", "único", "talla unica", "talla única"):
+        return None
 
     # Si hay decimales tipo '1,5 ml' o '7.5ml', redondear para detectar decants/viales pequeños
-    match_dec_ml = re.search(r"(\d{1,3}[.,]\d+)\s*[-_]?\s*ml\b", texto, re.IGNORECASE)
+    match_dec_ml = re.search(r"(?<!\d)(\d{1,3}[.,]\d+)\s*[-_]?\s*ml(?![a-zA-Z])", t_strip, re.IGNORECASE)
     if match_dec_ml:
         val_f = float(match_dec_ml.group(1).replace(",", "."))
         val_i = max(1, int(round(val_f)))
         if 1 <= val_i <= 1000:
             return val_i
 
-    match_ml = re.search(r"(\d{1,4})\s*[-_]?\s*(?:ml|m\b)", texto, re.IGNORECASE)
+    match_ml = re.search(r"(?<!\d)(\d{1,4})\s*[-_]?\s*(?:ml(?![a-zA-Z])|m\b)", t_strip, re.IGNORECASE)
     if match_ml:
         val = int(match_ml.group(1))
         if 2 <= val <= 1000:
             return val
 
-    match_oz = re.search(r"(\d+(?:\.\d+)?)\s*(?:fl\.?\s*oz|oz)\b", texto, re.IGNORECASE)
+    match_oz = re.search(r"(?<!\d)(\d+(?:\.\d+)?)\s*(?:fl\.?\s*oz|oz)(?![a-zA-Z])", t_strip, re.IGNORECASE)
     if match_oz:
         val_oz = float(match_oz.group(1))
         ml_estimado = int(round(val_oz * 29.5735))
@@ -381,7 +414,74 @@ def extraer_volumen_ml(texto: str, default: int = 100) -> int:
         if 2 <= ml_estimado <= 1000:
             return ml_estimado
 
-    return default
+    return None
+
+
+# - ¿Qué hace esta función (Extracción de Volumen Retrocompatible)?:
+#   Mantiene compatibilidad con llamadas que requieren un entero por defecto cuando `extraer_volumen_ml_opcional` es `None`.
+def extraer_volumen_ml(texto: str, default: int = 100) -> int:
+    """Wrapper retrocompatible sobre `extraer_volumen_ml_opcional`."""
+    val = extraer_volumen_ml_opcional(texto)
+    return val if val is not None else default
+
+
+# - ¿Qué hace esta función (Resolución Jerárquica y Guardia de Coherencia de Volumen)?:
+#   Resuelve el volumen real de una oferta siguiendo orden estricto de precedencia:
+#     1) `titulo_variante` (ej. '50 ml' en Shopify/Ripley/Falabella)
+#     2) `titulo_producto` (ej. 'Perfume SWY Powerfully EDP 50 Ml' cuando la variante es 'Default Title')
+#     3) `url_slug` (ej. '...-edp-50-ml-hombre')
+#     4) `volumen_ml_defecto` ÚNICAMENTE si el producto es monovariante (`n_variantes_producto <= 1`)
+#     5) `None` (descarta la oferta como volumen ambiguo en vez de inventar 100 ml).
+#   Además aplica guardia de coherencia: en fichas monovariante no-tester, si el slug URL declara un volumen
+#   comercial (>=25 ml) que contradice al volumen resuelto (>1 ml de diferencia), retorna `None`.
+def resolver_volumen_oferta(
+    titulo_variante: str = "",
+    titulo_producto: str = "",
+    url_slug: str = "",
+    volumen_ml_defecto: Optional[int] = None,
+    n_variantes_producto: int = 1,
+    es_tester: bool = False,
+) -> Optional[int]:
+    """Determina de forma verificable el volumen en ml de una oferta o retorna `None` si es ambiguo/contradictorio."""
+    vol_var = extraer_volumen_ml_opcional(titulo_variante)
+    vol_prod = extraer_volumen_ml_opcional(titulo_producto)
+    slug_tail = urllib.parse.unquote(str(url_slug or "")).split("?")[0].split("#")[0].rstrip("/").split("/")[-1]
+    vol_slug = extraer_volumen_ml_opcional(slug_tail)
+
+    # En productos multivariante sin volumen en el título de la variante (y donde tampoco es par regular/tester único),
+    # evitamos usar volumen_ml_defecto para no colapsar tallas distintas a 100 ml.
+    vol_resuelto: Optional[int] = None
+    if vol_var is not None:
+        vol_resuelto = vol_var
+    elif vol_prod is not None:
+        vol_resuelto = vol_prod
+    elif vol_slug is not None:
+        vol_resuelto = vol_slug
+    elif n_variantes_producto <= 1 and volumen_ml_defecto is not None:
+        try:
+            v_def = int(round(float(volumen_ml_defecto)))
+            if 25 <= v_def <= 1000:
+                vol_resuelto = v_def
+        except (ValueError, TypeError):
+            vol_resuelto = None
+
+    if vol_resuelto is None:
+        return None
+
+    # Guardia de coherencia URL <-> volumen en productos monovariante (no-tester):
+    # Si la variante NO declaró su propio volumen distinto y el slug trae un volumen comercial (>=25 ml)
+    # que contradice al título en más de 1 ml, descartamos por ambigüedad.
+    if (
+        n_variantes_producto <= 1
+        and not es_tester
+        and vol_slug is not None
+        and vol_slug >= 25
+        and vol_var is None
+        and abs(vol_resuelto - vol_slug) > 1
+    ):
+        return None
+
+    return vol_resuelto
 
 
 # - ¿Qué hace esta función (Clasificación de Concentración)?:
@@ -456,6 +556,24 @@ def normalizar_genero(genero: Optional[str]) -> Optional[str]:
     if g in ("unisex", "u", "ambos"):
         return "Unisex"
     return None
+
+
+# - ¿Qué hace esta función?:
+#   Evalúa si dos géneros son compatibles para representar el mismo perfume:
+#   - 'Unisex' + 'Hombre' -> (True, 'Hombre') (se conserva el más específico)
+#   - 'Unisex' + 'Mujer'  -> (True, 'Mujer')
+#   - Iguales             -> (True, genero_normalizado)
+#   - 'Hombre' vs 'Mujer' -> (False, '') (nunca fusionar automáticamente Pour Homme con Pour Femme).
+def generos_compatibles(g1: Optional[str], g2: Optional[str]) -> Tuple[bool, str]:
+    n1 = normalizar_genero(g1) or "Unisex"
+    n2 = normalizar_genero(g2) or "Unisex"
+    if n1 == n2:
+        return True, n1
+    if n1 == "Unisex":
+        return True, n2
+    if n2 == "Unisex":
+        return True, n1
+    return False, ""
 
 
 def extraer_genero(texto: str) -> str:
@@ -608,25 +726,15 @@ def limpiar_nombre_perfume(titulo: str, marca: str = "") -> str:
         flags=re.IGNORECASE,
     )
 
-    # 2. Remover marca (tanto cruda como canónica y variantes conocidas) si aparece como prefijo
+    # 2. Remover marca (tanto cruda como canónica y sub-marcas declarativas en ALIAS_MARCA) si aparece como prefijo
     marcas_a_quitar = set()
     if marca:
         marcas_a_quitar.add(marca.strip())
         m_canon = normalizar_marca_canonica(marca)
         if m_canon:
             marcas_a_quitar.add(m_canon)
-            if m_canon == "Maison Alhambra":
-                marcas_a_quitar.update(["Maison Al Hambra", "Alhambra"])
-            elif m_canon == "Dior":
-                marcas_a_quitar.add("Christian Dior")
-            elif m_canon == "Giorgio Armani":
-                marcas_a_quitar.update(["Emporio Armani", "Armani"])
-            elif m_canon == "Yves Saint Laurent":
-                marcas_a_quitar.update(["Saint Laurent"])
-            elif m_canon == "Dolce & Gabbana":
-                marcas_a_quitar.update(["Dolce Gabbana", "Dolce-Gabbana", "Dolce and Gabbana"])
-            elif m_canon == "Ard Al Zaafaran":
-                marcas_a_quitar.add("Al Zaafaran")
+            for alias_m in ALIAS_MARCA.get(m_canon, ()):
+                marcas_a_quitar.add(alias_m)
 
     # Ordenar de más larga a más corta para remover prefijos compuestos completos
     for m_var in sorted(marcas_a_quitar, key=len, reverse=True):
@@ -665,9 +773,10 @@ def limpiar_nombre_perfume(titulo: str, marca: str = "") -> str:
     # Remover preposiciones sueltas al final (ej. '... De', '... Para')
     limpio = re.sub(r"\s+\b(?:de|para)\b\s*$", "", limpio, flags=re.IGNORECASE)
 
-    # Remover 'men' o 'woman'/'women' sueltos al final salvo cuando forman parte del nombre (ej. '212 Men', '212 VIP Men', 'CH Men')
+    # Remover 'for men'/'men' o 'for women'/'woman' sueltos al final salvo cuando forman parte del nombre (ej. '212 Men', '212 VIP Men', 'CH Men')
     if not re.search(r"\b(?:212|ch|solo|boss)\s+(?:vip\s+)?men\b", limpio, flags=re.IGNORECASE):
-        limpio = re.sub(r"\s+\b(?:men|man|women|woman)\b\s*$", "", limpio, flags=re.IGNORECASE)
+        limpio = re.sub(r"\s+\b(?:for\s+)?(?:men|man|women|woman)\b\s*$", "", limpio, flags=re.IGNORECASE)
+    limpio = re.sub(r"\s+\b(?:de|para|for)\b\s*$", "", limpio, flags=re.IGNORECASE)
 
     # 6. Remover códigos finales de catálogo (' H', ' M', ' U')
     limpio = re.sub(r"\s+[hmuHMU]\s*$", "", limpio)
@@ -1362,3 +1471,131 @@ def coincide_con_perfume(
         vendedor=vendedor,
         genero_esperado=genero_esperado,
     ).coincide
+
+
+# =============================================================================
+# 4. DETECCIÓN ESTADÍSTICA DE PRECIOS ATÍPICOS (OUTLIERS POR MEDIANA Y TESTER)
+# =============================================================================
+
+# - ¿Qué hace esta función?:
+#   Evalúa las ofertas activas en stock de un mismo `(perfume_id, volumen_ml)` y detecta:
+#   1) Precios `< 0.5x` o `> 2.2x` respecto de la mediana cuando existen `>= 4` ofertas en el formato.
+#   2) Ofertas `tester` cuyo precio supera el precio de la botella `regular` sellada equivalente.
+#   Retorna las ofertas marcadas con `estado_sugerido = 'requiere_revision'` y trazabilidad completa.
+def detectar_precios_atipicos(
+    ofertas_de_variante: List[Dict[str, Any]],
+    ofertas_regulares_mismo_volumen: Optional[List[Dict[str, Any]]] = None,
+) -> List[Dict[str, Any]]:
+    activas: List[Dict[str, Any]] = []
+    for o in (ofertas_de_variante or []):
+        if not bool(o.get("en_stock", True)):
+            continue
+        if str(o.get("estado") or "activa").lower() != "activa":
+            continue
+        try:
+            p_val = int(round(float(o.get("precio_actual") or 0)))
+        except (ValueError, TypeError):
+            continue
+        if p_val <= 0:
+            continue
+        copia = dict(o)
+        copia["precio_actual"] = p_val
+        activas.append(copia)
+
+    if not activas:
+        return []
+
+    regulares = [o for o in activas if str(o.get("formato") or "regular").lower() != "tester"]
+    testers = [o for o in activas if str(o.get("formato") or "regular").lower() == "tester"]
+
+    outliers: List[Dict[str, Any]] = []
+    ids_marcados: Set[int] = set()
+    regulares_outliers_idx: Set[int] = set()
+
+    # Regla 1 y 2: Outliers estadísticos respecto de la mediana (requiere >= 4 ofertas activas del mismo formato)
+    for grupo_fmt in (regulares, testers):
+        if len(grupo_fmt) < 4:
+            continue
+        precios_g = [int(x["precio_actual"]) for x in grupo_fmt]
+        med = float(statistics.median(precios_g))
+        med_int = int(round(med))
+        for idx_g, item in enumerate(grupo_fmt):
+            p = int(item["precio_actual"])
+            regla = None
+            motivo = ""
+            if p < 0.5 * med:
+                regla = "bajo_mediana"
+                motivo = f"Precio ${p:,} inferior a 0.5x mediana (${med_int:,}) sobre {len(grupo_fmt)} ofertas"
+            elif p > 2.2 * med:
+                regla = "sobre_mediana"
+                motivo = f"Precio ${p:,} superior a 2.2x mediana (${med_int:,}) sobre {len(grupo_fmt)} ofertas"
+            if regla:
+                out_d = dict(item)
+                out_d["regla_outlier"] = regla
+                out_d["estado_sugerido"] = "requiere_revision"
+                out_d["mediana_referencia"] = med_int
+                out_d["motivo_outlier"] = motivo
+                outliers.append(out_d)
+                if item.get("id") is not None:
+                    ids_marcados.add(int(item["id"]))
+                if grupo_fmt is regulares:
+                    regulares_outliers_idx.add(idx_g)
+
+    # Regla 3: Tester más caro que la botella regular sellada del mismo volumen
+    pool_reg_raw = ofertas_regulares_mismo_volumen if ofertas_regulares_mismo_volumen is not None else regulares
+    pool_reg_sano: List[Dict[str, Any]] = []
+    for idx_r, r_item in enumerate(pool_reg_raw or []):
+        if pool_reg_raw is regulares and idx_r in regulares_outliers_idx:
+            continue
+        if not bool(r_item.get("en_stock", True)):
+            continue
+        if str(r_item.get("estado") or "activa").lower() != "activa":
+            continue
+        if str(r_item.get("formato") or "regular").lower() == "tester":
+            continue
+        try:
+            pr_val = int(round(float(r_item.get("precio_actual") or 0)))
+        except (ValueError, TypeError):
+            continue
+        if pr_val > 0:
+            pool_reg_sano.append(dict(r_item, precio_actual=pr_val))
+
+    if testers and pool_reg_sano:
+        precios_reg_sanos = [int(x["precio_actual"]) for x in pool_reg_sano]
+        med_reg = float(statistics.median(precios_reg_sanos))
+        med_reg_int = int(round(med_reg))
+        techo_mercado = (med_reg * 1.15) if len(precios_reg_sanos) >= 3 else float(max(precios_reg_sanos))
+        reg_por_tienda: Dict[Any, int] = {}
+        for rx in pool_reg_sano:
+            tid_r = rx.get("tienda_id")
+            if tid_r is not None:
+                p_rx = int(rx["precio_actual"])
+                if tid_r not in reg_por_tienda or p_rx < reg_por_tienda[tid_r]:
+                    reg_por_tienda[tid_r] = p_rx
+
+        for tst in testers:
+            oid_t = tst.get("id")
+            if oid_t is not None and int(oid_t) in ids_marcados:
+                continue
+            p_tst = int(tst["precio_actual"])
+            tid_t = tst.get("tienda_id")
+            p_misma_tienda = reg_por_tienda.get(tid_t) if tid_t is not None else None
+
+            es_mayor_misma_tienda = p_misma_tienda is not None and p_tst > p_misma_tienda
+            es_mayor_mercado = p_tst > techo_mercado
+
+            if es_mayor_misma_tienda or es_mayor_mercado:
+                ref_cmp = p_misma_tienda if es_mayor_misma_tienda else med_reg_int
+                out_t = dict(tst)
+                out_t["regla_outlier"] = "tester_mayor_que_regular"
+                out_t["estado_sugerido"] = "requiere_revision"
+                out_t["mediana_referencia"] = int(ref_cmp)
+                out_t["motivo_outlier"] = (
+                    f"Tester (${p_tst:,}) supera precio de botella regular sellada (${int(ref_cmp):,})"
+                )
+                outliers.append(out_t)
+                if oid_t is not None:
+                    ids_marcados.add(int(oid_t))
+
+    return outliers
+

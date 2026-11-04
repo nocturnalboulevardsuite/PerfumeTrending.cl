@@ -55,6 +55,7 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          RETAIL_PROXY_URL: ${{ secrets.RETAIL_PROXY_URL }}
           SCRAPER_BATCH_SIZE: ${{ inputs.batch_size || '500' }}
           SCRAPER_ROTATIONS: ${{ inputs.rotations || '0' }}
           SCRAPER_DELAY_ROTATIONS: ${{ inputs.delay || '10' }}
@@ -62,6 +63,15 @@ jobs:
           SCRAPER_TOTAL_SHARDS: 4
         run: |
           python APP/backend/scraper_periodico.py --shard ${{ matrix.shard }} --total-shards 4
+
+      - name: Publicar tabla de salud por tienda y alertas no bloqueantes
+        if: always()
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          python APP/backend/mantenimiento/resumen_salud_ci.py --shard ${{ matrix.shard }}
 
       - name: Guardar reporte de auditoria como artefacto
         uses: actions/upload-artifact@v4

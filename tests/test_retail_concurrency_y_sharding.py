@@ -128,6 +128,7 @@ class TestRetailConcurrencyYSharding(unittest.TestCase):
             self.assertEqual(data["actualizaciones"], 150)
             self.assertEqual(data["metadata"]["shard"], 1)
 
+    @patch("backend.scraper_periodico.registrar_fallo_scraping")
     @patch("backend.scraper_periodico.registrar_observacion_oferta")
     @patch("backend.scraper_periodico.iniciar_scraping_run")
     @patch("backend.scraper_periodico.finalizar_scraping_run")
@@ -142,6 +143,7 @@ class TestRetailConcurrencyYSharding(unittest.TestCase):
         mock_finalizar,
         mock_iniciar,
         mock_reg,
+        mock_fallo,
     ):
         """Verifica que las tiendas de retail se ejecuten concurrentemente y que un fallo en una no afecte a las otras."""
         mock_iniciar.return_value = 888

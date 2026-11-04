@@ -40,6 +40,12 @@ El proyecto se organiza en tres fases académicas con entregables individuales y
 
 ---
 
+## 🛡️ Confiabilidad y Calidad de Datos
+
+- **Documentación Operativa ETL:** ver [`docs/CONFIABILIDAD_DATOS.md`](docs/CONFIABILIDAD_DATOS.md) (política de frescura 3/7/14 días, resolución estricta de volúmenes sin default `100 ml`, estrategia anti-WAF por tienda, fusión segura de duplicados, detección de precios atípicos y observabilidad CI con histéresis de 2 strikes).
+
+---
+
 ## 📌 Estado del Proyecto
 
 🚧 En desarrollo — Fase 1 de 3 (Definición del Proyecto APT).

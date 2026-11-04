@@ -90,6 +90,93 @@ CATALOGO_CACHE_TTL_SECONDS = 300.0
 _REMATES_MASTER: Optional[Tuple[float, List[Dict[str, Any]]]] = None
 REMATES_CACHE_TTL_SECONDS = 300.0
 
+# =============================================================================
+# POLÍTICA DE FRESCURA DE OFERTAS (UMBRALES CONFIGURABLES EN DÍAS UTC)
+# =============================================================================
+# - ¿Qué hace esta sección?:
+#   Define los umbrales de vigencia temporal de una oferta desde su última verificación exitosa:
+#   * <= 3 días (`DIAS_OFERTA_FRESCA`): oferta fresca, elegible a todos los sellos.
+#   * 3 a 7 días (`DIAS_OFERTA_ADVERTENCIA`): oferta reciente, muestra aviso discreto y sigue siendo elegible.
+#   * 7 a 14 días (`DIAS_OFERTA_OCULTAR`): oferta desactualizada, muestra advertencia ámbar y NO compite por
+#     "Mejor precio", "Mínimo histórico", "Desde $X" ni entra en "Remates".
+#   * > 14 días: oferta obsoleta, se oculta de la comparación activa hasta ser reverificada.
+DIAS_OFERTA_FRESCA: float = 3.0
+DIAS_OFERTA_ADVERTENCIA: float = 7.0
+DIAS_OFERTA_OCULTAR: float = 14.0
+
+
+# - ¿Qué hace esta función?:
+#   Convierte cualquier marca temporal (ISO-8601 de Supabase con zona horaria o string UTC de SQLite)
+#   en la cantidad exacta de días transcurridos respecto de `now_utc`. Retorna `None` si no hay fecha válida.
+def calcular_dias_sin_verificar(ts_raw: Any, now_utc: Optional[datetime] = None) -> Optional[float]:
+    """Calcula los días transcurridos desde `ts_raw` hasta `now_utc` en UTC."""
+    if ts_raw is None:
+        return None
+    if isinstance(ts_raw, datetime):
+        dt_val = ts_raw
+    else:
+        txt = str(ts_raw).strip()
+        if not txt:
+            return None
+        if txt.endswith("Z"):
+            txt = txt[:-1] + "+00:00"
+        dt_val = None
+        try:
+            dt_val = datetime.fromisoformat(txt)
+        except ValueError:
+            for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M:%S.%f", "%Y-%m-%d"):
+                try:
+                    dt_val = datetime.strptime(txt, fmt)
+                    break
+                except ValueError:
+                    continue
+        if dt_val is None:
+            return None
+
+    if dt_val.tzinfo is None:
+        dt_val = dt_val.replace(tzinfo=timezone.utc)
+    else:
+        dt_val = dt_val.astimezone(timezone.utc)
+
+    ref_now = now_utc or datetime.now(timezone.utc)
+    if ref_now.tzinfo is None:
+        ref_now = ref_now.replace(tzinfo=timezone.utc)
+    else:
+        ref_now = ref_now.astimezone(timezone.utc)
+
+    delta_days = (ref_now - dt_val).total_seconds() / 86400.0
+    return round(max(0.0, delta_days), 3)
+
+
+# - ¿Qué hace esta función?:
+#   Clasifica la edad de verificación de una oferta en uno de los cuatro niveles de frescura:
+#   'fresca' (<=3d), 'reciente' (3-7d), 'desactualizada' (7-14d) u 'obsoleta' (>14d).
+def clasificar_frescura_oferta(dias_sin_verificar: Optional[float]) -> str:
+    """Retorna el nivel semántico de frescura de una oferta según `dias_sin_verificar`."""
+    if dias_sin_verificar is None:
+        return "fresca"
+    if dias_sin_verificar <= DIAS_OFERTA_FRESCA:
+        return "fresca"
+    if dias_sin_verificar <= DIAS_OFERTA_ADVERTENCIA:
+        return "reciente"
+    if dias_sin_verificar <= DIAS_OFERTA_OCULTAR:
+        return "desactualizada"
+    return "obsoleta"
+
+
+def es_oferta_elegible_mejor_precio(dias_sin_verificar: Optional[float]) -> bool:
+    """Indica si una oferta tiene frescura suficiente (<= 7 días) para ganar 'Mejor precio' o 'Remate'."""
+    if dias_sin_verificar is None:
+        return True
+    return dias_sin_verificar <= DIAS_OFERTA_ADVERTENCIA
+
+
+def es_oferta_visible(dias_sin_verificar: Optional[float], en_stock: bool = True) -> bool:
+    """Oculta ofertas marcadas en stock que llevan más de 14 días sin reverificarse."""
+    if not en_stock or dias_sin_verificar is None:
+        return True
+    return dias_sin_verificar <= DIAS_OFERTA_OCULTAR
+
 
 # Caché en memoria para evitar consultas repetitivas N+1 a variantes_perfume en Supabase
 _CACHE_VARIANTE_SUPABASE_POR_TUPLA: Dict[Tuple[int, int, str], int] = {}
@@ -2070,10 +2157,16 @@ def registrar_fallo_scraping(
     mensaje: str,
     variante_id: Optional[int] = None,
     perfume_id: Optional[int] = None,
+    motivo_codigo: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
-    Registra un fallo de extracción sin alterar el precio actual, stock ni URL confirmada.
-    Si una oferta acumula 5 o más fallos consecutivos, pasa a `estado='requiere_revision'`.
+    Registra un fallo de extracción sin alterar el precio actual ni la URL confirmada.
+    - Si `motivo_codigo` es `'waf'`, `'timeout'` o `'parse_error'`, registra el intento pero NO incrementa
+      `fallos_consecutivos` ni retira la oferta.
+    - Si `motivo_codigo == 'no_encontrado_en_feed'` y acumula >= 5 fallos consecutivos, retira la oferta
+      a `estado='agotada'` y `en_stock=False`.
+    - En modo legado (`motivo_codigo=None`), mantiene retrocompatibilidad (`>=5` -> `'requiere_revision'`,
+      `404` -> `'requiere_revision'` y `en_stock=False`).
     """
     if tienda_id is None:
         raise ValueError("tienda_id es obligatorio")
@@ -2081,96 +2174,223 @@ def registrar_fallo_scraping(
         raise ValueError("Debe indicarse el motivo del fallo")
 
     ahora = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    ahora_iso = datetime.now(timezone.utc).isoformat()
     msg_clean = str(mensaje).strip()[:2000]
+    codigo_norm = (motivo_codigo or "").strip().lower() or None
+    es_transitorio_red = codigo_norm in ("waf", "timeout", "parse_error")
+    es_ausencia_feed = codigo_norm == "no_encontrado_en_feed"
 
     sb = get_supabase(use_service_role=True)
     if sb and is_supabase_disponible():
-        if not variante_id and perfume_id:
+        variantes_objetivo: List[int] = []
+        if variante_id:
+            variantes_objetivo = [int(variante_id)]
+        elif perfume_id:
             pid = int(perfume_id)
-            if pid in _CACHE_VARIANTE_DEFECTO_SUPABASE:
-                variante_id = _CACHE_VARIANTE_DEFECTO_SUPABASE[pid]
-            else:
+            if es_ausencia_feed:
                 try:
-                    r_v = sb.table("variantes_perfume").select("id").eq("perfume_id", pid).limit(1).execute()
-                    if r_v.data:
-                        variante_id = r_v.data[0]["id"]
-                        _CACHE_VARIANTE_DEFECTO_SUPABASE[pid] = variante_id
+                    r_oa = (
+                        sb.table("ofertas_actuales")
+                        .select("variante_id, variantes_perfume!inner(perfume_id)")
+                        .eq("tienda_id", int(tienda_id))
+                        .eq("variantes_perfume.perfume_id", pid)
+                        .eq("estado", "activa")
+                        .execute()
+                    )
+                    variantes_objetivo = sorted({int(x["variante_id"]) for x in (r_oa.data or []) if x.get("variante_id")})
                 except Exception as e:
-                    logger.debug(f"Error resolviendo variante en Supabase: {e}")
+                    logger.debug(f"Error consultando variantes activas en Supabase: {e}")
+            if not variantes_objetivo:
+                if pid in _CACHE_VARIANTE_DEFECTO_SUPABASE:
+                    variantes_objetivo = [_CACHE_VARIANTE_DEFECTO_SUPABASE[pid]]
+                else:
+                    try:
+                        r_v = sb.table("variantes_perfume").select("id").eq("perfume_id", pid).limit(1).execute()
+                        if r_v.data:
+                            vid_def = int(r_v.data[0]["id"])
+                            _CACHE_VARIANTE_DEFECTO_SUPABASE[pid] = vid_def
+                            variantes_objetivo = [vid_def]
+                    except Exception as e:
+                        logger.debug(f"Error resolviendo variante en Supabase: {e}")
 
-        if not variante_id:
+        if not variantes_objetivo:
             return {"resultado": "fallo_sin_variante", "mensaje": msg_clean}
 
+        ultimo_res: Dict[str, Any] = {"resultado": "fallo_sin_oferta", "mensaje": msg_clean}
         try:
-            rpc_res = sb.rpc("registrar_fallo_scraping", {
-                "p_variante_id": int(variante_id),
-                "p_tienda_id": int(tienda_id),
-                "p_mensaje": msg_clean,
-            }).execute()
-            res_data = rpc_res.data or {"resultado": "fallo_registrado"}
-            # - ¿Qué hace esta mejora?:
-            # Si el fallo es un error 404 (página eliminada en tienda), desactiva de inmediato la oferta
-            # y marca en_stock = False para proteger la experiencia del usuario final.
-            # Si es un fallo transitorio (timeout, WAF temporal, 500), espera acumular >= 5 fallos consecutivos.
-            msg_lower = msg_clean.lower()
-            es_404 = ("404" in msg_clean or "no encontrada" in msg_lower or "not found" in msg_lower or "inexistente" in msg_lower)
-            limite_fallos = 1 if es_404 else 5
-            if isinstance(res_data, dict) and int(res_data.get("fallos_consecutivos") or 0) >= limite_fallos:
-                oferta_id_sb = res_data.get("oferta_id")
-                if oferta_id_sb:
-                    up_data = {"estado": "requiere_revision"}
-                    res_data["estado"] = "requiere_revision"
-                    if es_404:
-                        up_data["en_stock"] = False
-                        res_data["en_stock"] = False
-                    sb.table("ofertas_actuales").update(up_data).eq("id", oferta_id_sb).execute()
-                    limpiar_cache_catalogo()
-            return res_data
+            for vid_item in variantes_objetivo:
+                if es_transitorio_red:
+                    r_curr = (
+                        sb.table("ofertas_actuales")
+                        .select("id, fallos_consecutivos, estado, precio_actual, en_stock")
+                        .eq("variante_id", int(vid_item))
+                        .eq("tienda_id", int(tienda_id))
+                        .limit(1)
+                        .execute()
+                    )
+                    if r_curr.data:
+                        row_c = r_curr.data[0]
+                        sb.table("ofertas_actuales").update({
+                            "ultimo_intento": ahora_iso,
+                            "ultimo_error": f"[{codigo_norm}] {msg_clean}"[:2000],
+                            "updated_at": ahora_iso,
+                        }).eq("id", row_c["id"]).execute()
+                        ultimo_res = {
+                            "resultado": "fallo_transitorio",
+                            "oferta_id": row_c["id"],
+                            "fallos_consecutivos": int(row_c.get("fallos_consecutivos") or 0),
+                            "estado": row_c.get("estado"),
+                            "precio_actual": row_c.get("precio_actual"),
+                            "en_stock": bool(row_c.get("en_stock")),
+                        }
+                    continue
+
+                rpc_res = sb.rpc("registrar_fallo_scraping", {
+                    "p_variante_id": int(vid_item),
+                    "p_tienda_id": int(tienda_id),
+                    "p_mensaje": msg_clean,
+                }).execute()
+                res_data = rpc_res.data or {"resultado": "fallo_registrado"}
+                msg_lower = msg_clean.lower()
+                es_404 = ("404" in msg_clean or "no encontrada" in msg_lower or "not found" in msg_lower or "inexistente" in msg_lower)
+                limite_fallos = 1 if es_404 else 5
+                if isinstance(res_data, dict) and int(res_data.get("fallos_consecutivos") or 0) >= limite_fallos:
+                    oferta_id_sb = res_data.get("oferta_id")
+                    if oferta_id_sb:
+                        if es_ausencia_feed and not es_404:
+                            up_data = {"estado": "agotada", "en_stock": False}
+                            res_data["estado"] = "agotada"
+                            res_data["en_stock"] = False
+                        else:
+                            up_data = {"estado": "requiere_revision"}
+                            res_data["estado"] = "requiere_revision"
+                            if es_404:
+                                up_data["en_stock"] = False
+                                res_data["en_stock"] = False
+                        sb.table("ofertas_actuales").update(up_data).eq("id", oferta_id_sb).execute()
+                        limpiar_cache_catalogo()
+                ultimo_res = res_data
+            return ultimo_res
         except Exception as e:
             logger.error(f"Error en RPC registrar_fallo_scraping en Supabase: {e}")
             raise
 
     init_db()
     with get_db_cursor(commit=True) as cursor:
-        target_variante_id = variante_id
-        if not target_variante_id and perfume_id:
-            cursor.execute("SELECT id FROM variantes_perfume WHERE perfume_id = ? LIMIT 1;", (perfume_id,))
-            row_v = cursor.fetchone()
-            if row_v:
-                target_variante_id = row_v["id"]
+        variantes_sq: List[int] = []
+        if variante_id:
+            variantes_sq = [int(variante_id)]
+        elif perfume_id:
+            if es_ausencia_feed:
+                cursor.execute(
+                    """
+                    SELECT oa.variante_id
+                    FROM ofertas_actuales oa
+                    JOIN variantes_perfume vp ON vp.id = oa.variante_id
+                    WHERE vp.perfume_id = ? AND oa.tienda_id = ? AND oa.estado = 'activa';
+                    """,
+                    (perfume_id, tienda_id),
+                )
+                variantes_sq = [int(r["variante_id"]) for r in cursor.fetchall()]
+            if not variantes_sq:
+                cursor.execute("SELECT id FROM variantes_perfume WHERE perfume_id = ? LIMIT 1;", (perfume_id,))
+                row_v = cursor.fetchone()
+                if row_v:
+                    variantes_sq = [int(row_v["id"])]
 
-        if not target_variante_id:
+        if not variantes_sq:
             return {"resultado": "fallo_sin_variante", "mensaje": msg_clean}
 
+        ultimo_sq: Dict[str, Any] = {"resultado": "fallo_sin_oferta", "mensaje": msg_clean}
+        for target_variante_id in variantes_sq:
+            cursor.execute(
+                "SELECT id, fallos_consecutivos, precio_actual, en_stock, estado "
+                "FROM ofertas_actuales WHERE variante_id = ? AND tienda_id = ?;",
+                (target_variante_id, tienda_id),
+            )
+            row_oferta = cursor.fetchone()
+            if not row_oferta:
+                continue
+
+            if es_transitorio_red:
+                err_txt = f"[{codigo_norm}] {msg_clean}"[:2000]
+                cursor.execute(
+                    "UPDATE ofertas_actuales SET ultimo_intento = ?, ultimo_error = ?, updated_at = ? WHERE id = ?;",
+                    (ahora, err_txt, ahora, row_oferta["id"]),
+                )
+                ultimo_sq = {
+                    "resultado": "fallo_transitorio",
+                    "oferta_id": row_oferta["id"],
+                    "fallos_consecutivos": int(row_oferta["fallos_consecutivos"] or 0),
+                    "estado": row_oferta["estado"],
+                    "precio_actual": row_oferta["precio_actual"],
+                    "en_stock": bool(row_oferta["en_stock"]),
+                }
+                continue
+
+            msg_lower = msg_clean.lower()
+            es_404 = ("404" in msg_clean or "no encontrada" in msg_lower or "not found" in msg_lower or "inexistente" in msg_lower)
+            nueva_cuenta = (row_oferta["fallos_consecutivos"] or 0) + 1
+            if es_404:
+                nuevo_estado = "requiere_revision"
+                nuevo_stock = False
+            elif es_ausencia_feed and nueva_cuenta >= 5:
+                nuevo_estado = "agotada"
+                nuevo_stock = False
+            elif nueva_cuenta >= 5:
+                nuevo_estado = "requiere_revision"
+                nuevo_stock = bool(row_oferta["en_stock"])
+            else:
+                nuevo_estado = row_oferta["estado"]
+                nuevo_stock = bool(row_oferta["en_stock"])
+
+            cursor.execute("""
+            UPDATE ofertas_actuales
+            SET ultimo_intento = ?, fallos_consecutivos = ?, ultimo_error = ?, estado = ?, en_stock = ?, updated_at = ?
+            WHERE id = ?;
+            """, (ahora, nueva_cuenta, msg_clean, nuevo_estado, int(nuevo_stock), ahora, row_oferta["id"]))
+
+            ultimo_sq = {
+                "resultado": "fallo_registrado",
+                "oferta_id": row_oferta["id"],
+                "fallos_consecutivos": nueva_cuenta,
+                "estado": nuevo_estado,
+                "precio_actual": row_oferta["precio_actual"],
+                "en_stock": bool(nuevo_stock),
+            }
+
+        return ultimo_sq
+
+
+# - ¿Qué hace esta función?:
+#   Marca una oferta con `estado = 'requiere_revision'` y registra el motivo en `ultimo_error`
+#   (usado por el detector en vivo de precios atípicos sin eliminar la fila).
+def marcar_oferta_requiere_revision(oferta_id: int, motivo: str) -> bool:
+    if not oferta_id:
+        return False
+    ahora_iso = datetime.now(timezone.utc).isoformat()
+    msg_limpio = str(motivo or "Requiere revisión")[:240]
+    sb = get_supabase(use_service_role=True)
+    if sb and is_supabase_disponible():
+        try:
+            sb.table("ofertas_actuales").update({
+                "estado": "requiere_revision",
+                "ultimo_error": msg_limpio,
+                "updated_at": ahora_iso,
+            }).eq("id", int(oferta_id)).execute()
+            return True
+        except Exception as e:
+            logger.warning(f"No se pudo marcar oferta #{oferta_id} en revisión en Supabase: {e}")
+            return False
+
+    init_db()
+    ahora_sq = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    with get_db_cursor(commit=True) as cursor:
         cursor.execute(
-            "SELECT id, fallos_consecutivos, precio_actual, en_stock, estado "
-            "FROM ofertas_actuales WHERE variante_id = ? AND tienda_id = ?;",
-            (target_variante_id, tienda_id),
+            "UPDATE ofertas_actuales SET estado = 'requiere_revision', ultimo_error = ?, updated_at = ? WHERE id = ?;",
+            (msg_limpio, ahora_sq, int(oferta_id)),
         )
-        row_oferta = cursor.fetchone()
-
-        if not row_oferta:
-            return {"resultado": "fallo_sin_oferta", "mensaje": msg_clean}
-
-        msg_lower = msg_clean.lower()
-        es_404 = ("404" in msg_clean or "no encontrada" in msg_lower or "not found" in msg_lower or "inexistente" in msg_lower)
-        nueva_cuenta = (row_oferta["fallos_consecutivos"] or 0) + 1
-        nuevo_estado = "requiere_revision" if (nueva_cuenta >= 5 or es_404) else row_oferta["estado"]
-        nuevo_stock = False if es_404 else bool(row_oferta["en_stock"])
-        cursor.execute("""
-        UPDATE ofertas_actuales
-        SET ultimo_intento = ?, fallos_consecutivos = ?, ultimo_error = ?, estado = ?, en_stock = ?, updated_at = ?
-        WHERE id = ?;
-        """, (ahora, nueva_cuenta, msg_clean, nuevo_estado, int(nuevo_stock), ahora, row_oferta["id"]))
-
-        return {
-            "resultado": "fallo_registrado",
-            "oferta_id": row_oferta["id"],
-            "fallos_consecutivos": nueva_cuenta,
-            "estado": nuevo_estado,
-            "precio_actual": row_oferta["precio_actual"],
-            "en_stock": bool(nuevo_stock),
-        }
+    return True
 
 
 def registrar_precio(
@@ -2239,7 +2459,11 @@ def _obtener_catalogo_master_supabase(force_refresh: bool = False) -> List[Dict[
     def _ofertas_page(offset: int, limit: int):
         return (
             sb.table("ofertas_actuales")
-            .select("id, precio_actual, precio_normal, en_stock, url_producto, variantes_perfume!inner(perfume_id, volumen_ml, formato)")
+            .select(
+                "id, precio_actual, precio_normal, en_stock, url_producto, "
+                "ultima_verificacion_exitosa, updated_at, "
+                "variantes_perfume!inner(perfume_id, volumen_ml, formato)"
+            )
             .eq("estado", "activa")
             .eq("en_stock", True)
             .gt("precio_actual", 0)
@@ -2251,7 +2475,9 @@ def _obtener_catalogo_master_supabase(force_refresh: bool = False) -> List[Dict[
 
     precios_regular: Dict[int, int] = {}
     precios_tester: Dict[int, int] = {}
+    precios_sin_reverificar: Dict[int, int] = {}
     remates_reales: Set[int] = set()
+    now_utc = datetime.now(timezone.utc)
 
     for o in ofertas_activas:
         vp = o.get("variantes_perfume") or {}
@@ -2267,7 +2493,19 @@ def _obtener_catalogo_master_supabase(force_refresh: bool = False) -> List[Dict[
         if not pid or p_act <= 0 or vol < 25:
             continue
 
+        dias_sv = calcular_dias_sin_verificar(
+            o.get("ultima_verificacion_exitosa") or o.get("updated_at"),
+            now_utc=now_utc,
+        )
+        if not es_oferta_visible(dias_sv, en_stock=True):
+            continue
+
         pid_int = int(pid)
+        if not es_oferta_elegible_mejor_precio(dias_sv):
+            if pid_int not in precios_sin_reverificar or p_act < precios_sin_reverificar[pid_int]:
+                precios_sin_reverificar[pid_int] = p_act
+            continue
+
         if fmt == "tester":
             if pid_int not in precios_tester or p_act < precios_tester[pid_int]:
                 precios_tester[pid_int] = p_act
@@ -2282,6 +2520,7 @@ def _obtener_catalogo_master_supabase(force_refresh: bool = False) -> List[Dict[
         pid_int = int(p.get("id") or 0)
         mejor_reg = precios_regular.get(pid_int)
         mejor_tst = precios_tester.get(pid_int)
+        p["precio_sin_reverificar"] = precios_sin_reverificar.get(pid_int)
         if mejor_reg is not None:
             p["mejor_precio"] = mejor_reg
             p["mejor_precio_es_tester"] = False
@@ -2367,46 +2606,9 @@ def obtener_catalogo(
         except Exception as e:
             logger.warning(f"Error consultando catálogo en Supabase ({e}), recurriendo a SQLite de respaldo.")
 
-    # Respaldo SQLite local (prioriza ofertas_actuales y cae a precios_registro si está vacío)
+    # Respaldo SQLite local (prioriza ofertas_actuales frescas <=7d y cae a precios_registro solo si no hay ofertas_actuales)
     init_db()
-    query_sql = """
-    SELECT p.*,
-           COALESCE(
-               (SELECT MIN(oa.precio_actual)
-                FROM ofertas_actuales oa
-                JOIN variantes_perfume vp ON vp.id = oa.variante_id
-                WHERE vp.perfume_id = p.id
-                  AND oa.estado = 'activa'
-                  AND oa.en_stock = 1
-                  AND oa.precio_actual > 0
-                  AND COALESCE(vp.volumen_ml, 100) >= 25
-                  AND LOWER(COALESCE(vp.formato, 'regular')) != 'tester'),
-               (SELECT MIN(oa2.precio_actual)
-                FROM ofertas_actuales oa2
-                JOIN variantes_perfume vp2 ON vp2.id = oa2.variante_id
-                WHERE vp2.perfume_id = p.id
-                  AND oa2.estado = 'activa'
-                  AND oa2.en_stock = 1
-                  AND oa2.precio_actual > 0
-                  AND COALESCE(vp2.volumen_ml, 100) >= 25),
-               (SELECT MIN(pr.precio_actual)
-                FROM precios_registro pr
-                WHERE pr.perfume_id = p.id
-                  AND pr.en_stock = 1
-                  AND pr.precio_actual > 0
-                  AND pr.id = (
-                      SELECT pr2.id
-                      FROM precios_registro pr2
-                      WHERE pr2.perfume_id = pr.perfume_id
-                        AND pr2.tienda_id = pr.tienda_id
-                        AND ABS(COALESCE(pr2.volumen_ml, 100) - COALESCE(pr.volumen_ml, 100)) < 1
-                      ORDER BY pr2.fecha_registro DESC, pr2.id DESC
-                      LIMIT 1
-                  ))
-           ) as mejor_precio
-    FROM perfumes p
-    WHERE 1=1
-    """
+    query_sql = "SELECT p.* FROM perfumes p WHERE 1=1"
     params: List[Any] = []
 
     if busqueda:
@@ -2422,6 +2624,100 @@ def obtener_catalogo(
     with get_db_cursor() as cursor:
         cursor.execute(query_sql, params)
         perfumes = [dict(row) for row in cursor.fetchall()]
+
+        if perfumes:
+            pids = [int(p["id"]) for p in perfumes]
+            placeholders = ",".join("?" for _ in pids)
+            cursor.execute(
+                f"""
+                SELECT vp.perfume_id, oa.precio_actual, oa.en_stock, oa.estado,
+                       oa.ultima_verificacion_exitosa, oa.updated_at, oa.url_producto,
+                       COALESCE(vp.volumen_ml, 100) as volumen_ml,
+                       LOWER(COALESCE(vp.formato, 'regular')) as formato
+                FROM ofertas_actuales oa
+                JOIN variantes_perfume vp ON vp.id = oa.variante_id
+                WHERE vp.perfume_id IN ({placeholders})
+                  AND oa.estado = 'activa'
+                  AND oa.en_stock = 1
+                  AND oa.precio_actual > 0
+                  AND COALESCE(vp.volumen_ml, 100) >= 25;
+                """,
+                pids,
+            )
+            oa_rows = cursor.fetchall()
+            tiene_oa_por_pid: Set[int] = set()
+            reg_min_sq: Dict[int, int] = {}
+            tst_min_sq: Dict[int, int] = {}
+            stale_min_sq: Dict[int, int] = {}
+            now_utc = datetime.now(timezone.utc)
+
+            for r in oa_rows:
+                pid_r = int(r["perfume_id"])
+                tiene_oa_por_pid.add(pid_r)
+                dias_sv = calcular_dias_sin_verificar(
+                    r["ultima_verificacion_exitosa"] or r["updated_at"],
+                    now_utc=now_utc,
+                )
+                if not es_oferta_visible(dias_sv, en_stock=True):
+                    continue
+                p_val = int(r["precio_actual"])
+                if not es_oferta_elegible_mejor_precio(dias_sv):
+                    if pid_r not in stale_min_sq or p_val < stale_min_sq[pid_r]:
+                        stale_min_sq[pid_r] = p_val
+                    continue
+                fmt_r = str(r["formato"] or "regular").lower()
+                if fmt_r != "tester" and "tester" in str(r["url_producto"] or "").lower():
+                    fmt_r = "tester"
+                if fmt_r == "tester":
+                    if pid_r not in tst_min_sq or p_val < tst_min_sq[pid_r]:
+                        tst_min_sq[pid_r] = p_val
+                else:
+                    if pid_r not in reg_min_sq or p_val < reg_min_sq[pid_r]:
+                        reg_min_sq[pid_r] = p_val
+
+            pids_sin_oa = [pid_i for pid_i in pids if pid_i not in tiene_oa_por_pid]
+            legacy_min_sq: Dict[int, int] = {}
+            if pids_sin_oa:
+                ph_leg = ",".join("?" for _ in pids_sin_oa)
+                cursor.execute(
+                    f"""
+                    SELECT pr.perfume_id, MIN(pr.precio_actual) as min_p
+                    FROM precios_registro pr
+                    WHERE pr.perfume_id IN ({ph_leg})
+                      AND pr.en_stock = 1
+                      AND pr.precio_actual > 0
+                      AND pr.id = (
+                          SELECT pr2.id
+                          FROM precios_registro pr2
+                          WHERE pr2.perfume_id = pr.perfume_id
+                            AND pr2.tienda_id = pr.tienda_id
+                            AND ABS(COALESCE(pr2.volumen_ml, 100) - COALESCE(pr.volumen_ml, 100)) < 1
+                          ORDER BY pr2.fecha_registro DESC, pr2.id DESC
+                          LIMIT 1
+                      )
+                    GROUP BY pr.perfume_id;
+                    """,
+                    pids_sin_oa,
+                )
+                for rl in cursor.fetchall():
+                    if rl["min_p"] is not None:
+                        legacy_min_sq[int(rl["perfume_id"])] = int(rl["min_p"])
+
+            for p in perfumes:
+                pid_p = int(p["id"])
+                p["precio_sin_reverificar"] = stale_min_sq.get(pid_p)
+                if pid_p in reg_min_sq:
+                    p["mejor_precio"] = reg_min_sq[pid_p]
+                    p["mejor_precio_es_tester"] = False
+                elif pid_p in tst_min_sq:
+                    p["mejor_precio"] = tst_min_sq[pid_p]
+                    p["mejor_precio_es_tester"] = True
+                elif pid_p in legacy_min_sq:
+                    p["mejor_precio"] = legacy_min_sq[pid_p]
+                    p["mejor_precio_es_tester"] = False
+                else:
+                    p["mejor_precio"] = None
+                    p["mejor_precio_es_tester"] = False
 
     if orden == "precio_asc":
         perfumes.sort(key=lambda x: (x.get("mejor_precio") is None, x.get("mejor_precio") or 999999999))
@@ -2469,15 +2765,19 @@ def obtener_detalle_perfume(perfume_id: int) -> Optional[Dict[str, Any]]:
 def obtener_precios_actuales(perfume_id: int) -> List[Dict[str, Any]]:
     """
     Retorna las ofertas vigentes por tienda y presentación para el perfume dado,
-    incluyendo estado de stock, volumen_ml, precio_por_ml y formato ('regular' vs 'tester').
+    incluyendo estado de stock, volumen_ml, precio_por_ml, formato ('regular' vs 'tester')
+    y metadatos de frescura (`dias_sin_verificar`, `nivel_frescura`, `excluida_mejor_precio`).
+    Las ofertas en stock con más de 14 días sin verificar se ocultan de la comparación activa.
     """
+    now_utc = datetime.now(timezone.utc)
     sb = get_supabase()
     if sb and is_supabase_disponible():
         try:
             resp = (
                 sb.table("ofertas_actuales")
                 .select(
-                    "id, precio_actual, precio_normal, en_stock, url_producto, ultima_verificacion_exitosa, "
+                    "id, precio_actual, precio_normal, en_stock, estado, url_producto, "
+                    "ultima_verificacion_exitosa, updated_at, "
                     "tiendas(id, nombre, url_base, trust_score, badge, logo_emoji), "
                     "variantes_perfume!inner(id, perfume_id, volumen_ml, formato)"
                 )
@@ -2495,6 +2795,12 @@ def obtener_precios_actuales(perfume_id: int) -> List[Dict[str, Any]]:
                     vol = int(round(float(v.get("volumen_ml") or 100)))
                     if vol < 25 or p_act <= 0:
                         continue
+                    en_stock_val = bool(item.get("en_stock", True)) and str(item.get("estado") or "activa") == "activa"
+                    ts_verif = item.get("ultima_verificacion_exitosa") or item.get("updated_at")
+                    dias_sv = calcular_dias_sin_verificar(ts_verif, now_utc=now_utc)
+                    if not es_oferta_visible(dias_sv, en_stock=en_stock_val):
+                        continue
+
                     url_prod = str(item.get("url_producto") or "")
                     fmt = str(v.get("formato") or "regular").lower()
                     if fmt != "tester" and "tester" in url_prod.lower():
@@ -2511,12 +2817,15 @@ def obtener_precios_actuales(perfume_id: int) -> List[Dict[str, Any]]:
                         "logo_emoji": t.get("logo_emoji", ""),
                         "precio_actual": p_act,
                         "precio_normal": item.get("precio_normal") or p_act,
-                        "en_stock": bool(item.get("en_stock", True)),
+                        "en_stock": en_stock_val,
                         "volumen_ml": vol,
                         "formato": fmt,
                         "precio_por_ml": p_ml,
                         "url_producto": url_prod,
                         "fecha_registro": item.get("ultima_verificacion_exitosa"),
+                        "dias_sin_verificar": dias_sv,
+                        "nivel_frescura": clasificar_frescura_oferta(dias_sv),
+                        "excluida_mejor_precio": not es_oferta_elegible_mejor_precio(dias_sv),
                     })
                 return res_lista
             return []
@@ -2527,11 +2836,11 @@ def obtener_precios_actuales(perfume_id: int) -> List[Dict[str, Any]]:
     with get_db_cursor() as cursor:
         cursor.execute("""
         SELECT oa.id, t.id as tienda_id, t.nombre as tienda_nombre, t.url_base, t.trust_score, t.badge, t.logo_emoji,
-               oa.precio_actual, COALESCE(oa.precio_normal, oa.precio_actual) as precio_normal, oa.en_stock,
+               oa.precio_actual, COALESCE(oa.precio_normal, oa.precio_actual) as precio_normal, oa.en_stock, oa.estado,
                CAST(ROUND(COALESCE(vp.volumen_ml, 100)) AS INTEGER) as volumen_ml,
                LOWER(COALESCE(vp.formato, 'regular')) as formato,
                CAST(ROUND(CAST(oa.precio_actual AS REAL) / MAX(1, COALESCE(vp.volumen_ml, 100))) AS INTEGER) as precio_por_ml,
-               oa.url_producto, oa.ultima_verificacion_exitosa as fecha_registro
+               oa.url_producto, oa.ultima_verificacion_exitosa as fecha_registro, oa.updated_at
         FROM ofertas_actuales oa
         JOIN variantes_perfume vp ON vp.id = oa.variante_id
         JOIN tiendas t ON t.id = oa.tienda_id
@@ -2543,11 +2852,20 @@ def obtener_precios_actuales(perfume_id: int) -> List[Dict[str, Any]]:
         """, (perfume_id,))
         rows_oa = [dict(r) for r in cursor.fetchall()]
         if rows_oa:
+            visibles_oa: List[Dict[str, Any]] = []
             for r in rows_oa:
-                r["en_stock"] = bool(r["en_stock"])
+                en_stock_sq = bool(r["en_stock"]) and str(r.get("estado") or "activa") == "activa"
+                r["en_stock"] = en_stock_sq
+                dias_sv = calcular_dias_sin_verificar(r.get("fecha_registro") or r.get("updated_at"), now_utc=now_utc)
+                if not es_oferta_visible(dias_sv, en_stock=en_stock_sq):
+                    continue
                 if r.get("formato") != "tester" and "tester" in str(r.get("url_producto") or "").lower():
                     r["formato"] = "tester"
-            return rows_oa
+                r["dias_sin_verificar"] = dias_sv
+                r["nivel_frescura"] = clasificar_frescura_oferta(dias_sv)
+                r["excluida_mejor_precio"] = not es_oferta_elegible_mejor_precio(dias_sv)
+                visibles_oa.append(r)
+            return visibles_oa
 
         query = """
         SELECT t.id as tienda_id, t.nombre as tienda_nombre, t.url_base, t.trust_score, t.badge, t.logo_emoji,
@@ -2569,11 +2887,19 @@ def obtener_precios_actuales(perfume_id: int) -> List[Dict[str, Any]]:
         ORDER BY pr.precio_actual ASC;
         """
         cursor.execute(query, (perfume_id, perfume_id))
-        res_legacy = [dict(row) for row in cursor.fetchall()]
-        for r in res_legacy:
+        res_legacy = []
+        for row in cursor.fetchall():
+            r = dict(row)
             r["en_stock"] = bool(r["en_stock"])
+            dias_sv = calcular_dias_sin_verificar(r.get("fecha_registro"), now_utc=now_utc)
+            if not es_oferta_visible(dias_sv, en_stock=r["en_stock"]):
+                continue
             if "tester" in str(r.get("url_producto") or "").lower():
                 r["formato"] = "tester"
+            r["dias_sin_verificar"] = dias_sv
+            r["nivel_frescura"] = clasificar_frescura_oferta(dias_sv)
+            r["excluida_mejor_precio"] = not es_oferta_elegible_mejor_precio(dias_sv)
+            res_legacy.append(r)
         return res_legacy
 
 
@@ -2835,6 +3161,7 @@ def obtener_remates_reales(
         candidatos_cacheados = [r for r in _REMATES_MASTER[1] if r.get("descuento_pct", 0) >= descuento_min_pct]
         return list(candidatos_cacheados[: max(1, int(limite))])
 
+    now_utc = datetime.now(timezone.utc)
     sb = get_supabase()
     if sb and is_supabase_disponible():
         try:
@@ -2842,7 +3169,8 @@ def obtener_remates_reales(
                 return (
                     sb.table("ofertas_actuales")
                     .select(
-                        "id, precio_actual, precio_normal, en_stock, url_producto, ultima_verificacion_exitosa, "
+                        "id, precio_actual, precio_normal, en_stock, url_producto, "
+                        "ultima_verificacion_exitosa, updated_at, "
                         "tiendas(id, nombre, url_base, trust_score, badge), "
                         "variantes_perfume!inner(id, perfume_id, volumen_ml, formato, "
                         "perfumes!inner(id, nombre, marca, tipo, notas, imagen_url, es_arabe))"
@@ -2862,6 +3190,13 @@ def obtener_remates_reales(
                 p_act = int(item.get("precio_actual") or 0)
                 p_norm = int(item.get("precio_normal") or 0)
                 if p_act <= 0 or p_norm <= p_act or p_norm >= 1_000_000:
+                    continue
+
+                dias_sv = calcular_dias_sin_verificar(
+                    item.get("ultima_verificacion_exitosa") or item.get("updated_at"),
+                    now_utc=now_utc,
+                )
+                if not es_oferta_elegible_mejor_precio(dias_sv):
                     continue
 
                 vp = item.get("variantes_perfume") or {}
@@ -2908,6 +3243,8 @@ def obtener_remates_reales(
                     "descuento_pct": pct,
                     "url": url_prod,
                     "ultima_verificacion": item.get("ultima_verificacion_exitosa") or "",
+                    "dias_sin_verificar": dias_sv,
+                    "nivel_frescura": clasificar_frescura_oferta(dias_sv),
                 })
 
             candidatos.sort(key=lambda x: (-x["descuento_pct"], -x["ahorro_clp"], x["precio_remate"]))
@@ -2924,7 +3261,7 @@ def obtener_remates_reales(
                t.nombre as tienda, t.url_base, t.trust_score, t.badge as badge_tienda,
                CAST(ROUND(COALESCE(vp.volumen_ml, 100)) AS INTEGER) as volumen_ml,
                oa.precio_normal, oa.precio_actual as precio_remate,
-               oa.url_producto as url, oa.ultima_verificacion_exitosa as ultima_verificacion
+               oa.url_producto as url, oa.ultima_verificacion_exitosa as ultima_verificacion, oa.updated_at
         FROM ofertas_actuales oa
         JOIN variantes_perfume vp ON vp.id = oa.variante_id
         JOIN perfumes p ON p.id = vp.perfume_id
@@ -2937,7 +3274,7 @@ def obtener_remates_reales(
           AND LOWER(COALESCE(vp.formato, 'regular')) != 'tester'
         ORDER BY (CAST(oa.precio_normal - oa.precio_actual AS REAL) / oa.precio_normal) DESC
         LIMIT ?;
-        """, (max(1, int(limite) * 2),))
+        """, (max(1, int(limite) * 4),))
         rows = [dict(r) for r in cursor.fetchall()]
 
         if not rows:
@@ -2956,7 +3293,7 @@ def obtener_remates_reales(
               AND COALESCE(pr.volumen_ml, 100) >= 25
             ORDER BY pr.fecha_registro DESC
             LIMIT ?;
-            """, (max(1, int(limite) * 2),))
+            """, (max(1, int(limite) * 4),))
             rows = [dict(r) for r in cursor.fetchall()]
 
         res_local: List[Dict[str, Any]] = []
@@ -2965,6 +3302,9 @@ def obtener_remates_reales(
             p_act = int(r.get("precio_remate") or 0)
             p_norm = int(r.get("precio_normal") or 0)
             if p_act <= 0 or p_norm <= p_act or p_norm >= 1_000_000:
+                continue
+            dias_sv = calcular_dias_sin_verificar(r.get("ultima_verificacion") or r.get("updated_at"), now_utc=now_utc)
+            if not es_oferta_elegible_mejor_precio(dias_sv):
                 continue
             if "tester" in str(r.get("url") or "").lower():
                 continue
@@ -2979,6 +3319,8 @@ def obtener_remates_reales(
             r["ahorro_clp"] = ahorro
             r["descuento_pct"] = pct
             r["es_arabe"] = bool(r.get("es_arabe"))
+            r["dias_sin_verificar"] = dias_sv
+            r["nivel_frescura"] = clasificar_frescura_oferta(dias_sv)
             res_local.append(r)
 
         res_local.sort(key=lambda x: (-x["descuento_pct"], -x["ahorro_clp"], x["precio_remate"]))
@@ -3046,7 +3388,7 @@ def guardar_o_actualizar_perfume_scraped(
                 }).execute()
                 tienda_id_sb = ins_t.data[0]["id"]
 
-            genero_norm = (genero or "Unisex").strip() or "Unisex"
+            genero_norm = normalizar_genero(genero) or "Unisex"
             res_p = (
                 sb.table("perfumes")
                 .select("id, genero")
@@ -3056,18 +3398,32 @@ def guardar_o_actualizar_perfume_scraped(
                 .execute()
             )
             perfume_id_sb = None
+            genero_cand_electo = None
+            # Priorizar coincidencia exacta de género; luego compatible (Unisex <-> Hombre/Mujer)
             for cand_p in (res_p.data or []):
-                g_cand = (cand_p.get("genero") or "Unisex").strip().lower()
-                g_req = genero_norm.lower()
-                if g_cand == g_req or (g_req == "unisex") or (g_cand == "unisex"):
+                g_cand_n = normalizar_genero(cand_p.get("genero")) or "Unisex"
+                if g_cand_n == genero_norm:
                     perfume_id_sb = cand_p["id"]
+                    genero_cand_electo = g_cand_n
                     break
+            if perfume_id_sb is None:
+                for cand_p in (res_p.data or []):
+                    es_comp, g_res = generos_compatibles(cand_p.get("genero"), genero_norm)
+                    if es_comp:
+                        perfume_id_sb = cand_p["id"]
+                        genero_cand_electo = normalizar_genero(cand_p.get("genero")) or "Unisex"
+                        if genero_cand_electo == "Unisex" and g_res in ("Hombre", "Mujer"):
+                            try:
+                                sb.table("perfumes").update({"genero": g_res}).eq("id", perfume_id_sb).execute()
+                            except Exception as exc_g:
+                                logger.debug(f"Aviso afinando género Unisex->{g_res} en perfume #{perfume_id_sb}: {exc_g}")
+                        break
 
             if perfume_id_sb is not None:
                 es_nuevo = False
             else:
                 es_nuevo = True
-                img = imagen_url or "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=500&q=80"
+                img = imagen_url or ""
                 notas_txt = notas or "Cítricos, Maderas, Almizcle"
                 ins_p = sb.table("perfumes").insert({
                     "nombre": nombre_canon,
@@ -3143,7 +3499,7 @@ def guardar_o_actualizar_perfume_scraped(
             perfume_id_sq = row_perfume["id"]
         else:
             es_nuevo_sq = True
-            img = imagen_url or "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=500&q=80"
+            img = imagen_url or ""
             notas_texto = notas or "Cítricos, Maderas, Almizcle"
             cursor.execute("""
             INSERT INTO perfumes (nombre, marca, genero, tipo, notas, imagen_url, es_arabe, en_tendencia, en_remate, precio_referencia)

@@ -864,6 +864,8 @@ st.markdown(f"""
     span.pt-tag-ml {{ background: rgba(59, 130, 246, 0.12); border-color: rgba(96, 165, 250, 0.35); color: {info_blue} !important; font-weight: 700; }}
     span.pt-tag-tester {{ background: rgba(245, 158, 11, 0.12); border-color: rgba(251, 191, 36, 0.35); color: {warn_amber} !important; font-weight: 700; }}
     span.pt-tag-alltime {{ background: rgba(220, 38, 38, 0.15); border-color: rgba(220, 38, 38, 0.40); color: #ef4444 !important; font-weight: 800; }}
+    span.pt-tag-age {{ opacity: 0.85; font-size: 0.71rem; }}
+    span.pt-tag-stale {{ background: rgba(245, 158, 11, 0.14); border-color: rgba(251, 191, 36, 0.45); color: {warn_amber} !important; font-weight: 700; }}
 
     .price-card-right {{
         display: flex;
@@ -1543,26 +1545,34 @@ else:
     )
 
     # 4. Identificar el mejor precio y el mejor valor por ml priorizando botellas selladas ('regular')
+    #    y excluyendo ofertas sin reverificar hace más de 7 días (política de frescura).
+    def es_oferta_fresca_elegible(it):
+        if it.get('excluida_mejor_precio'):
+            return False
+        d_sv = it.get('dias_sin_verificar')
+        return d_sv is None or float(d_sv) <= 7.0
+
     precios_regular_stock = [
         t['precio_actual']
         for t in tiendas_filtradas
-        if t.get('precio_actual', 0) > 0 and esta_en_stock(t) and not es_tester_item(t)
+        if t.get('precio_actual', 0) > 0 and esta_en_stock(t) and not es_tester_item(t) and es_oferta_fresca_elegible(t)
     ]
     precios_validos = [
         t['precio_actual']
         for t in tiendas_filtradas
-        if t.get('precio_actual', 0) > 0 and esta_en_stock(t)
+        if t.get('precio_actual', 0) > 0 and esta_en_stock(t) and es_oferta_fresca_elegible(t)
     ]
+    hay_alguna_en_stock = any(t.get('precio_actual', 0) > 0 and esta_en_stock(t) for t in tiendas_filtradas)
     hay_regular_en_stock = len(precios_regular_stock) > 0
     min_precio = min(precios_regular_stock) if hay_regular_en_stock else (min(precios_validos) if precios_validos else 0)
 
     # Calcular mejor costo por mililitro ($/ml) cuando se comparan múltiples volúmenes ('Todos')
     min_precio_ml = 0.0
-    if len({extraer_volumen(t) for t in tiendas_filtradas if esta_en_stock(t)}) > 1:
+    if len({extraer_volumen(t) for t in tiendas_filtradas if esta_en_stock(t) and es_oferta_fresca_elegible(t)}) > 1:
         candidatos_ml = [
             t['precio_actual'] / max(1, extraer_volumen(t))
             for t in tiendas_filtradas
-            if t.get('precio_actual', 0) > 0 and esta_en_stock(t) and (not es_tester_item(t) if hay_regular_en_stock else True)
+            if t.get('precio_actual', 0) > 0 and esta_en_stock(t) and es_oferta_fresca_elegible(t) and (not es_tester_item(t) if hay_regular_en_stock else True)
         ]
         if candidatos_ml:
             min_precio_ml = min(candidatos_ml)
@@ -1570,7 +1580,7 @@ else:
     total_agotados = len([t for t in tiendas_ordenadas if not esta_en_stock(t)])
     total_disponibles = len(tiendas_ordenadas) - total_agotados
 
-    if not precios_validos:
+    if not hay_alguna_en_stock:
         st.markdown(
             clean_html("""
             <div class="offer-alert">
@@ -1590,13 +1600,19 @@ else:
         vol_ml = extraer_volumen(item)
         en_stock = esta_en_stock(item)
         es_tester = es_tester_item(item)
-        # - ¿Qué hace esta lógica (Detección de la Mejor Oferta)?:
-        #   Determina si esta tienda tiene el precio más bajo del mercado en stock,
+        # - ¿Qué hace esta lógica (Detección de la Mejor Oferta + Frescura)?:
+        #   Determina si esta tienda tiene el precio más bajo del mercado en stock y verificado (<=7 días),
         #   priorizando frascos sellados estándar sobre unidades tester para no engañar al usuario.
+        es_elegible_frescura = es_oferta_fresca_elegible(item)
+        dias_sv_raw = item.get('dias_sin_verificar')
+        dias_sv_num = float(dias_sv_raw) if dias_sv_raw is not None else 0.0
+        dias_sv_int = max(1, int(round(dias_sv_num))) if dias_sv_raw is not None else 0
+
         is_best_deal = (
             p_act == min_precio
             and p_act > 0
             and en_stock
+            and es_elegible_frescura
             and (not es_tester if hay_regular_en_stock else True)
         )
 
@@ -1624,6 +1640,7 @@ else:
             is_best_ml = (
                 min_precio_ml > 0
                 and en_stock
+                and es_elegible_frescura
                 and (not es_tester if hay_regular_en_stock else True)
                 and abs((p_act / max(1, vol_ml)) - min_precio_ml) < 0.5
             )
@@ -1643,6 +1660,7 @@ else:
         min_historico_vol = get_cached_minimo_historico(selected_id, vol_ml)
         es_min_hist = (
             en_stock
+            and es_elegible_frescura
             and p_act > 0
             and min_historico_vol is not None
             and p_act <= min_historico_vol
@@ -1651,6 +1669,19 @@ else:
             "<span class='pt-tag pt-tag-alltime' title='Precio más bajo jamás registrado para este perfume'>🔥 Mínimo Histórico</span>"
             if es_min_hist else ""
         )
+        if en_stock and dias_sv_raw is not None and dias_sv_num > 7.0:
+            badge_frescura = (
+                f"<span class='pt-tag pt-tag-stale' "
+                f"title='Esta tienda no ha podido reverificarse recientemente; confirma el precio y stock al abrir el enlace'>"
+                f"⚠️ Precio sin reverificar (hace {dias_sv_int} d)</span>"
+            )
+        elif en_stock and dias_sv_raw is not None and dias_sv_num > 3.0:
+            badge_frescura = (
+                f"<span class='pt-tag pt-tag-age' title='Última verificación automática exitosa hace {dias_sv_int} días'>"
+                f"Verificado hace {dias_sv_int} d</span>"
+            )
+        else:
+            badge_frescura = ""
 
         precio_actual_str = f"${p_act:,.0f}".replace(",", ".")
         precio_ant_str = f"${p_norm:,.0f}".replace(",", ".") if p_norm and p_norm > p_act else ""
@@ -1703,6 +1734,7 @@ else:
                 {badge_tester}
                 {status_badge}
                 {badge_minimo_hist}
+                {badge_frescura}
             </div>
             <div class="price-card-right">
                 {price_display_html}

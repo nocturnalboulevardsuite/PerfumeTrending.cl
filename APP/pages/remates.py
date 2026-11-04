@@ -1082,6 +1082,12 @@ else:
                     '<div class="badge-alltime" style="position: absolute; bottom: 8px; left: 8px; background: rgba(220, 38, 38, 0.92); color: #ffffff; font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.3); text-transform: uppercase;">🔥 Mínimo Histórico</div>'
                     if es_alltime else ""
                 )
+                dias_rem_raw = item.get("dias_sin_verificar")
+                stock_label_rem = (
+                    f"Verif. hace {max(1, int(round(float(dias_rem_raw))))} d"
+                    if (dias_rem_raw is not None and float(dias_rem_raw) > 3.0)
+                    else "En stock"
+                )
 
                 with cols[i]:
                     html_card = f"""
@@ -1096,7 +1102,7 @@ else:
                         <div class="remate-brand">{marca_safe}</div>
                         <div class="remate-store-row">
                             <div>Vendido por <b>{tienda_safe}</b></div>
-                            <div class="remate-stock"><div class="remate-stock-dot"></div>En stock</div>
+                            <div class="remate-stock"><div class="remate-stock-dot"></div>{stock_label_rem}</div>
                         </div>
                         <div class="stock-badge">Ahorras {ahorro_str} CLP</div>
                         <div class="price-box">

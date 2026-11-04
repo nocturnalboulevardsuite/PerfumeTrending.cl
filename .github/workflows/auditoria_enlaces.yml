@@ -1,0 +1,61 @@
+name: Auditoria Semanal de Enlaces Activos
+
+on:
+  schedule:
+    # Todos los domingos a las 05:30 AM hora de Chile (08:30 UTC)
+    - cron: '30 8 * * 0'
+  workflow_dispatch:
+    inputs:
+      sample_size:
+        description: 'Cantidad de enlaces activos a auditar'
+        required: false
+        default: '1000'
+      dry_run:
+        description: 'Modo simulacion sin escribir en BD (true/false)'
+        required: false
+        default: 'false'
+
+permissions:
+  contents: write
+
+jobs:
+  auditar-enlaces:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Descargar codigo del repositorio
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configurar entorno Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Instalar dependencias
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Ejecutar auditoria de enlaces con histeresis de 2 strikes
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          EXTRA_ARGS=""
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            EXTRA_ARGS="--dry-run"
+          fi
+          python APP/backend/auditoria_enlaces.py --sample ${{ inputs.sample_size || '1000' }} $EXTRA_ARGS
+
+      - name: Subir reporte de auditoria de enlaces
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: reporte-auditoria-enlaces
+          path: APP/data/reportes/ultima_auditoria_enlaces.json
+          retention-days: 14
+

@@ -304,18 +304,32 @@ class TestScrapersFallosYStock(unittest.TestCase):
 
         mock_resp_search = MagicMock(status_code=200, text=search_html)
         mock_resp_pdp = MagicMock(status_code=200, text=pdp_html)
-        mock_session.get.side_effect = [mock_resp_search, mock_resp_pdp]
+        mock_session.get.side_effect = [mock_resp_search, mock_resp_search]
 
         with patch("APP.backend.scraper_periodico.curl_requests", None):
+            # Sin volumen en search card ni volumen_ml_defecto: prohibido inventar 100 ml
+            res_sin_vol = extraer_variedades_ripley(
+                session=mock_session,
+                url_directa=None,
+                perfume_nombre="Bleu de Chanel",
+                marca="Chanel",
+                concentracion="Eau de Parfum",
+                volumen_ml_defecto=None,
+            )
+            self.assertEqual(len(res_sin_vol), 0)
+
+            # Con volumen_ml_defecto explícito (50 ml): fallback seguro a search card
             res_list = extraer_variedades_ripley(
                 session=mock_session,
                 url_directa=None,
                 perfume_nombre="Bleu de Chanel",
                 marca="Chanel",
-                concentracion="Eau de Parfum"
+                concentracion="Eau de Parfum",
+                volumen_ml_defecto=50,
             )
 
         self.assertEqual(len(res_list), 1)  # Fallback a search card si curl_requests es None
+        self.assertEqual(res_list[0]["volumen_ml"], 50)
         # Ahora con curl_requests simulado
         mock_curl_session = MagicMock()
         mock_curl_session.get.side_effect = [mock_resp_search, mock_resp_pdp]
