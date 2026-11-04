@@ -1,0 +1,108 @@
+{
+  "timestamp_utc": "2026-11-04T03:43:17.538696+00:00",
+  "sample_per_store": 30,
+  "resultados": [
+    {
+      "tienda": "Paris",
+      "cliente": "curl_cffi_chrome120",
+      "urls_probadas": 30,
+      "http_200": 0,
+      "pct_200": 0.0,
+      "payload_valido": 0,
+      "pct_payload_valido": 0.0,
+      "waf_403_429": 30,
+      "pct_waf": 100.0,
+      "http_404": 0,
+      "otros_errores": 0,
+      "latencia_media_ms": 16.8,
+      "codigos_detalle": {
+        "403": 30
+      }
+    },
+    {
+      "tienda": "Paris",
+      "cliente": "requests",
+      "urls_probadas": 30,
+      "http_200": 0,
+      "pct_200": 0.0,
+      "payload_valido": 0,
+      "pct_payload_valido": 0.0,
+      "waf_403_429": 30,
+      "pct_waf": 100.0,
+      "http_404": 0,
+      "otros_errores": 0,
+      "latencia_media_ms": 21.7,
+      "codigos_detalle": {
+        "403": 30
+      }
+    },
+    {
+      "tienda": "Ripley",
+      "cliente": "curl_cffi_chrome120",
+      "urls_probadas": 30,
+      "http_200": 0,
+      "pct_200": 0.0,
+      "payload_valido": 0,
+      "pct_payload_valido": 0.0,
+      "waf_403_429": 30,
+      "pct_waf": 100.0,
+      "http_404": 0,
+      "otros_errores": 0,
+      "latencia_media_ms": 32.5,
+      "codigos_detalle": {
+        "403": 30
+      }
+    },
+    {
+      "tienda": "Ripley",
+      "cliente": "requests",
+      "urls_probadas": 30,
+      "http_200": 0,
+      "pct_200": 0.0,
+      "payload_valido": 0,
+      "pct_payload_valido": 0.0,
+      "waf_403_429": 30,
+      "pct_waf": 100.0,
+      "http_404": 0,
+      "otros_errores": 0,
+      "latencia_media_ms": 116.3,
+      "codigos_detalle": {
+        "403": 30
+      }
+    },
+    {
+      "tienda": "Falabella",
+      "cliente": "curl_cffi_chrome120",
+      "urls_probadas": 30,
+      "http_200": 0,
+      "pct_200": 0.0,
+      "payload_valido": 0,
+      "pct_payload_valido": 0.0,
+      "waf_403_429": 30,
+      "pct_waf": 100.0,
+      "http_404": 0,
+      "otros_errores": 0,
+      "latencia_media_ms": 38.4,
+      "codigos_detalle": {
+        "403": 30
+      }
+    },
+    {
+      "tienda": "Falabella",
+      "cliente": "requests",
+      "urls_probadas": 30,
+      "http_200": 30,
+      "pct_200": 100.0,
+      "payload_valido": 30,
+      "pct_payload_valido": 100.0,
+      "waf_403_429": 0,
+      "pct_waf": 0.0,
+      "http_404": 0,
+      "otros_errores": 0,
+      "latencia_media_ms": 596.6,
+      "codigos_detalle": {
+        "200": 30
+      }
+    }
+  ]
+}
