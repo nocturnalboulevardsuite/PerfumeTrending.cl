@@ -1547,7 +1547,11 @@ for row in range(0, len(hype_items), cols_per_row):
                         unsafe_allow_html=True,
                     )
                     with st.container(key=f"ytbtn_{idx}"):
-                        st.link_button("Ver el video más visto ↗", data.get("url") or "https://www.youtube.com", use_container_width=True)
+                        yt_safe_url = escape_html(data.get("url") or "https://www.youtube.com")
+                        st.markdown(
+                            f'''<a href="{yt_safe_url}" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; justify-content: center; width: 100%; height: 38px; background: transparent; color: inherit; border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px; font-size: 14px; font-weight: 500; text-decoration: none; transition: border-color 0.2s;">Ver el video más visto ↗</a>''',
+                            unsafe_allow_html=True,
+                        )
 
 # PIE DE PÁGINA
 st.markdown(clean_html("""

@@ -358,14 +358,14 @@ def extraer_volumen_ml(texto: str, default: int = 100) -> int:
         return default
 
     # Si hay decimales tipo '1,5 ml' o '7.5ml', redondear para detectar decants/viales pequeños
-    match_dec_ml = re.search(r"(\d{1,3}[.,]\d+)\s*ml\b", texto, re.IGNORECASE)
+    match_dec_ml = re.search(r"(\d{1,3}[.,]\d+)\s*[-_]?\s*ml\b", texto, re.IGNORECASE)
     if match_dec_ml:
         val_f = float(match_dec_ml.group(1).replace(",", "."))
         val_i = max(1, int(round(val_f)))
         if 1 <= val_i <= 1000:
             return val_i
 
-    match_ml = re.search(r"(\d{1,4})\s*(?:ml|m\b)", texto, re.IGNORECASE)
+    match_ml = re.search(r"(\d{1,4})\s*[-_]?\s*(?:ml|m\b)", texto, re.IGNORECASE)
     if match_ml:
         val = int(match_ml.group(1))
         if 2 <= val <= 1000:
@@ -619,6 +619,8 @@ def limpiar_nombre_perfume(titulo: str, marca: str = "") -> str:
                 marcas_a_quitar.update(["Maison Al Hambra", "Alhambra"])
             elif m_canon == "Dior":
                 marcas_a_quitar.add("Christian Dior")
+            elif m_canon == "Giorgio Armani":
+                marcas_a_quitar.update(["Emporio Armani", "Armani"])
             elif m_canon == "Yves Saint Laurent":
                 marcas_a_quitar.update(["Saint Laurent"])
             elif m_canon == "Dolce & Gabbana":

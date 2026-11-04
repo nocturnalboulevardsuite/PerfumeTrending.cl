@@ -259,6 +259,31 @@ st.markdown(f"""
     }}
     [role="dialog"] button[aria-label="Close"] svg {{ color: {text_color} !important; fill: {text_color} !important; }}
 
+    /* Botón de compartir WhatsApp nativo en HTML (0 dependencias JS para evitar errores de módulos dinámicos) */
+    a.pt-wa-share-btn {{
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 100% !important;
+        height: 38px !important;
+        padding: 0.25rem 0.75rem !important;
+        background: transparent !important;
+        color: {text_color} !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        border-radius: 8px !important;
+        font-family: {font_sans} !important;
+        font-size: 14px !important;
+        font-weight: 500 !important;
+        text-decoration: none !important;
+        box-sizing: border-box !important;
+        transition: all 0.2s ease !important;
+    }}
+    a.pt-wa-share-btn:hover {{
+        border-color: #25d366 !important;
+        color: #25d366 !important;
+        background: rgba(37, 211, 102, 0.08) !important;
+    }}
+
     /* Campos de texto (modal de ingreso), versiones antiguas y nuevas de Streamlit */
     div[data-baseweb="input"],
     [data-testid="stTextInputRootElement"] {{
@@ -1368,7 +1393,10 @@ with col_info:
 
     with col_wa_btn:
         st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
-        st.link_button("💬 WhatsApp", wa_href, use_container_width=True)
+        st.markdown(
+            f'''<a href="{wa_href}" target="_blank" rel="noopener noreferrer" class="pt-wa-share-btn">💬 WhatsApp</a>''',
+            unsafe_allow_html=True,
+        )
 
     with col_share_btn:
         st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
