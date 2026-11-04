@@ -229,6 +229,12 @@ CANONICAL_BRAND_MAP: Dict[str, str] = {
     "spiritica": "Spiritica",
     "emper": "Emper",
     "dumont": "Dumont",
+    "dumont paris": "Dumont",
+    "jo milano paris": "Jo Milano",
+    "jivi": "Jivi Parfums",
+    "jivi parfums": "Jivi Parfums",
+    "auraa": "Auraa Desire",
+    "auraa desire": "Auraa Desire",
 }
 
 # Tabla declarativa de alias y sub-marcas comerciales para limpieza canónica de títulos (Fase 4).
@@ -246,7 +252,7 @@ ALIAS_MARCA: Dict[str, Tuple[str, ...]] = {
     "Ralph Lauren": ("Polo Ralph Lauren",),
     "Mugler": ("Thierry Mugler",),
     "By Kilian": ("Kilian",),
-    "Roja Parfums": ("Roja Dove",),
+    "Roja Parfums": ("Roja Dove", "Roja"),
     "Initio Parfums Privés": ("Initio Parfums Prives", "Initio Parfums", "Initio"),
     "Maison Francis Kurkdjian": ("Francis Kurkdjian", "MFK"),
     "Al Haramain": ("Haramain",),
@@ -256,6 +262,16 @@ ALIAS_MARCA: Dict[str, Tuple[str, ...]] = {
     "Hermès": ("Hermes",),
     "Chloé": ("Chloe",),
     "Estée Lauder": ("Estee Lauder",),
+    "Montblanc": ("Mont Blanc",),
+    "Victoria's Secret": ("Victoria Secret", "Victorias Secret"),
+    "Adolfo Domínguez": ("Adolfo Dominguez",),
+    "Stéphane Humbert Lucas": ("Stephane Humbert Lucas 777", "Stephane Humbert Lucas", "Stephane Humbert"),
+    "Tauer Perfumes": ("Andy Tauer",),
+    "Fragrance World": ("Fragance World",),
+    "Dumont": ("Dumont Paris",),
+    "Jo Milano": ("Jo Milano Paris",),
+    "Jivi Parfums": ("Jivi",),
+    "Auraa Desire": ("Auraa",),
 }
 
 MARCAS_INVALIDAS_CATALOGO: Set[str] = {
@@ -736,12 +752,7 @@ def limpiar_nombre_perfume(titulo: str, marca: str = "") -> str:
             for alias_m in ALIAS_MARCA.get(m_canon, ()):
                 marcas_a_quitar.add(alias_m)
 
-    # Ordenar de más larga a más corta para remover prefijos compuestos completos
-    for m_var in sorted(marcas_a_quitar, key=len, reverse=True):
-        if m_var:
-            limpio = re.sub(rf"^(?:{re.escape(m_var)}\s*[-|:/]?\s*)+", "", limpio, flags=re.IGNORECASE)
-
-    # 3. Remover especificaciones de mililitros (1 a 4 dígitos + decimales) y onzas
+    # 3. Remover especificaciones de mililitros (1 a 4 dígitos + decimales) y onzas primero
     limpio = re.sub(r"\b\d{1,4}(?:[.,]\d+)?\s*(?:ml|m)\b", "", limpio, flags=re.IGNORECASE)
     limpio = re.sub(r"\b\d+(?:[.,]\d+)?\s*(?:fl\.?\s*oz|oz)\b", "", limpio, flags=re.IGNORECASE)
 
@@ -755,7 +766,6 @@ def limpiar_nombre_perfume(titulo: str, marca: str = "") -> str:
 
     # 5. Remover ruido comercial y etiquetas de género genéricas que NO son parte del nombre oficial
     limpio = re.sub(r"\((?:h|m|u|hombre|mujer|unisex|men|women|tester)\)", "", limpio, flags=re.IGNORECASE)
-    # Remover conectores 'de {marca}' o 'para {genero}' antes de ruidos
     if marca:
         for m_var in sorted(marcas_a_quitar, key=len, reverse=True):
             if m_var:
@@ -770,8 +780,24 @@ def limpiar_nombre_perfume(titulo: str, marca: str = "") -> str:
     for r in ruidos:
         limpio = re.sub(rf"\b{re.escape(r)}\b", "", limpio, flags=re.IGNORECASE)
 
-    # Remover preposiciones sueltas al final (ej. '... De', '... Para')
-    limpio = re.sub(r"\s+\b(?:de|para)\b\s*$", "", limpio, flags=re.IGNORECASE)
+    # Ordenar variantes de marca de más larga a más corta para remover prefijo o sufijo redundante
+    # preservando nombres epónimos ('Azzaro', 'Animale', 'Halloween') y líneas ('Dior Homme', 'Miss Dior', 'Bleu de Chanel').
+    limpio = re.sub(r"\s+", " ", limpio).strip()
+    for m_var in sorted(marcas_a_quitar, key=len, reverse=True):
+        if not m_var:
+            continue
+        if not re.match(rf"^{re.escape(m_var)}\s+(?:homme|addict|issimo)\b", limpio, flags=re.IGNORECASE):
+            cand_ini = re.sub(rf"^(?:{re.escape(m_var)}\s*[-|:/]?\s*)+", "", limpio, flags=re.IGNORECASE).strip()
+            if len(cand_ini) >= 2:
+                limpio = cand_ini
+        if not re.search(rf"\b(?:miss|bleu\s+de|coco|l['’]eau\s+d['’]|eau\s+de)\s+{re.escape(m_var)}\s*$", limpio, flags=re.IGNORECASE):
+            cand_fin = re.sub(rf"\s+(?:(?:de|by)\s+)?{re.escape(m_var)}\s*$", "", limpio, flags=re.IGNORECASE).strip()
+            if len(cand_fin) >= 2:
+                limpio = cand_fin
+
+    # Remover colas truncadas de concentración ('... Extrait De', '... Eau De') y preposiciones finales
+    limpio = re.sub(r"\s+\b(?:extrait\s+de|eau\s+de)\b\s*$", "", limpio, flags=re.IGNORECASE)
+    limpio = re.sub(r"\s+\b(?:de|para|for|by)\b\s*$", "", limpio, flags=re.IGNORECASE)
 
     # Remover 'for men'/'men' o 'for women'/'woman' sueltos al final salvo cuando forman parte del nombre (ej. '212 Men', '212 VIP Men', 'CH Men')
     if not re.search(r"\b(?:212|ch|solo|boss)\s+(?:vip\s+)?men\b", limpio, flags=re.IGNORECASE):
@@ -782,6 +808,7 @@ def limpiar_nombre_perfume(titulo: str, marca: str = "") -> str:
     limpio = re.sub(r"\s+[hmuHMU]\s*$", "", limpio)
 
     # 7. Limpiar signos residuales respetando apóstrofes y '&' dentro de nombres (ej. J'adore, D&G, Bade'e)
+    limpio = re.sub(r"\s*[.]+\s*$", "", limpio)
     limpio = re.sub(r"[-–—/|()\[\]:+]+", " ", limpio)
     limpio = re.sub(r"\s+", " ", limpio).strip()
 
@@ -802,6 +829,76 @@ def limpiar_nombre_perfume(titulo: str, marca: str = "") -> str:
         else:
             palabras.append(w.capitalize())
     return " ".join(palabras)
+
+
+# - ¿Qué hace esta función?:
+#   Infiere el género explícito ('Hombre' o 'Mujer') cuando `genero_actual` es vacío o 'Unisex'
+#   pero el propio nombre contiene un marcador inequívoco ('Pour Femme', 'For Him', 'Pour Homme', etc.).
+def inferir_genero_explicito_nombre(nombre: str, genero_actual: Optional[str] = None) -> str:
+    g_norm = normalizar_genero(genero_actual) or "Unisex"
+    if g_norm in ("Hombre", "Mujer"):
+        return g_norm
+    s_low = "".join(
+        c for c in unicodedata.normalize("NFKD", str(nombre or "")) if not unicodedata.combining(c)
+    ).lower()
+    if re.search(r"\b(pour\s+femme|for\s+women|for\s+her|for\s+woman|women|woman|femme|mujer|dama)\b", s_low):
+        return "Mujer"
+    if re.search(r"\b(pour\s+homme|for\s+men|for\s+him|for\s+man|men|man|homme|hombre|varon)\b", s_low):
+        return "Hombre"
+    return "Unisex"
+
+
+# - ¿Qué hace esta función?:
+#   Construye la clave canónica de identidad de una fragancia para deduplicación determinista:
+#   - Normaliza acentos ('Boisée' == 'Boisee', 'Idôle' == 'Idole'), apóstrofes ('J'Adore' == 'Jadore'),
+#     decimales ('999,9' == '999.9'), horas ('9pm' == '9 pm') y conectores ('Rose N Roses' == 'Rose & Roses',
+#     'Honor And Glory' == 'Honor & Glory').
+#   - Elimina sufijos de concentración redundantes cuando ya están declarados en `concentracion`
+#     (ej. 'The One Gold Intense' con `Eau de Parfum Intense`, o 'Scandal Absolu Parfum' con `Parfum`,
+#     preservando siempre flankers reales como 'Cloud Intense' en EDP o 'Scandal Le Parfum').
+#   - Si `incluir_genero_nombre=False`, remueve calificadores de género ('Pour Homme', 'Pour Femme',
+#     'For Him', 'For Her', 'Men', 'Women') siempre que reste al menos un token sustantivo.
+def clave_identidad_perfume(
+    nombre: str,
+    marca: str = "",
+    concentracion: str = "",
+    incluir_genero_nombre: bool = False,
+) -> str:
+    m_can = normalizar_marca_canonica(marca) or (marca or "").strip()
+    base = limpiar_nombre_perfume(nombre, m_can or marca) or str(nombre or "").strip()
+    s = "".join(c for c in unicodedata.normalize("NFKD", base) if not unicodedata.combining(c)).lower()
+    t = "".join(c for c in unicodedata.normalize("NFKD", str(concentracion or "")) if not unicodedata.combining(c)).lower()
+
+    if m_can == "Hugo Boss":
+        cand_boss = re.sub(r"^boss\s+", "", s).strip()
+        if len(cand_boss) >= 2:
+            s = cand_boss
+
+    s = re.sub(r"\b(\d+)\s*(am|pm)\b", r"\1 \2", s)
+    s = re.sub(r"(\d),(\d)", r"\1.\2", s)
+    s = re.sub(r"\bgame\s+of\s+spade\b", "game of spades", s)
+
+    s = re.sub(r"\b([a-z]{2,})\s+(?:&|and|n['’]|['’]n['’]|['’]n|n)\s+([a-z]{2,})\b", r"\1 & \2", s)
+    s = re.sub(r"['’`]", "", s)
+
+    if "intense" in t:
+        s = re.sub(r"\bintense\b", " ", s)
+    if t in ("parfum", "extrait de parfum"):
+        s = re.sub(r"(?<!\ble\s)\bparfum\b", " ", s)
+
+    if not incluir_genero_nombre:
+        sin_gen = re.sub(
+            r"\b(?:pour\s+homme|pour\s+femme|for\s+men|for\s+women|for\s+him|for\s+her|for\s+man|for\s+woman|men|man|women|woman|homme|femme|hombre|mujer|unisex)\b",
+            " ",
+            s,
+        )
+        sin_gen = re.sub(r"[^a-z0-9.&]+", " ", sin_gen)
+        sin_gen = " ".join(sin_gen.split())
+        if len(sin_gen) >= 2:
+            return sin_gen
+
+    s = re.sub(r"[^a-z0-9.&]+", " ", s)
+    return " ".join(s.split())
 
 
 # =============================================================================

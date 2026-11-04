@@ -2420,5 +2420,4793 @@
       "ofertas_movidas": 0,
       "ofertas_deduplicadas": 0
     }
+  },
+  {
+    "id_origen": 5115,
+    "id_destino": 2143,
+    "marca_origen": "Adolfo Domínguez",
+    "nombre_origen": "Adolfo Dominguez Verbena",
+    "genero_origen": "Mujer",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 5115,
+      "id_destino": 2143,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 2,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 8
+    }
+  },
+  {
+    "id_origen": 3912,
+    "id_destino": 1312,
+    "marca_origen": "Afnan",
+    "nombre_origen": "9am Dive",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 3912,
+      "id_destino": 1312,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 3,
+      "ofertas_movidas": 7,
+      "ofertas_deduplicadas": 2
+    }
+  },
+  {
+    "id_origen": 4452,
+    "id_destino": 1439,
+    "marca_origen": "Afnan",
+    "nombre_origen": "9pm Pour Femme",
+    "genero_origen": "Mujer",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4452,
+      "id_destino": 1439,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 2,
+      "ofertas_deduplicadas": 1
+    }
+  },
+  {
+    "id_origen": 4875,
+    "id_destino": 1439,
+    "marca_origen": "Afnan",
+    "nombre_origen": "9 Pm Pour Femme",
+    "genero_origen": "Mujer",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4875,
+      "id_destino": 1439,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 1
+    }
+  },
+  {
+    "id_origen": 464,
+    "id_destino": 4055,
+    "marca_origen": "Afnan",
+    "nombre_origen": "9pm Night Out Extrait De",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 464,
+      "id_destino": 4055,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 2,
+      "ofertas_movidas": 2,
+      "ofertas_deduplicadas": 0
+    }
+  },
+  {
+    "id_origen": 4833,
+    "id_destino": 4055,
+    "marca_origen": "Afnan",
+    "nombre_origen": "9pm Night Out",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4833,
+      "id_destino": 4055,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 2,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 2
+    }
+  },
+  {
+    "id_origen": 4826,
+    "id_destino": 1925,
+    "marca_origen": "Afnan",
+    "nombre_origen": "9 Pm Rebel",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4826,
+      "id_destino": 1925,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 2,
+      "ofertas_deduplicadas": 0
+    }
+  },
+  {
+    "id_origen": 4674,
+    "id_destino": 917,
+    "marca_origen": "Al Haramain",
+    "nombre_origen": "Amber Oud Aqua Dubai",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4674,
+      "id_destino": 917,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 4,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 8
+    }
+  },
+  {
+    "id_origen": 4936,
+    "id_destino": 1345,
+    "marca_origen": "Al Haramain",
+    "nombre_origen": "Amber Oud Gold 999.9 Dubai Edition",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4936,
+      "id_destino": 1345,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 3,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 5
+    }
+  },
+  {
+    "id_origen": 1046,
+    "id_destino": 4512,
+    "marca_origen": "Al Haramain",
+    "nombre_origen": "L'Aventure Blanche",
+    "genero_origen": "Mujer",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 1046,
+      "id_destino": 4512,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 2,
+      "ofertas_deduplicadas": 1
+    }
+  },
+  {
+    "id_origen": 4794,
+    "id_destino": 1635,
+    "marca_origen": "Anfar",
+    "nombre_origen": "Fouco",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4794,
+      "id_destino": 1635,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 1
+    }
+  },
+  {
+    "id_origen": 5046,
+    "id_destino": 4529,
+    "marca_origen": "Animale",
+    "nombre_origen": "Animale Edp 100ml Mujer",
+    "genero_origen": "Mujer",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 5046,
+      "id_destino": 4529,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 2,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 6
+    }
+  },
+  {
+    "id_origen": 4299,
+    "id_destino": 1517,
+    "marca_origen": "Antonio Banderas",
+    "nombre_origen": "Queen Of Seduction Antonio Banderas",
+    "genero_origen": "Mujer",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4299,
+      "id_destino": 1517,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 4,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 11
+    }
+  },
+  {
+    "id_origen": 3957,
+    "id_destino": 5390,
+    "marca_origen": "Argos",
+    "nombre_origen": "Neptune's Trident",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 3957,
+      "id_destino": 5390,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 1
+    }
+  },
+  {
+    "id_origen": 3056,
+    "id_destino": 313,
+    "marca_origen": "Ariana Grande",
+    "nombre_origen": "Ari Ariana Grande",
+    "genero_origen": "Mujer",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 3056,
+      "id_destino": 313,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 5,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 16
+    }
+  },
+  {
+    "id_origen": 3615,
+    "id_destino": 1955,
+    "marca_origen": "Ariana Grande",
+    "nombre_origen": "Cloud Ariana Grande",
+    "genero_origen": "Mujer",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 3615,
+      "id_destino": 1955,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 5,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 29
+    }
+  },
+  {
+    "id_origen": 3709,
+    "id_destino": 1109,
+    "marca_origen": "Ariana Grande",
+    "nombre_origen": "God Is A Woman Ariana Grande",
+    "genero_origen": "Mujer",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 3709,
+      "id_destino": 1109,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 5,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 32
+    }
+  },
+  {
+    "id_origen": 312,
+    "id_destino": 30,
+    "marca_origen": "Ariana Grande",
+    "nombre_origen": "Mod Vanilla Ariana Grande",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 312,
+      "id_destino": 30,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 4,
+      "ofertas_movidas": 1,
+      "ofertas_deduplicadas": 24
+    }
+  },
+  {
+    "id_origen": 3060,
+    "id_destino": 34,
+    "marca_origen": "Ariana Grande",
+    "nombre_origen": "Sweet Like Candy Ariana Grande",
+    "genero_origen": "Mujer",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 3060,
+      "id_destino": 34,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 5,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 29
+    }
+  },
+  {
+    "id_origen": 418,
+    "id_destino": 3068,
+    "marca_origen": "Ariana Grande",
+    "nombre_origen": "Thank Next",
+    "genero_origen": "Mujer",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 418,
+      "id_destino": 3068,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 6,
+      "ofertas_movidas": 1,
+      "ofertas_deduplicadas": 33
+    }
+  },
+  {
+    "id_origen": 5022,
+    "id_destino": 33,
+    "marca_origen": "Ariana Grande",
+    "nombre_origen": "Thank U Next Ariana Grande",
+    "genero_origen": "Mujer",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 5022,
+      "id_destino": 33,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 6,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 25
+    }
+  },
+  {
+    "id_origen": 4765,
+    "id_destino": 1271,
+    "marca_origen": "Armaf",
+    "nombre_origen": "Club De Nuit Oud Parfum",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4765,
+      "id_destino": 1271,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 2,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 6
+    }
+  },
+  {
+    "id_origen": 4717,
+    "id_destino": 407,
+    "marca_origen": "Armaf",
+    "nombre_origen": "Club De Nuit Precieux I",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4717,
+      "id_destino": 407,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 2,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 3
+    }
+  },
+  {
+    "id_origen": 4750,
+    "id_destino": 1199,
+    "marca_origen": "Armaf",
+    "nombre_origen": "Club De Nuit Private Key To My Success",
+    "genero_origen": "Mujer",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4750,
+      "id_destino": 1199,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 1
+    }
+  },
+  {
+    "id_origen": 4057,
+    "id_destino": 3915,
+    "marca_origen": "Armaf",
+    "nombre_origen": "Club De Nuit Urban Elixir",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4057,
+      "id_destino": 3915,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 2,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 12
+    }
+  },
+  {
+    "id_origen": 3488,
+    "id_destino": 1411,
+    "marca_origen": "Armaf",
+    "nombre_origen": "Man Connoisseur",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 3488,
+      "id_destino": 1411,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 9
+    }
+  },
+  {
+    "id_origen": 3676,
+    "id_destino": 1409,
+    "marca_origen": "Armaf",
+    "nombre_origen": "Woman Connoisseur",
+    "genero_origen": "Mujer",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 3676,
+      "id_destino": 1409,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 8
+    }
+  },
+  {
+    "id_origen": 4860,
+    "id_destino": 545,
+    "marca_origen": "Armaf",
+    "nombre_origen": "El Cielo Pour Homme",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4860,
+      "id_destino": 545,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 1
+    }
+  },
+  {
+    "id_origen": 4319,
+    "id_destino": 2066,
+    "marca_origen": "Armaf",
+    "nombre_origen": "Legesi",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4319,
+      "id_destino": 2066,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 4
+    }
+  },
+  {
+    "id_origen": 5108,
+    "id_destino": 2066,
+    "marca_origen": "Armaf",
+    "nombre_origen": "Legesi Homme",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 5108,
+      "id_destino": 2066,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 1
+    }
+  },
+  {
+    "id_origen": 4751,
+    "id_destino": 1201,
+    "marca_origen": "Armaf",
+    "nombre_origen": "Magnificent Pour Femme",
+    "genero_origen": "Mujer",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4751,
+      "id_destino": 1201,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 4
+    }
+  },
+  {
+    "id_origen": 4488,
+    "id_destino": 4230,
+    "marca_origen": "Armaf",
+    "nombre_origen": "Odyssey Mandarin Sky",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4488,
+      "id_destino": 4230,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 1,
+      "variantes_consolidadas": 2,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 13
+    }
+  },
+  {
+    "id_origen": 4775,
+    "id_destino": 1073,
+    "marca_origen": "Armaf",
+    "nombre_origen": "Ventana Pour Homme",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4775,
+      "id_destino": 1073,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 3
+    }
+  },
+  {
+    "id_origen": 4117,
+    "id_destino": 971,
+    "marca_origen": "Auraa",
+    "nombre_origen": "Desire Evolution",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4117,
+      "id_destino": 971,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 1,
+      "ofertas_deduplicadas": 4
+    }
+  },
+  {
+    "id_origen": 4848,
+    "id_destino": 492,
+    "marca_origen": "Auraa Desire",
+    "nombre_origen": "Tocco Marrone",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4848,
+      "id_destino": 492,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 2
+    }
+  },
+  {
+    "id_origen": 4527,
+    "id_destino": 4563,
+    "marca_origen": "Azzaro",
+    "nombre_origen": "Perfume Azzaro Edt 50ml Hombre",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4527,
+      "id_destino": 4563,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 1,
+      "variantes_consolidadas": 0,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 0
+    }
+  },
+  {
+    "id_origen": 4533,
+    "id_destino": 4563,
+    "marca_origen": "Azzaro",
+    "nombre_origen": "Perfume Azzaro Edt 200ml Hombre",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4533,
+      "id_destino": 4563,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 1,
+      "variantes_consolidadas": 0,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 0
+    }
+  },
+  {
+    "id_origen": 4859,
+    "id_destino": 543,
+    "marca_origen": "Azzaro",
+    "nombre_origen": "Forever Wanted Absolu Parfum",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4859,
+      "id_destino": 543,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 2,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 8
+    }
+  },
+  {
+    "id_origen": 3802,
+    "id_destino": 46,
+    "marca_origen": "Azzaro",
+    "nombre_origen": "The Most Wanted Intense",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 3802,
+      "id_destino": 46,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 4,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 18
+    }
+  },
+  {
+    "id_origen": 1587,
+    "id_destino": 3697,
+    "marca_origen": "Benetton",
+    "nombre_origen": "Hot",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 1587,
+      "id_destino": 3697,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 6
+    }
+  },
+  {
+    "id_origen": 3036,
+    "id_destino": 334,
+    "marca_origen": "Britney Spears",
+    "nombre_origen": "Fantasy Britney Spears",
+    "genero_origen": "Mujer",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 3036,
+      "id_destino": 334,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 5,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 21
+    }
+  },
+  {
+    "id_origen": 4897,
+    "id_destino": 3156,
+    "marca_origen": "Cacharel",
+    "nombre_origen": "Ella Ella",
+    "genero_origen": "Mujer",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4897,
+      "id_destino": 3156,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 3,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 5
+    }
+  },
+  {
+    "id_origen": 4551,
+    "id_destino": 43,
+    "marca_origen": "Calvin Klein",
+    "nombre_origen": "CK One Shock",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4551,
+      "id_destino": 43,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 4,
+      "ofertas_movidas": 3,
+      "ofertas_deduplicadas": 14
+    }
+  },
+  {
+    "id_origen": 5048,
+    "id_destino": 1647,
+    "marca_origen": "Calvin Klein",
+    "nombre_origen": "Escape Calvin Klein",
+    "genero_origen": "Mujer",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 5048,
+      "id_destino": 1647,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 3,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 10
+    }
+  },
+  {
+    "id_origen": 4565,
+    "id_destino": 707,
+    "marca_origen": "Carolina Herrera",
+    "nombre_origen": "212",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4565,
+      "id_destino": 707,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 1,
+      "variantes_consolidadas": 7,
+      "ofertas_movidas": 4,
+      "ofertas_deduplicadas": 24
+    }
+  },
+  {
+    "id_origen": 4624,
+    "id_destino": 536,
+    "marca_origen": "Carolina Herrera",
+    "nombre_origen": "212 Woman Heroes",
+    "genero_origen": "Mujer",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4624,
+      "id_destino": 536,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 5,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 18
+    }
+  },
+  {
+    "id_origen": 2010,
+    "id_destino": 468,
+    "marca_origen": "Carolina Herrera",
+    "nombre_origen": "212 Men Heroes",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 2010,
+      "id_destino": 468,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 6,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 19
+    }
+  },
+  {
+    "id_origen": 4145,
+    "id_destino": 122,
+    "marca_origen": "Carolina Herrera",
+    "nombre_origen": "212 Men NYC Parfum",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4145,
+      "id_destino": 122,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 3,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 8
+    }
+  },
+  {
+    "id_origen": 3077,
+    "id_destino": 1913,
+    "marca_origen": "Carolina Herrera",
+    "nombre_origen": "212 VIP",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 3077,
+      "id_destino": 1913,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 3,
+      "ofertas_movidas": 1,
+      "ofertas_deduplicadas": 13
+    }
+  },
+  {
+    "id_origen": 1741,
+    "id_destino": 160,
+    "marca_origen": "Carolina Herrera",
+    "nombre_origen": "212 VIP Men Black",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 1741,
+      "id_destino": 160,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 3,
+      "ofertas_movidas": 1,
+      "ofertas_deduplicadas": 18
+    }
+  },
+  {
+    "id_origen": 5239,
+    "id_destino": 1458,
+    "marca_origen": "Carolina Herrera",
+    "nombre_origen": "212 VIP Rosé",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 5239,
+      "id_destino": 1458,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 4,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 19
+    }
+  },
+  {
+    "id_origen": 314,
+    "id_destino": 1219,
+    "marca_origen": "Carolina Herrera",
+    "nombre_origen": "212 VIP Wins Carolina Herrera",
+    "genero_origen": "Mujer",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 314,
+      "id_destino": 1219,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 2,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 5
+    }
+  },
+  {
+    "id_origen": 434,
+    "id_destino": 4541,
+    "marca_origen": "Carolina Herrera",
+    "nombre_origen": "CH Men",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 434,
+      "id_destino": 4541,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 4,
+      "ofertas_movidas": 3,
+      "ofertas_deduplicadas": 15
+    }
+  },
+  {
+    "id_origen": 3848,
+    "id_destino": 1488,
+    "marca_origen": "Carolina Herrera",
+    "nombre_origen": "Good Girl Légère",
+    "genero_origen": "Mujer",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 3848,
+      "id_destino": 1488,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 4,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 7
+    }
+  },
+  {
+    "id_origen": 449,
+    "id_destino": 346,
+    "marca_origen": "Clinique",
+    "nombre_origen": "Happy",
+    "genero_origen": "Mujer",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 449,
+      "id_destino": 346,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 4,
+      "ofertas_movidas": 1,
+      "ofertas_deduplicadas": 20
+    }
+  },
+  {
+    "id_origen": 5041,
+    "id_destino": 5040,
+    "marca_origen": "Coach",
+    "nombre_origen": "Floral",
+    "genero_origen": "Mujer",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 5041,
+      "id_destino": 5040,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 4,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 14
+    }
+  },
+  {
+    "id_origen": 3945,
+    "id_destino": 3614,
+    "marca_origen": "Creed",
+    "nombre_origen": "Millésime Impérial",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 3945,
+      "id_destino": 3614,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 2,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 4
+    }
+  },
+  {
+    "id_origen": 144,
+    "id_destino": 889,
+    "marca_origen": "Dior",
+    "nombre_origen": "J'Adore",
+    "genero_origen": "Mujer",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 144,
+      "id_destino": 889,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 3,
+      "variantes_consolidadas": 2,
+      "ofertas_movidas": 2,
+      "ofertas_deduplicadas": 2
+    }
+  },
+  {
+    "id_origen": 886,
+    "id_destino": 888,
+    "marca_origen": "Dior",
+    "nombre_origen": "Miss Dior Rose & Roses",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 886,
+      "id_destino": 888,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 2,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 9
+    }
+  },
+  {
+    "id_origen": 3985,
+    "id_destino": 244,
+    "marca_origen": "Dior",
+    "nombre_origen": "Sauvage Parfum",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 3985,
+      "id_destino": 244,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 4,
+      "ofertas_movidas": 2,
+      "ofertas_deduplicadas": 14
+    }
+  },
+  {
+    "id_origen": 4078,
+    "id_destino": 555,
+    "marca_origen": "Dolce & Gabbana",
+    "nombre_origen": "Light Blue Capri In Love Pour Homme",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4078,
+      "id_destino": 555,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 3,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 12
+    }
+  },
+  {
+    "id_origen": 3990,
+    "id_destino": 261,
+    "marca_origen": "Dolce & Gabbana",
+    "nombre_origen": "Light Blue Pour Homme Summer Vibes",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 3990,
+      "id_destino": 261,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 2,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 2
+    }
+  },
+  {
+    "id_origen": 4770,
+    "id_destino": 1290,
+    "marca_origen": "Dolce & Gabbana",
+    "nombre_origen": "Light Blue Pour Homme Versión 2025",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4770,
+      "id_destino": 1290,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 3
+    }
+  },
+  {
+    "id_origen": 5181,
+    "id_destino": 3807,
+    "marca_origen": "Dolce & Gabbana",
+    "nombre_origen": "My Devotion Intense",
+    "genero_origen": "Mujer",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 5181,
+      "id_destino": 3807,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 2
+    }
+  },
+  {
+    "id_origen": 4869,
+    "id_destino": 870,
+    "marca_origen": "Dolce & Gabbana",
+    "nombre_origen": "The One Pour Homme",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4869,
+      "id_destino": 870,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 4,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 4
+    }
+  },
+  {
+    "id_origen": 3994,
+    "id_destino": 277,
+    "marca_origen": "Dolce & Gabbana",
+    "nombre_origen": "The One Gold Intense",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 3994,
+      "id_destino": 277,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 6,
+      "ofertas_movidas": 2,
+      "ofertas_deduplicadas": 20
+    }
+  },
+  {
+    "id_origen": 4908,
+    "id_destino": 277,
+    "marca_origen": "Dolce & Gabbana",
+    "nombre_origen": "The One Gold Men Intense",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4908,
+      "id_destino": 277,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 3,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 11
+    }
+  },
+  {
+    "id_origen": 5320,
+    "id_destino": 277,
+    "marca_origen": "Dolce & Gabbana",
+    "nombre_origen": "The One Gold Pour Homme Intense",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 5320,
+      "id_destino": 277,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 2,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 4
+    }
+  },
+  {
+    "id_origen": 4752,
+    "id_destino": 1208,
+    "marca_origen": "Dumont",
+    "nombre_origen": "Laxia Pour Femme",
+    "genero_origen": "Mujer",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4752,
+      "id_destino": 1208,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 4
+    }
+  },
+  {
+    "id_origen": 4058,
+    "id_destino": 3416,
+    "marca_origen": "Dumont",
+    "nombre_origen": "Nitro Pour Homme",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4058,
+      "id_destino": 3416,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 8
+    }
+  },
+  {
+    "id_origen": 4726,
+    "id_destino": 1103,
+    "marca_origen": "Dumont",
+    "nombre_origen": "Nitro Pour Homme Gold",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4726,
+      "id_destino": 1103,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 2
+    }
+  },
+  {
+    "id_origen": 4877,
+    "id_destino": 1447,
+    "marca_origen": "Dumont",
+    "nombre_origen": "Nitro Green Pour Homme",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4877,
+      "id_destino": 1447,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 2
+    }
+  },
+  {
+    "id_origen": 3891,
+    "id_destino": 1448,
+    "marca_origen": "Dumont",
+    "nombre_origen": "Nitro Red Pour Homme",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 3891,
+      "id_destino": 1448,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 1,
+      "ofertas_deduplicadas": 5
+    }
+  },
+  {
+    "id_origen": 1104,
+    "id_destino": 497,
+    "marca_origen": "Dumont",
+    "nombre_origen": "Nitro Red Intensely Extrait De",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 1104,
+      "id_destino": 497,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 4
+    }
+  },
+  {
+    "id_origen": 4727,
+    "id_destino": 497,
+    "marca_origen": "Dumont",
+    "nombre_origen": "Nitro Red Intensely",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4727,
+      "id_destino": 497,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 3
+    }
+  },
+  {
+    "id_origen": 4850,
+    "id_destino": 497,
+    "marca_origen": "Dumont Paris",
+    "nombre_origen": "Dumont Nitro Red Pour Homme Intensely",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4850,
+      "id_destino": 497,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 2
+    }
+  },
+  {
+    "id_origen": 4725,
+    "id_destino": 1101,
+    "marca_origen": "Dumont",
+    "nombre_origen": "Nitro White Intensely Pour Homme",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4725,
+      "id_destino": 1101,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 3
+    }
+  },
+  {
+    "id_origen": 5385,
+    "id_destino": 3925,
+    "marca_origen": "Eight & Bob",
+    "nombre_origen": "Cap D’Antibes",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 5385,
+      "id_destino": 3925,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 1
+    }
+  },
+  {
+    "id_origen": 4729,
+    "id_destino": 1113,
+    "marca_origen": "Elivi",
+    "nombre_origen": "Giradino Romani",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4729,
+      "id_destino": 1113,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 1
+    }
+  },
+  {
+    "id_origen": 4730,
+    "id_destino": 1114,
+    "marca_origen": "Elivi",
+    "nombre_origen": "Magical Mia",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4730,
+      "id_destino": 1114,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 2
+    }
+  },
+  {
+    "id_origen": 4731,
+    "id_destino": 1115,
+    "marca_origen": "Elivi",
+    "nombre_origen": "Roses Parisien",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4731,
+      "id_destino": 1115,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 2
+    }
+  },
+  {
+    "id_origen": 4733,
+    "id_destino": 1117,
+    "marca_origen": "Elivi",
+    "nombre_origen": "Sweet London",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4733,
+      "id_destino": 1117,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 1
+    }
+  },
+  {
+    "id_origen": 4732,
+    "id_destino": 1116,
+    "marca_origen": "Elivi",
+    "nombre_origen": "Ville De Gevene",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4732,
+      "id_destino": 1116,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 1
+    }
+  },
+  {
+    "id_origen": 4140,
+    "id_destino": 1010,
+    "marca_origen": "Flavia",
+    "nombre_origen": "Amethyst Pour Femme",
+    "genero_origen": "Mujer",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4140,
+      "id_destino": 1010,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 2
+    }
+  },
+  {
+    "id_origen": 4142,
+    "id_destino": 1012,
+    "marca_origen": "Flavia",
+    "nombre_origen": "Jade Pour Homme",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4142,
+      "id_destino": 1012,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 2
+    }
+  },
+  {
+    "id_origen": 4141,
+    "id_destino": 1011,
+    "marca_origen": "Flavia",
+    "nombre_origen": "Legende Parfum",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4141,
+      "id_destino": 1011,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 1
+    }
+  },
+  {
+    "id_origen": 4759,
+    "id_destino": 1242,
+    "marca_origen": "Flavia",
+    "nombre_origen": "Lyft Pour Homme",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4759,
+      "id_destino": 1242,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 2
+    }
+  },
+  {
+    "id_origen": 4758,
+    "id_destino": 1241,
+    "marca_origen": "Flavia",
+    "nombre_origen": "Lyft Pour Femme",
+    "genero_origen": "Mujer",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4758,
+      "id_destino": 1241,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 2
+    }
+  },
+  {
+    "id_origen": 4740,
+    "id_destino": 1140,
+    "marca_origen": "Fragrance Project",
+    "nombre_origen": "Biba",
+    "genero_origen": "Mujer",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4740,
+      "id_destino": 1140,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 2
+    }
+  },
+  {
+    "id_origen": 4738,
+    "id_destino": 1128,
+    "marca_origen": "Fragrance Project",
+    "nombre_origen": "Stallionaire",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4738,
+      "id_destino": 1128,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 1
+    }
+  },
+  {
+    "id_origen": 4739,
+    "id_destino": 1139,
+    "marca_origen": "Fragrance Project",
+    "nombre_origen": "Zeuss",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4739,
+      "id_destino": 1139,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 2
+    }
+  },
+  {
+    "id_origen": 4931,
+    "id_destino": 4628,
+    "marca_origen": "Fragrance World",
+    "nombre_origen": "Fragance World Venti Green Tweed",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4931,
+      "id_destino": 4628,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 1
+    }
+  },
+  {
+    "id_origen": 4865,
+    "id_destino": 1301,
+    "marca_origen": "French Avenue",
+    "nombre_origen": "Amber Empire",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4865,
+      "id_destino": 1301,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 2
+    }
+  },
+  {
+    "id_origen": 4119,
+    "id_destino": 982,
+    "marca_origen": "French Avenue",
+    "nombre_origen": "Grecia White Parfum",
+    "genero_origen": "Mujer",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4119,
+      "id_destino": 982,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 3
+    }
+  },
+  {
+    "id_origen": 3820,
+    "id_destino": 4930,
+    "marca_origen": "French Avenue",
+    "nombre_origen": "Impérial Océan De French Avenue Para",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 3820,
+      "id_destino": 4930,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 1
+    }
+  },
+  {
+    "id_origen": 1054,
+    "id_destino": 4144,
+    "marca_origen": "French Avenue",
+    "nombre_origen": "Liquid Brun Limited Edition Extrait De",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 1054,
+      "id_destino": 4144,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 1,
+      "ofertas_deduplicadas": 2
+    }
+  },
+  {
+    "id_origen": 5086,
+    "id_destino": 1510,
+    "marca_origen": "Giorgio Armani",
+    "nombre_origen": "Acqua Di Gio Parfum",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 5086,
+      "id_destino": 1510,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 6,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 12
+    }
+  },
+  {
+    "id_origen": 4042,
+    "id_destino": 3979,
+    "marca_origen": "Giorgio Armani",
+    "nombre_origen": "Armani Acqua Di Giò Intense",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4042,
+      "id_destino": 3979,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 3,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 12
+    }
+  },
+  {
+    "id_origen": 4231,
+    "id_destino": 96,
+    "marca_origen": "Giorgio Armani",
+    "nombre_origen": "Acqua Di Gio Profondo Parfum",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4231,
+      "id_destino": 96,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 4,
+      "ofertas_movidas": 1,
+      "ofertas_deduplicadas": 15
+    }
+  },
+  {
+    "id_origen": 4293,
+    "id_destino": 3849,
+    "marca_origen": "Giorgio Armani",
+    "nombre_origen": "In Love With You Emporio Armani",
+    "genero_origen": "Mujer",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4293,
+      "id_destino": 3849,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 2,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 3
+    }
+  },
+  {
+    "id_origen": 3450,
+    "id_destino": 387,
+    "marca_origen": "Giorgio Armani",
+    "nombre_origen": "Power Of You Armani",
+    "genero_origen": "Mujer",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 3450,
+      "id_destino": 387,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 5,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 22
+    }
+  },
+  {
+    "id_origen": 3176,
+    "id_destino": 1206,
+    "marca_origen": "Givenchy",
+    "nombre_origen": "Gentleman Boisee Givenchy",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 3176,
+      "id_destino": 1206,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 4,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 19
+    }
+  },
+  {
+    "id_origen": 5311,
+    "id_destino": 1206,
+    "marca_origen": "Givenchy",
+    "nombre_origen": "Gentleman Boisée",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 5311,
+      "id_destino": 1206,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 4,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 12
+    }
+  },
+  {
+    "id_origen": 4396,
+    "id_destino": 453,
+    "marca_origen": "Givenchy",
+    "nombre_origen": "Very Irrésistible",
+    "genero_origen": "Mujer",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4396,
+      "id_destino": 453,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 4,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 10
+    }
+  },
+  {
+    "id_origen": 3572,
+    "id_destino": 737,
+    "marca_origen": "Hermès",
+    "nombre_origen": "Un Jardin Sur Le Toit Hermes",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 3572,
+      "id_destino": 737,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 2,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 5
+    }
+  },
+  {
+    "id_origen": 253,
+    "id_destino": 3046,
+    "marca_origen": "Hugo Boss",
+    "nombre_origen": "Alive",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 253,
+      "id_destino": 3046,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 1,
+      "variantes_consolidadas": 2,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 12
+    }
+  },
+  {
+    "id_origen": 5093,
+    "id_destino": 263,
+    "marca_origen": "Hugo Boss",
+    "nombre_origen": "Boss Bottled",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 5093,
+      "id_destino": 263,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 5,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 18
+    }
+  },
+  {
+    "id_origen": 3853,
+    "id_destino": 250,
+    "marca_origen": "Hugo Boss",
+    "nombre_origen": "Boss Bottled Night",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 3853,
+      "id_destino": 250,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 3,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 15
+    }
+  },
+  {
+    "id_origen": 826,
+    "id_destino": 67,
+    "marca_origen": "Hugo Boss",
+    "nombre_origen": "Bottled Unlimited",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 826,
+      "id_destino": 67,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 2,
+      "variantes_consolidadas": 2,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 10
+    }
+  },
+  {
+    "id_origen": 673,
+    "id_destino": 212,
+    "marca_origen": "Hugo Boss",
+    "nombre_origen": "Femme",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 673,
+      "id_destino": 212,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 1,
+      "variantes_consolidadas": 5,
+      "ofertas_movidas": 2,
+      "ofertas_deduplicadas": 23
+    }
+  },
+  {
+    "id_origen": 4715,
+    "id_destino": 401,
+    "marca_origen": "Issey Miyake",
+    "nombre_origen": "L’Eau D’Issey Rose & Rose Intense",
+    "genero_origen": "Mujer",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4715,
+      "id_destino": 401,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 2
+    }
+  },
+  {
+    "id_origen": 3844,
+    "id_destino": 267,
+    "marca_origen": "Jean Paul Gaultier",
+    "nombre_origen": "Scandal Absolu Parfum",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 3844,
+      "id_destino": 267,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 6,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 15
+    }
+  },
+  {
+    "id_origen": 3993,
+    "id_destino": 267,
+    "marca_origen": "Jean Paul Gaultier",
+    "nombre_origen": "Scandal Pour Homme Absolu Parfum",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 3993,
+      "id_destino": 267,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 2,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 3
+    }
+  },
+  {
+    "id_origen": 1234,
+    "id_destino": 4757,
+    "marca_origen": "Jean Paul Gaultier",
+    "nombre_origen": "Scandal Absolu Concentré",
+    "genero_origen": "Mujer",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 1234,
+      "id_destino": 4757,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 3,
+      "variantes_consolidadas": 3,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 6
+    }
+  },
+  {
+    "id_origen": 2182,
+    "id_destino": 1120,
+    "marca_origen": "Jivi Parfums",
+    "nombre_origen": "Jivi The Story Of Oud Chapter 1 Origin",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 2182,
+      "id_destino": 1120,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 8
+    }
+  },
+  {
+    "id_origen": 4477,
+    "id_destino": 1120,
+    "marca_origen": "Jivi Parfums",
+    "nombre_origen": "Jivi The Story Of Oud Chapter 1 Origin Parfum",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4477,
+      "id_destino": 1120,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 7
+    }
+  },
+  {
+    "id_origen": 4734,
+    "id_destino": 1120,
+    "marca_origen": "Jivi",
+    "nombre_origen": "The Story Of Oud Chapter 1 Origin Parfum",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4734,
+      "id_destino": 1120,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 7
+    }
+  },
+  {
+    "id_origen": 2181,
+    "id_destino": 1123,
+    "marca_origen": "Jivi Parfums",
+    "nombre_origen": "Jivi The Story Of Oud Chapter 4 Silk Road",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 2181,
+      "id_destino": 1123,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 7
+    }
+  },
+  {
+    "id_origen": 4736,
+    "id_destino": 1123,
+    "marca_origen": "Jivi",
+    "nombre_origen": "The Story Of Oud Chapter 4 Silk Road Parfum",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4736,
+      "id_destino": 1123,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 6
+    }
+  },
+  {
+    "id_origen": 4475,
+    "id_destino": 1123,
+    "marca_origen": "Jivi Parfums",
+    "nombre_origen": "Jivi The Story Of Oud Chapter 4 Silk Road Parfum",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4475,
+      "id_destino": 1123,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 6
+    }
+  },
+  {
+    "id_origen": 2180,
+    "id_destino": 1121,
+    "marca_origen": "Jivi Parfums",
+    "nombre_origen": "Jivi The Story Of Oud Chapter 6 Culture",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 2180,
+      "id_destino": 1121,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 7
+    }
+  },
+  {
+    "id_origen": 4473,
+    "id_destino": 1121,
+    "marca_origen": "Jivi Parfums",
+    "nombre_origen": "Jivi The Story Of Oud Chapter 6 Culture Parfum",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4473,
+      "id_destino": 1121,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 6
+    }
+  },
+  {
+    "id_origen": 4735,
+    "id_destino": 1121,
+    "marca_origen": "Jivi",
+    "nombre_origen": "The Story Of Oud Chapter 6 Culture Parfum",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4735,
+      "id_destino": 1121,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 6
+    }
+  },
+  {
+    "id_origen": 1248,
+    "id_destino": 2240,
+    "marca_origen": "Jo Milano Paris",
+    "nombre_origen": "Game Of Spade Bid",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 1248,
+      "id_destino": 2240,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 1,
+      "ofertas_deduplicadas": 2
+    }
+  },
+  {
+    "id_origen": 4763,
+    "id_destino": 2240,
+    "marca_origen": "Jo Milano Paris",
+    "nombre_origen": "Game Of Spade Bid Parfum",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4763,
+      "id_destino": 2240,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 1
+    }
+  },
+  {
+    "id_origen": 1231,
+    "id_destino": 638,
+    "marca_origen": "Jo Milano Paris",
+    "nombre_origen": "Game Of Spades Bonus",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 1231,
+      "id_destino": 638,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 2,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 12
+    }
+  },
+  {
+    "id_origen": 4080,
+    "id_destino": 636,
+    "marca_origen": "Jo Milano Paris",
+    "nombre_origen": "Game Of Spades Double Bonus Parfum",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4080,
+      "id_destino": 636,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 7
+    }
+  },
+  {
+    "id_origen": 1246,
+    "id_destino": 642,
+    "marca_origen": "Jo Milano Paris",
+    "nombre_origen": "Game Of Spade Gold",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 1246,
+      "id_destino": 642,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 3,
+      "ofertas_deduplicadas": 0
+    }
+  },
+  {
+    "id_origen": 4761,
+    "id_destino": 642,
+    "marca_origen": "Jo Milano Paris",
+    "nombre_origen": "Game Of Spade Gold Parfum",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4761,
+      "id_destino": 642,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 1
+    }
+  },
+  {
+    "id_origen": 4330,
+    "id_destino": 637,
+    "marca_origen": "Jo Milano",
+    "nombre_origen": "Game Of Spades High Roller Parfum",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4330,
+      "id_destino": 637,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 3
+    }
+  },
+  {
+    "id_origen": 1244,
+    "id_destino": 637,
+    "marca_origen": "Jo Milano Paris",
+    "nombre_origen": "Game Of Spade High Roller",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 1244,
+      "id_destino": 637,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 1,
+      "ofertas_deduplicadas": 0
+    }
+  },
+  {
+    "id_origen": 4338,
+    "id_destino": 640,
+    "marca_origen": "Jo Milano",
+    "nombre_origen": "Game Of Spades No Limit Parfum",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4338,
+      "id_destino": 640,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 7
+    }
+  },
+  {
+    "id_origen": 1313,
+    "id_destino": 640,
+    "marca_origen": "Jo Milano Paris",
+    "nombre_origen": "Game Of Spades No Limit",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 1313,
+      "id_destino": 640,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 6
+    }
+  },
+  {
+    "id_origen": 4867,
+    "id_destino": 640,
+    "marca_origen": "Jo Milano Paris",
+    "nombre_origen": "Game Of Spades No Limit Parfum",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4867,
+      "id_destino": 640,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 4
+    }
+  },
+  {
+    "id_origen": 4762,
+    "id_destino": 1247,
+    "marca_origen": "Jo Milano Paris",
+    "nombre_origen": "Game Of Spade Ruby Parfum",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4762,
+      "id_destino": 1247,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 1
+    }
+  },
+  {
+    "id_origen": 1378,
+    "id_destino": 633,
+    "marca_origen": "Jo Milano Paris",
+    "nombre_origen": "Game Of Spades Topaz",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 1378,
+      "id_destino": 633,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 2,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 9
+    }
+  },
+  {
+    "id_origen": 4872,
+    "id_destino": 633,
+    "marca_origen": "Jo Milano Paris",
+    "nombre_origen": "Game Of Spades Topaz Parfum",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4872,
+      "id_destino": 633,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 2,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 4
+    }
+  },
+  {
+    "id_origen": 4301,
+    "id_destino": 634,
+    "marca_origen": "Jo Milano",
+    "nombre_origen": "Game Of Spades Wildcard Parfum",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4301,
+      "id_destino": 634,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 3,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 11
+    }
+  },
+  {
+    "id_origen": 1316,
+    "id_destino": 634,
+    "marca_origen": "Jo Milano Paris",
+    "nombre_origen": "Game Of Spade Wildcard",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 1316,
+      "id_destino": 634,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 1,
+      "ofertas_deduplicadas": 1
+    }
+  },
+  {
+    "id_origen": 4868,
+    "id_destino": 634,
+    "marca_origen": "Jo Milano Paris",
+    "nombre_origen": "Game Of Spade Wildcard Parfum",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4868,
+      "id_destino": 634,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 1
+    }
+  },
+  {
+    "id_origen": 4760,
+    "id_destino": 1245,
+    "marca_origen": "Jo Milano Paris",
+    "nombre_origen": "Game Of Spade Yellow Sapphire Parfum",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4760,
+      "id_destino": 1245,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 1
+    }
+  },
+  {
+    "id_origen": 4634,
+    "id_destino": 780,
+    "marca_origen": "Khadlaj",
+    "nombre_origen": "Island Dreams",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4634,
+      "id_destino": 780,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 4
+    }
+  },
+  {
+    "id_origen": 4764,
+    "id_destino": 1269,
+    "marca_origen": "King Of Kings",
+    "nombre_origen": "Royal Gold Parfum",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4764,
+      "id_destino": 1269,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 2
+    }
+  },
+  {
+    "id_origen": 4072,
+    "id_destino": 4321,
+    "marca_origen": "Lacoste",
+    "nombre_origen": "Lacoste Original Edp 100 Ml (h)",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4072,
+      "id_destino": 4321,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 1
+    }
+  },
+  {
+    "id_origen": 5240,
+    "id_destino": 2948,
+    "marca_origen": "Lancôme",
+    "nombre_origen": "Idôle",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 5240,
+      "id_destino": 2948,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 3,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 9
+    }
+  },
+  {
+    "id_origen": 4082,
+    "id_destino": 3830,
+    "marca_origen": "Lancôme",
+    "nombre_origen": "Lancome La Vie Est Belle Lelixir",
+    "genero_origen": "Mujer",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4082,
+      "id_destino": 3830,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 3,
+      "ofertas_movidas": 1,
+      "ofertas_deduplicadas": 3
+    }
+  },
+  {
+    "id_origen": 2140,
+    "id_destino": 1433,
+    "marca_origen": "Lattafa",
+    "nombre_origen": "Badee Al Oud Honor & Glory",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 2140,
+      "id_destino": 1433,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 11
+    }
+  },
+  {
+    "id_origen": 4660,
+    "id_destino": 1421,
+    "marca_origen": "Lattafa",
+    "nombre_origen": "Badee Al Oud Noble Blush Lattafa",
+    "genero_origen": "Mujer",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4660,
+      "id_destino": 1421,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 2,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 10
+    }
+  },
+  {
+    "id_origen": 4125,
+    "id_destino": 993,
+    "marca_origen": "Lorenzo Pazzaglia",
+    "nombre_origen": "Artik Sea",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4125,
+      "id_destino": 993,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 3,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 3
+    }
+  },
+  {
+    "id_origen": 4123,
+    "id_destino": 991,
+    "marca_origen": "Lorenzo Pazzaglia",
+    "nombre_origen": "Bloody Smoke",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4123,
+      "id_destino": 991,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 2,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 4
+    }
+  },
+  {
+    "id_origen": 4122,
+    "id_destino": 990,
+    "marca_origen": "Lorenzo Pazzaglia",
+    "nombre_origen": "Carbonara",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4122,
+      "id_destino": 990,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 2,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 5
+    }
+  },
+  {
+    "id_origen": 4154,
+    "id_destino": 1081,
+    "marca_origen": "Lorenzo Pazzaglia",
+    "nombre_origen": "Choco Raptor",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4154,
+      "id_destino": 1081,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 2,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 4
+    }
+  },
+  {
+    "id_origen": 4121,
+    "id_destino": 989,
+    "marca_origen": "Lorenzo Pazzaglia",
+    "nombre_origen": "Coffeee Passion New",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4121,
+      "id_destino": 989,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 1
+    }
+  },
+  {
+    "id_origen": 4124,
+    "id_destino": 992,
+    "marca_origen": "Lorenzo Pazzaglia",
+    "nombre_origen": "Dangerous Maryx",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4124,
+      "id_destino": 992,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 2
+    }
+  },
+  {
+    "id_origen": 4723,
+    "id_destino": 994,
+    "marca_origen": "Lorenzo Pazzaglia",
+    "nombre_origen": "Darkflorum",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4723,
+      "id_destino": 994,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 1
+    }
+  },
+  {
+    "id_origen": 4127,
+    "id_destino": 996,
+    "marca_origen": "Lorenzo Pazzaglia",
+    "nombre_origen": "Dream Sea",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4127,
+      "id_destino": 996,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 2,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 4
+    }
+  },
+  {
+    "id_origen": 4126,
+    "id_destino": 995,
+    "marca_origen": "Lorenzo Pazzaglia",
+    "nombre_origen": "Esco Pazzo",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4126,
+      "id_destino": 995,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 2,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 4
+    }
+  },
+  {
+    "id_origen": 4128,
+    "id_destino": 997,
+    "marca_origen": "Lorenzo Pazzaglia",
+    "nombre_origen": "Evil Angel",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4128,
+      "id_destino": 997,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 2
+    }
+  },
+  {
+    "id_origen": 4129,
+    "id_destino": 998,
+    "marca_origen": "Lorenzo Pazzaglia",
+    "nombre_origen": "Ficus In Fabula",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4129,
+      "id_destino": 998,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 4
+    }
+  },
+  {
+    "id_origen": 4133,
+    "id_destino": 1002,
+    "marca_origen": "Lorenzo Pazzaglia",
+    "nombre_origen": "Fom",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4133,
+      "id_destino": 1002,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 3
+    }
+  },
+  {
+    "id_origen": 4134,
+    "id_destino": 1003,
+    "marca_origen": "Lorenzo Pazzaglia",
+    "nombre_origen": "Foresta Magica",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4134,
+      "id_destino": 1003,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 2
+    }
+  },
+  {
+    "id_origen": 4130,
+    "id_destino": 999,
+    "marca_origen": "Lorenzo Pazzaglia",
+    "nombre_origen": "Green Island",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4130,
+      "id_destino": 999,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 2,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 3
+    }
+  },
+  {
+    "id_origen": 4132,
+    "id_destino": 1001,
+    "marca_origen": "Lorenzo Pazzaglia",
+    "nombre_origen": "Incenso Notturno",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4132,
+      "id_destino": 1001,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 2,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 4
+    }
+  },
+  {
+    "id_origen": 4131,
+    "id_destino": 1000,
+    "marca_origen": "Lorenzo Pazzaglia",
+    "nombre_origen": "Narcotix Citrus",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4131,
+      "id_destino": 1000,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 3
+    }
+  },
+  {
+    "id_origen": 4149,
+    "id_destino": 1076,
+    "marca_origen": "Lorenzo Pazzaglia",
+    "nombre_origen": "Pax",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4149,
+      "id_destino": 1076,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 2,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 6
+    }
+  },
+  {
+    "id_origen": 4152,
+    "id_destino": 1079,
+    "marca_origen": "Lorenzo Pazzaglia",
+    "nombre_origen": "Pink Milk New",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4152,
+      "id_destino": 1079,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 2
+    }
+  },
+  {
+    "id_origen": 4151,
+    "id_destino": 1078,
+    "marca_origen": "Lorenzo Pazzaglia",
+    "nombre_origen": "Que Chimba",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4151,
+      "id_destino": 1078,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 2,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 6
+    }
+  },
+  {
+    "id_origen": 4150,
+    "id_destino": 1077,
+    "marca_origen": "Lorenzo Pazzaglia",
+    "nombre_origen": "Sugar Kisses",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4150,
+      "id_destino": 1077,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 2,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 6
+    }
+  },
+  {
+    "id_origen": 4148,
+    "id_destino": 1075,
+    "marca_origen": "Lorenzo Pazzaglia",
+    "nombre_origen": "Sweet Xplosion",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4148,
+      "id_destino": 1075,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 2,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 6
+    }
+  },
+  {
+    "id_origen": 4135,
+    "id_destino": 1004,
+    "marca_origen": "Lorenzo Pazzaglia",
+    "nombre_origen": "Vesuviuur",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4135,
+      "id_destino": 1004,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 2,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 4
+    }
+  },
+  {
+    "id_origen": 4102,
+    "id_destino": 912,
+    "marca_origen": "Maison Alhambra",
+    "nombre_origen": "Daring Blue For Life Pour Homme",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4102,
+      "id_destino": 912,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 6
+    }
+  },
+  {
+    "id_origen": 4743,
+    "id_destino": 1159,
+    "marca_origen": "Maison Alhambra",
+    "nombre_origen": "Delilah Pour Femme",
+    "genero_origen": "Mujer",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4743,
+      "id_destino": 1159,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 2,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 3
+    }
+  },
+  {
+    "id_origen": 4820,
+    "id_destino": 428,
+    "marca_origen": "Maison Alhambra",
+    "nombre_origen": "Delilah Pour Femme All Over Perfume",
+    "genero_origen": "Mujer",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4820,
+      "id_destino": 428,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 1
+    }
+  },
+  {
+    "id_origen": 4167,
+    "id_destino": 1841,
+    "marca_origen": "Maison Alhambra",
+    "nombre_origen": "Pink Velvet",
+    "genero_origen": "Mujer",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4167,
+      "id_destino": 1841,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 3,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 7
+    }
+  },
+  {
+    "id_origen": 4099,
+    "id_destino": 106,
+    "marca_origen": "Maison Alhambra",
+    "nombre_origen": "Reyna Pour Femme",
+    "genero_origen": "Mujer",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4099,
+      "id_destino": 106,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 7
+    }
+  },
+  {
+    "id_origen": 4821,
+    "id_destino": 433,
+    "marca_origen": "Mast Perfume",
+    "nombre_origen": "Rome Extradose Pour Femme",
+    "genero_origen": "Mujer",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4821,
+      "id_destino": 433,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 1
+    }
+  },
+  {
+    "id_origen": 4008,
+    "id_destino": 308,
+    "marca_origen": "Mast Perfume",
+    "nombre_origen": "Rome Ivory Pour Homme",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4008,
+      "id_destino": 308,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 2
+    }
+  },
+  {
+    "id_origen": 4447,
+    "id_destino": 1027,
+    "marca_origen": "Michael Kors",
+    "nombre_origen": "Gorgeous!",
+    "genero_origen": "Mujer",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4447,
+      "id_destino": 1027,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 4,
+      "ofertas_movidas": 1,
+      "ofertas_deduplicadas": 11
+    }
+  },
+  {
+    "id_origen": 5314,
+    "id_destino": 5185,
+    "marca_origen": "Molyneux",
+    "nombre_origen": "Quartz Homme",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 5314,
+      "id_destino": 5185,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 2,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 3
+    }
+  },
+  {
+    "id_origen": 5166,
+    "id_destino": 667,
+    "marca_origen": "Montblanc",
+    "nombre_origen": "Mont Blanc Emblem",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 5166,
+      "id_destino": 667,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 2,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 7
+    }
+  },
+  {
+    "id_origen": 5149,
+    "id_destino": 176,
+    "marca_origen": "Montblanc",
+    "nombre_origen": "Mont Blanc Explorer",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 5149,
+      "id_destino": 176,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 5
+    }
+  },
+  {
+    "id_origen": 3123,
+    "id_destino": 4658,
+    "marca_origen": "Montblanc",
+    "nombre_origen": "Mont Blanc Legend",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 3123,
+      "id_destino": 4658,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 5,
+      "ofertas_movidas": 4,
+      "ofertas_deduplicadas": 11
+    }
+  },
+  {
+    "id_origen": 3073,
+    "id_destino": 90,
+    "marca_origen": "Montblanc",
+    "nombre_origen": "Mont Blanc Legend Blue",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 3073,
+      "id_destino": 90,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 4
+    }
+  },
+  {
+    "id_origen": 3877,
+    "id_destino": 1455,
+    "marca_origen": "Montblanc",
+    "nombre_origen": "Mont Blanc Legend Spirit",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 3877,
+      "id_destino": 1455,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 4,
+      "ofertas_movidas": 2,
+      "ofertas_deduplicadas": 7
+    }
+  },
+  {
+    "id_origen": 5277,
+    "id_destino": 3380,
+    "marca_origen": "Moschino",
+    "nombre_origen": "Fresh Couture",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 5277,
+      "id_destino": 3380,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 2,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 11
+    }
+  },
+  {
+    "id_origen": 4051,
+    "id_destino": 3045,
+    "marca_origen": "Moschino",
+    "nombre_origen": "Toy 2",
+    "genero_origen": "Mujer",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4051,
+      "id_destino": 3045,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 4,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 25
+    }
+  },
+  {
+    "id_origen": 3105,
+    "id_destino": 81,
+    "marca_origen": "Moschino",
+    "nombre_origen": "Toy Boy Moschino",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 3105,
+      "id_destino": 81,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 4,
+      "ofertas_movidas": 2,
+      "ofertas_deduplicadas": 20
+    }
+  },
+  {
+    "id_origen": 5005,
+    "id_destino": 4277,
+    "marca_origen": "Mugler",
+    "nombre_origen": "Alien Goddess Thierry Mugler",
+    "genero_origen": "Mujer",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 5005,
+      "id_destino": 4277,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 1,
+      "variantes_consolidadas": 3,
+      "ofertas_movidas": 1,
+      "ofertas_deduplicadas": 5
+    }
+  },
+  {
+    "id_origen": 382,
+    "id_destino": 4037,
+    "marca_origen": "Mykonos",
+    "nombre_origen": "Dreamscape Extrait De",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 382,
+      "id_destino": 4037,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 1,
+      "ofertas_deduplicadas": 6
+    }
+  },
+  {
+    "id_origen": 4033,
+    "id_destino": 378,
+    "marca_origen": "Mykonos",
+    "nombre_origen": "Glitch",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4033,
+      "id_destino": 378,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 2,
+      "ofertas_movidas": 1,
+      "ofertas_deduplicadas": 3
+    }
+  },
+  {
+    "id_origen": 4035,
+    "id_destino": 380,
+    "marca_origen": "Mykonos",
+    "nombre_origen": "Milk Drops",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4035,
+      "id_destino": 380,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 2,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 8
+    }
+  },
+  {
+    "id_origen": 4034,
+    "id_destino": 379,
+    "marca_origen": "Mykonos",
+    "nombre_origen": "Pink Drops",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4034,
+      "id_destino": 379,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 8
+    }
+  },
+  {
+    "id_origen": 383,
+    "id_destino": 4038,
+    "marca_origen": "Mykonos",
+    "nombre_origen": "Reflection Extrait De",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 383,
+      "id_destino": 4038,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 1,
+      "ofertas_deduplicadas": 6
+    }
+  },
+  {
+    "id_origen": 384,
+    "id_destino": 4039,
+    "marca_origen": "Mykonos",
+    "nombre_origen": "Sorrento Extrait De",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 384,
+      "id_destino": 4039,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 1,
+      "ofertas_deduplicadas": 6
+    }
+  },
+  {
+    "id_origen": 4113,
+    "id_destino": 965,
+    "marca_origen": "Naseem",
+    "nombre_origen": "Asma Aqua Parfum Sin Alcohol",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4113,
+      "id_destino": 965,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 2
+    }
+  },
+  {
+    "id_origen": 4749,
+    "id_destino": 1189,
+    "marca_origen": "Naseem",
+    "nombre_origen": "Love Me Now Aqua Parfum",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4749,
+      "id_destino": 1189,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 1
+    }
+  },
+  {
+    "id_origen": 4111,
+    "id_destino": 963,
+    "marca_origen": "Naseem",
+    "nombre_origen": "Nadeen Aqua Parfum Sin Alcohol",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4111,
+      "id_destino": 963,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 1
+    }
+  },
+  {
+    "id_origen": 4748,
+    "id_destino": 1188,
+    "marca_origen": "Naseem",
+    "nombre_origen": "Rehan Aqua Parfum Sin Alcohol",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4748,
+      "id_destino": 1188,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 1
+    }
+  },
+  {
+    "id_origen": 4114,
+    "id_destino": 966,
+    "marca_origen": "Naseem",
+    "nombre_origen": "Sabika Aqua Parfum Sin Alcohol",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4114,
+      "id_destino": 966,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 2
+    }
+  },
+  {
+    "id_origen": 4116,
+    "id_destino": 968,
+    "marca_origen": "Naseem",
+    "nombre_origen": "Summer 69 Aqua Parfum",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4116,
+      "id_destino": 968,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 1
+    }
+  },
+  {
+    "id_origen": 4115,
+    "id_destino": 967,
+    "marca_origen": "Naseem",
+    "nombre_origen": "Wild Obsession Aqua Parfum Sin Alcohol",
+    "genero_origen": "Mujer",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4115,
+      "id_destino": 967,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 1
+    }
+  },
+  {
+    "id_origen": 4112,
+    "id_destino": 964,
+    "marca_origen": "Naseem",
+    "nombre_origen": "Yumna Aqua Parfum Sin Alcohol",
+    "genero_origen": "Mujer",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4112,
+      "id_destino": 964,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 1
+    }
+  },
+  {
+    "id_origen": 3109,
+    "id_destino": 1693,
+    "marca_origen": "Nike",
+    "nombre_origen": "Ultra Blue",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 3109,
+      "id_destino": 1693,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 3,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 7
+    }
+  },
+  {
+    "id_origen": 1529,
+    "id_destino": 2016,
+    "marca_origen": "Nike",
+    "nombre_origen": "Man Ultra Green",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 1529,
+      "id_destino": 2016,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 2,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 6
+    }
+  },
+  {
+    "id_origen": 1465,
+    "id_destino": 98,
+    "marca_origen": "Nike",
+    "nombre_origen": "Woman Ultra Purple",
+    "genero_origen": "Mujer",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 1465,
+      "id_destino": 98,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 3,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 2
+    }
+  },
+  {
+    "id_origen": 4683,
+    "id_destino": 27,
+    "marca_origen": "Nusuk",
+    "nombre_origen": "Gladius",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4683,
+      "id_destino": 27,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 1,
+      "ofertas_deduplicadas": 1
+    }
+  },
+  {
+    "id_origen": 4686,
+    "id_destino": 48,
+    "marca_origen": "Nusuk",
+    "nombre_origen": "Johra",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4686,
+      "id_destino": 48,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 1
+    }
+  },
+  {
+    "id_origen": 4685,
+    "id_destino": 47,
+    "marca_origen": "Nusuk",
+    "nombre_origen": "Mahab",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4685,
+      "id_destino": 47,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 1
+    }
+  },
+  {
+    "id_origen": 4684,
+    "id_destino": 28,
+    "marca_origen": "Nusuk",
+    "nombre_origen": "Saher",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4684,
+      "id_destino": 28,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 1
+    }
+  },
+  {
+    "id_origen": 4107,
+    "id_destino": 951,
+    "marca_origen": "Orientica",
+    "nombre_origen": "Xclusif Oud Emerald",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4107,
+      "id_destino": 951,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 2
+    }
+  },
+  {
+    "id_origen": 4109,
+    "id_destino": 953,
+    "marca_origen": "Orientica",
+    "nombre_origen": "Xclusif Oud Sport",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4109,
+      "id_destino": 953,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 2,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 3
+    }
+  },
+  {
+    "id_origen": 4844,
+    "id_destino": 484,
+    "marca_origen": "Oscar de la Renta",
+    "nombre_origen": "Oscar De La Renta Tester Edt 100ml",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4844,
+      "id_destino": 484,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 3
+    }
+  },
+  {
+    "id_origen": 3974,
+    "id_destino": 1783,
+    "marca_origen": "Paco Rabanne",
+    "nombre_origen": "One Million Gold Intense",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 3974,
+      "id_destino": 1783,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 4,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 5
+    }
+  },
+  {
+    "id_origen": 3436,
+    "id_destino": 157,
+    "marca_origen": "Paco Rabanne",
+    "nombre_origen": "Phantom Paco Rabanne",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 3436,
+      "id_destino": 157,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 4,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 19
+    }
+  },
+  {
+    "id_origen": 4001,
+    "id_destino": 294,
+    "marca_origen": "Paco Rabanne",
+    "nombre_origen": "XS Excess Pour Homme",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4001,
+      "id_destino": 294,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 1
+    }
+  },
+  {
+    "id_origen": 4716,
+    "id_destino": 405,
+    "marca_origen": "Paloma Picasso",
+    "nombre_origen": "Paloma Picasso Edp 30ml",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4716,
+      "id_destino": 405,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 2,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 5
+    }
+  },
+  {
+    "id_origen": 5126,
+    "id_destino": 405,
+    "marca_origen": "Paloma Picasso",
+    "nombre_origen": "Paloma Picasso 30ml Edp Mujer",
+    "genero_origen": "Mujer",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 5126,
+      "id_destino": 405,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 2,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 5
+    }
+  },
+  {
+    "id_origen": 4824,
+    "id_destino": 405,
+    "marca_origen": "Paloma Picasso",
+    "nombre_origen": "Paloma Picasso Tester Edp 30 Ml",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4824,
+      "id_destino": 405,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 2,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 2
+    }
+  },
+  {
+    "id_origen": 3120,
+    "id_destino": 2201,
+    "marca_origen": "Paris Hilton",
+    "nombre_origen": "Ruby Rush Paris Hilton",
+    "genero_origen": "Mujer",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 3120,
+      "id_destino": 2201,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 2,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 11
+    }
+  },
+  {
+    "id_origen": 4870,
+    "id_destino": 1336,
+    "marca_origen": "Rasasi",
+    "nombre_origen": "Al Rabih Pour Homme",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4870,
+      "id_destino": 1336,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 1
+    }
+  },
+  {
+    "id_origen": 3901,
+    "id_destino": 9,
+    "marca_origen": "Rasasi",
+    "nombre_origen": "Hawas For Him",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 3901,
+      "id_destino": 9,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 11
+    }
+  },
+  {
+    "id_origen": 452,
+    "id_destino": 1383,
+    "marca_origen": "Rasasi",
+    "nombre_origen": "Hawas Atlantis For Him",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 452,
+      "id_destino": 1383,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 9
+    }
+  },
+  {
+    "id_origen": 3888,
+    "id_destino": 4491,
+    "marca_origen": "Rasasi",
+    "nombre_origen": "Hawas Ice For Him",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 3888,
+      "id_destino": 4491,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 6
+    }
+  },
+  {
+    "id_origen": 4382,
+    "id_destino": 904,
+    "marca_origen": "Rasasi",
+    "nombre_origen": "Hawas Kobra",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4382,
+      "id_destino": 904,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 8
+    }
+  },
+  {
+    "id_origen": 905,
+    "id_destino": 713,
+    "marca_origen": "Rasasi",
+    "nombre_origen": "Hawas For Him Malibu",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 905,
+      "id_destino": 713,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 10
+    }
+  },
+  {
+    "id_origen": 4381,
+    "id_destino": 713,
+    "marca_origen": "Rasasi",
+    "nombre_origen": "Hawas Malibu",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4381,
+      "id_destino": 713,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 8
+    }
+  },
+  {
+    "id_origen": 651,
+    "id_destino": 2036,
+    "marca_origen": "Rasasi",
+    "nombre_origen": "Hawas Pink For Her",
+    "genero_origen": "Mujer",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 651,
+      "id_destino": 2036,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 8
+    }
+  },
+  {
+    "id_origen": 2604,
+    "id_destino": 1341,
+    "marca_origen": "Rasasi",
+    "nombre_origen": "Hawas Viper",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 2604,
+      "id_destino": 1341,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 7
+    }
+  },
+  {
+    "id_origen": 4876,
+    "id_destino": 1445,
+    "marca_origen": "Rasasi",
+    "nombre_origen": "Shuhrah Pour Homme",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4876,
+      "id_destino": 1445,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 2
+    }
+  },
+  {
+    "id_origen": 1100,
+    "id_destino": 1588,
+    "marca_origen": "Rave",
+    "nombre_origen": "Man Pure Desire",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 1100,
+      "id_destino": 1588,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 2
+    }
+  },
+  {
+    "id_origen": 4096,
+    "id_destino": 2608,
+    "marca_origen": "Rayhaan",
+    "nombre_origen": "Italia Pour Homme",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4096,
+      "id_destino": 2608,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 1
+    }
+  },
+  {
+    "id_origen": 4681,
+    "id_destino": 25,
+    "marca_origen": "Riiffs",
+    "nombre_origen": "Aswaar",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4681,
+      "id_destino": 25,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 1
+    }
+  },
+  {
+    "id_origen": 4155,
+    "id_destino": 575,
+    "marca_origen": "Riiffs",
+    "nombre_origen": "Ciao Pour Femme",
+    "genero_origen": "Mujer",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4155,
+      "id_destino": 575,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 6
+    }
+  },
+  {
+    "id_origen": 3981,
+    "id_destino": 14,
+    "marca_origen": "Riiffs",
+    "nombre_origen": "Freeze",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 3981,
+      "id_destino": 14,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 4
+    }
+  },
+  {
+    "id_origen": 3814,
+    "id_destino": 13,
+    "marca_origen": "Riiffs",
+    "nombre_origen": "Freeze In Flames",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 3814,
+      "id_destino": 13,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 2
+    }
+  },
+  {
+    "id_origen": 4676,
+    "id_destino": 19,
+    "marca_origen": "Riiffs",
+    "nombre_origen": "Hoor",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4676,
+      "id_destino": 19,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 1
+    }
+  },
+  {
+    "id_origen": 4677,
+    "id_destino": 20,
+    "marca_origen": "Riiffs",
+    "nombre_origen": "Hulm",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4677,
+      "id_destino": 20,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 1
+    }
+  },
+  {
+    "id_origen": 4679,
+    "id_destino": 23,
+    "marca_origen": "Riiffs",
+    "nombre_origen": "Momento",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4679,
+      "id_destino": 23,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 1
+    }
+  },
+  {
+    "id_origen": 4678,
+    "id_destino": 21,
+    "marca_origen": "Riiffs",
+    "nombre_origen": "Tahira",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4678,
+      "id_destino": 21,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 1
+    }
+  },
+  {
+    "id_origen": 4680,
+    "id_destino": 24,
+    "marca_origen": "Riiffs",
+    "nombre_origen": "Virtus",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4680,
+      "id_destino": 24,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 1
+    }
+  },
+  {
+    "id_origen": 4009,
+    "id_destino": 309,
+    "marca_origen": "Riiffs",
+    "nombre_origen": "Zenith",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4009,
+      "id_destino": 309,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 1
+    }
+  },
+  {
+    "id_origen": 4856,
+    "id_destino": 528,
+    "marca_origen": "Roja Parfums",
+    "nombre_origen": "Roja Elysium Pour Homme",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4856,
+      "id_destino": 528,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 2
+    }
+  },
+  {
+    "id_origen": 4960,
+    "id_destino": 528,
+    "marca_origen": "Roja Parfums",
+    "nombre_origen": "Roja Dove Elysium Pour Homme",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4960,
+      "id_destino": 528,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 1
+    }
+  },
+  {
+    "id_origen": 4853,
+    "id_destino": 522,
+    "marca_origen": "Roja Parfums",
+    "nombre_origen": "Roja Enigma",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4853,
+      "id_destino": 522,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 2
+    }
+  },
+  {
+    "id_origen": 4956,
+    "id_destino": 3930,
+    "marca_origen": "Stéphane Humbert Lucas",
+    "nombre_origen": "Stephane Humbert Lucas God Of Fire",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4956,
+      "id_destino": 3930,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 2
+    }
+  },
+  {
+    "id_origen": 5380,
+    "id_destino": 3918,
+    "marca_origen": "Stéphane Humbert Lucas",
+    "nombre_origen": "Khol De Bahréin",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 5380,
+      "id_destino": 3918,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 1
+    }
+  },
+  {
+    "id_origen": 4953,
+    "id_destino": 3929,
+    "marca_origen": "Stéphane Humbert Lucas",
+    "nombre_origen": "Stephane Humbert Lucas Pink Boa",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4953,
+      "id_destino": 3929,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 2
+    }
+  },
+  {
+    "id_origen": 4951,
+    "id_destino": 3931,
+    "marca_origen": "Stéphane Humbert Lucas",
+    "nombre_origen": "Stephane Humbert Lucas Sea My Love",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4951,
+      "id_destino": 3931,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 2
+    }
+  },
+  {
+    "id_origen": 4948,
+    "id_destino": 3919,
+    "marca_origen": "Stéphane Humbert Lucas",
+    "nombre_origen": "Stephane Humbert Lucas Soleil De Jeddah Mango Kiss",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4948,
+      "id_destino": 3919,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 2
+    }
+  },
+  {
+    "id_origen": 5386,
+    "id_destino": 3926,
+    "marca_origen": "Tauer Perfumes",
+    "nombre_origen": "Andy Tauer Phi Une Rose De Kandahar",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 5386,
+      "id_destino": 3926,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 1
+    }
+  },
+  {
+    "id_origen": 4846,
+    "id_destino": 490,
+    "marca_origen": "Versace",
+    "nombre_origen": "Crystal Emerald Pour Femme",
+    "genero_origen": "Mujer",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4846,
+      "id_destino": 490,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 2,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 3
+    }
+  },
+  {
+    "id_origen": 4422,
+    "id_destino": 161,
+    "marca_origen": "Versace",
+    "nombre_origen": "Pour Homme Dylan Blue",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4422,
+      "id_destino": 161,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 3,
+      "ofertas_movidas": 1,
+      "ofertas_deduplicadas": 5
+    }
+  },
+  {
+    "id_origen": 4822,
+    "id_destino": 161,
+    "marca_origen": "Versace",
+    "nombre_origen": "Dylan Blue Pour Homme",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4822,
+      "id_destino": 161,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 3,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 5
+    }
+  },
+  {
+    "id_origen": 95,
+    "id_destino": 3059,
+    "marca_origen": "Versace",
+    "nombre_origen": "Eros",
+    "genero_origen": "Mujer",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 95,
+      "id_destino": 3059,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 1,
+      "variantes_movidas": 1,
+      "variantes_consolidadas": 4,
+      "ofertas_movidas": 1,
+      "ofertas_deduplicadas": 8
+    }
+  },
+  {
+    "id_origen": 4003,
+    "id_destino": 3059,
+    "marca_origen": "Versace",
+    "nombre_origen": "Eros Pour Femme",
+    "genero_origen": "Mujer",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4003,
+      "id_destino": 3059,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 2,
+      "ofertas_movidas": 6,
+      "ofertas_deduplicadas": 3
+    }
+  },
+  {
+    "id_origen": 4298,
+    "id_destino": 10,
+    "marca_origen": "Versace",
+    "nombre_origen": "Eros Versace",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4298,
+      "id_destino": 10,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 5,
+      "ofertas_movidas": 2,
+      "ofertas_deduplicadas": 20
+    }
+  },
+  {
+    "id_origen": 4208,
+    "id_destino": 663,
+    "marca_origen": "Versace",
+    "nombre_origen": "Eros Parfum",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4208,
+      "id_destino": 663,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 4,
+      "ofertas_movidas": 1,
+      "ofertas_deduplicadas": 21
+    }
+  },
+  {
+    "id_origen": 473,
+    "id_destino": 3360,
+    "marca_origen": "Versace",
+    "nombre_origen": "Eros Energy",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 473,
+      "id_destino": 3360,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 4,
+      "ofertas_movidas": 3,
+      "ofertas_deduplicadas": 23
+    }
+  },
+  {
+    "id_origen": 4084,
+    "id_destino": 3360,
+    "marca_origen": "Versace",
+    "nombre_origen": "Eros Energy Pour Homme",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4084,
+      "id_destino": 3360,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 3,
+      "ofertas_movidas": 1,
+      "ofertas_deduplicadas": 9
+    }
+  },
+  {
+    "id_origen": 3710,
+    "id_destino": 186,
+    "marca_origen": "Versace",
+    "nombre_origen": "Eros Flame Versace",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 3710,
+      "id_destino": 186,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 5,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 30
+    }
+  },
+  {
+    "id_origen": 4851,
+    "id_destino": 510,
+    "marca_origen": "Versace",
+    "nombre_origen": "Eros Najim Pour Homme Parfum",
+    "genero_origen": "Hombre",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4851,
+      "id_destino": 510,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 2,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 4
+    }
+  },
+  {
+    "id_origen": 4903,
+    "id_destino": 190,
+    "marca_origen": "Victoria's Secret",
+    "nombre_origen": "Victoria Secret Bombshell",
+    "genero_origen": "Mujer",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4903,
+      "id_destino": 190,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 2,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 7
+    }
+  },
+  {
+    "id_origen": 760,
+    "id_destino": 305,
+    "marca_origen": "Victoria's Secret",
+    "nombre_origen": "Velvet Petals Victoria Secret",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 760,
+      "id_destino": 305,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 3,
+      "ofertas_movidas": 1,
+      "ofertas_deduplicadas": 6
+    }
+  },
+  {
+    "id_origen": 4143,
+    "id_destino": 1040,
+    "marca_origen": "Zimaya",
+    "nombre_origen": "Happy Oud",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4143,
+      "id_destino": 1040,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 2
+    }
+  },
+  {
+    "id_origen": 4110,
+    "id_destino": 959,
+    "marca_origen": "Zimaya",
+    "nombre_origen": "Oud Is Great",
+    "genero_origen": "Unisex",
+    "fecha_fusion": "2026-11-04T05:59:55.200340+00:00",
+    "detalle": {
+      "id_origen": 4110,
+      "id_destino": 959,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 2
+    }
+  },
+  {
+    "id_origen": 4904,
+    "id_destino": 191,
+    "marca_origen": "Victoria's Secret",
+    "nombre_origen": "Victoria Secret Bare",
+    "genero_origen": "Mujer",
+    "fecha_fusion": "2026-11-04T06:27:34.216237+00:00",
+    "detalle": {
+      "id_origen": 4904,
+      "id_destino": 191,
+      "favoritos_reasignados": 0,
+      "notas_reasignadas": 0,
+      "variantes_movidas": 0,
+      "variantes_consolidadas": 1,
+      "ofertas_movidas": 0,
+      "ofertas_deduplicadas": 2
+    }
   }
 ]

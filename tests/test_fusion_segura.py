@@ -241,6 +241,34 @@ class TestFusionSeguraPerfumes(unittest.TestCase):
         # Perfume 200 NO fue borrado
         self.assertEqual(len(tables["perfumes"]), 2)
 
+    def test_clave_identidad_perfume_casos_difusos(self):
+        from backend.normalizador import clave_identidad_perfume
+
+        self.assertEqual(
+            clave_identidad_perfume("Miss Dior Rose & Roses", "Dior", "Eau de Toilette", True),
+            clave_identidad_perfume("Miss Dior Rose N Roses", "Dior", "Eau de Toilette", True),
+        )
+        self.assertEqual(
+            clave_identidad_perfume("Eros", "Versace", "Eau de Toilette", True),
+            clave_identidad_perfume("Eros Versace", "Versace", "Eau de Toilette", True),
+        )
+        self.assertEqual(
+            clave_identidad_perfume("Freeze In Flames Extrait De", "Riiffs", "Extrait de Parfum", True),
+            clave_identidad_perfume("Freeze In Flames", "Riiffs", "Extrait de Parfum", True),
+        )
+        self.assertEqual(
+            clave_identidad_perfume("Dylan Blue", "Versace", "Eau de Toilette", False),
+            clave_identidad_perfume("Dylan Blue Pour Homme", "Versace", "Eau de Toilette", False),
+        )
+        self.assertNotEqual(
+            clave_identidad_perfume("Cloud", "Ariana Grande", "Eau de Parfum", False),
+            clave_identidad_perfume("Cloud Intense", "Ariana Grande", "Eau de Parfum", False),
+        )
+        self.assertNotEqual(
+            clave_identidad_perfume("Scandal", "Jean Paul Gaultier", "Parfum", False),
+            clave_identidad_perfume("Scandal Le Parfum", "Jean Paul Gaultier", "Parfum", False),
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

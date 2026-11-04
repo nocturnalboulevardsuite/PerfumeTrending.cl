@@ -32,14 +32,18 @@ except ImportError:  # pragma: no cover
 
 try:
     from backend.normalizador import (
+        clave_identidad_perfume,
         detectar_formato_oferta,
+        inferir_genero_explicito_nombre,
         limpiar_nombre_perfume,
         normalizar_marca_canonica,
     )
 except ImportError:
     try:
         from APP.backend.normalizador import (
+            clave_identidad_perfume,
             detectar_formato_oferta,
+            inferir_genero_explicito_nombre,
             limpiar_nombre_perfume,
             normalizar_marca_canonica,
         )
@@ -52,6 +56,17 @@ except ImportError:
 
         def normalizar_marca_canonica(marca: str) -> str:
             return (marca or "").strip()
+
+        def inferir_genero_explicito_nombre(nombre: str, genero_actual: Optional[str] = None) -> str:
+            return (genero_actual or "Unisex").strip()
+
+        def clave_identidad_perfume(
+            nombre: str,
+            marca: str = "",
+            concentracion: str = "",
+            incluir_genero_nombre: bool = False,
+        ) -> str:
+            return (nombre or "").strip().lower()
 
 logger = logging.getLogger("PerfumeDatabase")
 
@@ -3388,35 +3403,49 @@ def guardar_o_actualizar_perfume_scraped(
                 }).execute()
                 tienda_id_sb = ins_t.data[0]["id"]
 
-            genero_norm = normalizar_genero(genero) or "Unisex"
+            genero_norm = inferir_genero_explicito_nombre(nombre, genero)
             res_p = (
                 sb.table("perfumes")
-                .select("id, genero")
+                .select("id, nombre, genero")
                 .ilike("marca", marca_canon)
-                .ilike("nombre", nombre_canon)
                 .ilike("tipo", tipo)
                 .execute()
             )
-            perfume_id_sb = None
-            genero_cand_electo = None
-            # Priorizar coincidencia exacta de género; luego compatible (Unisex <-> Hombre/Mujer)
+            k_con_gen = clave_identidad_perfume(nombre_canon, marca_canon, tipo, incluir_genero_nombre=True)
+            k_sin_gen = clave_identidad_perfume(nombre_canon, marca_canon, tipo, incluir_genero_nombre=False)
+            cands_exactos = []
+            cands_sin_gen = []
             for cand_p in (res_p.data or []):
-                g_cand_n = normalizar_genero(cand_p.get("genero")) or "Unisex"
+                cn = cand_p.get("nombre") or ""
+                if clave_identidad_perfume(cn, marca_canon, tipo, incluir_genero_nombre=True) == k_con_gen:
+                    cands_exactos.append(cand_p)
+                elif clave_identidad_perfume(cn, marca_canon, tipo, incluir_genero_nombre=False) == k_sin_gen:
+                    cands_sin_gen.append(cand_p)
+
+            perfume_id_sb = None
+            for cand_p in cands_exactos:
+                g_cand_n = inferir_genero_explicito_nombre(cand_p.get("nombre") or "", cand_p.get("genero"))
                 if g_cand_n == genero_norm:
                     perfume_id_sb = cand_p["id"]
-                    genero_cand_electo = g_cand_n
                     break
             if perfume_id_sb is None:
-                for cand_p in (res_p.data or []):
-                    es_comp, g_res = generos_compatibles(cand_p.get("genero"), genero_norm)
-                    if es_comp:
+                gens_ex = {inferir_genero_explicito_nombre(c.get("nombre") or "", c.get("genero")) for c in cands_exactos}
+                if not ("Hombre" in gens_ex and "Mujer" in gens_ex):
+                    for cand_p in cands_exactos:
+                        es_comp, g_res = generos_compatibles(cand_p.get("genero"), genero_norm)
+                        if es_comp:
+                            perfume_id_sb = cand_p["id"]
+                            if (normalizar_genero(cand_p.get("genero")) or "Unisex") == "Unisex" and g_res in ("Hombre", "Mujer"):
+                                try:
+                                    sb.table("perfumes").update({"genero": g_res}).eq("id", perfume_id_sb).execute()
+                                except Exception as exc_g:
+                                    logger.debug(f"Aviso afinando género Unisex->{g_res} en perfume #{perfume_id_sb}: {exc_g}")
+                            break
+            if perfume_id_sb is None and genero_norm in ("Hombre", "Mujer"):
+                for cand_p in cands_sin_gen:
+                    g_cand_n = inferir_genero_explicito_nombre(cand_p.get("nombre") or "", cand_p.get("genero"))
+                    if g_cand_n == genero_norm:
                         perfume_id_sb = cand_p["id"]
-                        genero_cand_electo = normalizar_genero(cand_p.get("genero")) or "Unisex"
-                        if genero_cand_electo == "Unisex" and g_res in ("Hombre", "Mujer"):
-                            try:
-                                sb.table("perfumes").update({"genero": g_res}).eq("id", perfume_id_sb).execute()
-                            except Exception as exc_g:
-                                logger.debug(f"Aviso afinando género Unisex->{g_res} en perfume #{perfume_id_sb}: {exc_g}")
                         break
 
             if perfume_id_sb is not None:

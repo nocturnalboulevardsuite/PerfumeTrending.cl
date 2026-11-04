@@ -47,7 +47,9 @@ for _p in (str(APP_DIR), str(REPO_ROOT)):
 
 from backend.database import get_supabase, limpiar_cache_catalogo
 from backend.normalizador import (
+    clave_identidad_perfume,
     generos_compatibles,
+    inferir_genero_explicito_nombre,
     limpiar_nombre_perfume,
     normalizar_genero,
     normalizar_marca_canonica,
@@ -353,56 +355,113 @@ def ejecutar_fusion_perfumes(apply_changes: bool = False) -> Dict[str, Any]:
     grupos: Dict[Tuple[str, str, str], List[Dict[str, Any]]] = defaultdict(list)
     for p in perfumes:
         m_can = (normalizar_marca_canonica(p.get("marca") or "") or p.get("marca") or "").strip()
-        n_limp = (limpiar_nombre_perfume(p.get("nombre") or "", p.get("marca") or m_can) or p.get("nombre") or "").strip()
-        tipo_k = (p.get("tipo") or "").strip().lower()
-        grupos[(m_can.lower(), n_limp.lower(), tipo_k)].append(p)
+        tipo_raw = (p.get("tipo") or "").strip()
+        k_sin_gen = clave_identidad_perfume(
+            p.get("nombre") or "",
+            p.get("marca") or m_can,
+            tipo_raw,
+            incluir_genero_nombre=False,
+        )
+        if not k_sin_gen:
+            continue
+        grupos[(m_can.lower(), k_sin_gen, tipo_raw.lower())].append(p)
 
     grupos_duplicados = {k: v for k, v in grupos.items() if len(v) > 1}
     grupos_seguros: List[Tuple[Tuple[str, str, str], List[Dict[str, Any]], str]] = []
     conflictos_manuales: List[Dict[str, Any]] = []
 
     for key, miembros in sorted(grupos_duplicados.items(), key=lambda x: x[0]):
-        es_compatible, genero_resuelto = evaluar_compatibilidad_generos_grupo([m.get("genero") for m in miembros])
-        if es_compatible:
+        claves_con_gen = {
+            clave_identidad_perfume(
+                m.get("nombre") or "",
+                m.get("marca") or "",
+                m.get("tipo") or "",
+                incluir_genero_nombre=True,
+            )
+            for m in miembros
+        }
+        generos_efectivos = [
+            inferir_genero_explicito_nombre(m.get("nombre") or "", m.get("genero"))
+            for m in miembros
+        ]
+        misma_clave_con_gen = len(claves_con_gen) == 1
+        es_compatible, genero_resuelto = evaluar_compatibilidad_generos_grupo(generos_efectivos)
+
+        if misma_clave_con_gen and es_compatible:
             grupos_seguros.append((key, miembros, genero_resuelto))
-        else:
-            # Conflicto explícito Hombre vs Mujer: jamás fusionar Hombre con Mujer ni absorber Unisex.
-            # Si dentro del grupo existen >=2 filas exactamente del mismo género explícito ('Hombre' o 'Mujer'),
-            # consolidamos únicamente ese subgrupo idéntico dejando intacto el par Hombre vs Mujer.
-            por_gen: Dict[str, List[Dict[str, Any]]] = defaultdict(list)
-            for m in miembros:
-                g_norm = normalizar_genero(m.get("genero")) or "Unisex"
-                por_gen[g_norm].append(m)
+            continue
 
-            ids_donantes_subgrupo = set()
-            for g_exp in ("Hombre", "Mujer"):
-                sub = por_gen.get(g_exp, [])
-                if len(sub) > 1:
-                    grupos_seguros.append((key, sub, g_exp))
-                    sub_ord = sorted(
-                        sub,
-                        key=lambda p: (stock_por_perf[int(p["id"])], tot_por_perf[int(p["id"])], -int(p["id"])),
-                        reverse=True,
+        por_gen_exp: Dict[str, List[Dict[str, Any]]] = defaultdict(list)
+        unisex_por_subclave: Dict[str, List[Dict[str, Any]]] = defaultdict(list)
+        for m, g_ef in zip(miembros, generos_efectivos):
+            if g_ef in ("Hombre", "Mujer"):
+                por_gen_exp[g_ef].append(m)
+            else:
+                sk = clave_identidad_perfume(
+                    m.get("nombre") or "",
+                    m.get("marca") or "",
+                    m.get("tipo") or "",
+                    incluir_genero_nombre=True,
+                )
+                unisex_por_subclave[sk].append(m)
+
+        if not ("Hombre" in por_gen_exp and "Mujer" in por_gen_exp):
+            gen_unico = "Hombre" if "Hombre" in por_gen_exp else ("Mujer" if "Mujer" in por_gen_exp else None)
+            if gen_unico:
+                subclaves_exp = {
+                    clave_identidad_perfume(
+                        x.get("nombre") or "",
+                        x.get("marca") or "",
+                        x.get("tipo") or "",
+                        incluir_genero_nombre=True,
                     )
-                    for d_sub in sub_ord[1:]:
-                        ids_donantes_subgrupo.add(int(d_sub["id"]))
+                    for x in por_gen_exp[gen_unico]
+                }
+                for sk, u_list in list(unisex_por_subclave.items()):
+                    if sk in subclaves_exp:
+                        por_gen_exp[gen_unico].extend(u_list)
+                        del unisex_por_subclave[sk]
 
-            for m in miembros:
-                mid = int(m["id"])
-                if mid in ids_donantes_subgrupo and apply_changes:
-                    continue
-                conflictos_manuales.append({
-                    "marca_canon": key[0],
-                    "nombre_limpio": key[1],
-                    "tipo": key[2],
-                    "perfume_id": mid,
-                    "marca_bd": m.get("marca", ""),
-                    "nombre_bd": m.get("nombre", ""),
-                    "genero_bd": m.get("genero", ""),
-                    "ofertas_en_stock": stock_por_perf[mid],
-                    "ofertas_totales": tot_por_perf[mid],
-                    "motivo": "conflicto_genero_hombre_vs_mujer",
-                })
+        ids_donantes_subgrupo = set()
+        for g_exp in ("Hombre", "Mujer"):
+            sub = por_gen_exp.get(g_exp, [])
+            if len(sub) > 1:
+                grupos_seguros.append((key, sub, g_exp))
+                sub_ord = sorted(
+                    sub,
+                    key=lambda p: (stock_por_perf[int(p["id"])], tot_por_perf[int(p["id"])], -int(p["id"])),
+                    reverse=True,
+                )
+                for d_sub in sub_ord[1:]:
+                    ids_donantes_subgrupo.add(int(d_sub["id"]))
+
+        for _sk, u_sub in unisex_por_subclave.items():
+            if len(u_sub) > 1:
+                grupos_seguros.append((key, u_sub, "Unisex"))
+                u_ord = sorted(
+                    u_sub,
+                    key=lambda p: (stock_por_perf[int(p["id"])], tot_por_perf[int(p["id"])], -int(p["id"])),
+                    reverse=True,
+                )
+                for d_u in u_ord[1:]:
+                    ids_donantes_subgrupo.add(int(d_u["id"]))
+
+        for m in miembros:
+            mid = int(m["id"])
+            if mid in ids_donantes_subgrupo and apply_changes:
+                continue
+            conflictos_manuales.append({
+                "marca_canon": key[0],
+                "nombre_limpio": key[1],
+                "tipo": key[2],
+                "perfume_id": mid,
+                "marca_bd": m.get("marca", ""),
+                "nombre_bd": m.get("nombre", ""),
+                "genero_bd": m.get("genero", ""),
+                "ofertas_en_stock": stock_por_perf[mid],
+                "ofertas_totales": tot_por_perf[mid],
+                "motivo": "conflicto_genero_o_unisex_ambiguo",
+            })
 
     # Exportar siempre CSV de revisión manual para conflictos Hombre vs Mujer
     manual_csv = REPO_ROOT / "scratch" / "revision_manual_duplicados.csv"
@@ -447,7 +506,21 @@ def ejecutar_fusion_perfumes(apply_changes: bool = False) -> Dict[str, Any]:
         donantes = ordenados[1:]
         id_canon = int(p_canon["id"])
         marca_canon = normalizar_marca_canonica(p_canon.get("marca") or "") or p_canon.get("marca") or ""
-        nombre_canon_limpio = limpiar_nombre_perfume(p_canon.get("nombre") or "", marca_canon) or p_canon.get("nombre") or ""
+        cands_nombre = [
+            limpiar_nombre_perfume(m.get("nombre") or "", m.get("marca") or marca_canon) or (m.get("nombre") or "").strip()
+            for m in ordenados
+        ]
+        nombre_canon_limpio = cands_nombre[0]
+        for cn in cands_nombre:
+            if "\ufffd" in cn or not cn:
+                continue
+            tiene_amp = "&" in cn and "&" not in nombre_canon_limpio
+            tiene_acento = any(ord(ch) > 127 for ch in cn) and not any(ord(ch) > 127 for ch in nombre_canon_limpio)
+            es_mas_corto_limpio = len(cn) < len(nombre_canon_limpio) and len(cn) >= 3
+            if tiene_amp or (tiene_acento and len(cn) <= len(nombre_canon_limpio) + 2) or ("\ufffd" in nombre_canon_limpio):
+                nombre_canon_limpio = cn
+            elif es_mas_corto_limpio and "&" not in nombre_canon_limpio and not any(ord(ch) > 127 for ch in nombre_canon_limpio):
+                nombre_canon_limpio = cn
 
         if not apply_changes:
             for d in donantes:
