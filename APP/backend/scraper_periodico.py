@@ -197,7 +197,9 @@ try:
         es_precio_valido,
         es_producto_perfume_valido,
         extraer_volumen_ml,
+        extraer_volumen_ml_opcional,
         normalizar_marca_canonica,
+        resolver_volumen_oferta,
     )
     from backend.scraper_autonomo import (
         TIENDAS_CRAWLER_CONFIG,
@@ -231,7 +233,9 @@ except ImportError:
         es_precio_valido,
         es_producto_perfume_valido,
         extraer_volumen_ml,
+        extraer_volumen_ml_opcional,
         normalizar_marca_canonica,
+        resolver_volumen_oferta,
     )
     from scraper_autonomo import (
         TIENDAS_CRAWLER_CONFIG,
@@ -489,8 +493,17 @@ def extraer_variedades_shopify(
                 if not es_precio_valido(precio_act):
                     continue
 
-                vol_encontrado = extraer_volumen_ml(raw_title) or extraer_volumen_ml(clean_url) or volumen_ml_defecto or 100
-                if vol_encontrado < 25:
+                es_tst_cand = detectar_formato_oferta(raw_title, clean_url) == "tester"
+                vol_encontrado = resolver_volumen_oferta(
+                    titulo_producto=raw_title,
+                    url_slug=clean_url,
+                    volumen_ml_defecto=volumen_ml_defecto,
+                    n_variantes_producto=1,
+                    es_tester=es_tst_cand,
+                )
+                if not vol_encontrado or vol_encontrado < 25:
+                    if diagnostico is not None:
+                        diagnostico["exclusiones_volumen_ambiguo"] = diagnostico.get("exclusiones_volumen_ambiguo", 0) + 1
                     continue
 
                 res_match = coincide_entidad_detallada(
@@ -612,8 +625,17 @@ def extraer_variedades_woocommerce(
                     if not es_precio_valido(p_act):
                         continue
 
-                    vol_encontrado = extraer_volumen_ml(raw_title) or extraer_volumen_ml(clean_url) or volumen_ml_defecto or 100
-                    if vol_encontrado < 25:
+                    es_tst_wc = detectar_formato_oferta(raw_title, clean_url) == "tester"
+                    vol_encontrado = resolver_volumen_oferta(
+                        titulo_producto=raw_title,
+                        url_slug=clean_url,
+                        volumen_ml_defecto=volumen_ml_defecto,
+                        n_variantes_producto=1,
+                        es_tester=es_tst_wc,
+                    )
+                    if not vol_encontrado or vol_encontrado < 25:
+                        if diagnostico is not None:
+                            diagnostico["exclusiones_volumen_ambiguo"] = diagnostico.get("exclusiones_volumen_ambiguo", 0) + 1
                         continue
 
                     res_match = coincide_entidad_detallada(
@@ -766,10 +788,18 @@ def extraer_variedades_falabella(
                                     continue
                                 v_name = v.get("name") or prod_name
                                 size_attr = v.get("attributes", {}).get("size")
-                                vol = clean_digits(size_attr) if size_attr else extraer_volumen_ml(v_name)
-                                if not vol or vol < 10 or vol > 1000:
-                                    vol = extraer_volumen_ml(v_name) or volumen_ml_defecto or 100
-                                if vol < 25:
+                                size_num = clean_digits(size_attr) if size_attr else 0
+                                vol = size_num if (10 <= size_num <= 1000) else resolver_volumen_oferta(
+                                    titulo_variante=v_name,
+                                    titulo_producto=prod_name,
+                                    url_slug=url_directa or "",
+                                    volumen_ml_defecto=volumen_ml_defecto,
+                                    n_variantes_producto=len(skus),
+                                    es_tester=(detectar_formato_oferta(v_name, url_directa or "") == "tester"),
+                                )
+                                if not vol or vol < 25:
+                                    if diagnostico is not None:
+                                        diagnostico["exclusiones_volumen_ambiguo"] = diagnostico.get("exclusiones_volumen_ambiguo", 0) + 1
                                     continue
                                 prices = v.get("prices", [])
                                 p_act, p_norm = 0, 0
@@ -871,10 +901,18 @@ def extraer_variedades_falabella(
                                     for v in skus:
                                         v_name = v.get("name") or d_name
                                         size_attr = v.get("attributes", {}).get("size")
-                                        vol = clean_digits(size_attr) if size_attr else extraer_volumen_ml(v_name)
-                                        if not vol or vol < 10 or vol > 1000:
-                                            vol = extraer_volumen_ml(v_name) or volumen_ml_defecto or 100
-                                        if vol < 25:
+                                        size_num = clean_digits(size_attr) if size_attr else 0
+                                        vol = size_num if (10 <= size_num <= 1000) else resolver_volumen_oferta(
+                                            titulo_variante=v_name,
+                                            titulo_producto=d_name,
+                                            url_slug=prod_url or "",
+                                            volumen_ml_defecto=volumen_ml_defecto,
+                                            n_variantes_producto=len(skus),
+                                            es_tester=(detectar_formato_oferta(v_name, prod_url or "") == "tester"),
+                                        )
+                                        if not vol or vol < 25:
+                                            if diagnostico is not None:
+                                                diagnostico["exclusiones_volumen_ambiguo"] = diagnostico.get("exclusiones_volumen_ambiguo", 0) + 1
                                             continue
                                         prices = v.get("prices", [])
                                         p_act, p_norm = 0, 0
@@ -923,8 +961,14 @@ def extraer_variedades_falabella(
                         prices = r.get("prices", [])
                         if prices:
                             p_act = clean_digits(prices[0].get("price", ["0"])[0])
-                            vol = extraer_volumen_ml(d_name) or volumen_ml_defecto or 100
-                            if vol >= 25 and es_precio_valido(p_act):
+                            vol = resolver_volumen_oferta(
+                                titulo_producto=d_name,
+                                url_slug=prod_url or "",
+                                volumen_ml_defecto=volumen_ml_defecto,
+                                n_variantes_producto=1,
+                                es_tester=(detectar_formato_oferta(d_name, prod_url or "") == "tester"),
+                            )
+                            if vol and vol >= 25 and es_precio_valido(p_act):
                                 res_sc = coincide_entidad_detallada(
                                     titulo=d_name,
                                     perfume_nombre=perfume_nombre,
@@ -1020,8 +1064,16 @@ def extraer_variedades_paris(
                             p_raw = off.get("price")
                             if p_raw:
                                 p_act = clean_digits(p_raw)
-                                vol = extraer_volumen_ml(p_name) or volumen_ml_defecto or 100
-                                if vol < 25 or not es_precio_valido(p_act):
+                                vol = resolver_volumen_oferta(
+                                    titulo_producto=p_name,
+                                    url_slug=url_directa or "",
+                                    volumen_ml_defecto=volumen_ml_defecto,
+                                    n_variantes_producto=1,
+                                    es_tester=(detectar_formato_oferta(p_name, url_directa or "") == "tester"),
+                                )
+                                if not vol or vol < 25 or not es_precio_valido(p_act):
+                                    if not vol and diagnostico is not None:
+                                        diagnostico["exclusiones_volumen_ambiguo"] = diagnostico.get("exclusiones_volumen_ambiguo", 0) + 1
                                     continue
                                 res_match = coincide_entidad_detallada(
                                     titulo=p_name,
@@ -1098,8 +1150,16 @@ def extraer_variedades_paris(
                                 p_raw = off.get("price")
                                 if p_raw:
                                     p_act = clean_digits(p_raw)
-                                    vol = extraer_volumen_ml(p_name) or volumen_ml_defecto or 100
-                                    if vol < 25 or not es_precio_valido(p_act):
+                                    vol = resolver_volumen_oferta(
+                                        titulo_producto=p_name,
+                                        url_slug=lk,
+                                        volumen_ml_defecto=volumen_ml_defecto,
+                                        n_variantes_producto=1,
+                                        es_tester=(detectar_formato_oferta(p_name, lk) == "tester"),
+                                    )
+                                    if not vol or vol < 25 or not es_precio_valido(p_act):
+                                        if not vol and diagnostico is not None:
+                                            diagnostico["exclusiones_volumen_ambiguo"] = diagnostico.get("exclusiones_volumen_ambiguo", 0) + 1
                                         continue
                                     res_match = coincide_entidad_detallada(
                                         titulo=p_name,
@@ -1266,7 +1326,7 @@ def extraer_variedades_ripley(
                                         vol = None
                                         for def_attr in v.get("definingAttribute", []):
                                             val_str = def_attr.get("value", "")
-                                            vol = extraer_volumen_ml(val_str)
+                                            vol = extraer_volumen_ml_opcional(val_str)
                                             if vol:
                                                 break
 
@@ -1275,13 +1335,21 @@ def extraer_variedades_ripley(
                                                 if attr.get("usage") == "Defining" or "contenido_perfume" in (attr.get("identifier") or "").lower():
                                                     vals = attr.get("Values", [{}])
                                                     v_str = vals[0].get("values", "") if vals else ""
-                                                    vol = extraer_volumen_ml(v_str)
+                                                    vol = extraer_volumen_ml_opcional(v_str)
                                                     if vol:
                                                         break
 
                                         if not vol:
-                                            vol = extraer_volumen_ml(pdp_title) or volumen_ml_defecto or 100
-                                        if vol < 25:
+                                            vol = resolver_volumen_oferta(
+                                                titulo_producto=pdp_title,
+                                                url_slug=pdp_url or "",
+                                                volumen_ml_defecto=volumen_ml_defecto,
+                                                n_variantes_producto=max(1, len(variants)),
+                                                es_tester=(detectar_formato_oferta(pdp_title, pdp_url or "") == "tester"),
+                                            )
+                                        if not vol or vol < 25:
+                                            if diagnostico is not None:
+                                                diagnostico["exclusiones_volumen_ambiguo"] = diagnostico.get("exclusiones_volumen_ambiguo", 0) + 1
                                             continue
 
                                         res_v = coincide_entidad_detallada(
@@ -1329,8 +1397,14 @@ def extraer_variedades_ripley(
                         p_norm = p.get("masterPriceNumber", p_act) or p_act
                         if p_act and es_precio_valido(p_act):
                             p_title = p.get("name", "")
-                            vol = extraer_volumen_ml(p_title) or volumen_ml_defecto or 100
-                            if vol >= 25:
+                            vol = resolver_volumen_oferta(
+                                titulo_producto=p_title,
+                                url_slug=pdp_url or "",
+                                volumen_ml_defecto=volumen_ml_defecto,
+                                n_variantes_producto=1,
+                                es_tester=(detectar_formato_oferta(p_title, pdp_url or "") == "tester"),
+                            )
+                            if vol and vol >= 25:
                                 res_sc = coincide_entidad_detallada(
                                     titulo=p_title,
                                     perfume_nombre=perfume_nombre,
@@ -1477,12 +1551,23 @@ def extraer_precio_ripley(
                                 )
                                 if not res_ld.coincide:
                                     continue
-                                vol_det = extraer_volumen_ml(p_name) or volumen_ml or 100
                                 fmt_det = res_ld.formato_detectado or detectar_formato_oferta(p_name, url_a_probar)
+                                vol_det = resolver_volumen_oferta(
+                                    titulo_producto=p_name,
+                                    url_slug=url_a_probar,
+                                    volumen_ml_defecto=volumen_ml,
+                                    n_variantes_producto=1,
+                                    es_tester=(fmt_det == "tester"),
+                                )
                             else:
-                                vol_det = volumen_ml or 100
                                 fmt_det = detectar_formato_oferta(perfume_nombre, url_a_probar)
-                            if vol_det < 25:
+                                vol_det = resolver_volumen_oferta(
+                                    url_slug=url_a_probar,
+                                    volumen_ml_defecto=volumen_ml,
+                                    n_variantes_producto=1,
+                                    es_tester=(fmt_det == "tester"),
+                                )
+                            if not vol_det or vol_det < 25:
                                 continue
                             avail_r = str(offers.get("availability", "")).lower()
                             en_stock_r = False if ("outofstock" in avail_r or "agotado" in avail_r) else True
@@ -1518,12 +1603,23 @@ def extraer_precio_ripley(
                         )
                         if not res_dom.coincide:
                             return {"exito": False, "motivo": res_dom.motivo}
-                        vol_dom = extraer_volumen_ml(dom_title) or volumen_ml or 100
                         fmt_dom = res_dom.formato_detectado or detectar_formato_oferta(dom_title, url_a_probar)
+                        vol_dom = resolver_volumen_oferta(
+                            titulo_producto=dom_title,
+                            url_slug=url_a_probar,
+                            volumen_ml_defecto=volumen_ml,
+                            n_variantes_producto=1,
+                            es_tester=(fmt_dom == "tester"),
+                        )
                     else:
-                        vol_dom = volumen_ml or 100
                         fmt_dom = detectar_formato_oferta(perfume_nombre, url_a_probar)
-                    if vol_dom >= 25:
+                        vol_dom = resolver_volumen_oferta(
+                            url_slug=url_a_probar,
+                            volumen_ml_defecto=volumen_ml,
+                            n_variantes_producto=1,
+                            es_tester=(fmt_dom == "tester"),
+                        )
+                    if vol_dom and vol_dom >= 25:
                         return {
                             "exito": True,
                             "precio_actual": p_act,
@@ -1580,6 +1676,7 @@ def _combinar_tiendas_stats(
             "fallbacks_seguridad": 0,
             "bloqueos_waf": 0,
             "omitidos_circuit_breaker": 0,
+            "exclusiones_volumen_ambiguo": 0,
             "trust_score": t.get("trust_score", 90),
         }
         for t in tiendas_db
@@ -1592,6 +1689,7 @@ def _combinar_tiendas_stats(
                 consolidado[t_nom]["fallbacks_seguridad"] += vals.get("fallbacks_seguridad", 0)
                 consolidado[t_nom]["bloqueos_waf"] += vals.get("bloqueos_waf", 0)
                 consolidado[t_nom]["omitidos_circuit_breaker"] = consolidado[t_nom].get("omitidos_circuit_breaker", 0) + vals.get("omitidos_circuit_breaker", 0)
+                consolidado[t_nom]["exclusiones_volumen_ambiguo"] = consolidado[t_nom].get("exclusiones_volumen_ambiguo", 0) + vals.get("exclusiones_volumen_ambiguo", 0)
     return consolidado
 
 
@@ -1683,7 +1781,7 @@ class CatalogoTiendaBulk:
         p_act = clean_digits(prices.get("price")) or clean_digits(prod.get("price"))
         p_norm = clean_digits(prices.get("regular_price")) or clean_digits(prod.get("regular_price")) or p_act
         in_stock = bool(prod.get("is_in_stock", True)) if "is_in_stock" in prod else (prod.get("stock_status") != "outofstock")
-        vol_ml = extraer_volumen_ml(raw_title) or extraer_volumen_ml(clean_url) or 100
+        vol_ml_opt = extraer_volumen_ml_opcional(raw_title) or extraer_volumen_ml_opcional(clean_url)
 
         item = {
             "title": raw_title,
@@ -1693,7 +1791,7 @@ class CatalogoTiendaBulk:
             "formato": formato_prod,
             "imagen_url": img_url,
             "variants": [{
-                "title": f"{vol_ml}ml",
+                "title": f"{vol_ml_opt}ml" if vol_ml_opt else "",
                 "price": p_act,
                 "compare_at_price": p_norm if p_norm > p_act else None,
                 "available": in_stock,
@@ -1741,7 +1839,9 @@ class CatalogoTiendaBulk:
             clean_url = item["url"]
             formato_prod = item["formato"]
 
-            for v in item.get("variants", []):
+            lista_vars_item = item.get("variants", [])
+            n_vars_item = len(lista_vars_item)
+            for v in lista_vars_item:
                 try:
                     p_act = int(float(v.get("price", 0)))
                 except (ValueError, TypeError):
@@ -1751,14 +1851,21 @@ class CatalogoTiendaBulk:
                     continue
 
                 v_title = v.get("title", "")
-                vol_encontrado = (
-                    extraer_volumen_ml(v_title)
-                    or extraer_volumen_ml(f"{raw_title} {v_title}")
-                    or extraer_volumen_ml(clean_url)
-                    or volumen_ml_defecto
-                    or 100
+                es_tst_bulk = (
+                    formato_prod == "tester"
+                    or detectar_formato_oferta(f"{raw_title} {v_title}", clean_url) == "tester"
                 )
-                if vol_encontrado < 25:
+                vol_encontrado = resolver_volumen_oferta(
+                    titulo_variante=v_title,
+                    titulo_producto=raw_title,
+                    url_slug=clean_url,
+                    volumen_ml_defecto=volumen_ml_defecto,
+                    n_variantes_producto=n_vars_item,
+                    es_tester=es_tst_bulk,
+                )
+                if not vol_encontrado or vol_encontrado < 25:
+                    if diagnostico is not None:
+                        diagnostico["exclusiones_volumen_ambiguo"] = diagnostico.get("exclusiones_volumen_ambiguo", 0) + 1
                     continue
 
                 res_match = coincide_entidad_detallada(
@@ -1935,6 +2042,7 @@ def auditar_lote_perfumes(
             "fallbacks_seguridad": 0,
             "bloqueos_waf": 0,
             "omitidos_circuit_breaker": 0,
+            "exclusiones_volumen_ambiguo": 0,
             "trust_score": t.get("trust_score", 90),
         }
         for t in tiendas_db
@@ -1955,6 +2063,9 @@ def auditar_lote_perfumes(
             nonlocal actualizaciones, ofertas_nuevas, cambios_precio, cambios_stock, cambios_url, bloqueos_waf
             t_id = tienda_item["id"]
             t_nom = tienda_item["nombre"]
+
+            if diag_dict and diag_dict.get("exclusiones_volumen_ambiguo"):
+                tiendas_stats[t_nom]["exclusiones_volumen_ambiguo"] += int(diag_dict["exclusiones_volumen_ambiguo"])
 
             if err_item is not None:
                 err_msg = f"Error en ciclo para {p_nom} en {t_nom}: {err_item}"
@@ -1982,7 +2093,11 @@ def auditar_lote_perfumes(
                         continue
                     precio_normal_final = int(var_data.get("precio_normal") or precio_actual_final)
                     url_final = var_data["url"]
-                    vol_final = int(var_data.get("volumen_ml") or v_base or 100)
+                    vol_raw_final = var_data.get("volumen_ml")
+                    if not vol_raw_final:
+                        tiendas_stats[t_nom]["exclusiones_volumen_ambiguo"] += 1
+                        continue
+                    vol_final = int(vol_raw_final)
                     if vol_final < 25:
                         continue
                     stock_final = bool(var_data.get("en_stock", True))

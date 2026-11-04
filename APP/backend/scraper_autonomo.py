@@ -92,8 +92,10 @@ try:
         extraer_concentracion,
         extraer_genero,
         extraer_volumen_ml,
+        extraer_volumen_ml_opcional,
         limpiar_nombre_perfume,
         normalizar_marca_canonica,
+        resolver_volumen_oferta,
     )
 except ImportError:
     from database import (
@@ -117,8 +119,10 @@ except ImportError:
         extraer_concentracion,
         extraer_genero,
         extraer_volumen_ml,
+        extraer_volumen_ml_opcional,
         limpiar_nombre_perfume,
         normalizar_marca_canonica,
+        resolver_volumen_oferta,
     )
 
 # =============================================================================
@@ -565,8 +569,8 @@ def ejecutar_descubrimiento_autonomo(
                             wc_reg = clean_digits(prices_wc.get("regular_price"))
                             wc_stock = bool(prod.get("is_in_stock", True))
                             formato_prod = detectar_formato_oferta(raw_title, url_producto)
-                            vol_ml = extraer_volumen_ml(raw_title) or extraer_volumen_ml(url_producto) or 100
-                            variants = [{"price": wc_price, "compare_at_price": wc_reg if wc_reg > wc_price else None, "available": wc_stock, "title": f"{vol_ml}ml"}]
+                            vol_ml_wc = extraer_volumen_ml_opcional(raw_title) or extraer_volumen_ml_opcional(url_producto)
+                            variants = [{"price": wc_price, "compare_at_price": wc_reg if wc_reg > wc_price else None, "available": wc_stock, "title": f"{vol_ml_wc}ml" if vol_ml_wc else ""}]
                         else:
                             raw_title = html.unescape(prod.get("title", "")).strip()
                             raw_vendor = html.unescape((prod.get("vendor", "") or "").strip())
@@ -621,8 +625,15 @@ def ejecutar_descubrimiento_autonomo(
                             if not es_precio_valido(v_price):
                                 continue
                             v_title = v.get("title", "")
-                            vol_ml = extraer_volumen_ml(f"{raw_title} {v_title}") or 100
-                            if vol_ml < 25:
+                            es_tst_disc = (formato_prod == "tester" or detectar_formato_oferta(f"{raw_title} {v_title}", url_producto) == "tester")
+                            vol_ml = resolver_volumen_oferta(
+                                titulo_variante=v_title,
+                                titulo_producto=raw_title,
+                                url_slug=url_producto,
+                                n_variantes_producto=len(variants),
+                                es_tester=es_tst_disc,
+                            )
+                            if not vol_ml or vol_ml < 25:
                                 continue
                             v_compare_raw = v.get("compare_at_price")
                             v_compare = int(float(v_compare_raw)) if (v_compare_raw and float(v_compare_raw) > v_price) else None
@@ -954,8 +965,15 @@ def descubrir_nuevos_perfumes_desde_bulk(
                 p_val = clean_digits(v.get("price"))
                 if es_precio_valido(p_val) and p_val >= 4000:
                     v_title = v.get("title", "")
-                    vol_cand = extraer_volumen_ml(f"{raw_title} {v_title}") or extraer_volumen_ml(item_url) or 100
-                    if vol_cand >= 25:
+                    es_tst_b = (formato == "tester" or detectar_formato_oferta(f"{raw_title} {v_title}", item_url) == "tester")
+                    vol_cand = resolver_volumen_oferta(
+                        titulo_variante=v_title,
+                        titulo_producto=raw_title,
+                        url_slug=item_url,
+                        n_variantes_producto=len(variants),
+                        es_tester=es_tst_b,
+                    )
+                    if vol_cand and vol_cand >= 25:
                         var_valida = (v, p_val, vol_cand)
                         break
 
