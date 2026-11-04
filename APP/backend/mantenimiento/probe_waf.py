@@ -132,7 +132,7 @@ def evaluar_tienda(tienda: str, urls: List[str]) -> List[Dict[str, Any]]:
     clientes = ["requests", "curl_cffi_chrome120"]
     for cliente in clientes:
         if cliente == "requests":
-            sess = crear_sesion_robusta(total_retries=1, backoff_factor=0.3)
+            sess = crear_sesion_robusta()
         else:
             if curl_requests is None:
                 continue
