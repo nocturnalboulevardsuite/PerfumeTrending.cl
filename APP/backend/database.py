@@ -3423,7 +3423,7 @@ def guardar_o_actualizar_perfume_scraped(
                 es_nuevo = False
             else:
                 es_nuevo = True
-                img = imagen_url or "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=500&q=80"
+                img = imagen_url or ""
                 notas_txt = notas or "Cítricos, Maderas, Almizcle"
                 ins_p = sb.table("perfumes").insert({
                     "nombre": nombre_canon,
@@ -3499,7 +3499,7 @@ def guardar_o_actualizar_perfume_scraped(
             perfume_id_sq = row_perfume["id"]
         else:
             es_nuevo_sq = True
-            img = imagen_url or "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=500&q=80"
+            img = imagen_url or ""
             notas_texto = notas or "Cítricos, Maderas, Almizcle"
             cursor.execute("""
             INSERT INTO perfumes (nombre, marca, genero, tipo, notas, imagen_url, es_arabe, en_tendencia, en_remate, precio_referencia)

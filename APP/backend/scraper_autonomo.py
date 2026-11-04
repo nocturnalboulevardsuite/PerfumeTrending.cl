@@ -588,7 +588,7 @@ def ejecutar_descubrimiento_autonomo(
                             tags = []
                             url_producto = prod.get("permalink", "")
                             images = prod.get("images", [])
-                            img_url = images[0].get("src", "") if images else "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=500&q=80"
+                            img_url = images[0].get("src", "") if images else ""
                             prices_wc = prod.get("prices", {})
                             wc_price = clean_digits(prices_wc.get("price"))
                             wc_reg = clean_digits(prices_wc.get("regular_price"))
@@ -602,7 +602,7 @@ def ejecutar_descubrimiento_autonomo(
                             tags = prod.get("tags", [])
                             url_producto = f"{t_url_base}/products/{prod.get('handle', '')}"
                             images = prod.get("images", [])
-                            img_url = images[0].get("src", "") if images else "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=500&q=80"
+                            img_url = images[0].get("src", "") if images else ""
                             formato_prod = detectar_formato_oferta(raw_title, url_producto)
                             variants = prod.get("variants", [])
 
