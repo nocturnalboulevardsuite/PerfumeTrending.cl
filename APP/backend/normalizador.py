@@ -13,6 +13,7 @@ from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass
 import re
+import statistics
 import unicodedata
 import urllib.parse
 from typing import Any, Dict, Iterator, List, Optional, Set, Tuple
@@ -1470,3 +1471,131 @@ def coincide_con_perfume(
         vendedor=vendedor,
         genero_esperado=genero_esperado,
     ).coincide
+
+
+# =============================================================================
+# 4. DETECCIÓN ESTADÍSTICA DE PRECIOS ATÍPICOS (OUTLIERS POR MEDIANA Y TESTER)
+# =============================================================================
+
+# - ¿Qué hace esta función?:
+#   Evalúa las ofertas activas en stock de un mismo `(perfume_id, volumen_ml)` y detecta:
+#   1) Precios `< 0.5x` o `> 2.2x` respecto de la mediana cuando existen `>= 4` ofertas en el formato.
+#   2) Ofertas `tester` cuyo precio supera el precio de la botella `regular` sellada equivalente.
+#   Retorna las ofertas marcadas con `estado_sugerido = 'requiere_revision'` y trazabilidad completa.
+def detectar_precios_atipicos(
+    ofertas_de_variante: List[Dict[str, Any]],
+    ofertas_regulares_mismo_volumen: Optional[List[Dict[str, Any]]] = None,
+) -> List[Dict[str, Any]]:
+    activas: List[Dict[str, Any]] = []
+    for o in (ofertas_de_variante or []):
+        if not bool(o.get("en_stock", True)):
+            continue
+        if str(o.get("estado") or "activa").lower() != "activa":
+            continue
+        try:
+            p_val = int(round(float(o.get("precio_actual") or 0)))
+        except (ValueError, TypeError):
+            continue
+        if p_val <= 0:
+            continue
+        copia = dict(o)
+        copia["precio_actual"] = p_val
+        activas.append(copia)
+
+    if not activas:
+        return []
+
+    regulares = [o for o in activas if str(o.get("formato") or "regular").lower() != "tester"]
+    testers = [o for o in activas if str(o.get("formato") or "regular").lower() == "tester"]
+
+    outliers: List[Dict[str, Any]] = []
+    ids_marcados: Set[int] = set()
+    regulares_outliers_idx: Set[int] = set()
+
+    # Regla 1 y 2: Outliers estadísticos respecto de la mediana (requiere >= 4 ofertas activas del mismo formato)
+    for grupo_fmt in (regulares, testers):
+        if len(grupo_fmt) < 4:
+            continue
+        precios_g = [int(x["precio_actual"]) for x in grupo_fmt]
+        med = float(statistics.median(precios_g))
+        med_int = int(round(med))
+        for idx_g, item in enumerate(grupo_fmt):
+            p = int(item["precio_actual"])
+            regla = None
+            motivo = ""
+            if p < 0.5 * med:
+                regla = "bajo_mediana"
+                motivo = f"Precio ${p:,} inferior a 0.5x mediana (${med_int:,}) sobre {len(grupo_fmt)} ofertas"
+            elif p > 2.2 * med:
+                regla = "sobre_mediana"
+                motivo = f"Precio ${p:,} superior a 2.2x mediana (${med_int:,}) sobre {len(grupo_fmt)} ofertas"
+            if regla:
+                out_d = dict(item)
+                out_d["regla_outlier"] = regla
+                out_d["estado_sugerido"] = "requiere_revision"
+                out_d["mediana_referencia"] = med_int
+                out_d["motivo_outlier"] = motivo
+                outliers.append(out_d)
+                if item.get("id") is not None:
+                    ids_marcados.add(int(item["id"]))
+                if grupo_fmt is regulares:
+                    regulares_outliers_idx.add(idx_g)
+
+    # Regla 3: Tester más caro que la botella regular sellada del mismo volumen
+    pool_reg_raw = ofertas_regulares_mismo_volumen if ofertas_regulares_mismo_volumen is not None else regulares
+    pool_reg_sano: List[Dict[str, Any]] = []
+    for idx_r, r_item in enumerate(pool_reg_raw or []):
+        if pool_reg_raw is regulares and idx_r in regulares_outliers_idx:
+            continue
+        if not bool(r_item.get("en_stock", True)):
+            continue
+        if str(r_item.get("estado") or "activa").lower() != "activa":
+            continue
+        if str(r_item.get("formato") or "regular").lower() == "tester":
+            continue
+        try:
+            pr_val = int(round(float(r_item.get("precio_actual") or 0)))
+        except (ValueError, TypeError):
+            continue
+        if pr_val > 0:
+            pool_reg_sano.append(dict(r_item, precio_actual=pr_val))
+
+    if testers and pool_reg_sano:
+        precios_reg_sanos = [int(x["precio_actual"]) for x in pool_reg_sano]
+        med_reg = float(statistics.median(precios_reg_sanos))
+        med_reg_int = int(round(med_reg))
+        techo_mercado = (med_reg * 1.15) if len(precios_reg_sanos) >= 3 else float(max(precios_reg_sanos))
+        reg_por_tienda: Dict[Any, int] = {}
+        for rx in pool_reg_sano:
+            tid_r = rx.get("tienda_id")
+            if tid_r is not None:
+                p_rx = int(rx["precio_actual"])
+                if tid_r not in reg_por_tienda or p_rx < reg_por_tienda[tid_r]:
+                    reg_por_tienda[tid_r] = p_rx
+
+        for tst in testers:
+            oid_t = tst.get("id")
+            if oid_t is not None and int(oid_t) in ids_marcados:
+                continue
+            p_tst = int(tst["precio_actual"])
+            tid_t = tst.get("tienda_id")
+            p_misma_tienda = reg_por_tienda.get(tid_t) if tid_t is not None else None
+
+            es_mayor_misma_tienda = p_misma_tienda is not None and p_tst > p_misma_tienda
+            es_mayor_mercado = p_tst > techo_mercado
+
+            if es_mayor_misma_tienda or es_mayor_mercado:
+                ref_cmp = p_misma_tienda if es_mayor_misma_tienda else med_reg_int
+                out_t = dict(tst)
+                out_t["regla_outlier"] = "tester_mayor_que_regular"
+                out_t["estado_sugerido"] = "requiere_revision"
+                out_t["mediana_referencia"] = int(ref_cmp)
+                out_t["motivo_outlier"] = (
+                    f"Tester (${p_tst:,}) supera precio de botella regular sellada (${int(ref_cmp):,})"
+                )
+                outliers.append(out_t)
+                if oid_t is not None:
+                    ids_marcados.add(int(oid_t))
+
+    return outliers
+

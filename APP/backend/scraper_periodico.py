@@ -179,6 +179,7 @@ try:
         registrar_precio,
         registrar_observacion_oferta,
         registrar_fallo_scraping,
+        marcar_oferta_requiere_revision,
         init_db,
         tienda_comercializa_marca,
         obtener_url_directa_tienda,
@@ -193,6 +194,7 @@ try:
         coincide_entidad_detallada,
         contexto_genero_esperado,
         detectar_formato_oferta,
+        detectar_precios_atipicos,
         es_arabe,
         es_precio_valido,
         es_producto_perfume_valido,
@@ -215,6 +217,7 @@ except ImportError:
         registrar_precio,
         registrar_observacion_oferta,
         registrar_fallo_scraping,
+        marcar_oferta_requiere_revision,
         init_db,
         tienda_comercializa_marca,
         obtener_url_directa_tienda,
@@ -229,6 +232,7 @@ except ImportError:
         coincide_entidad_detallada,
         contexto_genero_esperado,
         detectar_formato_oferta,
+        detectar_precios_atipicos,
         es_arabe,
         es_precio_valido,
         es_producto_perfume_valido,
@@ -289,6 +293,17 @@ def crear_sesion_robusta() -> requests.Session:
 
 # Umbral de cortocircuito por lote cuando un retailer bloquea por IP/ASN de datacenter
 WAF_FAST_FAIL_THRESHOLD = 15
+
+# Taxonomía controlada de motivos de fallo para observabilidad 100 % clasificada (Fase 5)
+CODIGOS_FALLO_CONTROLADOS: Tuple[str, ...] = (
+    "no_encontrado_en_feed",
+    "waf",
+    "timeout",
+    "parse_error",
+    "marca_excluida",
+    "volumen_ambiguo",
+    "entidad_no_coincide",
+)
 
 
 # - ¿Qué hace esta función?:
@@ -1748,6 +1763,7 @@ def _combinar_tiendas_stats(
             "bloqueos_waf": 0,
             "omitidos_circuit_breaker": 0,
             "exclusiones_volumen_ambiguo": 0,
+            "fallos_por_codigo": {c: 0 for c in CODIGOS_FALLO_CONTROLADOS},
             "trust_score": t.get("trust_score", 90),
         }
         for t in tiendas_db
@@ -1761,6 +1777,9 @@ def _combinar_tiendas_stats(
                 consolidado[t_nom]["bloqueos_waf"] += vals.get("bloqueos_waf", 0)
                 consolidado[t_nom]["omitidos_circuit_breaker"] = consolidado[t_nom].get("omitidos_circuit_breaker", 0) + vals.get("omitidos_circuit_breaker", 0)
                 consolidado[t_nom]["exclusiones_volumen_ambiguo"] = consolidado[t_nom].get("exclusiones_volumen_ambiguo", 0) + vals.get("exclusiones_volumen_ambiguo", 0)
+                fpc = vals.get("fallos_por_codigo") or {}
+                for c_key in CODIGOS_FALLO_CONTROLADOS:
+                    consolidado[t_nom]["fallos_por_codigo"][c_key] += int(fpc.get(c_key, 0) or 0)
     return consolidado
 
 
@@ -1890,6 +1909,9 @@ class CatalogoTiendaBulk:
             candidatos = [it for it in self.todos_items if m_low in it["title"].lower()]
 
         if not candidatos:
+            if diagnostico is not None:
+                diagnostico["motivo_codigo"] = "no_encontrado_en_feed"
+                diagnostico["detalle"] = f"Sin productos de marca '{marca}' en feed de {self.nombre_tienda}"
             return []
 
         # Pre-filtrar por tokens distintivos del nombre del perfume
@@ -1897,6 +1919,9 @@ class CatalogoTiendaBulk:
 
         variedades: List[Dict[str, Any]] = []
         vols_vistos = set()
+        vio_candidato_tokens = False
+        rechazos_entidad = 0
+        rechazos_volumen_entidad_ok = 0
 
         for item in candidatos:
             raw_title = item["title"]
@@ -1907,6 +1932,7 @@ class CatalogoTiendaBulk:
             if not es_producto_perfume_valido(raw_title, marca=marca or None, volumen_min_ml=25):
                 continue
 
+            vio_candidato_tokens = True
             clean_url = item["url"]
             formato_prod = item["formato"]
 
@@ -1937,6 +1963,17 @@ class CatalogoTiendaBulk:
                 if not vol_encontrado or vol_encontrado < 25:
                     if diagnostico is not None:
                         diagnostico["exclusiones_volumen_ambiguo"] = diagnostico.get("exclusiones_volumen_ambiguo", 0) + 1
+                    res_pre = coincide_entidad_detallada(
+                        titulo=raw_title,
+                        perfume_nombre=perfume_nombre,
+                        marca=marca,
+                        concentracion=concentracion,
+                        url=clean_url,
+                    )
+                    if res_pre.coincide:
+                        rechazos_volumen_entidad_ok += 1
+                    else:
+                        rechazos_entidad += 1
                     continue
 
                 res_match = coincide_entidad_detallada(
@@ -1949,6 +1986,7 @@ class CatalogoTiendaBulk:
                     precio_referencia=precio_referencia,
                 )
                 if not res_match.coincide:
+                    rechazos_entidad += 1
                     continue
 
                 if "chanel" in perfume_nombre.lower() and "chanel" not in raw_title.lower():
@@ -1979,6 +2017,20 @@ class CatalogoTiendaBulk:
                     "formato": formato_det,
                     "metodo": f"{self.nombre_tienda} Bulk Cache",
                 })
+
+        if not variedades and diagnostico is not None:
+            if rechazos_volumen_entidad_ok > 0:
+                diagnostico["motivo_codigo"] = "volumen_ambiguo"
+                diagnostico["detalle"] = f"Producto coincide en {self.nombre_tienda} pero sin volumen inequívoco"
+            elif rechazos_entidad > 0:
+                diagnostico["motivo_codigo"] = "entidad_no_coincide"
+                diagnostico["detalle"] = f"Candidatos de '{marca}' en {self.nombre_tienda} descartados por flanker/concentración/género"
+            elif not vio_candidato_tokens:
+                diagnostico["motivo_codigo"] = "no_encontrado_en_feed"
+                diagnostico["detalle"] = f"'{perfume_nombre}' ausente en feed de {self.nombre_tienda}"
+            else:
+                diagnostico["motivo_codigo"] = "no_encontrado_en_feed"
+                diagnostico["detalle"] = f"Sin variantes válidas en {self.nombre_tienda}"
 
         return variedades
 
@@ -2114,6 +2166,8 @@ def auditar_lote_perfumes(
     bloqueos_waf = 0
     errores: List[str] = []
     detalle_precios: List[Dict[str, Any]] = []
+    muestra_exclusiones_marca: List[Dict[str, Any]] = []
+    outliers_lote: List[Dict[str, Any]] = []
     tiendas_stats: Dict[str, Dict[str, Any]] = {
         t["nombre"]: {
             "consultas": 0,
@@ -2122,6 +2176,7 @@ def auditar_lote_perfumes(
             "bloqueos_waf": 0,
             "omitidos_circuit_breaker": 0,
             "exclusiones_volumen_ambiguo": 0,
+            "fallos_por_codigo": {c: 0 for c in CODIGOS_FALLO_CONTROLADOS},
             "trust_score": t.get("trust_score", 90),
         }
         for t in tiendas_db
@@ -2137,6 +2192,7 @@ def auditar_lote_perfumes(
 
         logger.info(f"[Rotación {rotacion_idx}/{total_rotaciones}] Auditando: {p_nom} ({p_marca}) [{p_tipo or 'N/A'} • {p_genero}]")
         _GENERO_ESPERADO_CTX.set(p_genero)
+        capturas_perfume_por_vol: Dict[int, List[Dict[str, Any]]] = defaultdict(list)
 
         def _procesar_resultado_tienda(tienda_item, u_directa, v_base, lista_vars, diag_dict, err_item):
             nonlocal actualizaciones, ofertas_nuevas, cambios_precio, cambios_stock, cambios_url, bloqueos_waf
@@ -2150,9 +2206,10 @@ def auditar_lote_perfumes(
                 err_msg = f"Error en ciclo para {p_nom} en {t_nom}: {err_item}"
                 logger.error(err_msg)
                 errores.append(err_msg)
+                err_low = str(err_item).lower()
+                cod_err = "timeout" if (isinstance(err_item, TimeoutError) or "timeout" in err_low or "timed out" in err_low) else "parse_error"
+                tiendas_stats[t_nom]["fallos_por_codigo"][cod_err] += 1
                 try:
-                    err_low = str(err_item).lower()
-                    cod_err = "timeout" if (isinstance(err_item, TimeoutError) or "timeout" in err_low or "timed out" in err_low) else "parse_error"
                     registrar_fallo_scraping(
                         tienda_id=t_id,
                         perfume_id=p_id,
@@ -2208,6 +2265,20 @@ def auditar_lote_perfumes(
 
                     tiendas_stats[t_nom]["exitos_en_vivo"] += 1
                     registrar_resultado_circuit_breaker(p_id, t_id, exito=True, cb_data=cb_cache)
+                    if stock_final:
+                        capturas_perfume_por_vol[vol_final].append({
+                            "id": res_obs.get("oferta_id") if isinstance(res_obs, dict) else None,
+                            "perfume_id": p_id,
+                            "perfume": f"{p_marca} - {p_nom} ({vol_final}ml)",
+                            "tienda_id": t_id,
+                            "tienda": t_nom,
+                            "precio_actual": precio_actual_final,
+                            "volumen_ml": vol_final,
+                            "formato": formato_final,
+                            "en_stock": True,
+                            "estado": "activa",
+                            "url_producto": url_final,
+                        })
                     detalle_precios.append({
                         "perfume": p_nom,
                         "tienda": t_nom,
@@ -2226,12 +2297,21 @@ def auditar_lote_perfumes(
             elif diag_dict.get("waf_bloqueado"):
                 bloqueos_waf += 1
                 tiendas_stats[t_nom]["bloqueos_waf"] += 1
+                tiendas_stats[t_nom]["fallos_por_codigo"]["waf"] += 1
                 logger.info(
                     f"  -> [{t_nom}] Bloqueo temporal WAF (HTTP {diag_dict.get('http_status', 403)}). "
                     "Se preserva última oferta sin penalizar fallos consecutivos."
                 )
             else:
-                codigo_fallo = str(diag_dict.get("motivo_codigo") or "no_encontrado_en_feed").strip().lower()
+                codigo_fallo = str(diag_dict.get("motivo_codigo") or "").strip().lower()
+                if not codigo_fallo:
+                    if diag_dict.get("exclusiones_volumen_ambiguo", 0) > 0:
+                        codigo_fallo = "volumen_ambiguo"
+                    else:
+                        codigo_fallo = "no_encontrado_en_feed"
+                if codigo_fallo not in CODIGOS_FALLO_CONTROLADOS:
+                    codigo_fallo = "no_encontrado_en_feed"
+                tiendas_stats[t_nom]["fallos_por_codigo"][codigo_fallo] += 1
                 motivo_fallo = str(diag_dict.get("detalle") or f"Sin disponibilidad confirmada en {t_nom}")
                 tiene_oferta_previa = False
                 if ofertas_activas_set is not None:
@@ -2263,6 +2343,16 @@ def auditar_lote_perfumes(
 
             if not tienda_comercializa_marca(t_nom, p_marca, es_arabe_flag=p.get("es_arabe")):
                 omitidos += 1
+                tiendas_stats[t_nom]["fallos_por_codigo"]["marca_excluida"] += 1
+                if len(muestra_exclusiones_marca) < 50:
+                    muestra_exclusiones_marca.append({
+                        "perfume_id": p_id,
+                        "perfume": p_nom,
+                        "marca": p_marca,
+                        "es_arabe": bool(p.get("es_arabe")),
+                        "tienda": t_nom,
+                        "motivo": "marca_excluida_por_perfil_tienda",
+                    })
                 continue
 
             tiene_extractor = (
@@ -2304,6 +2394,7 @@ def auditar_lote_perfumes(
                 ):
                     tiendas_stats[t_nom]["consultas"] += 1
                     tiendas_stats[t_nom]["bloqueos_waf"] += 1
+                    tiendas_stats[t_nom]["fallos_por_codigo"]["waf"] += 1
                     bloqueos_waf += 1
                     continue
                 tiendas_network_items.append(item)
@@ -2411,6 +2502,22 @@ def auditar_lote_perfumes(
                 tiendas_stats[t_nom]["consultas"] += 1
                 _procesar_resultado_tienda(t_obj, u_directa, v_base, vars_res, d_diag, err_ex)
 
+        # 4. Control estadístico de precios atípicos sobre las ofertas en stock capturadas de esta fragancia
+        for _vol_chk, grupo_vol in capturas_perfume_por_vol.items():
+            detectados_v = detectar_precios_atipicos(grupo_vol)
+            for out_item in detectados_v:
+                outliers_lote.append(out_item)
+                oid_rev = out_item.get("id")
+                if oid_rev:
+                    marcar_oferta_requiere_revision(
+                        int(oid_rev),
+                        f"[OUTLIER_PRECIO] {out_item.get('motivo_outlier', '')}",
+                    )
+                logger.warning(
+                    f"  [OUTLIER_PRECIO] {out_item.get('perfume')} en {out_item.get('tienda')}: "
+                    f"${out_item.get('precio_actual', 0):,} -> {out_item.get('motivo_outlier')}"
+                )
+
     duracion = round(time.time() - inicio, 2)
     estado_general = "EXITOSO" if not errores else ("DEGRADADO" if actualizaciones > 0 else "FALLIDO")
 
@@ -2455,10 +2562,13 @@ def auditar_lote_perfumes(
             "bloqueos_waf": bloqueos_waf,
             "exclusiones_marca": omitidos,
             "omitidos_circuit_breaker": omitidos_cb,
+            "outliers_marcados": len(outliers_lote),
             "errores_totales": len(errores),
         },
         "estadisticas_tiendas": tiendas_stats,
         "muestra_capturas": detalle_precios[:15],
+        "muestra_exclusiones_marca": muestra_exclusiones_marca[:50],
+        "outliers_detectados": outliers_lote[:50],
         "errores": errores,
     }
 
@@ -2675,8 +2785,11 @@ def ejecutar_ciclo_scraping_y_descubrimiento(
     total_bloqueos_waf = 0
     total_exclusiones = 0
     total_omitidos_cb = 0
+    total_outliers = 0
     total_errores: List[str] = []
     muestras_consolidadas: List[Dict[str, Any]] = []
+    muestras_exclusiones: List[Dict[str, Any]] = []
+    outliers_consolidados: List[Dict[str, Any]] = []
     reporte_resultado: Dict[str, Any] = {}
 
     # Precarga masiva en memoria de tiendas Shopify y WooCommerce (13 tiendas en ~15-20s)
@@ -2748,8 +2861,13 @@ def ejecutar_ciclo_scraping_y_descubrimiento(
         total_bloqueos_waf += m_lote["bloqueos_waf"]
         total_exclusiones += m_lote.get("exclusiones_marca", 0)
         total_omitidos_cb += m_lote.get("omitidos_circuit_breaker", 0)
+        total_outliers += m_lote.get("outliers_marcados", 0)
         total_errores.extend(rep_lote.get("errores", []))
         muestras_consolidadas.extend(rep_lote.get("muestra_capturas", []))
+        if len(muestras_exclusiones) < 50:
+            muestras_exclusiones.extend(rep_lote.get("muestra_exclusiones_marca", [])[: max(0, 50 - len(muestras_exclusiones))])
+        if len(outliers_consolidados) < 50:
+            outliers_consolidados.extend(rep_lote.get("outliers_detectados", [])[: max(0, 50 - len(outliers_consolidados))])
 
         duracion_parcial = round(time.time() - inicio_global, 2)
         estado_global = "EXITOSO" if not total_errores else ("DEGRADADO" if total_actualizaciones > 0 else "FALLIDO")
@@ -2783,12 +2901,15 @@ def ejecutar_ciclo_scraping_y_descubrimiento(
                 "bloqueos_waf": total_bloqueos_waf,
                 "exclusiones_marca": total_exclusiones,
                 "omitidos_circuit_breaker": total_omitidos_cb,
+                "outliers_marcados": total_outliers,
                 "errores_totales": len(total_errores),
             },
             "estadisticas_tiendas": _combinar_tiendas_stats(
                 [r["estadisticas_tiendas"] for r in consolidado_reportes], tiendas_db
             ),
             "muestra_capturas": muestras_consolidadas[:25],
+            "muestra_exclusiones_marca": muestras_exclusiones[:50],
+            "outliers_detectados": outliers_consolidados[:50],
             "descubrimiento": reporte_descubrimiento,
             "rotaciones_detalle": [
                 {

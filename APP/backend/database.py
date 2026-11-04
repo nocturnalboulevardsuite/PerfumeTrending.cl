@@ -2362,6 +2362,37 @@ def registrar_fallo_scraping(
         return ultimo_sq
 
 
+# - ¿Qué hace esta función?:
+#   Marca una oferta con `estado = 'requiere_revision'` y registra el motivo en `ultimo_error`
+#   (usado por el detector en vivo de precios atípicos sin eliminar la fila).
+def marcar_oferta_requiere_revision(oferta_id: int, motivo: str) -> bool:
+    if not oferta_id:
+        return False
+    ahora_iso = datetime.now(timezone.utc).isoformat()
+    msg_limpio = str(motivo or "Requiere revisión")[:240]
+    sb = get_supabase(use_service_role=True)
+    if sb and is_supabase_disponible():
+        try:
+            sb.table("ofertas_actuales").update({
+                "estado": "requiere_revision",
+                "ultimo_error": msg_limpio,
+                "updated_at": ahora_iso,
+            }).eq("id", int(oferta_id)).execute()
+            return True
+        except Exception as e:
+            logger.warning(f"No se pudo marcar oferta #{oferta_id} en revisión en Supabase: {e}")
+            return False
+
+    init_db()
+    ahora_sq = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    with get_db_cursor(commit=True) as cursor:
+        cursor.execute(
+            "UPDATE ofertas_actuales SET estado = 'requiere_revision', ultimo_error = ?, updated_at = ? WHERE id = ?;",
+            (msg_limpio, ahora_sq, int(oferta_id)),
+        )
+    return True
+
+
 def registrar_precio(
     perfume_id: int,
     tienda_id: int,
