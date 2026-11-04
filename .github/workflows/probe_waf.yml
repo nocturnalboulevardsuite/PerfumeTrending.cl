@@ -1,0 +1,47 @@
+name: Diagnostico WAF Retail (Paris, Ripley, Falabella)
+
+on:
+  workflow_dispatch:
+    inputs:
+      sample_size:
+        description: 'Cantidad de URLs reales a probar por tienda'
+        required: false
+        default: '30'
+
+permissions:
+  contents: read
+
+jobs:
+  probe-waf:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Descargar codigo del repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar entorno Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Instalar dependencias
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Ejecutar sonda diagnostica WAF
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          python APP/backend/mantenimiento/probe_waf.py --sample ${{ inputs.sample_size || '30' }}
+
+      - name: Subir resultado JSON como artefacto
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: probe-waf-report
+          path: APP/data/reportes/probe_waf.json
+          retention-days: 14
