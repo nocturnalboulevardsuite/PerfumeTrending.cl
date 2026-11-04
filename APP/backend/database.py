@@ -3357,7 +3357,7 @@ def guardar_o_actualizar_perfume_scraped(
                 }).execute()
                 tienda_id_sb = ins_t.data[0]["id"]
 
-            genero_norm = (genero or "Unisex").strip() or "Unisex"
+            genero_norm = normalizar_genero(genero) or "Unisex"
             res_p = (
                 sb.table("perfumes")
                 .select("id, genero")
@@ -3367,12 +3367,26 @@ def guardar_o_actualizar_perfume_scraped(
                 .execute()
             )
             perfume_id_sb = None
+            genero_cand_electo = None
+            # Priorizar coincidencia exacta de género; luego compatible (Unisex <-> Hombre/Mujer)
             for cand_p in (res_p.data or []):
-                g_cand = (cand_p.get("genero") or "Unisex").strip().lower()
-                g_req = genero_norm.lower()
-                if g_cand == g_req or (g_req == "unisex") or (g_cand == "unisex"):
+                g_cand_n = normalizar_genero(cand_p.get("genero")) or "Unisex"
+                if g_cand_n == genero_norm:
                     perfume_id_sb = cand_p["id"]
+                    genero_cand_electo = g_cand_n
                     break
+            if perfume_id_sb is None:
+                for cand_p in (res_p.data or []):
+                    es_comp, g_res = generos_compatibles(cand_p.get("genero"), genero_norm)
+                    if es_comp:
+                        perfume_id_sb = cand_p["id"]
+                        genero_cand_electo = normalizar_genero(cand_p.get("genero")) or "Unisex"
+                        if genero_cand_electo == "Unisex" and g_res in ("Hombre", "Mujer"):
+                            try:
+                                sb.table("perfumes").update({"genero": g_res}).eq("id", perfume_id_sb).execute()
+                            except Exception as exc_g:
+                                logger.debug(f"Aviso afinando género Unisex->{g_res} en perfume #{perfume_id_sb}: {exc_g}")
+                        break
 
             if perfume_id_sb is not None:
                 es_nuevo = False

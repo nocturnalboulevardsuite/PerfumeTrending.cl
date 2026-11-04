@@ -58,3 +58,4 @@ SELECT
         ELSE 'obsoleta'
     END AS nivel_frescura
 FROM public.ofertas_actuales oa;
+

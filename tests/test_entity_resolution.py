@@ -244,6 +244,25 @@ class TestEntityResolutionEngine(unittest.TestCase):
     def test_bleu_chanel_rechaza_versace_dylan_blue(self):
         self.assertFalse(coincide_con_perfume("Versace Dylan Blue Pour Homme EDT 100ml", "Bleu de Chanel", "Chanel"))
 
+    # --- 12. PARES REALES DE DEDUPLICACIÓN FASE 4 ---
+    def test_armani_powerfully_acepta_emporio_armani_50ml(self):
+        self.assertTrue(
+            coincide_con_perfume(
+                "Perfume Emporio Armani Stronger With You PowerFully EDP 50 Ml Hombre",
+                "Stronger With You Powerfully",
+                "Giorgio Armani",
+            )
+        )
+
+    def test_lattafa_hayaati_acepta_variante_hombre_y_unisex(self):
+        self.assertTrue(
+            coincide_con_perfume(
+                "Perfume Lattafa Hayaati EDP 100ml Hombre",
+                "Hayaati",
+                "Lattafa",
+            )
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

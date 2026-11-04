@@ -83,6 +83,8 @@ try:
     guardar_o_actualizar_perfume_scraped,
     )
     from backend.normalizador import (
+        generos_compatibles,
+        normalizar_genero,
         CANONICAL_BRAND_MAP,
         MARCAS_INVALIDAS_CATALOGO,
         detectar_formato_oferta,
@@ -110,6 +112,8 @@ except ImportError:
     guardar_o_actualizar_perfume_scraped,
     )
     from normalizador import (
+        generos_compatibles,
+        normalizar_genero,
         CANONICAL_BRAND_MAP,
         MARCAS_INVALIDAS_CATALOGO,
         detectar_formato_oferta,
@@ -409,15 +413,36 @@ def ejecutar_descubrimiento_autonomo(
         mensaje_detalle=f"Rastreo masivo ({paginas} páginas/tienda, límite {limite_por_tienda})",
     )
 
-    def _perfume_canon_key(m_raw: str, n_raw: str, c_raw: str, g_raw: str = "") -> Tuple[str, str, str, str]:
+    # - ¿Qué hace esta función?:
+    #   Construye la clave canónica de entidad `(marca, nombre_limpio, concentracion)` SIN género
+    #   para evitar fragmentar el mismo perfume cuando distintas tiendas lo etiquetan Hombre vs Unisex.
+    def _perfume_canon_key(m_raw: str, n_raw: str, c_raw: str) -> Tuple[str, str, str]:
         m_c = (normalizar_marca_canonica(m_raw) or "Diseñador").strip().lower()
         n_c = (limpiar_nombre_perfume(n_raw, m_raw) or n_raw or "").strip().lower()
         c_c = (c_raw or "Eau de Parfum").strip().lower()
-        g_c = (g_raw or extraer_genero(n_raw) or "Unisex").strip().lower()
-        return (m_c, n_c, c_c, g_c)
+        return (m_c, n_c, c_c)
+
+    def _resolver_id_en_mapa(
+        mapa: Dict[Tuple[str, str, str], List[Tuple[int, str]]],
+        ck: Tuple[str, str, str],
+        genero_obs: str,
+    ) -> Tuple[Optional[int], Optional[str], bool]:
+        g_norm = normalizar_genero(genero_obs) or "Unisex"
+        entradas = mapa.get(ck) or []
+        if not entradas:
+            return None, None, False
+        for pid_e, g_e in entradas:
+            if (normalizar_genero(g_e) or "Unisex") == g_norm:
+                return pid_e, g_norm, False
+        for pid_e, g_e in entradas:
+            es_comp, g_res = generos_compatibles(g_e, g_norm)
+            if es_comp:
+                return pid_e, g_res, False
+        # Existe la misma clave (marca, nombre, tipo) pero con género opuesto explícito (Hombre vs Mujer)
+        return None, None, True
 
     sb_tiendas_map: Dict[str, int] = {}
-    sb_perfumes_conocidos: Dict[Tuple[str, str, str, str], int] = {}
+    sb_perfumes_conocidos: Dict[Tuple[str, str, str], List[Tuple[int, str]]] = {}
     sb_variantes_conocidas: Dict[Tuple[int, int, str], int] = {}
 
     if supabase_activo and sb:
@@ -432,8 +457,8 @@ def ejecutar_descubrimiento_autonomo(
                 if not res_p.data:
                     break
                 for r in res_p.data:
-                    ck = _perfume_canon_key(r.get("marca") or "", r.get("nombre") or "", r.get("tipo") or "", r.get("genero") or "")
-                    sb_perfumes_conocidos[ck] = r["id"]
+                    ck = _perfume_canon_key(r.get("marca") or "", r.get("nombre") or "", r.get("tipo") or "")
+                    sb_perfumes_conocidos.setdefault(ck, []).append((r["id"], normalizar_genero(r.get("genero")) or "Unisex"))
                 if len(res_p.data) < 1000:
                     break
                 offset += 1000
@@ -463,10 +488,10 @@ def ejecutar_descubrimiento_autonomo(
         sqlite_tiendas_map = {r["nombre"].lower(): r["id"] for r in cursor.fetchall()}
 
         cursor.execute("SELECT id, marca, nombre, tipo, genero FROM perfumes;")
-        sqlite_perfumes_map: Dict[Tuple[str, str, str, str], int] = {}
+        sqlite_perfumes_map: Dict[Tuple[str, str, str], List[Tuple[int, str]]] = {}
         for r in cursor.fetchall():
-            ck = _perfume_canon_key(r["marca"] or "", r["nombre"] or "", r["tipo"] or "", r["genero"] or "")
-            sqlite_perfumes_map[ck] = r["id"]
+            ck = _perfume_canon_key(r["marca"] or "", r["nombre"] or "", r["tipo"] or "")
+            sqlite_perfumes_map.setdefault(ck, []).append((r["id"], normalizar_genero(r["genero"]) or "Unisex"))
 
         for tienda_cfg in TIENDAS_CRAWLER_CONFIG:
             t_nombre = tienda_cfg["nombre"]
@@ -653,28 +678,30 @@ def ejecutar_descubrimiento_autonomo(
                             continue
 
                         primer_precio = variantes_validas[0]["price"]
-                        canon_key = _perfume_canon_key(marca, nombre_limpio, concentracion, genero)
+                        canon_key = _perfume_canon_key(marca, nombre_limpio, concentracion)
                         es_nuevo = False
 
                         # -----------------------------------------------------
-                        # 3. GESTIÓN CANÓNICA DEL PERFUME EN SUPABASE
+                        # 3. GESTIÓN CANÓNICA DEL PERFUME EN SUPABASE (SIN GÉNERO EN CLAVE)
                         # -----------------------------------------------------
-                        perfume_id_sb = sb_perfumes_conocidos.get(canon_key)
+                        perfume_id_sb, genero_res_sb, conflicto_sb = _resolver_id_en_mapa(sb_perfumes_conocidos, canon_key, genero)
                         if not perfume_id_sb and supabase_activo and sb:
                             try:
                                 chk_p = (
                                     sb.table("perfumes")
-                                    .select("id")
+                                    .select("id, genero")
                                     .ilike("marca", marca)
                                     .ilike("nombre", nombre_limpio)
                                     .ilike("tipo", concentracion)
-                                    .ilike("genero", genero)
-                                    .limit(1)
                                     .execute()
                                 )
-                                if chk_p.data:
-                                    perfume_id_sb = chk_p.data[0]["id"]
-                                else:
+                                for row_c in (chk_p.data or []):
+                                    es_c, g_res = generos_compatibles(row_c.get("genero"), genero)
+                                    if es_c:
+                                        perfume_id_sb = row_c["id"]
+                                        genero_res_sb = g_res
+                                        break
+                                if not perfume_id_sb:
                                     img_url_final = img_url
                                     if subir_imagenes:
                                         img_url_final = subir_imagen_a_bucket_supabase(
@@ -687,7 +714,7 @@ def ejecutar_descubrimiento_autonomo(
                                     nuevo_p = sb.table("perfumes").insert({
                                         "nombre": nombre_limpio,
                                         "marca": marca,
-                                        "genero": genero,
+                                        "genero": normalizar_genero(genero) or "Unisex",
                                         "tipo": concentracion,
                                         "notas": "Notas aromáticas exclusivas",
                                         "imagen_url": img_url_final,
@@ -701,41 +728,48 @@ def ejecutar_descubrimiento_autonomo(
                                         es_nuevo = True
 
                                 if perfume_id_sb:
-                                    sb_perfumes_conocidos[canon_key] = perfume_id_sb
+                                    sb_perfumes_conocidos.setdefault(canon_key, []).append(
+                                        (perfume_id_sb, genero_res_sb or normalizar_genero(genero) or "Unisex")
+                                    )
                             except Exception as e:
                                 logger.warning(f"Error guardando perfume {nombre_limpio} en Supabase: {e}")
 
                         # -----------------------------------------------------
-                        # 4. GESTIÓN CANÓNICA DEL PERFUME EN SQLITE (SIN LIKE AMBIGUO)
+                        # 4. GESTIÓN CANÓNICA DEL PERFUME EN SQLITE (COMPATIBILIDAD DE GÉNERO)
                         # -----------------------------------------------------
-                        perfume_id_sqlite = sqlite_perfumes_map.get(canon_key)
+                        perfume_id_sqlite, genero_res_sq, _ = _resolver_id_en_mapa(sqlite_perfumes_map, canon_key, genero)
                         if not perfume_id_sqlite:
                             cursor.execute(
                                 """
-                                SELECT id FROM perfumes
+                                SELECT id, genero FROM perfumes
                                 WHERE LOWER(TRIM(marca)) = LOWER(?)
                                   AND LOWER(TRIM(nombre)) = LOWER(?)
-                                  AND LOWER(COALESCE(TRIM(tipo), '')) = LOWER(?)
-                                  AND LOWER(COALESCE(TRIM(genero), '')) = LOWER(?);
+                                  AND LOWER(COALESCE(TRIM(tipo), '')) = LOWER(?);
                                 """,
-                                (marca, nombre_limpio, concentracion, genero),
+                                (marca, nombre_limpio, concentracion),
                             )
-                            row_sqlite = cursor.fetchone()
+                            rows_sq = cursor.fetchall()
+                            for r_sq in rows_sq:
+                                es_c, g_res = generos_compatibles(r_sq["genero"], genero)
+                                if es_c:
+                                    perfume_id_sqlite = r_sq["id"]
+                                    genero_res_sq = g_res
+                                    break
 
-                            if row_sqlite:
-                                perfume_id_sqlite = row_sqlite["id"]
-                            else:
+                            if not perfume_id_sqlite:
                                 cursor.execute("""
                                 INSERT INTO perfumes (
                                     nombre, marca, genero, tipo, notas, imagen_url, es_arabe, en_tendencia, en_remate, precio_referencia
                                 )
                                 VALUES (?, ?, ?, ?, 'Notas aromáticas exclusivas', ?, ?, 1, 0, ?);
-                                """, (nombre_limpio, marca, genero, concentracion, img_url, arabe_flag, primer_precio))
+                                """, (nombre_limpio, marca, normalizar_genero(genero) or "Unisex", concentracion, img_url, arabe_flag, primer_precio))
                                 perfume_id_sqlite = cursor.lastrowid
                                 es_nuevo = True
 
                             if perfume_id_sqlite:
-                                sqlite_perfumes_map[canon_key] = perfume_id_sqlite
+                                sqlite_perfumes_map.setdefault(canon_key, []).append(
+                                    (perfume_id_sqlite, genero_res_sq or normalizar_genero(genero) or "Unisex")
+                                )
 
                         if es_nuevo:
                             nuevos_perfumes += 1
@@ -867,7 +901,7 @@ def descubrir_nuevos_perfumes_desde_bulk(
     inicio = time.time()
     ahora = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    perfumes_conocidos: Set[Tuple[str, str]] = set()
+    perfumes_conocidos: Dict[Tuple[str, str, str], Set[str]] = {}
     sb = get_supabase(use_service_role=True)
     supabase_activo = is_supabase_disponible()
 
@@ -875,14 +909,16 @@ def descubrir_nuevos_perfumes_desde_bulk(
         try:
             offset = 0
             while True:
-                res = sb.table("perfumes").select("marca, nombre").range(offset, offset + 999).execute()
+                res = sb.table("perfumes").select("marca, nombre, tipo, genero").range(offset, offset + 999).execute()
                 if not res.data:
                     break
                 for r in res.data:
                     m = (normalizar_marca_canonica(r.get("marca") or "") or "").strip().lower()
                     n = (limpiar_nombre_perfume(r.get("nombre") or "", r.get("marca") or "") or "").strip().lower()
+                    t_c = (r.get("tipo") or "Eau de Parfum").strip().lower()
+                    g_c = normalizar_genero(r.get("genero")) or "Unisex"
                     if m and n:
-                        perfumes_conocidos.add((m, n))
+                        perfumes_conocidos.setdefault((m, n, t_c), set()).add(g_c)
                 if len(res.data) < 1000:
                     break
                 offset += 1000
@@ -891,12 +927,14 @@ def descubrir_nuevos_perfumes_desde_bulk(
 
     try:
         with get_db_cursor() as cur:
-            cur.execute("SELECT marca, nombre FROM perfumes;")
+            cur.execute("SELECT marca, nombre, tipo, genero FROM perfumes;")
             for r in cur.fetchall():
                 m = (normalizar_marca_canonica(r["marca"] or "") or "").strip().lower()
                 n = (limpiar_nombre_perfume(r["nombre"] or "", r["marca"] or "") or "").strip().lower()
+                t_c = (r["tipo"] or "Eau de Parfum").strip().lower()
+                g_c = normalizar_genero(r["genero"]) or "Unisex"
                 if m and n:
-                    perfumes_conocidos.add((m, n))
+                    perfumes_conocidos.setdefault((m, n, t_c), set()).add(g_c)
     except Exception as e_sq:
         logger.warning(f"Aviso consultando perfumes conocidos en SQLite: {e_sq}")
 
@@ -951,8 +989,11 @@ def descubrir_nuevos_perfumes_desde_bulk(
                 descartados_no_perfume += 1
                 continue
 
-            clave_canon = (marca.strip().lower(), nombre_limpio.strip().lower())
-            if clave_canon in perfumes_conocidos:
+            conc_item = (extraer_concentracion(raw_title) or "Eau de Parfum").strip()
+            gen_item = normalizar_genero(extraer_genero(raw_title)) or "Unisex"
+            clave_canon = (marca.strip().lower(), nombre_limpio.strip().lower(), conc_item.lower())
+            generos_existentes = perfumes_conocidos.get(clave_canon, set())
+            if any(generos_compatibles(g_ex, gen_item)[0] for g_ex in generos_existentes):
                 continue
 
             if nuevos_en_tienda >= limite_nuevos_por_tienda:
@@ -1010,7 +1051,7 @@ def descubrir_nuevos_perfumes_desde_bulk(
                     nuevos_descubiertos += 1
                     nuevos_en_tienda += 1
                     precios_variantes_registrados += 1
-                    perfumes_conocidos.add(clave_canon)
+                    perfumes_conocidos.setdefault(clave_canon, set()).add(gen_item)
                     muestras.append({
                         "nombre": nombre_limpio,
                         "marca": marca,

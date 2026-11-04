@@ -230,6 +230,33 @@ CANONICAL_BRAND_MAP: Dict[str, str] = {
     "dumont": "Dumont",
 }
 
+# Tabla declarativa de alias y sub-marcas comerciales para limpieza canónica de títulos (Fase 4).
+# Nota: Nunca incluir prefijos cortos que formen parte del nombre de fragancias (ej. 'Boss' en 'Boss Bottled', 'Polo' en 'Polo Blue', 'CH' en 'CH Men').
+ALIAS_MARCA: Dict[str, Tuple[str, ...]] = {
+    "Maison Alhambra": ("Maison Al Hambra", "Alhambra"),
+    "Dior": ("Christian Dior",),
+    "Giorgio Armani": ("Emporio Armani", "Armani"),
+    "Yves Saint Laurent": ("Saint Laurent", "YSL", "Yves Saint Lauren"),
+    "Dolce & Gabbana": ("Dolce Gabbana", "Dolce-Gabbana", "Dolce and Gabbana", "D&G"),
+    "Ard Al Zaafaran": ("Al Zaafaran",),
+    "Carolina Herrera": ("CH Carolina Herrera",),
+    "Jean Paul Gaultier": ("JPG",),
+    "Paco Rabanne": ("Rabanne",),
+    "Ralph Lauren": ("Polo Ralph Lauren",),
+    "Mugler": ("Thierry Mugler",),
+    "By Kilian": ("Kilian",),
+    "Roja Parfums": ("Roja Dove",),
+    "Initio Parfums Privés": ("Initio Parfums Prives", "Initio Parfums", "Initio"),
+    "Maison Francis Kurkdjian": ("Francis Kurkdjian", "MFK"),
+    "Al Haramain": ("Haramain",),
+    "Viktor & Rolf": ("Viktor and Rolf", "Viktor Rolf"),
+    "Lancôme": ("Lancome",),
+    "Jesús del Pozo": ("Jesus del Pozo",),
+    "Hermès": ("Hermes",),
+    "Chloé": ("Chloe",),
+    "Estée Lauder": ("Estee Lauder",),
+}
+
 MARCAS_INVALIDAS_CATALOGO: Set[str] = {
     "", "varios", "perfumero", "generico", "sin marca", "otros",
     "accesorios", "pack", "set", "muestra", "decant", "test", "s/m",
@@ -530,6 +557,24 @@ def normalizar_genero(genero: Optional[str]) -> Optional[str]:
     return None
 
 
+# - ¿Qué hace esta función?:
+#   Evalúa si dos géneros son compatibles para representar el mismo perfume:
+#   - 'Unisex' + 'Hombre' -> (True, 'Hombre') (se conserva el más específico)
+#   - 'Unisex' + 'Mujer'  -> (True, 'Mujer')
+#   - Iguales             -> (True, genero_normalizado)
+#   - 'Hombre' vs 'Mujer' -> (False, '') (nunca fusionar automáticamente Pour Homme con Pour Femme).
+def generos_compatibles(g1: Optional[str], g2: Optional[str]) -> Tuple[bool, str]:
+    n1 = normalizar_genero(g1) or "Unisex"
+    n2 = normalizar_genero(g2) or "Unisex"
+    if n1 == n2:
+        return True, n1
+    if n1 == "Unisex":
+        return True, n2
+    if n2 == "Unisex":
+        return True, n1
+    return False, ""
+
+
 def extraer_genero(texto: str) -> str:
     """Determina el género objetivo del perfume ('Mujer', 'Hombre' o 'Unisex')."""
     t_raw = (texto or "").lower()
@@ -680,25 +725,15 @@ def limpiar_nombre_perfume(titulo: str, marca: str = "") -> str:
         flags=re.IGNORECASE,
     )
 
-    # 2. Remover marca (tanto cruda como canónica y variantes conocidas) si aparece como prefijo
+    # 2. Remover marca (tanto cruda como canónica y sub-marcas declarativas en ALIAS_MARCA) si aparece como prefijo
     marcas_a_quitar = set()
     if marca:
         marcas_a_quitar.add(marca.strip())
         m_canon = normalizar_marca_canonica(marca)
         if m_canon:
             marcas_a_quitar.add(m_canon)
-            if m_canon == "Maison Alhambra":
-                marcas_a_quitar.update(["Maison Al Hambra", "Alhambra"])
-            elif m_canon == "Dior":
-                marcas_a_quitar.add("Christian Dior")
-            elif m_canon == "Giorgio Armani":
-                marcas_a_quitar.update(["Emporio Armani", "Armani"])
-            elif m_canon == "Yves Saint Laurent":
-                marcas_a_quitar.update(["Saint Laurent"])
-            elif m_canon == "Dolce & Gabbana":
-                marcas_a_quitar.update(["Dolce Gabbana", "Dolce-Gabbana", "Dolce and Gabbana"])
-            elif m_canon == "Ard Al Zaafaran":
-                marcas_a_quitar.add("Al Zaafaran")
+            for alias_m in ALIAS_MARCA.get(m_canon, ()):
+                marcas_a_quitar.add(alias_m)
 
     # Ordenar de más larga a más corta para remover prefijos compuestos completos
     for m_var in sorted(marcas_a_quitar, key=len, reverse=True):
@@ -737,9 +772,10 @@ def limpiar_nombre_perfume(titulo: str, marca: str = "") -> str:
     # Remover preposiciones sueltas al final (ej. '... De', '... Para')
     limpio = re.sub(r"\s+\b(?:de|para)\b\s*$", "", limpio, flags=re.IGNORECASE)
 
-    # Remover 'men' o 'woman'/'women' sueltos al final salvo cuando forman parte del nombre (ej. '212 Men', '212 VIP Men', 'CH Men')
+    # Remover 'for men'/'men' o 'for women'/'woman' sueltos al final salvo cuando forman parte del nombre (ej. '212 Men', '212 VIP Men', 'CH Men')
     if not re.search(r"\b(?:212|ch|solo|boss)\s+(?:vip\s+)?men\b", limpio, flags=re.IGNORECASE):
-        limpio = re.sub(r"\s+\b(?:men|man|women|woman)\b\s*$", "", limpio, flags=re.IGNORECASE)
+        limpio = re.sub(r"\s+\b(?:for\s+)?(?:men|man|women|woman)\b\s*$", "", limpio, flags=re.IGNORECASE)
+    limpio = re.sub(r"\s+\b(?:de|para|for)\b\s*$", "", limpio, flags=re.IGNORECASE)
 
     # 6. Remover códigos finales de catálogo (' H', ' M', ' U')
     limpio = re.sub(r"\s+[hmuHMU]\s*$", "", limpio)

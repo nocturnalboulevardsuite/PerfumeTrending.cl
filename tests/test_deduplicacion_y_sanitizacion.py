@@ -12,6 +12,8 @@ Verifica:
 import unittest
 from unittest.mock import patch
 from APP.backend.normalizador import (
+    ALIAS_MARCA,
+    generos_compatibles,
     normalizar_marca_canonica,
     limpiar_nombre_perfume,
     es_producto_perfume_valido,
@@ -119,6 +121,55 @@ class TestDeduplicacionYSanitizacion(unittest.TestCase):
         self.assertEqual(res.get("estado"), "requiere_revision")
         self.assertFalse(res.get("en_stock"))
         self.assertEqual(res.get("fallos_consecutivos"), 1)
+
+    def test_05_alias_marca_declarativos_y_armani_powerfully_x3(self):
+        # - ¿Qué hace esta prueba?:
+        # Verifica que las 3 variantes reales de Armani Stronger With You Powerfully y sub-marcas
+        # de ALIAS_MARCA colapsen exactamente al mismo nombre canónico sin prefijos residuales.
+        self.assertIn("Giorgio Armani", ALIAS_MARCA)
+        variantes_armani = [
+            ("Stronger With You Powerfully EDP", "Giorgio Armani"),
+            ("Armani Stronger With You Powerfully EDP", "Giorgio Armani"),
+            ("Stronger With You Powerfully De Emporio Armani EDP", "Giorgio Armani"),
+            ("Perfume Emporio Armani Stronger With You PowerFully EDP 50 Ml Hombre", "Emporio Armani"),
+        ]
+        nombres = {limpiar_nombre_perfume(raw, m) for raw, m in variantes_armani}
+        self.assertEqual(nombres, {"Stronger With You Powerfully"})
+
+        otros_alias = [
+            ("Christian Dior Sauvage EDP 100ml", "Dior", "Sauvage"),
+            ("YSL Libre Eau de Parfum 90ml Mujer", "Yves Saint Laurent", "Libre"),
+            ("D&G Light Blue EDT 100ml", "Dolce & Gabbana", "Light Blue"),
+            ("Thierry Mugler Angel EDP 50ml", "Mugler", "Angel"),
+            ("MFK Baccarat Rouge 540 EDP 70ml", "Maison Francis Kurkdjian", "Baccarat Rouge 540"),
+            ("Rabanne 1 Million EDT 100ml", "Paco Rabanne", "1 Million"),
+        ]
+        for raw, marca, esp in otros_alias:
+            self.assertEqual(limpiar_nombre_perfume(raw, marca), esp)
+
+    def test_06_compatibilidad_generos_y_pares_reales_catalogo(self):
+        # - ¿Qué hace esta prueba?:
+        # Verifica la regla de compatibilidad de géneros en los pares reales detectados en §1:
+        # Romance (Mujer/Unisex), Hayaati (Hombre/Unisex), 212 VIP (Mujer/Unisex) se unifican
+        # conservando el género específico, mientras Hombre vs Mujer jamás se fusiona automáticamente.
+        self.assertEqual(generos_compatibles("Mujer", "Unisex"), (True, "Mujer"))
+        self.assertEqual(generos_compatibles("Unisex", "Hombre"), (True, "Hombre"))
+        self.assertEqual(generos_compatibles("Unisex", "Unisex"), (True, "Unisex"))
+        self.assertEqual(generos_compatibles("Hombre", "Mujer"), (False, ""))
+        self.assertEqual(generos_compatibles("Mujer", "Hombre"), (False, ""))
+
+        pares_reales = [
+            ("Ralph Lauren", "Romance EDP 100ml Mujer", "Mujer", "Ralph Lauren Romance EDP 100ml", "Unisex", "Mujer"),
+            ("Lattafa", "Lattafa Hayaati EDP 100ml Hombre", "Hombre", "Hayaati EDP 100ml Unisex", "Unisex", "Hombre"),
+            ("Carolina Herrera", "212 VIP EDP 80ml Mujer", "Mujer", "Carolina Herrera 212 VIP EDP", "Unisex", "Mujer"),
+        ]
+        for marca, t1, g1, t2, g2, g_esperado in pares_reales:
+            k1 = (normalizar_marca_canonica(marca).lower(), limpiar_nombre_perfume(t1, marca).lower())
+            k2 = (normalizar_marca_canonica(marca).lower(), limpiar_nombre_perfume(t2, marca).lower())
+            self.assertEqual(k1, k2)
+            ok, g_res = generos_compatibles(g1, g2)
+            self.assertTrue(ok)
+            self.assertEqual(g_res, g_esperado)
 
 
 if __name__ == "__main__":
