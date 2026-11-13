@@ -28,6 +28,7 @@ import uuid
 import json
 import urllib.parse
 import urllib.request
+import urllib.error
 from datetime import datetime, date
 
 # Configuración de rutas canónicas para importar backend y ui
@@ -119,6 +120,130 @@ RESULTADOS_SANDBOX = {
     "CALL": "Pago rechazado: el banco requiere autorizar la compra.",
     "LOCK": "Pago rechazado: la tarjeta está bloqueada.",
 }
+
+
+def _mp_access_token():
+    try:
+        if "mercadopago" in st.secrets:
+            tk = st.secrets["mercadopago"].get("access_token")
+            if tk:
+                return str(tk)
+    except Exception:
+        pass
+    return os.environ.get("MP_ACCESS_TOKEN") or ""
+
+
+def _post_json(url, payload, headers=None):
+    """POST JSON con urllib. Devuelve (codigo_http, respuesta_dict) incluso si la API responde con error."""
+    cuerpo = json.dumps(payload).encode("utf-8")
+    h = {"Content-Type": "application/json", "Accept": "application/json", "User-Agent": "PerfumeTrending/1.0"}
+    h.update(headers or {})
+    req = urllib.request.Request(url, data=cuerpo, headers=h, method="POST")
+    try:
+        with urllib.request.urlopen(req, timeout=20) as resp:
+            return resp.status, json.loads(resp.read().decode("utf-8") or "{}")
+    except urllib.error.HTTPError as err:
+        try:
+            return err.code, json.loads(err.read().decode("utf-8") or "{}")
+        except Exception:
+            return err.code, {}
+
+
+def _error_mp(data):
+    """Extrae un mensaje legible de una respuesta de error de Mercado Pago."""
+    if not isinstance(data, dict):
+        return ""
+    errores = data.get("errors") or data.get("cause") or []
+    if isinstance(errores, list) and errores:
+        e = errores[0] or {}
+        return str(e.get("message") or e.get("description") or e.get("code") or "")
+    return str(data.get("message") or data.get("error") or "")
+
+
+_DETALLES_RECHAZO = {
+    "cc_rejected_other_reason": "el emisor rechazó el pago",
+    "rejected_by_issuer": "el emisor rechazó el pago",
+    "card_insufficient_amount": "saldo insuficiente",
+    "cc_rejected_insufficient_amount": "saldo insuficiente",
+    "bad_filled_card_data": "los datos de la tarjeta son incorrectos",
+    "cc_rejected_bad_filled_security_code": "el código de seguridad no es válido",
+    "invalid_card_token": "el token de la tarjeta venció, intente nuevamente",
+    "card_disabled": "la tarjeta está deshabilitada",
+    "high_risk": "el pago fue rechazado por prevención de fraude",
+    "amount_limit_exceeded": "el monto supera el límite de la tarjeta",
+    "max_attempts_exceeded": "se superó el número de intentos",
+}
+
+
+def pagar_con_mercadopago(public_key, access_token, numero, nombre, venc, cvv, documento, info, referencia):
+    """Pago de prueba REAL en el ambiente de prueba de Mercado Pago (API de Orders).
+    1) Tokeniza la tarjeta con la Public Key.  2) Crea y procesa la orden con el Access Token.
+    Devuelve dict con: ok, estado, detalle, orden_id, pago_id, mensaje."""
+    mes, anio = parsear_vencimiento(venc)
+    cod, tok = _post_json(
+        f"https://api.mercadopago.com/v1/card_tokens?public_key={urllib.parse.quote(public_key)}",
+        {
+            "card_number": numero,
+            "expiration_month": mes,
+            "expiration_year": anio,
+            "security_code": cvv,
+            "cardholder": {"name": nombre, "identification": {"type": "otro", "number": documento or "123456789"}},
+        },
+    )
+    token = tok.get("id") if isinstance(tok, dict) else None
+    if cod >= 300 or not token:
+        return {"ok": False, "mensaje": "Mercado Pago no pudo validar la tarjeta" + (f": {_error_mp(tok)}" if _error_mp(tok) else ".")}
+
+    pm_id = (info or {}).get("id") or ""
+    pm_tipo = (info or {}).get("tipo") or "credit_card"
+    if not pm_id:
+        marca = (info or {}).get("marca", "")
+        base = {"Visa": "visa", "Mastercard": "master", "American Express": "amex", "Diners Club": "diners"}.get(marca, "visa")
+        pm_id = ("deb" + base) if pm_tipo == "debit_card" and base in ("visa", "master") else base
+
+    monto = str(PRECIO_PREMIUM)
+    cod, orden = _post_json(
+        "https://api.mercadopago.com/v1/orders",
+        {
+            "type": "online",
+            "processing_mode": "automatic",
+            "external_reference": referencia,
+            "total_amount": monto,
+            "description": "PerfumeTrending - Plan Premium (1 mes)",
+            # En el ambiente de prueba Mercado Pago exige un correo terminado en @testuser.com
+            "payer": {"email": "test@testuser.com"},
+            "transactions": {"payments": [{
+                "amount": monto,
+                "payment_method": {"id": pm_id, "type": pm_tipo, "token": token, "installments": 1},
+            }]},
+        },
+        headers={"Authorization": f"Bearer {access_token}", "X-Idempotency-Key": uuid.uuid4().hex},
+    )
+    if not isinstance(orden, dict) or not orden:
+        return {"ok": False, "mensaje": f"Mercado Pago no respondió (HTTP {cod})."}
+    if cod in (401, 403):
+        return {"ok": False, "mensaje": "El Access Token de Mercado Pago no es válido. Revise secrets.toml."}
+
+    datos = orden.get("data") if isinstance(orden.get("data"), dict) else orden
+    pagos = ((datos.get("transactions") or {}).get("payments") or [{}])
+    pago = pagos[0] if pagos else {}
+    estado = datos.get("status") or pago.get("status") or ""
+    detalle = pago.get("status_detail") or datos.get("status_detail") or ""
+    resultado = {
+        "estado": estado, "detalle": detalle,
+        "orden_id": datos.get("id", ""), "pago_id": pago.get("id", ""),
+    }
+    if estado == "processed" and detalle in ("accredited", ""):
+        resultado.update(ok=True, mensaje="Pago aprobado por Mercado Pago.")
+    elif estado in ("action_required", "processing"):
+        resultado.update(ok=False, mensaje="El pago quedó pendiente en Mercado Pago. Intente con otra tarjeta.")
+    elif estado == "failed" or detalle:
+        motivo = _DETALLES_RECHAZO.get(detalle, detalle.replace("_", " ") if detalle else "")
+        resultado.update(ok=False, mensaje="Pago rechazado por Mercado Pago" + (f": {motivo}." if motivo else "."))
+    else:
+        msg = _error_mp(orden)
+        resultado.update(ok=False, mensaje="Mercado Pago no pudo procesar el pago" + (f": {msg}" if msg else f" (HTTP {cod})."))
+    return resultado
 
 
 def _mp_public_key():
@@ -335,6 +460,7 @@ def usar_tarjeta_prueba(tipo):
     st.session_state["cp_nombre"] = "APRO"
     st.session_state["cp_venc"] = t["venc"]
     st.session_state["cp_cvv"] = t["cvv"]
+    st.session_state["cp_doc"] = "123456789"
     st.session_state["cp_tipo"] = tipo
     st.session_state["_cp_ultimo_bin"] = solo_digitos(t["num"])[:8]
 
@@ -529,7 +655,8 @@ if u_plan in ("premium", "vip", "socios_vip"):
                 ("Fecha", recibo["fecha"]),
                 ("Medio de pago", f'{recibo["tipo"]} {recibo["marca"]} terminada en {recibo["last4"]}'),
                 ("Total pagado", f'${recibo["monto"]:,.0f} CLP'.replace(",", ".")),
-            ]
+                ("Procesado por", recibo.get("procesador", "Simulado")),
+            ] + ([("Orden Mercado Pago", recibo["mp_orden"])] if recibo.get("mp_orden") else [])
         )
         titulo, texto = "Pago aprobado", "Su cuenta ahora es Premium verificada. Ya puede activar las alertas de precio desde su perfil."
     else:
@@ -620,9 +747,9 @@ with col_pago:
 
     st.markdown(clean_html("""
         <div class="cp-demo">
-            Entorno de demostración: no se realiza ningún cargo real. Las tarjetas de prueba son las
-            oficiales de Mercado Pago Chile y se rellenan con un clic. Con el titular <b>APRO</b> el pago
-            se aprueba; con <b>OTHE</b>, <b>FUND</b> o <b>SECU</b> se rechaza.
+            Ambiente de prueba de Mercado Pago: no se realiza ningún cargo real. Las tarjetas de prueba
+            son las oficiales de Mercado Pago Chile y se rellenan con un clic. Con el titular <b>APRO</b>
+            el pago se aprueba; con <b>OTHE</b>, <b>FUND</b> o <b>SECU</b> se rechaza.
         </div>
     """), unsafe_allow_html=True)
     c_deb, c_cred, _ = st.columns([2, 2, 1.4])
@@ -653,6 +780,7 @@ with col_pago:
         st.text_input("Vencimiento", key="cp_venc", placeholder="MM/AA", max_chars=5)
     with c_cvv:
         st.text_input("CVV", key="cp_cvv", placeholder="123", max_chars=4, type="password")
+    st.text_input("RUT o documento del titular", key="cp_doc", placeholder="12345678-9", max_chars=15)
 
     st.markdown("<div style='margin-top:10px;'></div>", unsafe_allow_html=True)
     pagar = st.button("Pagar $2.000 CLP", key="btn_pagar", use_container_width=True)
@@ -662,19 +790,35 @@ with col_pago:
         nombre = (st.session_state.get("cp_nombre") or "").strip()
         venc = st.session_state.get("cp_venc") or ""
         cvv = solo_digitos(st.session_state.get("cp_cvv"))
+        documento = "".join(ch for ch in str(st.session_state.get("cp_doc") or "") if ch.isalnum())
         info_pago = detectar_tarjeta(numero[:8], MP_PK) if len(numero) >= 6 else None
         errores = validar(numero, nombre, venc, cvv, info_pago)
+        if not documento:
+            errores.append("Ingrese el RUT o documento del titular.")
 
         if errores:
             st.error("\n\n".join(errores))
         else:
-            with st.spinner("Procesando pago..."):
-                time.sleep(1.6)
-            rechazo = RESULTADOS_SANDBOX.get(nombre.upper())
-            if rechazo:
-                st.error(rechazo + " Intente con otra tarjeta.")
+            referencia = "PT-" + uuid.uuid4().hex[:8].upper()
+            MP_TOKEN = _mp_access_token()
+            if MP_PK and MP_TOKEN:
+                with st.spinner("Procesando pago con Mercado Pago..."):
+                    try:
+                        res = pagar_con_mercadopago(MP_PK, MP_TOKEN, numero, nombre, venc, cvv, documento, info_pago, referencia)
+                    except Exception as exc:
+                        res = {"ok": False, "mensaje": f"No se pudo conectar con Mercado Pago ({type(exc).__name__})."}
+                fuente_pago = "Mercado Pago (ambiente de prueba)"
             else:
-                # Pago aprobado (simulado): activar el plan en la sesión y en la base de datos si existe la función
+                with st.spinner("Procesando pago..."):
+                    time.sleep(1.6)
+                rechazo = RESULTADOS_SANDBOX.get(nombre.upper())
+                res = {"ok": not rechazo, "mensaje": (rechazo + " Intente con otra tarjeta.") if rechazo else ""}
+                fuente_pago = "Simulado (Mercado Pago no configurado)"
+
+            if not res.get("ok"):
+                st.error(res.get("mensaje") or "El pago fue rechazado.")
+            else:
+                # Pago aprobado: activar el plan en la sesión y en la base de datos si existe la función
                 st.session_state["user_info"]["plan"] = "premium"
                 if actualizar_plan_usuario and u_ident:
                     try:
@@ -682,15 +826,17 @@ with col_pago:
                     except Exception:
                         pass
                 st.session_state["cp_recibo"] = {
-                    "orden": "PT-" + uuid.uuid4().hex[:8].upper(),
+                    "orden": referencia,
                     "fecha": datetime.now().strftime("%d-%m-%Y %H:%M"),
                     "tipo": tipo_legible((info_pago or {}).get("tipo")) or tipo,
                     "marca": (info_pago or {}).get("marca") or "Tarjeta",
                     "last4": numero[-4:],
                     "monto": PRECIO_PREMIUM,
+                    "procesador": fuente_pago,
+                    "mp_orden": res.get("orden_id", ""),
                 }
                 # Los datos de la tarjeta no se conservan
-                for k in ("cp_num", "cp_nombre", "cp_venc", "cp_cvv", "_cp_ultimo_bin"):
+                for k in ("cp_num", "cp_nombre", "cp_venc", "cp_cvv", "cp_doc", "_cp_ultimo_bin"):
                     st.session_state.pop(k, None)
                 st.rerun()
 
