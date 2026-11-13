@@ -322,7 +322,14 @@ PALABRAS_EXCLUSION: List[str] = [
     "polera", "pantalon", "pantalón", "chaqueta", "poleron", "polerón", "vestido", "falda", "enterito",
     "adhesivo", "pegamento", "pvc", "lip shine", "perfume mist", "fragrance mist", "fragance mist",
     "ambiental", "delineador", "sombras", "protector solar", "bloqueador", "cosmetiquero",
+    "tostador", "sosten", "sostén", "sobrecamisa", "alpargata", "alpargatas", "audifonos", "audífonos",
+    "whisky", "cama redonda", "para perro", "mitos y leyendas", "en hoja", "perfume corporal",
 ]
+
+_RE_PALABRAS_EXCLUSION = re.compile(
+    r"\b(?:" + "|".join(re.escape(p.strip()) for p in PALABRAS_EXCLUSION if p.strip()) + r")\b",
+    re.IGNORECASE,
+)
 
 RE_PRODUCTO_INVALIDO = re.compile(
     r"(?:"
@@ -680,9 +687,8 @@ def es_producto_perfume_valido(
             return False
 
     t = titulo.lower()
-    for palabra in PALABRAS_EXCLUSION:
-        if palabra in t:
-            return False
+    if _RE_PALABRAS_EXCLUSION.search(t):
+        return False
 
     if RE_PRODUCTO_INVALIDO.search(t):
         return False
@@ -694,9 +700,8 @@ def es_producto_perfume_valido(
 
     if tags:
         tags_str = " ".join(str(x) for x in tags).lower()
-        for palabra in PALABRAS_EXCLUSION:
-            if palabra in tags_str:
-                return False
+        if _RE_PALABRAS_EXCLUSION.search(tags_str):
+            return False
 
     return True
 

@@ -2340,12 +2340,24 @@ def auditar_lote_perfumes(
                         or bool(u_directa)
                     )
 
-                if tiene_oferta_previa and codigo_fallo in ("no_encontrado_en_feed", "waf", "timeout", "parse_error"):
+                if tiene_oferta_previa and codigo_fallo in (
+                    "no_encontrado_en_feed",
+                    "entidad_no_coincide",
+                    "volumen_ambiguo",
+                    "waf",
+                    "timeout",
+                    "parse_error",
+                ):
+                    codigo_registro = (
+                        "no_encontrado_en_feed"
+                        if codigo_fallo in ("entidad_no_coincide", "volumen_ambiguo")
+                        else codigo_fallo
+                    )
                     registrar_fallo_scraping(
                         tienda_id=t_id,
                         perfume_id=p_id,
                         mensaje=motivo_fallo,
-                        motivo_codigo=codigo_fallo,
+                        motivo_codigo=codigo_registro,
                     )
                 tiendas_stats[t_nom]["fallbacks_seguridad"] += 1
                 if not u_directa:

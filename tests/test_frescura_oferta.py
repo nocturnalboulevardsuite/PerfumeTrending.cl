@@ -32,21 +32,30 @@ def _patch_db_modules(db_path: str, db_dir: str):
             mod.DB_DIR,
             mod.is_supabase_disponible,
             mod.get_supabase,
+            mod.DIAS_OFERTA_FRESCA,
+            mod.DIAS_OFERTA_ADVERTENCIA,
+            mod.DIAS_OFERTA_OCULTAR,
         ))
         mod.DB_PATH = db_path
         mod.DB_DIR = db_dir
         mod.is_supabase_disponible = lambda: False
         mod.get_supabase = lambda *a, **kw: None
+        mod.DIAS_OFERTA_FRESCA = 3.0
+        mod.DIAS_OFERTA_ADVERTENCIA = 7.0
+        mod.DIAS_OFERTA_OCULTAR = 14.0
         mod.limpiar_cache_catalogo()
     return originals
 
 
 def _restore_db_modules(originals):
-    for mod, db_path, db_dir, fn_disp, fn_sb in originals:
+    for mod, db_path, db_dir, fn_disp, fn_sb, df, da, do in originals:
         mod.DB_PATH = db_path
         mod.DB_DIR = db_dir
         mod.is_supabase_disponible = fn_disp
         mod.get_supabase = fn_sb
+        mod.DIAS_OFERTA_FRESCA = df
+        mod.DIAS_OFERTA_ADVERTENCIA = da
+        mod.DIAS_OFERTA_OCULTAR = do
         mod.limpiar_cache_catalogo()
 
 

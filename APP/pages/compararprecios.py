@@ -1541,13 +1541,11 @@ else:
         )
     )
 
-    # 4. Identificar el mejor precio y el mejor valor por ml priorizando botellas selladas ('regular')
-    #    y excluyendo ofertas sin reverificar hace más de 7 días (política de frescura).
+    # 4. Identificar el mejor precio y el mejor valor por ml priorizando botellas selladas ('regular').
     def es_oferta_fresca_elegible(it):
         if it.get('excluida_mejor_precio'):
             return False
-        d_sv = it.get('dias_sin_verificar')
-        return d_sv is None or float(d_sv) <= 7.0
+        return True
 
     precios_regular_stock = [
         t['precio_actual']
@@ -1666,19 +1664,7 @@ else:
             "<span class='pt-tag pt-tag-alltime' title='Precio más bajo jamás registrado para este perfume'>🔥 Mínimo Histórico</span>"
             if es_min_hist else ""
         )
-        if en_stock and dias_sv_raw is not None and dias_sv_num > 7.0:
-            badge_frescura = (
-                f"<span class='pt-tag pt-tag-stale' "
-                f"title='Esta tienda no ha podido reverificarse recientemente; confirma el precio y stock al abrir el enlace'>"
-                f"⚠️ Precio sin reverificar (hace {dias_sv_int} d)</span>"
-            )
-        elif en_stock and dias_sv_raw is not None and dias_sv_num > 3.0:
-            badge_frescura = (
-                f"<span class='pt-tag pt-tag-age' title='Última verificación automática exitosa hace {dias_sv_int} días'>"
-                f"Verificado hace {dias_sv_int} d</span>"
-            )
-        else:
-            badge_frescura = ""
+        badge_frescura = ""
 
         precio_actual_str = f"${p_act:,.0f}".replace(",", ".")
         precio_ant_str = f"${p_norm:,.0f}".replace(",", ".") if p_norm and p_norm > p_act else ""

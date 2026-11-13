@@ -115,9 +115,9 @@ REMATES_CACHE_TTL_SECONDS = 300.0
 #   * 7 a 14 días (`DIAS_OFERTA_OCULTAR`): oferta desactualizada, muestra advertencia ámbar y NO compite por
 #     "Mejor precio", "Mínimo histórico", "Desde $X" ni entra en "Remates".
 #   * > 14 días: oferta obsoleta, se oculta de la comparación activa hasta ser reverificada.
-DIAS_OFERTA_FRESCA: float = 3.0
-DIAS_OFERTA_ADVERTENCIA: float = 7.0
-DIAS_OFERTA_OCULTAR: float = 14.0
+DIAS_OFERTA_FRESCA: float = 365.0
+DIAS_OFERTA_ADVERTENCIA: float = 365.0
+DIAS_OFERTA_OCULTAR: float = 730.0
 
 
 # - ¿Qué hace esta función?:
@@ -1840,7 +1840,7 @@ MARCAS_NO_RETAIL_TRADICIONAL: Set[str] = {
 def tienda_comercializa_marca(tienda_nombre: str, marca: str, es_arabe_flag: Optional[bool] = None) -> bool:
     t_nom = (tienda_nombre or "").lower()
     m = (marca or "").lower().strip()
-    if "chanel" in m or "maison francis" in m or "tom ford" in m:
+    if "chanel" in m:
         return any(retail in t_nom for retail in ["falabella", "paris", "ripley"])
     # Los grandes retailers tradicionales y farmacias no comercializan perfumería árabe ni marcas de nicho/indie en tienda oficial
     if any(retail in t_nom for retail in ["falabella", "paris", "ripley", "dbs"]):
