@@ -575,6 +575,9 @@ def init_db(force_reseed: bool = False) -> None:
                     ("ubicacion", "TEXT DEFAULT 'Santiago, Chile'"),
                     ("notif_stock", "BOOLEAN DEFAULT 1"),
                     ("notif_resumen", "BOOLEAN DEFAULT 0"),
+                    ("plan", "TEXT DEFAULT 'free'"),
+                    ("plan_activado_en", "TEXT"),
+                    ("plan_vence_en", "TEXT"),
                 ]:
                     if col_name not in u_cols:
                         cursor.execute(f"ALTER TABLE usuarios ADD COLUMN {col_name} {col_def};")
@@ -891,6 +894,7 @@ def _normalizar_usuario_cloud(user_obj) -> Dict[str, Any]:
         "notif_resumen": bool(meta.get("notif_resumen", False)),
         "umbral_descuento": int(meta.get("umbral_descuento", 10)),
         "favoritos": fav_ids,
+        **_leer_plan(dict(getattr(user_obj, "app_metadata", None) or {})),
     }
 
 
@@ -1131,6 +1135,7 @@ def obtener_perfil_usuario(usuario_id_o_email: Any) -> Optional[Dict[str, Any]]:
             u_data["notif_stock"] = bool(u_data.get("notif_stock", True))
             u_data["notif_resumen"] = bool(u_data.get("notif_resumen", False))
             u_data["ubicacion"] = u_data.get("ubicacion") or "Santiago, Chile"
+            u_data.update(_leer_plan(u_data))
             return u_data
         return None
 
@@ -1371,6 +1376,145 @@ def actualizar_preferencias_notificacion(
                 (int(bool(alerta_email)), umbral_limpio, val_find),
             )
         return True, "Preferencias de notificación guardadas."
+
+
+# =============================================================================
+# BLOQUE 8B: PLANES DE SUSCRIPCIÓN (FREE / PREMIUM / VIP)
+# -----------------------------------------------------------------------------
+# - En Supabase el plan se guarda en `app_metadata` del usuario de Supabase Auth.
+#   A diferencia de `user_metadata`, el usuario NO puede modificar `app_metadata` desde
+#   el navegador: solo el servidor con la clave service_role. Así nadie puede darse
+#   Premium a sí mismo. Si existe la tabla `perfiles_usuario` con columnas de plan,
+#   también se copia ahí (opcional, para verlo en el Table Editor).
+# - En el respaldo local (SQLite) se guarda en las columnas plan / plan_activado_en /
+#   plan_vence_en de la tabla `usuarios`.
+# - Cada compra activa el plan por PLAN_DURACION_DIAS días; al vencer vuelve a 'free'.
+# =============================================================================
+PLANES_VALIDOS = ("free", "premium", "vip")
+PLAN_DURACION_DIAS = 30
+
+
+def _leer_plan(datos: Dict[str, Any]) -> Dict[str, Any]:
+    """Devuelve {plan, plan_activado_en, plan_vence_en} aplicando el vencimiento."""
+    plan = str((datos or {}).get("plan") or "free").strip().lower()
+    if plan not in PLANES_VALIDOS:
+        plan = "free"
+    activado = (datos or {}).get("plan_activado_en") or ""
+    vence = (datos or {}).get("plan_vence_en") or ""
+    if plan != "free" and vence:
+        try:
+            vence_dt = datetime.fromisoformat(str(vence).replace("Z", "+00:00"))
+            if vence_dt.tzinfo is None:
+                vence_dt = vence_dt.replace(tzinfo=timezone.utc)
+            if vence_dt < datetime.now(timezone.utc):
+                plan = "free"
+        except ValueError:
+            pass
+    return {"plan": plan, "plan_activado_en": str(activado), "plan_vence_en": str(vence)}
+
+
+def _asegurar_columnas_plan_sqlite(cursor: sqlite3.Cursor) -> None:
+    cursor.execute("PRAGMA table_info(usuarios);")
+    cols = {c["name"] for c in cursor.fetchall()}
+    for col_name, col_def in [
+        ("plan", "TEXT DEFAULT 'free'"),
+        ("plan_activado_en", "TEXT"),
+        ("plan_vence_en", "TEXT"),
+    ]:
+        if col_name not in cols:
+            cursor.execute(f"ALTER TABLE usuarios ADD COLUMN {col_name} {col_def};")
+
+
+def actualizar_plan_usuario(
+    usuario_id_o_email: Any,
+    plan: str,
+    email: Optional[str] = None,
+    nombre: Optional[str] = None,
+    dias: int = PLAN_DURACION_DIAS,
+) -> Tuple[bool, str]:
+    """Guarda de forma persistente el plan del usuario (Supabase Auth o SQLite).
+    Si el usuario aún no existe en Supabase Auth (por ejemplo, entró solo con código por
+    correo), se crea su cuenta en la nube para que el plan no se pierda."""
+    plan_limpio = str(plan or "free").strip().lower()
+    if plan_limpio not in PLANES_VALIDOS:
+        return False, "Plan no válido."
+
+    ahora = datetime.now(timezone.utc)
+    if plan_limpio == "free":
+        datos_plan = {"plan": "free", "plan_activado_en": None, "plan_vence_en": None}
+    else:
+        from datetime import timedelta
+        datos_plan = {
+            "plan": plan_limpio,
+            "plan_activado_en": ahora.isoformat(),
+            "plan_vence_en": (ahora + timedelta(days=int(dias))).isoformat(),
+        }
+
+    email_ref = (email or (str(usuario_id_o_email) if "@" in str(usuario_id_o_email or "") else "")).strip().lower()
+
+    sb_srv = _obtener_admin_auth()
+    if sb_srv is not None:
+        user_obj = _buscar_usuario_cloud(sb_srv, usuario_id_o_email, email_fallback=email_ref or None)
+        if user_obj is None and email_ref:
+            try:
+                resp = sb_srv.auth.admin.create_user({
+                    "email": email_ref,
+                    "password": secrets.token_urlsafe(24),
+                    "email_confirm": True,
+                    "user_metadata": {
+                        "nombre": (nombre or email_ref.split("@")[0]).strip(),
+                        "ubicacion": "Santiago, Chile",
+                        "alerta_email": True,
+                        "notif_stock": True,
+                        "notif_resumen": False,
+                        "umbral_descuento": 10,
+                        "favoritos": {},
+                    },
+                })
+                user_obj = getattr(resp, "user", None)
+            except Exception as e:
+                logger.error(f"No se pudo crear el usuario en Supabase Auth para guardar el plan: {e}")
+                user_obj = None
+
+        if user_obj is not None:
+            uid = str(user_obj.id)
+            app_meta = dict(getattr(user_obj, "app_metadata", None) or {})
+            app_meta.update(datos_plan)
+            try:
+                sb_srv.auth.admin.update_user_by_id(uid, {"app_metadata": app_meta})
+            except Exception as e:
+                logger.error(f"Error guardando el plan en Supabase Auth: {e}")
+                return False, "No se pudo guardar el plan en la nube."
+            try:
+                sb_srv.table("perfiles_usuario").update(datos_plan).eq("id", uid).execute()
+            except Exception:
+                pass  # la tabla o las columnas de plan son opcionales
+            return True, "Plan guardado en la nube."
+
+    # Respaldo local (SQLite)
+    init_db()
+    with get_db_cursor(commit=True) as cursor:
+        _asegurar_columnas_plan_sqlite(cursor)
+        if isinstance(usuario_id_o_email, int) or str(usuario_id_o_email).isdigit():
+            cursor.execute("SELECT id FROM usuarios WHERE id = ?;", (int(usuario_id_o_email),))
+        else:
+            cursor.execute("SELECT id FROM usuarios WHERE LOWER(email) = ?;", (email_ref or str(usuario_id_o_email).strip().lower(),))
+        row = cursor.fetchone()
+        if not row:
+            if not email_ref:
+                return False, "No se encontró el usuario para guardar el plan."
+            cursor.execute(
+                "INSERT INTO usuarios (nombre, email, password_hash, ubicacion) VALUES (?, ?, ?, ?);",
+                ((nombre or email_ref.split("@")[0]).strip(), email_ref, hash_password(secrets.token_urlsafe(24)), "Santiago, Chile"),
+            )
+            u_id = cursor.lastrowid
+        else:
+            u_id = row["id"]
+        cursor.execute(
+            "UPDATE usuarios SET plan = ?, plan_activado_en = ?, plan_vence_en = ? WHERE id = ?;",
+            (datos_plan["plan"], datos_plan["plan_activado_en"], datos_plan["plan_vence_en"], u_id),
+        )
+    return True, "Plan guardado localmente."
 
 
 # =============================================================================
