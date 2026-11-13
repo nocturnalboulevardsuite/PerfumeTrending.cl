@@ -1957,6 +1957,17 @@ with c_chip2:
 with c_chip3:
     st.page_link("pages/compararprecios.py", label="Comparar Precios", use_container_width=True)
 with c_chip4:
+    # Este acceso es el único filtro de remates: se resalta en rojo mientras está activo
+    if st.session_state.get('selected_category') == 'remates':
+        st.markdown(f"""
+            <style>
+            div.st-key-chip_remates div.stButton > button {{
+                border-color: {accent} !important;
+                background-color: {accent_soft} !important;
+                box-shadow: inset 0 0 0 1px {accent} !important;
+            }}
+            </style>
+        """, unsafe_allow_html=True)
     if st.button("Remates & Flash", key="chip_remates", use_container_width=True):
         st.session_state['selected_category'] = 'remates'
         st.session_state['catalog_page'] = 1
@@ -2061,11 +2072,7 @@ if st.session_state['current_page'] == 'home':
                 st.session_state['selected_category'] = 'arabes'
                 st.session_state['catalog_page'] = 1
                 st.rerun()
-        with c_cat3:
-            if st.button("Remates & Ofertas", key="btn_cat_remates", use_container_width=True):
-                st.session_state['selected_category'] = 'remates'
-                st.session_state['catalog_page'] = 1
-                st.rerun()
+        # "Remates" se filtra desde el acceso rápido "Remates & Flash" de arriba (sin repetirlo aquí).
                 
     with col_sort_select:
         orden_map = {
