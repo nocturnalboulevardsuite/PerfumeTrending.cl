@@ -101,21 +101,31 @@ TARJETA_RECHAZADA = "4000000000000002"
 
 
 def sello_verificado(size=22):
-    """Sello de verificado estilo Instagram (borde ondulado) en dorado Premium."""
-    pts = []
-    n = 12
-    for i in range(n * 2):
-        r = 11 if i % 2 == 0 else 9.3
-        a = math.pi * i / n - math.pi / 2
-        pts.append(f"{12 + r * math.cos(a):.2f},{12 + r * math.sin(a):.2f}")
+    """Insignia Premium verificada: frasco de perfume dorado con un check y un destello."""
     return (
         f'<svg width="{size}" height="{size}" viewBox="0 0 24 24" role="img" aria-label="Premium verificado">'
-        f'<defs><linearGradient id="ptSeal" x1="0" y1="0" x2="1" y2="1">'
-        f'<stop offset="0" stop-color="#f7dc8f"/><stop offset="0.5" stop-color="#e2b857"/><stop offset="1" stop-color="#b98a26"/>'
-        f'</linearGradient></defs>'
-        f'<polygon points="{" ".join(pts)}" fill="url(#ptSeal)" stroke="url(#ptSeal)" stroke-width="1.6" stroke-linejoin="round"/>'
-        f'<polyline points="7.6 12.3 10.6 15.2 16.4 9.2" fill="none" stroke="#2a1f05" stroke-width="2.2" '
-        f'stroke-linecap="round" stroke-linejoin="round"/></svg>'
+        '<defs>'
+        '<linearGradient id="ptSealBody" x1="0" y1="0" x2="1" y2="1">'
+        '<stop offset="0" stop-color="#fbe7a6"/><stop offset="0.45" stop-color="#e2b857"/><stop offset="1" stop-color="#a87a1e"/>'
+        '</linearGradient>'
+        '<linearGradient id="ptSealCap" x1="0" y1="0" x2="0" y2="1">'
+        '<stop offset="0" stop-color="#8a6414"/><stop offset="1" stop-color="#5c420c"/>'
+        '</linearGradient>'
+        '</defs>'
+        # Tapa y cuello
+        '<rect x="8.6" y="1.2" width="6.8" height="3.6" rx="1.2" fill="url(#ptSealCap)"/>'
+        '<rect x="10.2" y="4.6" width="3.6" height="2.4" fill="#c99a2f"/>'
+        # Cuerpo del frasco
+        '<path d="M5.6 9.6 Q5.6 6.8 8.4 6.8 H15.6 Q18.4 6.8 18.4 9.6 V19.4 Q18.4 22.8 15 22.8 H9 '
+        'Q5.6 22.8 5.6 19.4 Z" fill="url(#ptSealBody)" stroke="#b98a26" stroke-width="0.8"/>'
+        # Reflejo del vidrio
+        '<path d="M7.6 10 V18.6" stroke="#ffffff" stroke-opacity="0.55" stroke-width="1.1" stroke-linecap="round"/>'
+        # Check de verificado
+        '<polyline points="8.9 14.9 11.2 17.2 15.4 12.6" fill="none" stroke="#2a1f05" stroke-width="2.1" '
+        'stroke-linecap="round" stroke-linejoin="round"/>'
+        # Destello
+        '<path d="M20.4 1.6 L21 3.4 L22.8 4 L21 4.6 L20.4 6.4 L19.8 4.6 L18 4 L19.8 3.4 Z" fill="#f3d27c"/>'
+        '</svg>'
     )
 
 
