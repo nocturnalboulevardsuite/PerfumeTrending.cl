@@ -1728,6 +1728,64 @@ st.markdown(estilos_moviles(accent, border_color, is_dark), unsafe_allow_html=Tr
 #   Renderiza la identidad visual de PerfumeTrending (logo vectorial), el switch de tema día/noche
 #   y el botón de ingreso o menú desplegable de perfil/alertas según si el usuario inició sesión.
 # 7. CABECERA CON LOGO COMPACTO E INTERACTIVO
+def sello_verificado(size=22):
+    """Insignia Premium verificada: frasco de perfume dorado con un check y un destello."""
+    return (
+        f'<svg width="{size}" height="{size}" viewBox="0 0 24 24" role="img" aria-label="Premium verificado">'
+        '<defs>'
+        '<linearGradient id="ptSealBody" x1="0" y1="0" x2="1" y2="1">'
+        '<stop offset="0" stop-color="#fbe7a6"/><stop offset="0.45" stop-color="#e2b857"/><stop offset="1" stop-color="#a87a1e"/>'
+        '</linearGradient>'
+        '<linearGradient id="ptSealCap" x1="0" y1="0" x2="0" y2="1">'
+        '<stop offset="0" stop-color="#8a6414"/><stop offset="1" stop-color="#5c420c"/>'
+        '</linearGradient>'
+        '</defs>'
+        # Tapa y cuello
+        '<rect x="8.6" y="1.2" width="6.8" height="3.6" rx="1.2" fill="url(#ptSealCap)"/>'
+        '<rect x="10.2" y="4.6" width="3.6" height="2.4" fill="#c99a2f"/>'
+        # Cuerpo del frasco
+        '<path d="M5.6 9.6 Q5.6 6.8 8.4 6.8 H15.6 Q18.4 6.8 18.4 9.6 V19.4 Q18.4 22.8 15 22.8 H9 '
+        'Q5.6 22.8 5.6 19.4 Z" fill="url(#ptSealBody)" stroke="#b98a26" stroke-width="0.8"/>'
+        # Reflejo del vidrio
+        '<path d="M7.6 10 V18.6" stroke="#ffffff" stroke-opacity="0.55" stroke-width="1.1" stroke-linecap="round"/>'
+        # Check de verificado
+        '<polyline points="8.9 14.9 11.2 17.2 15.4 12.6" fill="none" stroke="#2a1f05" stroke-width="2.1" '
+        'stroke-linecap="round" stroke-linejoin="round"/>'
+        # Destello
+        '<path d="M20.4 1.6 L21 3.4 L22.8 4 L21 4.6 L20.4 6.4 L19.8 4.6 L18 4 L19.8 3.4 Z" fill="#f3d27c"/>'
+        '</svg>'
+    )
+
+# - Insignia Premium junto al nombre del usuario en la cabecera:
+#   El nombre del botón de usuario es texto plano, así que la insignia se agrega con CSS
+#   (::after) usando el SVG del frasco como imagen. Solo se aplica si el plan es Premium/VIP.
+_plan_header = str((st.session_state.get('user_info') or {}).get('plan') or 'free').strip().lower()
+if st.session_state.get('logged_in') and _plan_header in ('premium', 'vip', 'socios_vip'):
+    _sello_uri = "data:image/svg+xml;base64," + base64.b64encode(
+        sello_verificado(18).replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" ', 1).encode("utf-8")
+    ).decode("ascii")
+    st.markdown(f"""
+        <style>
+        div[data-testid="stColumn"]:has(.user-popover-container) button[data-testid="stPopoverButton"] p::after {{
+            content: "";
+            display: inline-block;
+            width: 17px;
+            height: 17px;
+            margin-left: 6px;
+            vertical-align: -3px;
+            background: url("{_sello_uri}") no-repeat center / contain;
+        }}
+        .pt-header-premium {{
+            display: flex; align-items: center; gap: 6px;
+            font-size: 0.82rem; font-weight: 800; margin: 2px 0 8px;
+            color: {"#e2b857" if is_dark else "#8a6414"};
+        }}
+        </style>
+    """, unsafe_allow_html=True)
+    _header_premium_html = f'<div class="pt-header-premium">{sello_verificado(18)}<div>Premium verificado</div></div>'
+else:
+    _header_premium_html = ""
+
 if st.session_state['logged_in']:
     # Mismo tamaño del botón de usuario en todas las páginas: ni muy chico ni muy grande
     col_logo, col_espacio, col_actions = st.columns([5.2, 0.6, 3.2], vertical_alignment="center")
@@ -1760,6 +1818,8 @@ with col_actions:
             user_display = st.session_state['user_info'].get('nombre') or st.session_state['user_info'].get('email', 'Usuario')
             st.markdown('<div class="user-popover-container">', unsafe_allow_html=True)
             with st.popover(f"{user_display}", use_container_width=True):
+                if _header_premium_html:
+                    st.markdown(_header_premium_html, unsafe_allow_html=True)
                 st.write(f"**Conectado como:**")
                 st.write(st.session_state['user_info'].get('email', ''))
                 st.markdown("<div style='margin-top: 8px;'></div>", unsafe_allow_html=True)
