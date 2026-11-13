@@ -1779,24 +1779,22 @@ def sello_verificado(size=22):
         '</svg>'
     )
 
-# - Insignia Premium junto al nombre del usuario en la cabecera:
-#   El nombre del botón de usuario es texto plano, así que la insignia se agrega con CSS
-#   (::after) usando el SVG del frasco como imagen. Solo se aplica si el plan es Premium/VIP.
+# - Insignia Premium en la cabecera:
+#   Se muestra grande y animada en su propia columna, a la izquierda del botón con la foto
+#   de perfil, para que se entienda que es la insignia de usuario verificado.
 _plan_header = str((st.session_state.get('user_info') or {}).get('plan') or 'free').strip().lower()
 if st.session_state.get('logged_in') and _plan_header in ('premium', 'vip', 'socios_vip'):
-    _sello_uri = "data:image/svg+xml;base64," + base64.b64encode(
-        sello_verificado(22).encode("utf-8")
-    ).decode("ascii")
     st.markdown(f"""
         <style>
-        div[data-testid="stColumn"]:has(.user-popover-container) button[data-testid="stPopoverButton"] p::after {{
-            content: "";
-            display: inline-block;
-            width: 22px;
-            height: 22px;
-            margin-left: 4px;
-            vertical-align: -6px;
-            background: url("{_sello_uri}") no-repeat center / contain;
+        .pt-header-seal {{
+            display: flex; align-items: center; justify-content: flex-end;
+            cursor: default; line-height: 0;
+        }}
+        .pt-header-seal svg {{ display: block; }}
+        @media (max-width: 768px) {{
+            div[data-testid="stColumn"]:has(.pt-header-seal) {{
+                flex: 0 0 auto !important; width: auto !important; min-width: 0 !important;
+            }}
         }}
         .pt-header-premium {{
             display: flex; align-items: center; gap: 6px;
@@ -1809,7 +1807,14 @@ if st.session_state.get('logged_in') and _plan_header in ('premium', 'vip', 'soc
 else:
     _header_premium_html = ""
 
-if st.session_state['logged_in']:
+_header_seal_html = (
+    '<div class="pt-header-seal" title="Usuario Premium verificado">'
+    f'{sello_verificado(46)}</div>'
+) if _header_premium_html else ""
+
+if st.session_state['logged_in'] and _header_seal_html:
+    col_logo, col_espacio, col_actions = st.columns([4.8, 0.4, 3.8], vertical_alignment="center")
+elif st.session_state['logged_in']:
     # Mismo tamaño del botón de usuario en todas las páginas: ni muy chico ni muy grande
     col_logo, col_espacio, col_actions = st.columns([5.2, 0.6, 3.2], vertical_alignment="center")
 else:
@@ -1832,7 +1837,11 @@ with col_logo:
     """), unsafe_allow_html=True)
 
 with col_actions:
-    if st.session_state['logged_in']:
+    if st.session_state['logged_in'] and _header_seal_html:
+        btn_col0, btn_col1, btn_col2 = st.columns([0.6, 2.4, 0.8], vertical_alignment="center", gap="small")
+        with btn_col0:
+            st.markdown(_header_seal_html, unsafe_allow_html=True)
+    elif st.session_state['logged_in']:
         btn_col1, btn_col2 = st.columns([2.4, 0.8], vertical_alignment="center", gap="small")
     else:
         btn_col1, btn_col2 = st.columns([2.0, 0.8], vertical_alignment="center", gap="small")
