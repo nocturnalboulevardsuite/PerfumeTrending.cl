@@ -160,6 +160,94 @@ def sincronizar_id_en_url(pid):
         components.html(script, height=0, width=0)
 
 
+# Íconos del aviso: el emoji que guardan las acciones se traduce a un ícono SVG animado.
+_TOAST_ICONOS = {
+    "✅": ("check", "#ff7a1a"),
+    "❤️": ("heart", "#ff4d5e"),
+    "🤍": ("heart_off", "#a1a1aa"),
+    "🔐": ("lock", "#ff7a1a"),
+    "⚠️": ("alert", "#f59e0b"),
+}
+
+
+def _toast_svg(tipo: str) -> str:
+    base = ('<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffffff" '
+            'stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">')
+    if tipo == "check":
+        return base + '<polyline class="pt-toast-draw" points="5 12.5 10 17.5 19 7.5"/></svg>'
+    if tipo in ("heart", "heart_off"):
+        relleno = "#ffffff" if tipo == "heart" else "none"
+        return ('<svg width="15" height="15" viewBox="0 0 24 24" fill="' + relleno + '" stroke="#ffffff" '
+                'stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+                '<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>')
+    if tipo == "lock":
+        return base.replace('stroke-width="3"', 'stroke-width="2.4"') + '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>'
+    return base + '<line x1="12" y1="7" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>'
+
+
+def mostrar_aviso(texto: str, icono: str = "✅"):
+    """Aviso flotante minimalista en HTML/CSS: aparece, dibuja su ícono y se desvanece solo."""
+    import html as _html
+    tipo, color = _TOAST_ICONOS.get(icono, ("check", "#ff7a1a"))
+    st.markdown(f"""
+<style>
+div[data-testid="stElementContainer"]:has(.pt-toast),
+div.element-container:has(.pt-toast) {{ height: 0 !important; min-height: 0 !important; margin: 0 !important; overflow: visible !important; }}
+.pt-toast {{
+    position: fixed; top: 22px; right: 22px; z-index: 1000001;
+    display: flex; align-items: center; gap: 12px;
+    min-width: 260px; max-width: min(380px, calc(100vw - 32px));
+    padding: 13px 18px 15px 13px; box-sizing: border-box; overflow: hidden;
+    background: rgba(20, 21, 25, 0.96); color: #f5f5f4;
+    border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px;
+    box-shadow: 0 18px 40px -18px rgba(0, 0, 0, 0.65);
+    -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+    font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    animation: pt-toast-in 0.42s cubic-bezier(0.2, 0.9, 0.25, 1.15) both,
+               pt-toast-out 0.4s ease-in 3.8s forwards;
+    pointer-events: none;
+}}
+.pt-toast-icon {{
+    position: relative; flex: 0 0 32px; width: 32px; height: 32px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--pt-toast-c);
+    box-shadow: 0 0 0 0 var(--pt-toast-c);
+    animation: pt-toast-pop 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.4) 0.12s both,
+               pt-toast-ring 1.1s ease-out 0.35s 1;
+}}
+.pt-toast-draw {{ stroke-dasharray: 24; stroke-dashoffset: 24; animation: pt-toast-draw 0.42s ease-out 0.38s forwards; }}
+.pt-toast-text {{ font-size: 0.92rem; font-weight: 600; line-height: 1.35; color: #f5f5f4; }}
+.pt-toast-bar {{
+    position: absolute; left: 0; bottom: 0; height: 2px; width: 100%;
+    background: var(--pt-toast-c); opacity: 0.85; transform-origin: left;
+    animation: pt-toast-bar 3.8s linear forwards;
+}}
+@keyframes pt-toast-in {{ from {{ opacity: 0; transform: translateY(-10px) scale(0.97); }} to {{ opacity: 1; transform: none; }} }}
+@keyframes pt-toast-out {{ to {{ opacity: 0; transform: translateY(-6px); visibility: hidden; }} }}
+@keyframes pt-toast-pop {{ from {{ transform: scale(0.4); opacity: 0; }} to {{ transform: scale(1); opacity: 1; }} }}
+@keyframes pt-toast-ring {{ 0% {{ box-shadow: 0 0 0 0 var(--pt-toast-c); }} 100% {{ box-shadow: 0 0 0 10px transparent; }} }}
+@keyframes pt-toast-draw {{ to {{ stroke-dashoffset: 0; }} }}
+@keyframes pt-toast-bar {{ from {{ transform: scaleX(1); }} to {{ transform: scaleX(0); }} }}
+@media (max-width: 768px) {{
+    .pt-toast {{ top: auto; bottom: 18px; right: 50%; transform: translateX(50%); min-width: 0; width: calc(100vw - 32px);
+                 animation: pt-toast-fade 0.3s ease-out both, pt-toast-out-m 0.4s ease-in 3.8s forwards; }}
+    @keyframes pt-toast-fade {{ from {{ opacity: 0; }} to {{ opacity: 1; }} }}
+    @keyframes pt-toast-out-m {{ to {{ opacity: 0; visibility: hidden; }} }}
+}}
+@media (prefers-reduced-motion: reduce) {{
+    .pt-toast, .pt-toast-icon, .pt-toast-bar {{ animation-duration: 0.01s !important; }}
+    .pt-toast {{ animation: pt-toast-out 0.01s linear 3.8s forwards !important; }}
+    .pt-toast-draw {{ stroke-dashoffset: 0; animation: none; }}
+}}
+</style>
+<div class="pt-toast" role="status" aria-live="polite" style="--pt-toast-c: {color};">
+    <div class="pt-toast-icon">{_toast_svg(tipo)}</div>
+    <div class="pt-toast-text">{_html.escape(str(texto))}</div>
+    <div class="pt-toast-bar"></div>
+</div>
+""", unsafe_allow_html=True)
+
+
 def mostrar_aviso_favoritos():
     """Se llama al inicio de cada página (ejecución completa): muestra el aviso pendiente."""
     # Esta ejecución ya es completa, así que no hace falta recargar otra vez.
@@ -168,7 +256,7 @@ def mostrar_aviso_favoritos():
     if aviso:
         texto, icono = aviso
         try:
-            st.toast(texto, icon=icono)
+            mostrar_aviso(texto, icono)
         except Exception:
             st.toast(texto)
 
