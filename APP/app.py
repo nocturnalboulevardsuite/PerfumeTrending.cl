@@ -2433,6 +2433,8 @@ elif st.session_state['current_page'] == 'planes_page':
     vip_inner = card_bg if str(card_bg).startswith("#") else ("#15171c" if is_dark else "#ffffff")
     rgb_stops = "#f5c542, #ff7a1a, #ff2d55, #ff4fb8, #8b3dff, #2f6bff, #8b3dff, #ff4fb8, #f5c542"
     logged_in = bool(st.session_state.get('logged_in'))
+    plan_usuario = str((st.session_state.get('user_info') or {}).get('plan') or 'free').strip().lower()
+    es_premium = logged_in and plan_usuario in ('premium', 'vip', 'socios_vip')
 
     def check_icon(stroke):
         return (f'<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="{stroke}" '
@@ -2701,7 +2703,7 @@ elif st.session_state['current_page'] == 'planes_page':
     col_free, col_premium, col_vip = st.columns(3, gap="medium")
 
     with col_free:
-        badge_free = '<div class="pt-plan-badge">Plan actual</div>' if logged_in else ""
+        badge_free = '<div class="pt-plan-badge">Plan actual</div>' if logged_in and not es_premium else ""
         st.markdown(clean_html(f"""
             <div class="pt-plan">
                 {badge_free}
@@ -2718,7 +2720,9 @@ elif st.session_state['current_page'] == 'planes_page':
                 ], "pt-check-free")}
             </div>
         """), unsafe_allow_html=True)
-        if logged_in:
+        if es_premium:
+            st.button("Incluido en Premium", key="btn_plan_free", disabled=True, use_container_width=True)
+        elif logged_in:
             st.button("Plan actual", key="btn_plan_free", disabled=True, use_container_width=True)
         elif st.button("Crear cuenta", key="btn_plan_free", use_container_width=True):
             st.session_state['show_login_modal'] = True
@@ -2728,6 +2732,7 @@ elif st.session_state['current_page'] == 'planes_page':
     with col_premium:
         st.markdown(clean_html(f"""
             <div class="pt-plan pt-plan-premium">
+                {'<div class="pt-plan-badge">Plan actual</div>' if es_premium else ''}
                 <div class="pt-plan-name">Premium</div>
                 <div class="pt-plan-for">Alertas de precio</div>
                 <div class="pt-plan-price">$2.000<span class="pt-plan-price-unit">CLP / mes</span></div>
@@ -2740,15 +2745,17 @@ elif st.session_state['current_page'] == 'planes_page':
                 ], "pt-check-premium")}
             </div>
         """), unsafe_allow_html=True)
-        if st.button("Suscribirse a Premium", key="btn_plan_premium", use_container_width=True):
+        if es_premium:
+            if st.button("Plan activo · Ver comprobante", key="btn_plan_premium", use_container_width=True):
+                st.switch_page("pages/comprarplan.py")
+        elif st.button("Suscribirse a Premium", key="btn_plan_premium", use_container_width=True):
             if not logged_in:
                 st.session_state['show_login_modal'] = True
                 st.session_state['show_visual_modal'] = False
                 st.rerun()
             else:
-                st.session_state['plan_premium_aviso'] = True
-        if st.session_state.get('plan_premium_aviso'):
-            st.info("El pago del plan Premium aún no se encuentra habilitado. Se notificará a los usuarios cuando esté disponible.")
+                reset_modals()
+                st.switch_page("pages/comprarplan.py")
 
     with col_vip:
         st.markdown(clean_html(f"""
