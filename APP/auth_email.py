@@ -24,6 +24,7 @@ SMTP_SENDER_NAME, SMTP_SENDER_EMAIL.
 
 import hashlib
 import hmac
+import html
 import os
 import re
 import secrets
@@ -266,7 +267,118 @@ def _iniciar_sesion(email: str, nombre: str):
         except Exception:
             pass
     if "_fav_aviso" not in st.session_state:
-        st.session_state["_fav_aviso"] = ("Sesión iniciada. ¡Bienvenido!", "✅")
+        st.session_state["_fav_aviso"] = ("Has ingresado a tu cuenta.", "✅")
+
+
+# -----------------------------------------------------------------------------
+# Estilos del modal de acceso
+# -----------------------------------------------------------------------------
+def _paleta_modal():
+    """Colores según el tema activo (oscuro por defecto si no se puede leer la paleta)."""
+    try:
+        from ui import get_theme_palette
+        pal = get_theme_palette()
+        oscuro = bool(pal.is_dark)
+    except Exception:
+        oscuro = True
+    if oscuro:
+        return {"text": "#f5f5f4", "sub": "#a8a29e", "border": "rgba(255,255,255,0.12)",
+                "field": "rgba(255,255,255,0.04)", "soft": "rgba(255,255,255,0.06)"}
+    return {"text": "#1c1917", "sub": "#6b6159", "border": "#e2dcd5",
+            "field": "#ffffff", "soft": "#f6f3ef"}
+
+
+def _estilos_modal():
+    c = _paleta_modal()
+    accent = "#d83737"
+    st.markdown(f"""
+<style>
+div[role="dialog"]:has(.pt-auth) {{ border-radius: 20px !important; }}
+div[role="dialog"]:has(.pt-auth) h2 {{ font-size: 1rem !important; font-weight: 700 !important; color: {c["sub"]} !important; }}
+.pt-auth {{ font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }}
+.pt-auth-steps {{ display: flex; gap: 6px; margin: 0 0 18px; }}
+.pt-auth-steps div {{ height: 4px; flex: 1; border-radius: 999px; background: {c["soft"]}; }}
+.pt-auth-steps div.on {{ background: {accent}; }}
+.pt-auth-title {{ font-size: 1.45rem; font-weight: 800; letter-spacing: -0.02em; color: {c["text"]}; line-height: 1.2; }}
+.pt-auth-text {{ font-size: 0.92rem; color: {c["sub"]}; line-height: 1.5; margin: 6px 0 16px; }}
+.pt-auth-text b {{ color: {c["text"]}; font-weight: 700; }}
+.pt-auth-msg {{
+    display: flex; align-items: flex-start; gap: 8px; font-size: 0.86rem; line-height: 1.45;
+    padding: 10px 12px; border-radius: 12px; margin: 2px 0 12px;
+    animation: pt-auth-msg-in 0.25s ease-out both;
+}}
+.pt-auth-msg svg {{ flex: 0 0 16px; margin-top: 1px; }}
+.pt-auth-msg-error {{ background: rgba(216, 55, 55, 0.10); color: {"#fca5a5" if c["text"] == "#f5f5f4" else "#b91c1c"}; border: 1px solid rgba(216, 55, 55, 0.30); }}
+.pt-auth-msg-ok {{ background: rgba(255, 122, 26, 0.10); color: {"#fdba74" if c["text"] == "#f5f5f4" else "#c2410c"}; border: 1px solid rgba(255, 122, 26, 0.32); }}
+.pt-auth-msg-warn {{ background: {c["soft"]}; color: {c["sub"]}; border: 1px solid {c["border"]}; }}
+@keyframes pt-auth-msg-in {{ from {{ opacity: 0; transform: translateY(-4px); }} to {{ opacity: 1; transform: none; }} }}
+.pt-auth-foot {{ display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 0.78rem; color: {c["sub"]}; margin-top: 14px; }}
+
+/* Campos */
+div[role="dialog"]:has(.pt-auth) [data-testid="stWidgetLabel"] p {{ font-size: 0.82rem !important; font-weight: 600 !important; color: {c["sub"]} !important; }}
+div[role="dialog"]:has(.pt-auth) [data-testid="stTextInputRootElement"],
+div[role="dialog"]:has(.pt-auth) div[data-baseweb="input"] {{
+    background: {c["field"]} !important; border: 1px solid {c["border"]} !important;
+    border-radius: 12px !important; min-height: 48px !important; box-shadow: none !important;
+}}
+div[role="dialog"]:has(.pt-auth) [data-testid="stTextInputRootElement"]:focus-within,
+div[role="dialog"]:has(.pt-auth) div[data-baseweb="input"]:focus-within {{
+    border-color: {accent} !important; box-shadow: 0 0 0 3px rgba(216, 55, 55, 0.15) !important;
+}}
+div[role="dialog"]:has(.pt-auth) input {{ font-size: 0.98rem !important; color: {c["text"]} !important; background: transparent !important; }}
+div[role="dialog"] .st-key-_otp_input_codigo input {{
+    text-align: center !important; font-size: 1.7rem !important; font-weight: 800 !important;
+    letter-spacing: 0.45em !important; padding-left: 0.45em !important; font-variant-numeric: tabular-nums !important;
+}}
+div[role="dialog"] .st-key-_otp_input_codigo [data-testid="stTextInputRootElement"],
+div[role="dialog"] .st-key-_otp_input_codigo div[data-baseweb="input"] {{ min-height: 60px !important; }}
+div[role="dialog"]:has(.pt-auth) [data-testid="InputInstructions"] {{ display: none !important; }}
+
+/* Botón principal */
+div[role="dialog"] .st-key-_otp_btn_enviar button,
+div[role="dialog"] .st-key-_otp_btn_verificar button {{
+    background: {accent} !important; border: 1px solid {accent} !important; border-radius: 12px !important;
+    min-height: 50px !important; box-shadow: 0 10px 22px -14px {accent} !important;
+    transition: background-color 0.18s ease, transform 0.18s ease !important;
+}}
+div[role="dialog"] .st-key-_otp_btn_enviar button:hover,
+div[role="dialog"] .st-key-_otp_btn_verificar button:hover {{ background: #b92d2d !important; border-color: #b92d2d !important; transform: translateY(-1px); }}
+div[role="dialog"] .st-key-_otp_btn_enviar button p,
+div[role="dialog"] .st-key-_otp_btn_verificar button p {{ color: #ffffff !important; font-weight: 700 !important; font-size: 0.98rem !important; }}
+
+/* Acciones secundarias como enlaces */
+div[role="dialog"] .st-key-_otp_btn_reenviar button,
+div[role="dialog"] .st-key-_otp_btn_cambiar button {{
+    background: transparent !important; border: none !important; box-shadow: none !important; min-height: 36px !important;
+}}
+div[role="dialog"] .st-key-_otp_btn_reenviar button p,
+div[role="dialog"] .st-key-_otp_btn_cambiar button p {{ color: {c["sub"]} !important; font-weight: 600 !important; font-size: 0.86rem !important; }}
+div[role="dialog"] .st-key-_otp_btn_reenviar button:hover p,
+div[role="dialog"] .st-key-_otp_btn_cambiar button:hover p {{ color: {c["text"]} !important; text-decoration: underline; }}
+</style>
+""", unsafe_allow_html=True)
+
+
+_ICONO_ERROR = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'
+_ICONO_OK = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'
+_ICONO_CANDADO = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>'
+
+
+def _mensaje(texto: str, tipo: str = "error"):
+    icono = _ICONO_OK if tipo == "ok" else _ICONO_ERROR
+    st.markdown(
+        f'<div class="pt-auth-msg pt-auth-msg-{tipo}">{icono}<div>{html.escape(texto)}</div></div>',
+        unsafe_allow_html=True,
+    )
+
+
+def _encabezado(paso: int, titulo: str, texto_html: str):
+    pasos = "".join(f'<div class="{"on" if i <= paso else ""}"></div>' for i in (1, 2))
+    st.markdown(
+        f'<div class="pt-auth"><div class="pt-auth-steps">{pasos}</div>'
+        f'<div class="pt-auth-title">{titulo}</div><div class="pt-auth-text">{texto_html}</div></div>',
+        unsafe_allow_html=True,
+    )
 
 
 # -----------------------------------------------------------------------------
@@ -274,19 +386,19 @@ def _iniciar_sesion(email: str, nombre: str):
 # -----------------------------------------------------------------------------
 @st.dialog("Ingresar a PerfumeTrending")
 def modal_autenticacion():
+    _estilos_modal()
     stage = st.session_state.get("_otp_stage", "email")
-
-    if not smtp_configurado():
-        st.warning(
-            "El envío de códigos por correo aún no está configurado en el servidor. "
-            "Agrega la sección [smtp] en .streamlit/secrets.toml."
-        )
+    minutos = CODIGO_VIGENCIA_SEG // 60
 
     if stage == "email":
-        st.markdown(
-            "Escribe tu correo y te enviaremos un código de 6 dígitos para entrar. "
-            "Si es tu primera vez, tu cuenta se crea automáticamente."
+        _encabezado(
+            1,
+            "Ingresa con tu correo",
+            f"Te enviaremos un código de {CODIGO_DIGITOS} dígitos. Si es tu primera vez, la cuenta se crea automáticamente.",
         )
+        if not smtp_configurado():
+            _mensaje("El envío de códigos por correo aún no está configurado en el servidor.", "warn")
+
         email = st.text_input(
             "Correo electrónico",
             value=st.session_state.get("_otp_email", ""),
@@ -294,45 +406,54 @@ def modal_autenticacion():
             key="_otp_input_email",
         )
         nombre = st.text_input(
-            "Tu nombre (opcional, para cuentas nuevas)",
+            "Nombre (opcional)",
             value=st.session_state.get("_otp_nombre", ""),
             placeholder="Ej: Camila Rojas",
             max_chars=80,
             key="_otp_input_nombre",
         )
         if st.session_state.get("_otp_error"):
-            st.error(st.session_state.pop("_otp_error"))
+            _mensaje(st.session_state.pop("_otp_error"), "error")
 
         if st.button("Enviar código", key="_otp_btn_enviar", type="primary", use_container_width=True):
             email_limpio = (email or "").strip().lower()
             if not EMAIL_RE.match(email_limpio):
                 st.session_state["_otp_error"] = "Escribe un correo válido, por ejemplo nombre@correo.cl."
             else:
-                with st.spinner("Enviando código a tu correo..."):
+                with st.spinner("Enviando código..."):
                     ok, mensaje = _generar_y_enviar(email_limpio, (nombre or "").strip())
                 if ok:
-                    st.session_state["_otp_info"] = f"Te enviamos un código a {email_limpio}."
+                    st.session_state["_otp_info"] = "Código enviado."
                 else:
                     st.session_state["_otp_error"] = mensaje
             st.rerun(scope="fragment")
+
+        st.markdown(
+            f'<div class="pt-auth-foot">{_ICONO_CANDADO}<div>Sin contraseñas. El código vence en {minutos} minutos.</div></div>',
+            unsafe_allow_html=True,
+        )
         return
 
     # --- Etapa 2: ingresar el código recibido ---
     email = st.session_state.get("_otp_email", "")
-    if st.session_state.get("_otp_info"):
-        st.success(st.session_state.pop("_otp_info"))
-    st.markdown(
-        f"Revisa la bandeja de entrada de **{email}** (y la carpeta de spam) "
-        f"y escribe el código de {CODIGO_DIGITOS} dígitos."
+    _encabezado(
+        2,
+        "Revisa tu correo",
+        f"Escribe el código de {CODIGO_DIGITOS} dígitos que enviamos a <b>{html.escape(email)}</b>. "
+        "Si no aparece, revisa la carpeta de spam.",
     )
+    if st.session_state.get("_otp_info"):
+        _mensaje(st.session_state.pop("_otp_info"), "ok")
+
     codigo = st.text_input(
         "Código de acceso",
         max_chars=CODIGO_DIGITOS,
-        placeholder="123456",
+        placeholder="000000",
         key="_otp_input_codigo",
+        label_visibility="collapsed",
     )
     if st.session_state.get("_otp_error"):
-        st.error(st.session_state.pop("_otp_error"))
+        _mensaje(st.session_state.pop("_otp_error"), "error")
 
     if st.button("Ingresar", key="_otp_btn_verificar", type="primary", use_container_width=True):
         ok, mensaje = _verificar(codigo)
@@ -352,7 +473,7 @@ def modal_autenticacion():
             with st.spinner("Enviando un código nuevo..."):
                 ok, mensaje = _generar_y_enviar(email, st.session_state.get("_otp_nombre", ""))
             if ok:
-                st.session_state["_otp_info"] = f"Te enviamos un código nuevo a {email}."
+                st.session_state["_otp_info"] = "Te enviamos un código nuevo."
             else:
                 st.session_state["_otp_error"] = mensaje
             st.rerun(scope="fragment")
