@@ -2736,7 +2736,7 @@ elif st.session_state['current_page'] == 'planes_page':
                     "Incluye todos los beneficios del plan Free",
                     "Notificación cuando un perfume favorito baja de precio",
                     "Detalle de la tienda y del nuevo precio",
-                    "Seguimiento de todos los favoritos de la cuenta",
+                    "Seguimiento de sus perfumes y fragancias favoritas",
                 ], "pt-check-premium")}
             </div>
         """), unsafe_allow_html=True)
@@ -2763,7 +2763,7 @@ elif st.session_state['current_page'] == 'planes_page':
                     {lista([
                         "Incluye todos los beneficios del plan Premium",
                         "Catas de fragancias, al estilo de una cata de vinos",
-                        "Mystery box de decants exclusivas para socios",
+                        "Mystery box mensual de decants, con fragancias distintas cada mes",
                         "Descubrimiento de fragancias antes de adquirir el frasco completo",
                     ], "pt-check-vip")}
                 </div>
