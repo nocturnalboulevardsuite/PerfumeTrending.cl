@@ -1,15 +1,22 @@
 """
-PerfumeTrending.cl — Compra del Plan Premium (Checkout de demostración)
-=======================================================================
-Pantalla de pago con tarjeta de débito o crédito para activar el plan Premium:
-- Vista previa de la tarjeta que se actualiza con los datos ingresados.
-- Validación real del formulario (algoritmo de Luhn, vencimiento, CVV y titular).
-- Tarjetas de prueba: una aprobada y una rechazada, para demostrar ambos casos.
-- Al aprobarse, el perfil queda con plan 'premium' y aparece el sello de verificado.
+PerfumeTrending.cl — Compra del Plan Premium (checkout con detección real de Mercado Pago)
+=========================================================================================
+- La marca (Visa, Mastercard, American Express...), el tipo (débito o crédito) y el banco
+  emisor se consultan EN VIVO a la API de Mercado Pago con los primeros dígitos de la tarjeta
+  (BIN). Solo se envía el BIN: el número completo nunca sale de la app.
+- Si Mercado Pago no está configurado o no responde, se usa una detección local por prefijo.
+- Validación del formulario: algoritmo de Luhn, largo según la marca, vencimiento, CVV y titular.
+- Tarjetas de prueba oficiales de Mercado Pago Chile, que se rellenan con un clic.
+- El cobro es SIMULADO (no se cobra dinero). El resultado sigue las reglas del sandbox de
+  Mercado Pago según el nombre del titular: APRO aprueba, OTHE / FUND / SECU rechazan.
 
-IMPORTANTE: es un pago SIMULADO. No se conecta a ninguna pasarela, no se cobra dinero
-y los datos de la tarjeta nunca se guardan (solo se conservan los últimos 4 dígitos
-en el comprobante de la sesión).
+Configuración (.streamlit/secrets.toml):
+
+    [mercadopago]
+    public_key = "TEST-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+
+(o la variable de entorno MP_PUBLIC_KEY). La public key se obtiene en
+Mercado Pago Developers > Tus integraciones > Credenciales de prueba.
 """
 
 import streamlit as st
@@ -18,6 +25,9 @@ import os
 import math
 import time
 import uuid
+import json
+import urllib.parse
+import urllib.request
 from datetime import datetime, date
 
 # Configuración de rutas canónicas para importar backend y ui
@@ -95,9 +105,31 @@ font_sans = "'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, H
 
 PRECIO_PREMIUM = 2000
 
-# Tarjetas de prueba (formato de prueba estándar de las pasarelas, pasan el algoritmo de Luhn)
-TARJETA_APROBADA = {"num": "4242 4242 4242 4242", "nombre": "USUARIO DEMO", "venc": "12/30", "cvv": "123"}
-TARJETA_RECHAZADA = "4000000000000002"
+# Tarjetas de prueba oficiales de Mercado Pago Chile (docs: "Tarjetas de prueba").
+TARJETAS_PRUEBA = {
+    "Débito": {"num": "4023 6535 2391 4373", "venc": "11/30", "cvv": "123"},   # Visa Débito
+    "Crédito": {"num": "5416 7526 0258 2580", "venc": "11/30", "cvv": "123"},  # Mastercard
+}
+# Nombre del titular en el sandbox de Mercado Pago -> resultado del pago
+RESULTADOS_SANDBOX = {
+    "OTHE": "Pago rechazado por un error general del emisor.",
+    "FUND": "Pago rechazado por saldo insuficiente.",
+    "SECU": "Pago rechazado: el código de seguridad no es válido.",
+    "EXPI": "Pago rechazado por un problema con la fecha de vencimiento.",
+    "CALL": "Pago rechazado: el banco requiere autorizar la compra.",
+    "LOCK": "Pago rechazado: la tarjeta está bloqueada.",
+}
+
+
+def _mp_public_key():
+    try:
+        if "mercadopago" in st.secrets:
+            pk = st.secrets["mercadopago"].get("public_key")
+            if pk:
+                return str(pk)
+    except Exception:
+        pass
+    return os.environ.get("MP_PUBLIC_KEY") or ""
 
 
 def sello_verificado(size=22):
@@ -152,7 +184,7 @@ def sello_verificado(size=22):
 
 
 # =============================================================================
-# 2. VALIDACIONES DE LA TARJETA
+# 2. DETECCIÓN DE LA TARJETA (MERCADO PAGO) Y VALIDACIONES
 # =============================================================================
 def solo_digitos(valor):
     return "".join(ch for ch in str(valor or "") if ch.isdigit())
@@ -172,12 +204,98 @@ def luhn_valido(numero):
     return total % 10 == 0
 
 
-def marca_tarjeta(numero):
-    if numero.startswith("4"):
-        return "VISA"
-    if numero[:2] in ("51", "52", "53", "54", "55") or numero[:4].isdigit() and 2221 <= int(numero[:4] or 0) <= 2720:
-        return "Mastercard"
-    return ""
+_NOMBRES_MARCA = {
+    "visa": "Visa", "debvisa": "Visa", "master": "Mastercard", "debmaster": "Mastercard",
+    "amex": "American Express", "diners": "Diners Club", "magna": "Magna", "redcompra": "Redcompra",
+}
+
+
+def _deteccion_local(bin_):
+    """Detección por prefijo cuando Mercado Pago no está disponible (no conoce el banco)."""
+    d = {"fuente": "local", "marca": "", "tipo": "", "emisor": "", "logo": "", "largo": 16, "cvv": 3}
+    if bin_.startswith("4"):
+        d["marca"] = "Visa"
+    elif bin_[:2] in ("51", "52", "53", "54", "55") or (len(bin_) >= 4 and 2221 <= int(bin_[:4]) <= 2720):
+        d["marca"] = "Mastercard"
+    elif bin_[:2] in ("34", "37"):
+        d.update(marca="American Express", largo=15, cvv=4)
+    elif bin_[:2] in ("36", "38") or bin_[:3] in ("300", "301", "302", "303", "304", "305"):
+        d.update(marca="Diners Club", largo=14)
+    return d
+
+
+def _pedir_json(url):
+    req = urllib.request.Request(url, headers={"Accept": "application/json", "User-Agent": "PerfumeTrending/1.0"})
+    with urllib.request.urlopen(req, timeout=6) as resp:
+        return json.loads(resp.read().decode("utf-8"))
+
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def detectar_tarjeta(bin_: str, public_key: str):
+    """Consulta a Mercado Pago la marca, el tipo y el banco emisor a partir del BIN."""
+    if len(bin_) < 6:
+        return None
+    if public_key:
+        try:
+            q = urllib.parse.urlencode({
+                "public_key": public_key, "bins": bin_, "marketplace": "NONE", "status": "active",
+            })
+            data = _pedir_json(f"https://api.mercadopago.com/v1/payment_methods/search?{q}")
+            resultados = data.get("results") if isinstance(data, dict) else None
+            if resultados:
+                pm = resultados[0]
+                ajustes = (pm.get("settings") or [{}])[0] or {}
+                largo = (ajustes.get("card_number") or {}).get("length") or 16
+                cvv = (ajustes.get("security_code") or {}).get("length") or 3
+                return {
+                    "fuente": "mercadopago",
+                    "id": pm.get("id", ""),
+                    "marca": _NOMBRES_MARCA.get(pm.get("id", ""), pm.get("name", "")),
+                    "tipo": pm.get("payment_type_id", ""),
+                    "emisor": (pm.get("issuer") or {}).get("name", ""),
+                    "logo": pm.get("secure_thumbnail") or pm.get("thumbnail") or "",
+                    "largo": int(largo),
+                    "cvv": int(cvv),
+                }
+        except Exception:
+            pass
+        # Respaldo: el recurso de cuotas también informa medio de pago, tipo y emisor
+        try:
+            q = urllib.parse.urlencode({"public_key": public_key, "bin": bin_, "amount": PRECIO_PREMIUM})
+            data = _pedir_json(f"https://api.mercadopago.com/v1/payment_methods/installments?{q}")
+            if isinstance(data, list) and data:
+                it = data[0]
+                local = _deteccion_local(bin_)
+                pm_id = it.get("payment_method_id", "")
+                return {
+                    "fuente": "mercadopago",
+                    "id": pm_id,
+                    "marca": _NOMBRES_MARCA.get(pm_id, local["marca"] or pm_id.title()),
+                    "tipo": it.get("payment_type_id", ""),
+                    "emisor": (it.get("issuer") or {}).get("name", ""),
+                    "logo": (it.get("issuer") or {}).get("secure_thumbnail", "") or "",
+                    "largo": local["largo"],
+                    "cvv": local["cvv"],
+                }
+        except Exception:
+            pass
+    d = _deteccion_local(bin_)
+    d["fuente"] = "local_sin_mp" if public_key else "local"
+    return d
+
+
+def tipo_legible(tipo):
+    return {"debit_card": "Débito", "credit_card": "Crédito", "prepaid_card": "Prepago"}.get(tipo, "")
+
+
+def formatear_numero(numero, largo):
+    """Agrupa como en la tarjeta física: 4-6-5 para American Express, 4-4-4-4 para el resto."""
+    relleno = (numero + "•" * max(0, largo - len(numero)))[:largo]
+    if largo == 15:
+        return f"{relleno[:4]} {relleno[4:10]} {relleno[10:]}"
+    if largo == 14:
+        return f"{relleno[:4]} {relleno[4:10]} {relleno[10:]}"
+    return " ".join(relleno[i:i + 4] for i in range(0, len(relleno), 4))
 
 
 def parsear_vencimiento(valor):
@@ -190,10 +308,14 @@ def parsear_vencimiento(valor):
     return mes, anio
 
 
-def validar(numero, nombre, venc, cvv):
+def validar(numero, nombre, venc, cvv, info):
     errores = []
-    if len(numero) != 16 or not luhn_valido(numero):
+    largo = (info or {}).get("largo", 16)
+    largo_cvv = (info or {}).get("cvv", 3)
+    if len(numero) != largo or not luhn_valido(numero):
         errores.append("El número de tarjeta no es válido.")
+    elif info and not info.get("marca"):
+        errores.append("No reconocemos la marca de esta tarjeta.")
     if len(nombre.strip()) < 3:
         errores.append("Ingrese el nombre del titular tal como aparece en la tarjeta.")
     v = parsear_vencimiento(venc)
@@ -202,17 +324,19 @@ def validar(numero, nombre, venc, cvv):
         errores.append("La fecha de vencimiento debe tener el formato MM/AA.")
     elif (v[1], v[0]) < (hoy.year, hoy.month):
         errores.append("La tarjeta está vencida.")
-    if len(cvv) != 3:
-        errores.append("El código de seguridad (CVV) debe tener 3 dígitos.")
+    if len(cvv) != largo_cvv:
+        errores.append(f"El código de seguridad (CVV) debe tener {largo_cvv} dígitos.")
     return errores
 
 
-def usar_tarjeta_prueba():
-    st.session_state["cp_num"] = TARJETA_APROBADA["num"]
-    st.session_state["cp_nombre"] = TARJETA_APROBADA["nombre"]
-    st.session_state["cp_venc"] = TARJETA_APROBADA["venc"]
-    st.session_state["cp_cvv"] = TARJETA_APROBADA["cvv"]
-    st.session_state.pop("cp_errores", None)
+def usar_tarjeta_prueba(tipo):
+    t = TARJETAS_PRUEBA[tipo]
+    st.session_state["cp_num"] = t["num"]
+    st.session_state["cp_nombre"] = "APRO"
+    st.session_state["cp_venc"] = t["venc"]
+    st.session_state["cp_cvv"] = t["cvv"]
+    st.session_state["cp_tipo"] = tipo
+    st.session_state["_cp_ultimo_bin"] = solo_digitos(t["num"])[:8]
 
 
 def volver_a_planes():
@@ -286,6 +410,17 @@ div[data-testid="stRadio"] div[role="radiogroup"] > label p {{ font-weight: 700 
     color: {input_text} !important; background: transparent !important; font-size: 0.98rem !important;
 }}
 [data-testid="stWidgetLabel"] p {{ font-size: 0.84rem !important; font-weight: 600 !important; color: {subtext_color} !important; }}
+
+.cp-card-logo {{ height: 26px; background: #fff; border-radius: 6px; padding: 3px 6px; }}
+.cp-detect {{ display: flex; align-items: center; gap: 8px; font-size: 0.84rem; margin: -6px 0 12px 2px; color: {subtext_color}; }}
+.cp-detect b {{ color: {text_color}; }}
+.cp-detect-dot {{ width: 8px; height: 8px; border-radius: 50%; flex: 0 0 8px; }}
+.cp-detect-mp .cp-detect-dot {{ background: #22c55e; box-shadow: 0 0 0 3px rgba(34,197,94,0.18); }}
+.cp-detect-local .cp-detect-dot {{ background: {subtext_color}; }}
+div.st-key-btn_cp_demo_deb div.stButton > button,
+div.st-key-btn_cp_demo_cred div.stButton > button {{ min-height: 40px !important; border-style: dashed !important; }}
+div.st-key-btn_cp_demo_deb div.stButton > button p,
+div.st-key-btn_cp_demo_cred div.stButton > button p {{ font-size: 0.86rem !important; }}
 
 /* Nota de tarjetas de prueba */
 .cp-demo {{
@@ -429,26 +564,42 @@ st.markdown(clean_html("""
     <div class="cp-lede">Complete los datos de su tarjeta para activar las alertas de precio de sus fragancias favoritas.</div>
 """), unsafe_allow_html=True)
 
+MP_PK = _mp_public_key()
+
+# Detección con los dígitos ya escritos (antes de dibujar los campos)
+num_actual = solo_digitos(st.session_state.get("cp_num", ""))[:19]
+bin_actual = num_actual[:8]
+info = detectar_tarjeta(bin_actual, MP_PK) if len(bin_actual) >= 6 else None
+
+# Si cambia la tarjeta, el selector Débito / Crédito se ajusta solo al tipo que informa Mercado Pago
+if info and bin_actual != st.session_state.get("_cp_ultimo_bin"):
+    st.session_state["_cp_ultimo_bin"] = bin_actual
+    if tipo_legible(info.get("tipo")) in ("Débito", "Crédito"):
+        st.session_state["cp_tipo"] = tipo_legible(info.get("tipo"))
+
 col_pago, col_resumen = st.columns([6, 4], gap="large")
 
 with col_pago:
     st.markdown("<div class='cp-step'>Medio de pago</div>", unsafe_allow_html=True)
     tipo = st.radio("Tipo de tarjeta", ["Débito", "Crédito"], horizontal=True, key="cp_tipo", label_visibility="collapsed")
 
-    # Vista previa con los valores actuales de los campos
-    num_prev = solo_digitos(st.session_state.get("cp_num", ""))[:16]
-    num_fmt = " ".join(
-        (num_prev + "•" * (16 - len(num_prev)))[i:i + 4] for i in range(0, 16, 4)
-    )
+    largo = (info or {}).get("largo", 16)
+    num_fmt = escape_html(formatear_numero(num_actual[:largo], largo))
     nombre_prev = escape_html((st.session_state.get("cp_nombre") or "NOMBRE DEL TITULAR").upper())
     venc_prev = escape_html(st.session_state.get("cp_venc") or "MM/AA")
-    marca_prev = marca_tarjeta(num_prev)
+    marca_txt = escape_html((info or {}).get("marca", ""))
+    emisor_txt = escape_html((info or {}).get("emisor") or "Su banco")
+    logo = (info or {}).get("logo", "")
+    marca_html = (
+        f'<img class="cp-card-logo" src="{escape_html(logo)}" alt="{marca_txt}">' if logo.startswith("https://")
+        else f'<div class="cp-card-brand">{marca_txt}</div>'
+    )
     clase_tarjeta = "cp-card-debito" if tipo == "Débito" else "cp-card-credito"
 
     st.markdown(clean_html(f"""
         <div class="cp-card {clase_tarjeta}" aria-hidden="true">
             <div class="cp-card-row">
-                <div class="cp-card-bank">Banco Demo</div>
+                <div class="cp-card-bank">{emisor_txt}</div>
                 <div class="cp-card-type">{tipo.upper()}</div>
             </div>
             <div class="cp-card-row"><div class="cp-chip"></div></div>
@@ -462,50 +613,68 @@ with col_pago:
                     <div class="cp-card-label">VENCE</div>
                     <div class="cp-card-val">{venc_prev}</div>
                 </div>
-                <div class="cp-card-brand">{marca_prev}</div>
+                {marca_html}
             </div>
         </div>
     """), unsafe_allow_html=True)
 
-    st.markdown(clean_html(f"""
+    st.markdown(clean_html("""
         <div class="cp-demo">
-            Entorno de demostración: no se realiza ningún cargo real.<br>
-            Tarjeta aprobada: <b>4242 4242 4242 4242</b>, vence <b>12/30</b>, CVV <b>123</b>.<br>
-            Tarjeta rechazada: <b>4000 0000 0000 0002</b>, con cualquier fecha futura.
+            Entorno de demostración: no se realiza ningún cargo real. Las tarjetas de prueba son las
+            oficiales de Mercado Pago Chile y se rellenan con un clic. Con el titular <b>APRO</b> el pago
+            se aprueba; con <b>OTHE</b>, <b>FUND</b> o <b>SECU</b> se rechaza.
         </div>
     """), unsafe_allow_html=True)
-    c_demo, _ = st.columns([2.6, 4])
-    with c_demo:
-        st.button("Usar tarjeta de prueba", key="btn_cp_demo", on_click=usar_tarjeta_prueba, use_container_width=True)
+    c_deb, c_cred, _ = st.columns([2, 2, 1.4])
+    with c_deb:
+        st.button("Usar débito de prueba", key="btn_cp_demo_deb", on_click=usar_tarjeta_prueba, args=("Débito",), use_container_width=True)
+    with c_cred:
+        st.button("Usar crédito de prueba", key="btn_cp_demo_cred", on_click=usar_tarjeta_prueba, args=("Crédito",), use_container_width=True)
 
     st.markdown("<div class='cp-step'>Datos de la tarjeta</div>", unsafe_allow_html=True)
-    st.text_input("Número de tarjeta", key="cp_num", placeholder="0000 0000 0000 0000", max_chars=19)
+    st.text_input("Número de tarjeta", key="cp_num", placeholder="0000 0000 0000 0000", max_chars=23)
+
+    # Estado de la detección
+    if info:
+        detalle = " ".join(x for x in [info.get("marca", ""), tipo_legible(info.get("tipo"))] if x)
+        if info.get("emisor"):
+            detalle += f", {info['emisor']}"
+        if info["fuente"] == "mercadopago":
+            st.markdown(f"<div class='cp-detect cp-detect-mp'><div class='cp-detect-dot'></div><div>Mercado Pago detectó: <b>{escape_html(detalle)}</b></div></div>", unsafe_allow_html=True)
+        elif info.get("marca"):
+            nota = "Mercado Pago no respondió, detección local" if info["fuente"] == "local_sin_mp" else "Detección local (Mercado Pago no configurado)"
+            st.markdown(f"<div class='cp-detect cp-detect-local'><div class='cp-detect-dot'></div><div>{nota}: <b>{escape_html(detalle)}</b></div></div>", unsafe_allow_html=True)
+        else:
+            st.markdown("<div class='cp-detect cp-detect-local'><div class='cp-detect-dot'></div><div>Marca no reconocida.</div></div>", unsafe_allow_html=True)
+
     st.text_input("Nombre del titular", key="cp_nombre", placeholder="Como aparece en la tarjeta", max_chars=40)
     c_venc, c_cvv = st.columns(2)
     with c_venc:
         st.text_input("Vencimiento", key="cp_venc", placeholder="MM/AA", max_chars=5)
     with c_cvv:
-        st.text_input("CVV", key="cp_cvv", placeholder="123", max_chars=3, type="password")
+        st.text_input("CVV", key="cp_cvv", placeholder="123", max_chars=4, type="password")
 
     st.markdown("<div style='margin-top:10px;'></div>", unsafe_allow_html=True)
-    pagar = st.button(f"Pagar $2.000 CLP", key="btn_pagar", use_container_width=True)
+    pagar = st.button("Pagar $2.000 CLP", key="btn_pagar", use_container_width=True)
 
     if pagar:
         numero = solo_digitos(st.session_state.get("cp_num"))
-        nombre = st.session_state.get("cp_nombre") or ""
+        nombre = (st.session_state.get("cp_nombre") or "").strip()
         venc = st.session_state.get("cp_venc") or ""
         cvv = solo_digitos(st.session_state.get("cp_cvv"))
-        errores = validar(numero, nombre, venc, cvv)
+        info_pago = detectar_tarjeta(numero[:8], MP_PK) if len(numero) >= 6 else None
+        errores = validar(numero, nombre, venc, cvv, info_pago)
 
         if errores:
             st.error("\n\n".join(errores))
         else:
             with st.spinner("Procesando pago..."):
                 time.sleep(1.6)
-            if numero == TARJETA_RECHAZADA:
-                st.error("Pago rechazado por el banco emisor. Intente con otra tarjeta.")
+            rechazo = RESULTADOS_SANDBOX.get(nombre.upper())
+            if rechazo:
+                st.error(rechazo + " Intente con otra tarjeta.")
             else:
-                # Pago aprobado: activar el plan (sesión + base de datos si existe la función)
+                # Pago aprobado (simulado): activar el plan en la sesión y en la base de datos si existe la función
                 st.session_state["user_info"]["plan"] = "premium"
                 if actualizar_plan_usuario and u_ident:
                     try:
@@ -515,13 +684,13 @@ with col_pago:
                 st.session_state["cp_recibo"] = {
                     "orden": "PT-" + uuid.uuid4().hex[:8].upper(),
                     "fecha": datetime.now().strftime("%d-%m-%Y %H:%M"),
-                    "tipo": tipo,
-                    "marca": marca_tarjeta(numero) or "Tarjeta",
+                    "tipo": tipo_legible((info_pago or {}).get("tipo")) or tipo,
+                    "marca": (info_pago or {}).get("marca") or "Tarjeta",
                     "last4": numero[-4:],
                     "monto": PRECIO_PREMIUM,
                 }
                 # Los datos de la tarjeta no se conservan
-                for k in ("cp_num", "cp_nombre", "cp_venc", "cp_cvv"):
+                for k in ("cp_num", "cp_nombre", "cp_venc", "cp_cvv", "_cp_ultimo_bin"):
                     st.session_state.pop(k, None)
                 st.rerun()
 
@@ -533,7 +702,7 @@ with col_resumen:
             "Incluye todos los beneficios del plan Free",
             "Notificación cuando un perfume favorito baja de precio",
             "Detalle de la tienda y del nuevo precio",
-            "Sello de usuario verificado en su perfil",
+            "Insignia de usuario Premium verificado",
         ]
     )
     st.markdown(clean_html(f"""
@@ -546,6 +715,6 @@ with col_resumen:
                 <div class="cp-sum-total-label">Total</div>
                 <div class="cp-sum-total-val">$2.000 CLP</div>
             </div>
-            <div class="cp-secure">{svg_lock}<div>Pago simulado. Los datos de la tarjeta no se almacenan.</div></div>
+            <div class="cp-secure">{svg_lock}<div>Detección de tarjeta con Mercado Pago. Solo se consultan los primeros dígitos; el número completo no se envía ni se almacena.</div></div>
         </div>
     """), unsafe_allow_html=True)
