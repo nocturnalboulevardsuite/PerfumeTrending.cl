@@ -318,6 +318,10 @@ PALABRAS_EXCLUSION: List[str] = [
     "tinte", "nutrisse", "maquillaje", "aclarante", "facial", "capilar", "mascarilla",
     "pestañina", "rubor", "polvo", "iluminador", "base liquida", "base líquida", "esmalte", "uñas",
     "limpiador", "gel limpiador", "espuma limpiadora", "agua micelar",
+    "zapatilla", "zapatillas", "zapato", "zapatos", "sandalia", "sandalias", "botin", "botines",
+    "polera", "pantalon", "pantalón", "chaqueta", "poleron", "polerón", "vestido", "falda", "enterito",
+    "adhesivo", "pegamento", "pvc", "lip shine", "perfume mist", "fragrance mist", "fragance mist",
+    "ambiental", "delineador", "sombras", "protector solar", "bloqueador", "cosmetiquero",
 ]
 
 RE_PRODUCTO_INVALIDO = re.compile(
@@ -1016,6 +1020,11 @@ FORMATOS_EXCLUIDOS: List[Tuple[str, str]] = [
     (r"\baftershave\b", "after shave"),
     (r"\bbody\s*mist\b", "body mist"),
     (r"\bhair\s*mist\b", "hair mist"),
+    (r"\bperfume\s*mist\b", "perfume mist"),
+    (r"\bfragr?ance\s*mist\b", "fragrance mist"),
+    (r"\bmist\b", "mist"),
+    (r"\bambiental\b", "ambientador"),
+    (r"\bambientador\b", "ambientador"),
     (r"\bleau[\s\-]*brume\b", "bruma capilar/corporal"),
     (r"\bbrume\b", "bruma"),
     (r"\bbruma\b", "bruma"),
@@ -1062,6 +1071,9 @@ FLANKERS_EXCLUSIVOS: Set[str] = {
     "urban", "untold", "sillage", "milestone", "iconic", "precieux", "précieux",
     "ice", "fire", "tropical", "malibu", "glacial", "komodo",
     "nuit", "night", "beyond", "sheer", "summer",
+    "candy", "tous", "moi", "qahwa", "dukhan", "zanzibar", "bourbon",
+    "blush", "overdose", "only", "most", "red", "green", "pink", "yellow",
+    "heroes", "vip", "wins", "crush", "nova", "blossom", "extradose",
 }
 
 PALABRAS_GENERICAS_NOMBRE: Set[str] = {
@@ -1084,13 +1096,25 @@ def _normalizar_texto_match(s: str) -> str:
 def _aliases_marca(marca_norm: str) -> List[str]:
     if not marca_norm:
         return []
+    resultado: List[str] = [marca_norm]
     for k, aliases in MARCAS_DISENADOR_PRESTIGIO.items():
         if k in marca_norm or any(a == marca_norm for a in aliases):
-            return aliases
+            for a in aliases:
+                if a not in resultado:
+                    resultado.append(a)
     for k, aliases in MARCAS_ORIENTALES_RECONOCIDAS.items():
         if k in marca_norm or any(a == marca_norm for a in aliases):
-            return aliases
-    return [marca_norm]
+            for a in aliases:
+                if a not in resultado:
+                    resultado.append(a)
+    for canon, tup_als in ALIAS_MARCA.items():
+        canon_n = _normalizar_texto_match(canon)
+        als_n = [_normalizar_texto_match(x) for x in tup_als]
+        if marca_norm == canon_n or marca_norm in als_n:
+            for item in [canon_n] + als_n:
+                if item and item not in resultado:
+                    resultado.append(item)
+    return resultado
 
 
 # - ¿Qué hace esta función (Motor Determinista de Resolución de Entidades en 12 Capas)?:
@@ -1300,26 +1324,34 @@ def coincide_entidad_detallada(
                         formato_detectado=formato_det,
                     )
 
-        # Si el nombre del perfume es ultra corto o palabra común ambigua (<= 3 letras como 'Y', 'Si', 'Ch', 'Xs',
-        # o adjetivos genéricos como 'Libre', 'Solo', 'Fame', 'Noir', 'Gold'), exigir presencia explícita de la marca.
+        # Si el nombre del perfume es ultra corto (<= 3 letras), palabra ambigua/compartida entre marcas
+        # ('Libre', 'Solo', 'Fame', 'Yara', 'Girl', 'Adan', 'Arya', 'Celeste', 'Tradicional'), o si el candidato
+        # no declara vocabulario explícito de perfumería ('perfume', 'edp', 'edt', 'parfum', etc.), exigir la marca.
         tokens_significativos = [
             w for w in p_norm.split()
             if w not in PALABRAS_GENERICAS_NOMBRE and w not in aliases_esperados
         ]
-        palabras_ambiguas_sin_marca = {"libre", "solo", "fame", "luna", "halo", "pure", "noir", "gold", "code"}
-        nombre_corto = (
+        palabras_ambiguas_sin_marca = {
+            "libre", "solo", "fame", "luna", "halo", "pure", "noir", "gold", "code",
+            "yara", "girl", "adan", "arya", "celeste", "tradicional", "angel", "alien",
+        }
+        tiene_vocabulario_perfume = bool(
+            re.search(r"\b(?:perfume|fragancia|edp|edt|parfum|extrait|toilette|colonia|cologne|edc|elixir)\b", combo_text)
+        )
+        exige_marca = (
             bool(tokens_significativos)
             and (
                 len("".join(tokens_significativos)) <= 3
                 or (len(tokens_significativos) == 1 and tokens_significativos[0] in palabras_ambiguas_sin_marca)
+                or not tiene_vocabulario_perfume
             )
         )
-        if nombre_corto and aliases_esperados:
+        if exige_marca and aliases_esperados:
             if not any(re.search(rf"\b{re.escape(a)}\b", combo_text) for a in aliases_esperados):
                 return ResultadoCoincidencia(
                     coincide=False,
                     confianza=0.0,
-                    motivo=f"Nombre corto/ambiguo ('{perfume_nombre}') requiere presencia explícita de marca '{marca}'",
+                    motivo=f"Nombre monopalabra o sin indicador de perfume ('{perfume_nombre}') requiere presencia explícita de marca '{marca}'",
                     formato_detectado=formato_det,
                 )
 
@@ -1336,12 +1368,14 @@ def coincide_entidad_detallada(
     if not tokens:
         tokens = [w for w in p_norm.split() if len(w) >= 1 and w not in PALABRAS_GENERICAS_NOMBRE]
 
-    # 6. Guardia de Flankers No Solicitados (ej. buscar 'Sauvage' y recibir 'Sauvage Elixir' o 'Eros Flame')
+    # 6. Guardia de Flankers No Solicitados (ej. buscar 'Sauvage' y recibir 'Sauvage Elixir' o 'Yara' y recibir 'Yara Candy')
+    slug_path_norm = _normalizar_texto_match(urllib.parse.urlparse(url_raw).path) if url_raw else ""
+    texto_flanker_chk = f"{tit} {slug_path_norm}".strip()
     for flanker in FLANKERS_EXCLUSIVOS:
         # 'parfum' suelto no se trata como flanker prohibido cuando solo expresa concentración 'Eau de Parfum'
         if flanker == "parfum":
             continue
-        if re.search(rf"\b{re.escape(flanker)}\b", tit):
+        if re.search(rf"\b{re.escape(flanker)}\b", texto_flanker_chk):
             en_buscado = re.search(rf"\b{re.escape(flanker)}\b", p_norm) or (
                 c_norm and re.search(rf"\b{re.escape(flanker)}\b", c_norm)
             )
@@ -1442,7 +1476,7 @@ def coincide_entidad_detallada(
         es_edp_t = bool(re.search(r"\b(?:eau de parfum|edp)\b", combo_text)) and not bool(
             re.search(r"\b(?:eau de toilette|toilette|edt)\b", combo_text)
         )
-        es_edc_t = bool(re.search(r"\b(?:eau de cologne|edc)\b", combo_text))
+        es_edc_t = bool(re.search(r"\b(?:eau de cologne|edc|colonia)\b", combo_text))
 
         if es_edt_p and es_edp_t:
             return ResultadoCoincidencia(

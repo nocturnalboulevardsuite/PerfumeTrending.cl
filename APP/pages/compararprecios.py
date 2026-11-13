@@ -1461,10 +1461,7 @@ else:
         opciones_vol = ["Todos"] + [f"{v} ML" for v in vols_disponibles]
         
         if key_filtro not in st.session_state:
-            hay_100ml_en_stock = "100 ML" in opciones_vol and any(
-                extraer_volumen(t) == 100 and esta_en_stock(t) for t in tiendas_db
-            )
-            sel_guardada = "100 ML" if hay_100ml_en_stock else "Todos"
+            sel_guardada = "Todos"
         else:
             sel_guardada = st.session_state.get(key_filtro, "Todos")
             

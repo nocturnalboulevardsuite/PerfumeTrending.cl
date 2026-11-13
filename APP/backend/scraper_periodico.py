@@ -819,6 +819,24 @@ def _es_variante_falabella_agotada(v: Dict[str, Any], is_prod_out: bool) -> bool
     return False
 
 
+def _extraer_volumen_atributo_falabella(size_attr: Any) -> Optional[int]:
+    """
+    Extrae el volumen en ml desde `attributes.size` de Falabella sin confundir tallas de calzado/ropa
+    (ej. '36', '38', '37.5' -> nunca deben convertirse en 36ml, 38ml ni 375ml).
+    """
+    if not size_attr:
+        return None
+    s = str(size_attr).strip()
+    vol_exp = extraer_volumen_ml_opcional(s)
+    if vol_exp is not None and 25 <= vol_exp <= 1000:
+        return vol_exp
+    if re.fullmatch(r"\d{2,3}", s):
+        val = int(s)
+        if val in {30, 50, 60, 75, 80, 90, 100, 105, 120, 125, 150, 175, 200, 250}:
+            return val
+    return None
+
+
 def extraer_variedades_falabella(
     session: requests.Session,
     url_directa: Optional[str],
@@ -874,8 +892,8 @@ def extraer_variedades_falabella(
                                     continue
                                 v_name = v.get("name") or prod_name
                                 size_attr = v.get("attributes", {}).get("size")
-                                size_num = clean_digits(size_attr) if size_attr else 0
-                                vol = size_num if (10 <= size_num <= 1000) else resolver_volumen_oferta(
+                                vol_attr = _extraer_volumen_atributo_falabella(size_attr)
+                                vol = vol_attr if vol_attr else resolver_volumen_oferta(
                                     titulo_variante=v_name,
                                     titulo_producto=prod_name,
                                     url_slug=url_directa or "",
@@ -987,8 +1005,8 @@ def extraer_variedades_falabella(
                                     for v in skus:
                                         v_name = v.get("name") or d_name
                                         size_attr = v.get("attributes", {}).get("size")
-                                        size_num = clean_digits(size_attr) if size_attr else 0
-                                        vol = size_num if (10 <= size_num <= 1000) else resolver_volumen_oferta(
+                                        vol_attr = _extraer_volumen_atributo_falabella(size_attr)
+                                        vol = vol_attr if vol_attr else resolver_volumen_oferta(
                                             titulo_variante=v_name,
                                             titulo_producto=d_name,
                                             url_slug=prod_url or "",
