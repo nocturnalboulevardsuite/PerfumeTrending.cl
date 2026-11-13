@@ -31,6 +31,7 @@ for _p in (APP_DIR, BASE_DIR):
         sys.path.insert(0, _p)
 
 import hashlib
+import math
 
 try:
     from backend.database import (
@@ -721,6 +722,29 @@ st.markdown(f"""
         margin: 0 !important;
     }}
 
+    /* Sello Premium verificado */
+    .pt-verified-pill {{
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        width: fit-content;
+        margin: 10px auto 0;
+        padding: 5px 12px 5px 7px;
+        border-radius: 999px;
+        border: 1px solid {"#e2b857" if is_dark else "#a87b1c"};
+        background: {"rgba(226, 184, 87, 0.12)" if is_dark else "rgba(168, 123, 28, 0.08)"};
+        font-size: 0.78rem;
+        font-weight: 800;
+        color: {"#e2b857" if is_dark else "#8a6414"};
+        white-space: nowrap;
+    }}
+    .pt-name-seal {{
+        display: inline-flex;
+        vertical-align: -3px;
+        margin-left: 8px;
+    }}
+
     /* Datos del usuario */
     .profile-name {{
         margin: 0 0 6px 0;
@@ -1082,6 +1106,24 @@ u_umbral = int(u_info.get('umbral_descuento') or 10)
 u_notif_stock = bool(u_info.get('notif_stock', True))
 u_notif_resumen = bool(u_info.get('notif_resumen', False))
 
+def sello_verificado(size=22):
+    """Sello de verificado estilo Instagram (borde ondulado) en dorado Premium."""
+    pts = []
+    for i in range(24):
+        r = 11 if i % 2 == 0 else 9.3
+        a = math.pi * i / 12 - math.pi / 2
+        pts.append(f"{12 + r * math.cos(a):.2f},{12 + r * math.sin(a):.2f}")
+    return (
+        f'<svg width="{size}" height="{size}" viewBox="0 0 24 24" role="img" aria-label="Premium verificado">'
+        f'<defs><linearGradient id="ptSeal" x1="0" y1="0" x2="1" y2="1">'
+        f'<stop offset="0" stop-color="#f7dc8f"/><stop offset="0.5" stop-color="#e2b857"/><stop offset="1" stop-color="#b98a26"/>'
+        f'</linearGradient></defs>'
+        f'<polygon points="{" ".join(pts)}" fill="url(#ptSeal)" stroke="url(#ptSeal)" stroke-width="1.6" stroke-linejoin="round"/>'
+        f'<polyline points="7.6 12.3 10.6 15.2 16.4 9.2" fill="none" stroke="#2a1f05" stroke-width="2.2" '
+        f'stroke-linecap="round" stroke-linejoin="round"/></svg>'
+    )
+
+
 # Plan del usuario: las alertas por correo son exclusivas de Premium (y de Socios VIP).
 # Se lee el campo 'plan' del perfil (ej. 'free', 'premium', 'vip'). Mientras el pago no esté
 # habilitado ningún usuario tiene este campo, por lo que la sección se muestra bloqueada.
@@ -1146,6 +1188,10 @@ with col_av:
             key="avatar_quick_uploader",
             label_visibility="collapsed",
         )
+    if u_es_premium:
+        st.markdown(clean_html(f"""
+            <div class="pt-verified-pill">{sello_verificado(18)}<div>Premium verificado</div></div>
+        """), unsafe_allow_html=True)
     st.markdown("<div class='avatar-help'>PNG, JPG, GIF o WEBP desde tu PC.<br>Se guarda al instante.</div>", unsafe_allow_html=True)
 
     if quick_file is not None:
@@ -1173,11 +1219,15 @@ with col_av:
             else:
                 st.error(url_or_err)
 
+name_seal_html = (
+    f'<div class="pt-name-seal" title="Premium verificado">{sello_verificado(24)}</div>' if u_es_premium else ""
+)
+
 with col_details:
     st.markdown(clean_html(f'''
     <div class="profile-top">
         <div>
-            <div class="profile-name">{u_nombre_safe}</div>
+            <div class="profile-name">{u_nombre_safe}{name_seal_html}</div>
             <div class="profile-contact">
                 <div class="profile-contact-item">{svg_mail} {u_email_display}</div>
                 <div class="profile-contact-item">{svg_phone} {u_telefono_display}</div>
