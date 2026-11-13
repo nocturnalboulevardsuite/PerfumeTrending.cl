@@ -2424,14 +2424,14 @@ elif st.session_state['current_page'] == 'planes_page':
     st.markdown(clean_html("""
         <div class="pt-section-head">
             <div class="pt-display">Planes</div>
-            <div class="pt-lede">Usa PerfumeTrending gratis o suma alertas para saber cuándo bajan tus perfumes favoritos.</div>
+            <div class="pt-lede">Compare precios sin costo o active alertas de precio para sus perfumes favoritos.</div>
         </div>
     """), unsafe_allow_html=True)
 
     gold_plan = "#e2b857" if is_dark else "#a87b1c"
     gold_plan_soft = "rgba(226, 184, 87, 0.10)" if is_dark else "rgba(168, 123, 28, 0.07)"
     vip_inner = card_bg if str(card_bg).startswith("#") else ("#15171c" if is_dark else "#ffffff")
-    rgb_stops = "#ff3b3b, #ff9f1a, #ffe14d, #3ddc84, #2ec5ff, #7a5cff, #ff4fd8, #ff3b3b"
+    rgb_stops = "#f5c542, #ff7a1a, #ff2d55, #ff4fb8, #8b3dff, #2f6bff, #8b3dff, #ff4fb8, #f5c542"
     logged_in = bool(st.session_state.get('logged_in'))
 
     def check_icon(stroke):
@@ -2600,37 +2600,87 @@ elif st.session_state['current_page'] == 'planes_page':
         div.st-key-btn_plan_free div.stButton > button,
         div.st-key-btn_plan_premium div.stButton > button,
         div.st-key-btn_plan_vip div.stButton > button {{
-            min-height: 46px !important;
-            border-radius: 12px !important;
+            min-height: 50px !important;
+            border-radius: 14px !important;
+            position: relative !important;
+            overflow: hidden !important;
+            transition: transform 0.18s ease, box-shadow 0.22s ease, border-color 0.18s ease, background-color 0.18s ease, filter 0.18s ease !important;
         }}
+        div.st-key-btn_plan_free div.stButton > button p,
+        div.st-key-btn_plan_premium div.stButton > button p,
+        div.st-key-btn_plan_vip div.stButton > button p {{
+            font-size: 0.95rem !important;
+            font-weight: 700 !important;
+            letter-spacing: 0.2px !important;
+            position: relative !important;
+            z-index: 1 !important;
+        }}
+
+        /* Free: contorno sobrio */
         div.st-key-btn_plan_free div.stButton > button {{
             background: transparent !important;
+            border: 1.5px solid {btn_border} !important;
             box-shadow: none !important;
         }}
+        div.st-key-btn_plan_free div.stButton > button:hover {{
+            background: {btn_bg} !important;
+            border-color: {text_color} !important;
+            box-shadow: {shadow_hover} !important;
+        }}
+        div.st-key-btn_plan_free div.stButton > button:disabled {{
+            opacity: 0.7 !important;
+            border-style: dashed !important;
+            cursor: default !important;
+        }}
+        div.st-key-btn_plan_free div.stButton > button:disabled p {{
+            color: {subtext_color} !important;
+        }}
+
+        /* Premium: dorado con brillo al pasar el cursor */
         div.st-key-btn_plan_premium div.stButton > button {{
-            background: linear-gradient(135deg, #f3d27c 0%, #c9992f 100%) !important;
-            border: none !important;
+            background: linear-gradient(135deg, #f7dc8f 0%, #e2b857 45%, #b98a26 100%) !important;
+            border: 1px solid #c99a2f !important;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.55), 0 10px 24px -14px #c9992f !important;
         }}
         div.st-key-btn_plan_premium div.stButton > button p {{
             color: #2a1f05 !important;
-            font-weight: 700 !important;
+        }}
+        div.st-key-btn_plan_premium div.stButton > button::after {{
+            content: "" !important;
+            position: absolute !important;
+            top: 0; bottom: 0; left: -60%;
+            width: 45%;
+            background: linear-gradient(100deg, transparent 0%, rgba(255,255,255,0.55) 50%, transparent 100%);
+            transform: skewX(-18deg);
+            transition: left 0.6s ease;
+            pointer-events: none;
         }}
         div.st-key-btn_plan_premium div.stButton > button:hover {{
-            box-shadow: 0 10px 24px -10px #c9992f !important;
+            border-color: #b98a26 !important;
+            filter: brightness(1.04) !important;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.6), 0 14px 30px -12px #c9992f !important;
         }}
+        div.st-key-btn_plan_premium div.stButton > button:hover::after {{
+            left: 120%;
+        }}
+
+        /* Socios VIP: mismo borde RGB animado de la tarjeta */
         div.st-key-btn_plan_vip div.stButton > button,
         div.st-key-btn_plan_vip div.stButton > button:disabled {{
             opacity: 1 !important;
-            border: none !important;
-            background: linear-gradient(90deg, {rgb_stops}) !important;
-            background-size: 300% 100% !important;
-            animation: pt-rgb-glow 6s linear infinite;
+            cursor: default !important;
+            border: 2px solid transparent !important;
+            background:
+                linear-gradient({vip_inner}, {vip_inner}) padding-box,
+                linear-gradient(90deg, {rgb_stops}) border-box !important;
+            background-size: 100% 100%, 300% 100% !important;
+            box-shadow: 0 10px 26px -16px #8b3dff !important;
+            animation: pt-rgb-border 6s linear infinite;
         }}
         div.st-key-btn_plan_vip div.stButton > button p {{
-            color: #ffffff !important;
-            font-weight: 700 !important;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.35) !important;
+            color: {text_color} !important;
         }}
+
         .pt-plan-note {{
             font-size: 0.86rem;
             color: {subtext_color};
@@ -2651,26 +2701,26 @@ elif st.session_state['current_page'] == 'planes_page':
     col_free, col_premium, col_vip = st.columns(3, gap="medium")
 
     with col_free:
-        badge_free = '<div class="pt-plan-badge">Tu plan</div>' if logged_in else ""
+        badge_free = '<div class="pt-plan-badge">Plan actual</div>' if logged_in else ""
         st.markdown(clean_html(f"""
             <div class="pt-plan">
                 {badge_free}
                 <div class="pt-plan-name">Free</div>
-                <div class="pt-plan-for">Para empezar</div>
+                <div class="pt-plan-for">Acceso esencial</div>
                 <div class="pt-plan-price">Gratis</div>
                 <div class="pt-plan-rule"></div>
                 {lista([
-                    "Acceso completo a la página",
-                    "Creación de usuario",
+                    "Acceso completo a la plataforma",
+                    "Creación de cuenta de usuario",
                     "Comparador de precios entre tiendas",
-                    "Trust Score y Trend del Hype",
-                    "Guarda tus perfumes favoritos",
+                    "Consulta de Trust Score y Trend del Hype",
+                    "Registro de perfumes favoritos",
                 ], "pt-check-free")}
             </div>
         """), unsafe_allow_html=True)
         if logged_in:
-            st.button("Tu plan actual", key="btn_plan_free", disabled=True, use_container_width=True)
-        elif st.button("Crear cuenta gratis", key="btn_plan_free", use_container_width=True):
+            st.button("Plan actual", key="btn_plan_free", disabled=True, use_container_width=True)
+        elif st.button("Crear cuenta", key="btn_plan_free", use_container_width=True):
             st.session_state['show_login_modal'] = True
             st.session_state['show_visual_modal'] = False
             st.rerun()
@@ -2679,18 +2729,18 @@ elif st.session_state['current_page'] == 'planes_page':
         st.markdown(clean_html(f"""
             <div class="pt-plan pt-plan-premium">
                 <div class="pt-plan-name">Premium</div>
-                <div class="pt-plan-for">Para cazar ofertas</div>
+                <div class="pt-plan-for">Alertas de precio</div>
                 <div class="pt-plan-price">$2.000<span class="pt-plan-price-unit">CLP / mes</span></div>
                 <div class="pt-plan-rule"></div>
                 {lista([
-                    "Todo lo del plan Free",
-                    "Aviso cuando un perfume de tus favoritos baja de precio",
-                    "Te decimos en qué tienda bajó y a cuánto quedó",
-                    "Seguimiento de todos los favoritos de tu cuenta",
+                    "Incluye todos los beneficios del plan Free",
+                    "Notificación cuando un perfume favorito baja de precio",
+                    "Detalle de la tienda y del nuevo precio",
+                    "Seguimiento de todos los favoritos de la cuenta",
                 ], "pt-check-premium")}
             </div>
         """), unsafe_allow_html=True)
-        if st.button("Elegir Premium", key="btn_plan_premium", use_container_width=True):
+        if st.button("Suscribirse a Premium", key="btn_plan_premium", use_container_width=True):
             if not logged_in:
                 st.session_state['show_login_modal'] = True
                 st.session_state['show_visual_modal'] = False
@@ -2698,7 +2748,7 @@ elif st.session_state['current_page'] == 'planes_page':
             else:
                 st.session_state['plan_premium_aviso'] = True
         if st.session_state.get('plan_premium_aviso'):
-            st.info("El pago del plan Premium aún no está habilitado. Te avisaremos cuando puedas activarlo.")
+            st.info("El pago del plan Premium aún no se encuentra habilitado. Se notificará a los usuarios cuando esté disponible.")
 
     with col_vip:
         st.markdown(clean_html(f"""
@@ -2707,14 +2757,14 @@ elif st.session_state['current_page'] == 'planes_page':
                 <div class="pt-plan pt-plan-vip">
                     <div class="pt-plan-badge pt-plan-badge-vip">Próximamente</div>
                     <div class="pt-plan-name">Socios VIP</div>
-                    <div class="pt-plan-for">PerfumeTrending</div>
+                    <div class="pt-plan-for">Membresía PerfumeTrending</div>
                     <div class="pt-plan-price">Precio por definir</div>
                     <div class="pt-plan-rule"></div>
                     {lista([
-                        "Todo lo del plan Premium",
-                        "Catas de perfumes, como una cata de vinos",
-                        "Mystery box de decants por ser socio",
-                        "Prueba fragancias antes de comprar el frasco completo",
+                        "Incluye todos los beneficios del plan Premium",
+                        "Catas de fragancias, al estilo de una cata de vinos",
+                        "Mystery box de decants exclusivas para socios",
+                        "Descubrimiento de fragancias antes de adquirir el frasco completo",
                     ], "pt-check-vip")}
                 </div>
             </div>
@@ -2722,7 +2772,7 @@ elif st.session_state['current_page'] == 'planes_page':
         st.button("Próximamente", key="btn_plan_vip", disabled=True, use_container_width=True)
 
     st.markdown(clean_html("""
-        <div class="pt-plan-note">El plan Socios VIP todavía no tiene precio: lo anunciaremos cuando abra.</div>
+        <div class="pt-plan-note">El precio del plan Socios VIP se informará en su lanzamiento.</div>
     """), unsafe_allow_html=True)
 
 # 12. PIE DE PÁGINA (FOOTER)
