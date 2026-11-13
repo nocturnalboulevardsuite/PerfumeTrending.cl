@@ -1082,6 +1082,12 @@ u_umbral = int(u_info.get('umbral_descuento') or 10)
 u_notif_stock = bool(u_info.get('notif_stock', True))
 u_notif_resumen = bool(u_info.get('notif_resumen', False))
 
+# Plan del usuario: las alertas por correo son exclusivas de Premium (y de Socios VIP).
+# Se lee el campo 'plan' del perfil (ej. 'free', 'premium', 'vip'). Mientras el pago no esté
+# habilitado ningún usuario tiene este campo, por lo que la sección se muestra bloqueada.
+u_plan = str(u_info.get('plan') or 'free').strip().lower()
+u_es_premium = u_plan in ('premium', 'vip', 'socios_vip')
+
 # Cierre total de LFI: jamás se permite leer rutas locales del servidor desde avatares (`allow_local=False`)
 avatar_src = get_image_src(u_foto, allow_local=False, default_src=DEFAULT_AVATAR_SVG)
 
@@ -1096,7 +1102,9 @@ u_bio_display = (
     else "<i style='opacity:0.7;'>Aún no has agregado una biografía. Completa tus datos personales en la pestaña 'Editar Datos Personales'.</i>"
 )
 
-if u_email and u_alerta:
+if not u_es_premium:
+    badge_alerta = f"<span class='pt-alert-off'>{svg_bell_off} Alertas disponibles con Premium</span>"
+elif u_email and u_alerta:
     badge_alerta = f"<span class='pt-alert-on'>{svg_bell_active} Alertas activadas ({u_umbral}%)</span>"
 elif u_email and not u_alerta:
     badge_alerta = f"<span class='pt-alert-off'>{svg_bell_off} Alertas desactivadas</span>"
@@ -1333,64 +1341,248 @@ with tab_edit:
                 else:
                     st.error(msg_upd)
 
-# --- TAB 3: CONFIGURACIÓN DE NOTIFICACIONES Y ALERTAS ---
+# --- TAB 3: CONFIGURACIÓN DE NOTIFICACIONES Y ALERTAS (EXCLUSIVO PLAN PREMIUM) ---
+# - ¿Qué hace este bloque?:
+#   Si el usuario tiene plan Premium/VIP muestra sus preferencias de alertas como filas con
+#   interruptores. Si no, muestra una vista previa difuminada con una tarjeta que explica que
+#   la función es parte del plan Premium y un botón que lleva a la sección Planes de app.py.
 with tab_notif:
+    gold_plan = "#e2b857" if is_dark else "#a87b1c"
+    gold_plan_soft = "rgba(226, 184, 87, 0.12)" if is_dark else "rgba(168, 123, 28, 0.08)"
+    row_bg = "rgba(255, 255, 255, 0.025)" if is_dark else "#fbfaf8"
+
     svg_notif_header = f'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="{text_color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -3px; margin-right: 8px;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>'
-    st.markdown(f"<div class='pt-section-title'>{svg_notif_header} Alertas inteligentes por correo electrónico</div>", unsafe_allow_html=True)
-    st.markdown("<div class='pt-section-help'>Configura cuándo deseas recibir avisos automáticos cuando tus fragancias monitoreadas bajen de precio o recuperen stock en tiendas chilenas auditadas.</div>", unsafe_allow_html=True)
+    svg_lock = f'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="{gold_plan}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>'
+    svg_check_gold = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#2a1f05" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>'
 
-    if not u_email:
-        st.warning("Para activar notificaciones por correo electrónico, primero registra un correo válido en la pestaña 'Editar Datos Personales'.")
+    def icono_fila(path_d, color):
+        return (f'<div class="pt-notif-icon" style="color:{color}; background:{color}1f;">'
+                f'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" '
+                f'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{path_d}</svg></div>')
 
-    with st.form("form_notif_settings"):
-        alerta_check = st.checkbox(
-            "Recibir alertas por correo electrónico cuando un perfume favorito baje de precio.",
-            value=u_alerta,
-            disabled=not bool(u_email),
+    ico_precio = icono_fila('<polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/>', "#22c55e" if is_dark else "#15803d")
+    ico_stock = icono_fila('<path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>', "#60a5fa" if is_dark else "#1d4ed8")
+    ico_resumen = icono_fila('<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>', gold_plan)
+
+    def texto_fila(icono, titulo, descripcion):
+        return clean_html(f"""
+            <div class="pt-notif-text">
+                {icono}
+                <div>
+                    <div class="pt-notif-title">{titulo}</div>
+                    <div class="pt-notif-desc">{descripcion}</div>
+                </div>
+            </div>
+        """)
+
+    st.markdown(f"""
+        <style>
+        .pt-notif-head {{
+            display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+        }}
+        .pt-premium-chip {{
+            display: inline-flex; align-items: center;
+            font-size: 0.72rem; font-weight: 800; letter-spacing: 0.3px;
+            padding: 3px 10px; border-radius: 999px;
+            color: #2a1f05;
+            background: linear-gradient(135deg, #f7dc8f 0%, #e2b857 50%, #b98a26 100%);
+        }}
+        /* Filas de preferencias */
+        div[class*="st-key-notif_row_"] {{
+            background: {row_bg} !important;
+            border: 1px solid {border_color} !important;
+            border-radius: 16px !important;
+            padding: 16px 18px !important;
+            margin-bottom: 10px !important;
+        }}
+        .pt-notif-text {{ display: flex; align-items: flex-start; gap: 14px; }}
+        .pt-notif-icon {{
+            flex: 0 0 38px; width: 38px; height: 38px; border-radius: 11px;
+            display: inline-flex; align-items: center; justify-content: center;
+        }}
+        .pt-notif-title {{ font-size: 0.98rem; font-weight: 700; color: {text_color}; line-height: 1.3; }}
+        .pt-notif-desc {{ font-size: 0.86rem; color: {subtext_color}; line-height: 1.45; margin-top: 2px; }}
+        div[class*="st-key-notif_row_"] [data-testid="stCheckbox"] {{
+            display: flex; justify-content: flex-end;
+        }}
+        div.st-key-notif_row_precio [data-testid="stSlider"] {{
+            margin-top: 8px; padding: 0 4px 0 52px;
+        }}
+        div.st-key-notif_row_precio [data-testid="stSlider"] label p {{
+            font-size: 0.86rem !important; color: {subtext_color} !important; font-weight: 600 !important;
+        }}
+        .pt-notif-dest {{
+            font-size: 0.85rem; color: {subtext_color}; margin: 6px 0 12px 2px;
+        }}
+        .pt-notif-dest b {{ color: {text_color}; font-weight: 700; }}
+        div[data-testid="stForm"]:has(div[class*="st-key-notif_row_"]) {{
+            border: none !important; padding: 0 !important; background: transparent !important;
+        }}
+        div.st-key-notif_save div[data-testid="stFormSubmitButton"] {{
+            display: flex; justify-content: flex-end;
+        }}
+        div.st-key-notif_save div[data-testid="stFormSubmitButton"] button {{
+            width: auto !important; min-width: 240px; padding: 0 28px !important;
+            border-radius: 12px !important;
+        }}
+
+        /* Estado bloqueado (sin plan Premium) */
+        .pt-lock-wrap {{ position: relative; margin-top: 4px; }}
+        .pt-lock-preview {{
+            filter: blur(3px); opacity: 0.5; pointer-events: none; user-select: none;
+            -webkit-mask-image: linear-gradient(180deg, #000 40%, transparent 100%);
+            mask-image: linear-gradient(180deg, #000 40%, transparent 100%);
+        }}
+        .pt-lock-row {{
+            display: flex; align-items: center; justify-content: space-between; gap: 14px;
+            background: {row_bg}; border: 1px solid {border_color}; border-radius: 16px;
+            padding: 16px 18px; margin-bottom: 10px;
+        }}
+        .pt-lock-switch {{
+            flex: 0 0 40px; width: 40px; height: 22px; border-radius: 999px; background: {border_color};
+        }}
+        .pt-lock-card {{
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: min(460px, 92%); box-sizing: border-box;
+            background: {card_bg}; border: 1px solid {gold_plan}; border-radius: 20px;
+            padding: 26px 26px 22px; text-align: center;
+            box-shadow: 0 24px 50px -24px {gold_plan}, 0 2px 8px rgba(0,0,0,0.18);
+        }}
+        .pt-lock-badge {{
+            width: 48px; height: 48px; border-radius: 14px; margin: 0 auto 14px;
+            display: flex; align-items: center; justify-content: center; background: {gold_plan_soft};
+        }}
+        .pt-lock-title {{ font-size: 1.15rem; font-weight: 800; color: {text_color}; letter-spacing: -0.01em; line-height: 1.3; }}
+        .pt-lock-text {{ font-size: 0.9rem; color: {subtext_color}; line-height: 1.5; margin: 8px auto 16px; max-width: 38ch; }}
+        .pt-lock-list {{ display: flex; flex-direction: column; gap: 9px; text-align: left; margin: 0 auto 16px; width: fit-content; }}
+        .pt-lock-item {{ display: flex; align-items: center; gap: 10px; font-size: 0.9rem; color: {text_color}; }}
+        .pt-lock-check {{
+            flex: 0 0 18px; width: 18px; height: 18px; border-radius: 50%; background: {gold_plan};
+            display: inline-flex; align-items: center; justify-content: center;
+        }}
+        .pt-lock-price {{ font-size: 1.5rem; font-weight: 800; color: {gold_plan}; letter-spacing: -0.02em; }}
+        .pt-lock-price-unit {{ font-size: 0.85rem; font-weight: 500; color: {subtext_color}; margin-left: 4px; display: inline; }}
+        div.st-key-btn_ver_planes div.stButton > button {{
+            min-height: 50px !important; border-radius: 14px !important;
+            background: linear-gradient(135deg, #f7dc8f 0%, #e2b857 45%, #b98a26 100%) !important;
+            border: 1px solid #c99a2f !important;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.55), 0 10px 24px -14px #c9992f !important;
+        }}
+        div.st-key-btn_ver_planes div.stButton > button p {{ color: #2a1f05 !important; font-weight: 700 !important; }}
+        div.st-key-btn_ver_planes div.stButton > button:hover {{ filter: brightness(1.05) !important; }}
+
+        @media (max-width: 768px) {{
+            .pt-lock-preview {{ display: none; }}
+            .pt-lock-card {{ position: static; transform: none; width: 100%; }}
+            div.st-key-notif_row_precio [data-testid="stSlider"] {{ padding-left: 4px; }}
+            div.st-key-notif_save div[data-testid="stFormSubmitButton"] button {{ width: 100% !important; }}
+        }}
+        </style>
+    """, unsafe_allow_html=True)
+
+    st.markdown(clean_html(f"""
+        <div class="pt-notif-head">
+            <div class="pt-section-title">{svg_notif_header} Alertas por correo</div>
+            <div class="pt-premium-chip">Premium</div>
+        </div>
+    """), unsafe_allow_html=True)
+    st.markdown("<div class='pt-section-help'>Avisos automáticos sobre tus fragancias favoritas: bajadas de precio, reposición de stock y un resumen semanal de liquidaciones.</div>", unsafe_allow_html=True)
+
+    if not u_es_premium:
+        filas_preview = "".join(
+            f'<div class="pt-lock-row">{texto_fila(ic, t, d)}<div class="pt-lock-switch"></div></div>'
+            for ic, t, d in [
+                (ico_precio, "Bajadas de precio", "Correo cuando un perfume favorito baja de precio."),
+                (ico_stock, "Vuelta de stock", "Correo cuando una fragancia agotada vuelve a estar disponible."),
+                (ico_resumen, "Resumen semanal", "Las mayores liquidaciones verificadas en Chile."),
+            ]
         )
-
-        umbral_val = st.slider(
-            "Avisarme únicamente si la baja de precio es igual o mayor a:",
-            min_value=5,
-            max_value=50,
-            value=max(5, min(50, int(u_umbral))),
-            step=5,
-            format="%d%%",
+        items_lock = "".join(
+            f'<div class="pt-lock-item"><div class="pt-lock-check">{svg_check_gold}</div><div>{t}</div></div>'
+            for t in [
+                "Aviso cuando tus favoritos bajan de precio",
+                "Tienda y nuevo precio en cada aviso",
+                "Alertas de vuelta de stock y resumen semanal",
+            ]
         )
+        st.markdown(clean_html(f"""
+            <div class="pt-lock-wrap">
+                <div class="pt-lock-preview" aria-hidden="true">{filas_preview}</div>
+                <div class="pt-lock-card">
+                    <div class="pt-lock-badge">{svg_lock}</div>
+                    <div class="pt-lock-title">Función exclusiva del plan Premium</div>
+                    <div class="pt-lock-text">Las alertas por correo están disponibles para los usuarios con plan Premium.</div>
+                    <div class="pt-lock-list">{items_lock}</div>
+                    <div class="pt-lock-price">$2.000<div class="pt-lock-price-unit">CLP / mes</div></div>
+                </div>
+            </div>
+        """), unsafe_allow_html=True)
+        st.markdown("<div style='margin-top: 14px;'></div>", unsafe_allow_html=True)
+        _, c_planes, _ = st.columns([1, 1.2, 1])
+        with c_planes:
+            if st.button("Ver planes", key="btn_ver_planes", use_container_width=True):
+                st.session_state['current_page'] = 'planes_page'
+                st.switch_page("app.py")
 
-        notif_stock_check = st.checkbox(
-            "Notificarme cuando una fragancia agotada vuelva a tener stock verificado.",
-            value=u_notif_stock,
-            disabled=not bool(u_email),
-        )
+    else:
+        if not u_email:
+            st.warning("Para recibir alertas por correo, primero registra un correo válido en la pestaña 'Editar Datos Personales'.")
 
-        notif_resumen_check = st.checkbox(
-            "Recibir resumen semanal con las mayores liquidaciones verificadas en Chile.",
-            value=u_notif_resumen,
-            disabled=not bool(u_email),
-        )
+        with st.form("form_notif_settings", border=False):
+            with st.container(key="notif_row_precio"):
+                c_txt, c_tgl = st.columns([8, 1.4], vertical_alignment="center")
+                with c_txt:
+                    st.markdown(texto_fila(ico_precio, "Bajadas de precio", "Correo cuando un perfume favorito baja de precio en una tienda auditada."), unsafe_allow_html=True)
+                with c_tgl:
+                    alerta_check = st.toggle("Bajadas de precio", value=u_alerta, disabled=not bool(u_email), label_visibility="collapsed")
+                umbral_val = st.slider(
+                    "Bajada mínima para recibir el aviso",
+                    min_value=5,
+                    max_value=50,
+                    value=max(5, min(50, int(u_umbral))),
+                    step=5,
+                    format="%d%%",
+                )
 
-        btn_save_notif = st.form_submit_button("Guardar Preferencias de Alertas", use_container_width=True)
+            with st.container(key="notif_row_stock"):
+                c_txt, c_tgl = st.columns([8, 1.4], vertical_alignment="center")
+                with c_txt:
+                    st.markdown(texto_fila(ico_stock, "Vuelta de stock", "Correo cuando una fragancia agotada vuelve a tener stock verificado."), unsafe_allow_html=True)
+                with c_tgl:
+                    notif_stock_check = st.toggle("Vuelta de stock", value=u_notif_stock, disabled=not bool(u_email), label_visibility="collapsed")
 
-        if btn_save_notif:
-            ok_pref, msg_pref = actualizar_preferencias_notificacion(
-                u_ident,
-                alerta_email=alerta_check,
-                umbral_descuento=umbral_val,
-                notif_stock=notif_stock_check,
-                notif_resumen=notif_resumen_check,
-            )
-            if ok_pref:
-                st.session_state['user_info'].update({
-                    'alerta_email': alerta_check,
-                    'umbral_descuento': umbral_val,
-                    'notif_stock': notif_stock_check,
-                    'notif_resumen': notif_resumen_check,
-                })
-                st.success(msg_pref)
-                st.rerun()
-            else:
-                st.error(msg_pref)
+            with st.container(key="notif_row_resumen"):
+                c_txt, c_tgl = st.columns([8, 1.4], vertical_alignment="center")
+                with c_txt:
+                    st.markdown(texto_fila(ico_resumen, "Resumen semanal", "Las mayores liquidaciones verificadas en Chile, una vez por semana."), unsafe_allow_html=True)
+                with c_tgl:
+                    notif_resumen_check = st.toggle("Resumen semanal", value=u_notif_resumen, disabled=not bool(u_email), label_visibility="collapsed")
+
+            if u_email:
+                st.markdown(f"<div class='pt-notif-dest'>Los avisos se envían a <b>{escape_html(u_email)}</b></div>", unsafe_allow_html=True)
+
+            with st.container(key="notif_save"):
+                btn_save_notif = st.form_submit_button("Guardar preferencias")
+
+            if btn_save_notif:
+                ok_pref, msg_pref = actualizar_preferencias_notificacion(
+                    u_ident,
+                    alerta_email=alerta_check,
+                    umbral_descuento=umbral_val,
+                    notif_stock=notif_stock_check,
+                    notif_resumen=notif_resumen_check,
+                )
+                if ok_pref:
+                    st.session_state['user_info'].update({
+                        'alerta_email': alerta_check,
+                        'umbral_descuento': umbral_val,
+                        'notif_stock': notif_stock_check,
+                        'notif_resumen': notif_resumen_check,
+                    })
+                    st.success(msg_pref)
+                    st.rerun()
+                else:
+                    st.error(msg_pref)
 
 # 6. PIE DE PÁGINA
 st.markdown(clean_html("""
