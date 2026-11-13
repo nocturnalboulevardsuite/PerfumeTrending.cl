@@ -101,30 +101,52 @@ TARJETA_RECHAZADA = "4000000000000002"
 
 
 def sello_verificado(size=22):
-    """Insignia Premium verificada: frasco de perfume dorado con un check y un destello."""
+    """Insignia Premium verificada: sello ondulado naranjo (estilo verificado de Instagram)
+    con un frasco de perfume negro y naranjo en el centro y un aura naranja animada.
+    Es un SVG vectorial con animaciones SMIL, así que se anima tanto incrustado en HTML
+    como usado de imagen (data URI)."""
+    pts = []
+    for i in range(24):
+        r = 11 if i % 2 == 0 else 9.4
+        a = math.pi * i / 12 - math.pi / 2
+        pts.append(f"{12 + r * math.cos(a):.2f},{12 + r * math.sin(a):.2f}")
     return (
-        f'<svg width="{size}" height="{size}" viewBox="0 0 24 24" role="img" aria-label="Premium verificado">'
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{size}" height="{size}" viewBox="-5 -5 34 34" '
+        'role="img" aria-label="Premium verificado" style="overflow:visible">'
         '<defs>'
-        '<linearGradient id="ptSealBody" x1="0" y1="0" x2="1" y2="1">'
-        '<stop offset="0" stop-color="#fbe7a6"/><stop offset="0.45" stop-color="#e2b857"/><stop offset="1" stop-color="#a87a1e"/>'
+        '<radialGradient id="ptSealAura" cx="0.5" cy="0.5" r="0.5">'
+        '<stop offset="0.55" stop-color="#ff7a1a" stop-opacity="0.75"/>'
+        '<stop offset="0.78" stop-color="#ff5a00" stop-opacity="0.28"/>'
+        '<stop offset="1" stop-color="#ff7a1a" stop-opacity="0"/>'
+        '</radialGradient>'
+        '<linearGradient id="ptSealRing" x1="0" y1="0" x2="1" y2="1">'
+        '<stop offset="0" stop-color="#ffc46e"/><stop offset="0.35" stop-color="#ff8a1f"/>'
+        '<stop offset="0.7" stop-color="#e8590c"/><stop offset="1" stop-color="#ffb04a"/>'
+        '<animateTransform attributeName="gradientTransform" type="rotate" '
+        'from="0 0.5 0.5" to="360 0.5 0.5" dur="5s" repeatCount="indefinite"/>'
         '</linearGradient>'
-        '<linearGradient id="ptSealCap" x1="0" y1="0" x2="0" y2="1">'
-        '<stop offset="0" stop-color="#8a6414"/><stop offset="1" stop-color="#5c420c"/>'
+        '<linearGradient id="ptSealLiquid" x1="0" y1="0" x2="0" y2="1">'
+        '<stop offset="0" stop-color="#ffb04a"/><stop offset="1" stop-color="#ff6a00"/>'
         '</linearGradient>'
         '</defs>'
-        # Tapa y cuello
-        '<rect x="8.6" y="1.2" width="6.8" height="3.6" rx="1.2" fill="url(#ptSealCap)"/>'
-        '<rect x="10.2" y="4.6" width="3.6" height="2.4" fill="#c99a2f"/>'
-        # Cuerpo del frasco
-        '<path d="M5.6 9.6 Q5.6 6.8 8.4 6.8 H15.6 Q18.4 6.8 18.4 9.6 V19.4 Q18.4 22.8 15 22.8 H9 '
-        'Q5.6 22.8 5.6 19.4 Z" fill="url(#ptSealBody)" stroke="#b98a26" stroke-width="0.8"/>'
-        # Reflejo del vidrio
-        '<path d="M7.6 10 V18.6" stroke="#ffffff" stroke-opacity="0.55" stroke-width="1.1" stroke-linecap="round"/>'
-        # Check de verificado
-        '<polyline points="8.9 14.9 11.2 17.2 15.4 12.6" fill="none" stroke="#2a1f05" stroke-width="2.1" '
-        'stroke-linecap="round" stroke-linejoin="round"/>'
-        # Destello
-        '<path d="M20.4 1.6 L21 3.4 L22.8 4 L21 4.6 L20.4 6.4 L19.8 4.6 L18 4 L19.8 3.4 Z" fill="#f3d27c"/>'
+        # Aura naranja que respira
+        '<circle cx="12" cy="12" r="14" fill="url(#ptSealAura)">'
+        '<animate attributeName="r" values="13.5;17;13.5" dur="2.6s" repeatCount="indefinite"/>'
+        '<animate attributeName="opacity" values="0.5;1;0.5" dur="2.6s" repeatCount="indefinite"/>'
+        '</circle>'
+        # Sello ondulado con degradado naranjo en rotación
+        f'<polygon points="{" ".join(pts)}" fill="url(#ptSealRing)" stroke="url(#ptSealRing)" '
+        'stroke-width="1.4" stroke-linejoin="round"/>'
+        # Frasco de perfume: tapa, cuello y cuerpo negros con detalles naranjos
+        '<rect x="10.4" y="4.9" width="3.2" height="2.1" rx="0.55" fill="#111111"/>'
+        '<rect x="10.4" y="4.9" width="3.2" height="0.65" rx="0.3" fill="#ff9a3c"/>'
+        '<rect x="11.15" y="6.9" width="1.7" height="1.2" fill="#111111"/>'
+        '<rect x="8" y="8" width="8" height="10.4" rx="2.4" fill="#111111" stroke="#ffd3a1" stroke-width="0.45"/>'
+        '<rect x="9" y="12.6" width="6" height="4.8" rx="1.5" fill="url(#ptSealLiquid)">'
+        '<animate attributeName="y" values="12.6;12.1;12.6" dur="2.6s" repeatCount="indefinite"/>'
+        '<animate attributeName="height" values="4.8;5.3;4.8" dur="2.6s" repeatCount="indefinite"/>'
+        '</rect>'
+        '<path d="M9.5 9.5 V11.3" stroke="#ffffff" stroke-opacity="0.65" stroke-width="0.7" stroke-linecap="round"/>'
         '</svg>'
     )
 
