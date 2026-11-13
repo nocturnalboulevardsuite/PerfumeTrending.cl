@@ -1,22 +1,19 @@
 """
-PerfumeTrending.cl — Compra del Plan Premium (checkout con detección real de Mercado Pago)
-=========================================================================================
-- La marca (Visa, Mastercard, American Express...), el tipo (débito o crédito) y el banco
-  emisor se consultan EN VIVO a la API de Mercado Pago con los primeros dígitos de la tarjeta
-  (BIN). Solo se envía el BIN: el número completo nunca sale de la app.
-- Si Mercado Pago no está configurado o no responde, se usa una detección local por prefijo.
-- Validación del formulario: algoritmo de Luhn, largo según la marca, vencimiento, CVV y titular.
-- Tarjetas de prueba oficiales de Mercado Pago Chile, que se rellenan con un clic.
-- El cobro es SIMULADO (no se cobra dinero). El resultado sigue las reglas del sandbox de
-  Mercado Pago según el nombre del titular: APRO aprueba, OTHE / FUND / SECU rechazan.
+PerfumeTrending.cl — Compra del Plan Premium con Mercado Pago (ambiente de prueba)
+==================================================================================
+- Detección en vivo de marca, tipo (débito/crédito) y banco emisor con el BIN de la tarjeta.
+- Pago de prueba REAL con la API de Orders de Mercado Pago: la tarjeta se tokeniza con la
+  Public Key y la orden se crea con el Access Token. Los pagos aparecen en el panel de
+  Mercado Pago Developers > Pagos de prueba. No se cobra dinero real.
+- Si no hay credenciales, el pago se simula (APRO aprueba; OTHE / FUND / SECU rechazan).
+- Al aprobarse, el plan se guarda en la base de datos (`actualizar_plan_usuario`) con
+  vigencia de 30 días, así que se conserva al cerrar e iniciar sesión.
 
 Configuración (.streamlit/secrets.toml):
 
     [mercadopago]
-    public_key = "TEST-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-
-(o la variable de entorno MP_PUBLIC_KEY). La public key se obtiene en
-Mercado Pago Developers > Tus integraciones > Credenciales de prueba.
+    public_key = "APP_USR-..."     # Credenciales de prueba > Public Key
+    access_token = "APP_USR-..."   # Credenciales de prueba > Access Token (nunca en el código)
 """
 
 import streamlit as st
@@ -47,7 +44,15 @@ from ui import (
 )
 from auth_email import modal_autenticacion
 
-# Persistencia opcional del plan: si backend/database.py define `actualizar_plan_usuario`,
+try:
+    from backend.database import obtener_perfil_usuario
+except Exception:
+    try:
+        from APP.backend.database import obtener_perfil_usuario
+    except Exception:
+        obtener_perfil_usuario = None
+
+# Persistencia del plan: si backend/database.py define `actualizar_plan_usuario`,
 # el plan se guarda en Supabase; si no, queda activo solo durante la sesión.
 try:
     from backend.database import actualizar_plan_usuario
@@ -465,6 +470,13 @@ def usar_tarjeta_prueba(tipo):
     st.session_state["_cp_ultimo_bin"] = solo_digitos(t["num"])[:8]
 
 
+def _fecha_vigencia(iso_txt):
+    try:
+        return datetime.fromisoformat(str(iso_txt).replace("Z", "+00:00")).strftime("%d-%m-%Y")
+    except Exception:
+        return "30 días desde hoy"
+
+
 def volver_a_planes():
     st.session_state["current_page"] = "planes_page"
 
@@ -656,12 +668,15 @@ if u_plan in ("premium", "vip", "socios_vip"):
                 ("Medio de pago", f'{recibo["tipo"]} {recibo["marca"]} terminada en {recibo["last4"]}'),
                 ("Total pagado", f'${recibo["monto"]:,.0f} CLP'.replace(",", ".")),
                 ("Procesado por", recibo.get("procesador", "Simulado")),
+                ("Vigente hasta", _fecha_vigencia(st.session_state["user_info"].get("plan_vence_en"))),
             ] + ([("Orden Mercado Pago", recibo["mp_orden"])] if recibo.get("mp_orden") else [])
         )
         titulo, texto = "Pago aprobado", "Su cuenta ahora es Premium verificada. Ya puede activar las alertas de precio desde su perfil."
+        if recibo.get("guardado") is False:
+            texto += " Atención: el plan está activo en esta sesión, pero no se pudo guardar en la base de datos (" + str(recibo.get("guardado_msg", "")) + ")."
     else:
         filas = ""
-        titulo, texto = "Su cuenta ya es Premium", "El plan Premium está activo y su perfil muestra el sello de verificado."
+        titulo, texto = "Su cuenta ya es Premium", "El plan Premium está activo y su perfil muestra la insignia de verificado."
 
     st.markdown(clean_html(f"""
         <div class="cp-success">
@@ -820,9 +835,22 @@ with col_pago:
             else:
                 # Pago aprobado: activar el plan en la sesión y en la base de datos si existe la función
                 st.session_state["user_info"]["plan"] = "premium"
+                guardado_ok, guardado_msg = False, "La base de datos no tiene la función de planes."
                 if actualizar_plan_usuario and u_ident:
                     try:
-                        actualizar_plan_usuario(u_ident, "premium")
+                        guardado_ok, guardado_msg = actualizar_plan_usuario(
+                            u_ident, "premium",
+                            email=user_info.get("email"),
+                            nombre=user_info.get("nombre"),
+                        )
+                    except Exception as exc:
+                        guardado_ok, guardado_msg = False, f"Error al guardar el plan ({type(exc).__name__})."
+                if guardado_ok and obtener_perfil_usuario:
+                    try:
+                        perfil_nuevo = obtener_perfil_usuario(user_info.get("email") or u_ident) or {}
+                        for k in ("id", "plan", "plan_activado_en", "plan_vence_en"):
+                            if perfil_nuevo.get(k):
+                                st.session_state["user_info"][k] = perfil_nuevo[k]
                     except Exception:
                         pass
                 st.session_state["cp_recibo"] = {
@@ -834,6 +862,8 @@ with col_pago:
                     "monto": PRECIO_PREMIUM,
                     "procesador": fuente_pago,
                     "mp_orden": res.get("orden_id", ""),
+                    "guardado": guardado_ok,
+                    "guardado_msg": guardado_msg,
                 }
                 # Los datos de la tarjeta no se conservan
                 for k in ("cp_num", "cp_nombre", "cp_venc", "cp_cvv", "cp_doc", "_cp_ultimo_bin"):
