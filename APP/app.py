@@ -1269,6 +1269,8 @@ st.markdown(f"""
     div.st-key-btn_cat_remates div.stButton > button::before {{ background-image: url("{tag_red_svg}") !important; }}
 
     /* ---------- VER MÁS ---------- */
+    div[class*="st-key-pcard_cat_"] {{ scroll-margin-top: 90px; }}
+    div.st-key-btn_load_prev div.stButton > button,
     div.st-key-btn_load_more div.stButton > button {{
         background-color: transparent !important;
         border: 1px solid {gold} !important;
@@ -1276,9 +1278,11 @@ st.markdown(f"""
         min-height: 50px !important;
         box-shadow: none !important;
     }}
+    div.st-key-btn_load_prev div.stButton > button:hover,
     div.st-key-btn_load_more div.stButton > button:hover {{
         background-color: {gold_soft} !important;
     }}
+    div.st-key-btn_load_prev div.stButton > button p,
     div.st-key-btn_load_more div.stButton > button p {{
         color: {text_color} !important;
         font-size: 0.95rem !important;
@@ -2129,40 +2133,56 @@ if st.session_state['current_page'] == 'home':
                     st.rerun()
             return
 
+        # ---------------------------------------------------------------------
+        # CARGA POR VENTANA (sin números de página)
+        # Se muestran como máximo `max_ventana` tarjetas a la vez. "Cargar más"
+        # agrega un bloque abajo y, si se supera el máximo, quita el bloque de
+        # más arriba. "Cargar anteriores" hace lo inverso. Así la página nunca
+        # dibuja cientos de tarjetas y se mantiene rápida.
+        # ---------------------------------------------------------------------
         total_perfumes = len(catalog_list)
-        opciones_por_pag = [12, 24, 48, 96]
-        items_per_page = int(st.session_state.get('items_per_page', 12))
-        if items_per_page not in opciones_por_pag:
-            items_per_page = 12
-        total_pages = max(1, (total_perfumes + items_per_page - 1) // items_per_page)
+        opciones_por_carga = [12, 24, 48]
+        por_carga = int(st.session_state.get('items_per_page', 12))
+        if por_carga not in opciones_por_carga:
+            por_carga = 12
+        max_ventana = por_carga * 4
 
-        if st.session_state['catalog_page'] > total_pages:
-            st.session_state['catalog_page'] = total_pages
-        elif st.session_state['catalog_page'] < 1:
-            st.session_state['catalog_page'] = 1
+        # Si cambian la búsqueda, los filtros o el orden, la ventana vuelve al inicio
+        firma = (
+            total_perfumes,
+            catalog_list[0].get('id'),
+            catalog_list[-1].get('id'),
+            st.session_state.get('selected_category'),
+            st.session_state.get('selected_order'),
+            por_carga,
+        )
+        if st.session_state.get('_cat_firma') != firma:
+            st.session_state['_cat_firma'] = firma
+            st.session_state['cat_win_start'] = 0
+            st.session_state['cat_win_end'] = min(por_carga, total_perfumes)
 
-        cur_page = int(st.session_state['catalog_page'])
-        extra_rows = int(st.session_state.get('catalog_extra_items', 0))
-        start_idx = (cur_page - 1) * items_per_page
-        end_idx = min(start_idx + items_per_page + extra_rows, total_perfumes)
+        start_idx = max(0, min(int(st.session_state.get('cat_win_start', 0)), total_perfumes - 1))
+        end_idx = max(start_idx + 1, min(int(st.session_state.get('cat_win_end', por_carga)), total_perfumes))
 
-        # Resalta el número de la página actual en la barra de paginación
-        st.markdown(f"""
-            <style>
-            div.st-key-btn_pag_num_{cur_page} div.stButton > button:disabled {{
-                opacity: 1 !important;
-                background-color: {accent} !important;
-                border-color: {accent} !important;
-                cursor: default !important;
-            }}
-            div.st-key-btn_pag_num_{cur_page} div.stButton > button:disabled p {{
-                color: #ffffff !important;
-                font-weight: 700 !important;
-            }}
-            </style>
-        """, unsafe_allow_html=True)
+        def _cargar_mas():
+            nuevo_fin = min(total_perfumes, end_idx + por_carga)
+            nuevo_ini = start_idx
+            if nuevo_fin - nuevo_ini > max_ventana:
+                nuevo_ini = nuevo_fin - max_ventana
+            st.session_state['cat_win_start'] = nuevo_ini
+            st.session_state['cat_win_end'] = nuevo_fin
+            st.session_state['_cat_scroll_to'] = catalog_list[end_idx].get('id')
 
-        col_stat_txt, col_per_page, col_jump_top = st.columns([5.2, 2.4, 2.4], vertical_alignment="center")
+        def _cargar_anteriores():
+            nuevo_ini = max(0, start_idx - por_carga)
+            nuevo_fin = end_idx
+            if nuevo_fin - nuevo_ini > max_ventana:
+                nuevo_fin = nuevo_ini + max_ventana
+            st.session_state['cat_win_start'] = nuevo_ini
+            st.session_state['cat_win_end'] = nuevo_fin
+            st.session_state['_cat_scroll_to'] = catalog_list[nuevo_ini].get('id')
+
+        col_stat_txt, col_per_page = st.columns([7.6, 2.4], vertical_alignment="center")
         with col_stat_txt:
             st.markdown(
                 f"<div class='pt-meta'>Mostrando <b>{start_idx + 1}–{end_idx}</b> de <b>{total_perfumes}</b> fragancias</div>",
@@ -2170,31 +2190,27 @@ if st.session_state['current_page'] == 'home':
             )
         with col_per_page:
             sel_pp = st.selectbox(
-                "Perfumes por página",
-                options=opciones_por_pag,
-                index=opciones_por_pag.index(items_per_page),
-                format_func=lambda n: f"Mostrar {n} por página",
-                key="sel_items_per_page_top",
+                "Perfumes por carga",
+                options=opciones_por_carga,
+                index=opciones_por_carga.index(por_carga),
+                format_func=lambda n: f"Cargar de a {n}",
+                key="sel_items_per_load",
                 label_visibility="collapsed",
             )
-            if sel_pp != items_per_page:
+            if sel_pp != por_carga:
                 st.session_state['items_per_page'] = sel_pp
-                st.session_state['catalog_page'] = 1
-                st.session_state['catalog_extra_items'] = 0
                 st.rerun(scope="fragment")
-        with col_jump_top:
-            sel_jump = st.selectbox(
-                "Ir a página",
-                options=list(range(1, total_pages + 1)),
-                index=cur_page - 1,
-                format_func=lambda p_num: f"Página {p_num} de {total_pages}",
-                key="sel_jump_page_top",
-                label_visibility="collapsed",
-            )
-            if sel_jump != cur_page:
-                st.session_state['catalog_page'] = int(sel_jump)
-                st.session_state['catalog_extra_items'] = 0
-                st.rerun(scope="fragment")
+
+        # Botón superior para recuperar lo que se fue quitando al bajar
+        if start_idx > 0:
+            _, c_prev_mid, _ = st.columns([1, 2, 1])
+            with c_prev_mid:
+                st.button(
+                    f"↑ Cargar {min(por_carga, start_idx)} anteriores",
+                    key="btn_load_prev",
+                    on_click=_cargar_anteriores,
+                    use_container_width=True,
+                )
 
         st.markdown("<div style='margin-top: 12px;'></div>", unsafe_allow_html=True)
 
@@ -2279,59 +2295,50 @@ if st.session_state['current_page'] == 'home':
 
         st.markdown("<div style='margin-top: 24px;'></div>", unsafe_allow_html=True)
 
-        # Botón "Ver más perfumes" acumulativo (carga más tarjetas en la misma vista sin recargar toda la app)
+        # Botón inferior: cargar el siguiente bloque
         if end_idx < total_perfumes:
-            siguientes_cant = min(items_per_page, total_perfumes - end_idx)
             _, c_more_mid, _ = st.columns([1, 2, 1])
             with c_more_mid:
-                if st.button(f"Ver {siguientes_cant} perfumes más", key="btn_load_more", use_container_width=True):
-                    st.session_state['catalog_extra_items'] = extra_rows + items_per_page
-                    st.rerun(scope="fragment")
-            st.markdown("<div style='margin-top: 14px;'></div>", unsafe_allow_html=True)
-
-        # Barra de paginación multi-página con ventana numérica clicable + Primera/Última
-        win_start = max(1, cur_page - 2)
-        win_end = min(total_pages, win_start + 4)
-        win_start = max(1, win_end - 4)
-        paginas_ventana = list(range(win_start, win_end + 1))
-
-        nav_cols_spec = [1.1, 1.5] + [0.9] * len(paginas_ventana) + [1.5, 1.1]
-        pag_cols = st.columns(nav_cols_spec, vertical_alignment="center", gap="small")
-
-        with pag_cols[0]:
-            if st.button("« 1", key="btn_pag_first", disabled=(cur_page <= 1), use_container_width=True):
-                st.session_state['catalog_page'] = 1
-                st.session_state['catalog_extra_items'] = 0
-                st.rerun(scope="fragment")
-        with pag_cols[1]:
-            if st.button("‹ Anterior", key="btn_pag_prev", disabled=(cur_page <= 1), use_container_width=True):
-                st.session_state['catalog_page'] = max(1, cur_page - 1)
-                st.session_state['catalog_extra_items'] = 0
-                st.rerun(scope="fragment")
-
-        for idx_p, p_num in enumerate(paginas_ventana):
-            with pag_cols[2 + idx_p]:
-                if st.button(str(p_num), key=f"btn_pag_num_{p_num}", disabled=(p_num == cur_page), use_container_width=True):
-                    st.session_state['catalog_page'] = p_num
-                    st.session_state['catalog_extra_items'] = 0
-                    st.rerun(scope="fragment")
-
-        with pag_cols[2 + len(paginas_ventana)]:
-            if st.button("Siguiente ›", key="btn_pag_next", disabled=(cur_page >= total_pages), use_container_width=True):
-                st.session_state['catalog_page'] = min(total_pages, cur_page + 1)
-                st.session_state['catalog_extra_items'] = 0
-                st.rerun(scope="fragment")
-        with pag_cols[3 + len(paginas_ventana)]:
-            if st.button(f"{total_pages} »", key="btn_pag_last", disabled=(cur_page >= total_pages), use_container_width=True):
-                st.session_state['catalog_page'] = total_pages
-                st.session_state['catalog_extra_items'] = 0
-                st.rerun(scope="fragment")
+                st.button(
+                    f"Cargar {min(por_carga, total_perfumes - end_idx)} perfumes más",
+                    key="btn_load_more",
+                    on_click=_cargar_mas,
+                    use_container_width=True,
+                )
+        else:
+            st.markdown("<div class='pt-meta pt-meta-center'>Llegaste al final del catálogo.</div>", unsafe_allow_html=True)
 
         st.markdown(
-            f"<div class='pt-meta pt-meta-center'>Página <b>{cur_page}</b> de <b>{total_pages}</b>. "
-            f"Catálogo activo: <b>{total_perfumes}</b> fragancias.</div>",
+            f"<div class='pt-meta pt-meta-center'>Mostrando <b>{start_idx + 1}–{end_idx}</b> de "
+            f"<b>{total_perfumes}</b> fragancias.</div>",
             unsafe_allow_html=True,
         )
+
+        # Tras cargar, llevar la vista al primer perfume nuevo (las tarjetas de arriba
+        # pudieron desaparecer, así que sin esto la página "saltaría").
+        destino = st.session_state.pop('_cat_scroll_to', None)
+        if destino is not None:
+            script_scroll = f"""
+            <script>
+            (function() {{
+                const doc = (window.parent || window).document;
+                let intentos = 0;
+                function ir() {{
+                    const el = doc.querySelector('.st-key-pcard_cat_{destino}');
+                    if (el) {{
+                        el.scrollIntoView({{ behavior: 'smooth', block: 'start' }});
+                    }} else if (intentos++ < 25) {{
+                        setTimeout(ir, 80);
+                    }}
+                }}
+                setTimeout(ir, 60);
+            }})();
+            </script>
+            """
+            try:
+                st.html(script_scroll, unsafe_allow_javascript=True)
+            except Exception:
+                components.html(script_scroll, height=0, width=0)
 
     render_catalogo_paginado(catalog_perfumes)
 
