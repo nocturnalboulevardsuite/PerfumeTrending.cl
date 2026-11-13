@@ -1943,9 +1943,9 @@ with col_filter:
 
 # - ¿Qué hace este bloque (Chips de Acceso Directo)?:
 #   Botones de navegación rápida para saltar a 'Trend Del Hype', 'Páginas de Confianza', 'Comparar Precios' o 'Remates'.
-# 10. CHIPS DE ENLACE RÁPIDO (5 ACCESOS DIRECTOS)
+# 10. CHIPS DE ENLACE RÁPIDO (4 ACCESOS DIRECTOS; los remates se filtran abajo, junto al catálogo)
 st.markdown("<div style='margin-top: 12px;'></div>", unsafe_allow_html=True)
-c_chip0, c_chip1, c_chip2, c_chip3, c_chip4 = st.columns([1.7, 1.6, 2.0, 1.8, 1.8], vertical_alignment="center")
+c_chip0, c_chip1, c_chip2, c_chip3 = st.columns([1.7, 1.6, 2.0, 1.8], vertical_alignment="center")
 
 with c_chip0:
     if st.button("Inicio / Catálogo", key="chip_home", use_container_width=True, on_click=reset_to_home):
@@ -1956,23 +1956,6 @@ with c_chip2:
     st.page_link("pages/trustpage.py", label="Páginas de Confianza", use_container_width=True)
 with c_chip3:
     st.page_link("pages/compararprecios.py", label="Comparar Precios", use_container_width=True)
-with c_chip4:
-    # Este acceso es el único filtro de remates: se resalta en rojo mientras está activo
-    if st.session_state.get('selected_category') == 'remates':
-        st.markdown(f"""
-            <style>
-            div.st-key-chip_remates div.stButton > button {{
-                border-color: {accent} !important;
-                background-color: {accent_soft} !important;
-                box-shadow: inset 0 0 0 1px {accent} !important;
-            }}
-            </style>
-        """, unsafe_allow_html=True)
-    if st.button("Remates & Flash", key="chip_remates", use_container_width=True):
-        st.session_state['selected_category'] = 'remates'
-        st.session_state['catalog_page'] = 1
-        st.rerun()
-
 st.markdown("<div style='margin-top: 36px;'></div>", unsafe_allow_html=True)
 
 # 11. SECCIONES Y CONTENIDOS
@@ -2072,7 +2055,11 @@ if st.session_state['current_page'] == 'home':
                 st.session_state['selected_category'] = 'arabes'
                 st.session_state['catalog_page'] = 1
                 st.rerun()
-        # "Remates" se filtra desde el acceso rápido "Remates & Flash" de arriba (sin repetirlo aquí).
+        with c_cat3:
+            if st.button("Remates & Ofertas", key="btn_cat_remates", use_container_width=True):
+                st.session_state['selected_category'] = 'remates'
+                st.session_state['catalog_page'] = 1
+                st.rerun()
                 
     with col_sort_select:
         orden_map = {
