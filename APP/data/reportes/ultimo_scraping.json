@@ -1,122 +1,122 @@
 {
-  "actualizaciones": 0,
-  "fecha": "2026-11-13 21:02:37",
-  "duracion_segundos": 71.07,
+  "actualizaciones": 169,
+  "fecha": "2026-11-14 13:54:46",
+  "duracion_segundos": 1837.71,
   "metadata": {
     "version_etl": "3.3.0",
     "sistema": "PerfumeTrending Professional Anti-Bot ETL (Multi-Rotation LRU)",
-    "fecha_ejecucion": "2026-11-13 21:02:37",
-    "duracion_segundos": 71.07,
+    "fecha_ejecucion": "2026-11-14 13:54:46",
+    "duracion_segundos": 1837.71,
     "estado": "EXITOSO",
-    "rotaciones_completadas": 1,
-    "total_rotaciones_planificadas": 1,
+    "rotaciones_completadas": 2,
+    "total_rotaciones_planificadas": 2,
     "tamano_lote": 500,
-    "shard": 0,
-    "total_shards": 0
+    "shard": 1,
+    "total_shards": 4
   },
   "metricas": {
-    "total_perfumes_catalogo": 25,
-    "perfumes_auditados": 25,
+    "total_perfumes_catalogo": 841,
+    "perfumes_auditados": 841,
     "total_tiendas_registradas": 17,
-    "precios_actualizados": 0,
-    "ofertas_nuevas": 0,
-    "cambios_precio": 0,
-    "cambios_stock": 0,
-    "cambios_url": 0,
-    "bloqueos_waf": 1,
-    "exclusiones_marca": 67,
+    "precios_actualizados": 169,
+    "ofertas_nuevas": 15,
+    "cambios_precio": 127,
+    "cambios_stock": 55,
+    "cambios_url": 99,
+    "bloqueos_waf": 940,
+    "exclusiones_marca": 1979,
     "omitidos_circuit_breaker": 0,
-    "outliers_marcados": 0,
+    "outliers_marcados": 9,
     "errores_totales": 0
   },
   "estadisticas_tiendas": {
     "Falabella": {
-      "consultas": 11,
-      "exitos_en_vivo": 0,
-      "fallbacks_seguridad": 11,
-      "bloqueos_waf": 0,
+      "consultas": 466,
+      "exitos_en_vivo": 212,
+      "fallbacks_seguridad": 284,
+      "bloqueos_waf": 8,
       "omitidos_circuit_breaker": 0,
       "exclusiones_volumen_ambiguo": 0,
       "fallos_por_codigo": {
-        "no_encontrado_en_feed": 11,
-        "waf": 0,
+        "no_encontrado_en_feed": 284,
+        "waf": 8,
         "timeout": 0,
         "parse_error": 0,
-        "marca_excluida": 14,
+        "marca_excluida": 375,
         "volumen_ambiguo": 0,
         "entidad_no_coincide": 0
       },
       "trust_score": 96
     },
     "Paris": {
-      "consultas": 11,
+      "consultas": 466,
       "exitos_en_vivo": 0,
-      "fallbacks_seguridad": 11,
-      "bloqueos_waf": 0,
+      "fallbacks_seguridad": 0,
+      "bloqueos_waf": 466,
       "omitidos_circuit_breaker": 0,
       "exclusiones_volumen_ambiguo": 0,
       "fallos_por_codigo": {
-        "no_encontrado_en_feed": 11,
-        "waf": 0,
+        "no_encontrado_en_feed": 0,
+        "waf": 466,
         "timeout": 0,
         "parse_error": 0,
-        "marca_excluida": 14,
+        "marca_excluida": 375,
         "volumen_ambiguo": 0,
         "entidad_no_coincide": 0
       },
       "trust_score": 95
     },
     "Ripley": {
-      "consultas": 11,
+      "consultas": 466,
       "exitos_en_vivo": 0,
-      "fallbacks_seguridad": 10,
-      "bloqueos_waf": 1,
+      "fallbacks_seguridad": 0,
+      "bloqueos_waf": 466,
       "omitidos_circuit_breaker": 0,
       "exclusiones_volumen_ambiguo": 0,
       "fallos_por_codigo": {
-        "no_encontrado_en_feed": 10,
-        "waf": 1,
+        "no_encontrado_en_feed": 0,
+        "waf": 466,
         "timeout": 0,
         "parse_error": 0,
-        "marca_excluida": 14,
+        "marca_excluida": 375,
         "volumen_ambiguo": 0,
         "entidad_no_coincide": 0
       },
       "trust_score": 94
     },
     "Silk Perfumes": {
-      "consultas": 25,
-      "exitos_en_vivo": 0,
-      "fallbacks_seguridad": 25,
+      "consultas": 840,
+      "exitos_en_vivo": 353,
+      "fallbacks_seguridad": 575,
       "bloqueos_waf": 0,
       "omitidos_circuit_breaker": 0,
-      "exclusiones_volumen_ambiguo": 2,
+      "exclusiones_volumen_ambiguo": 13,
       "fallos_por_codigo": {
-        "no_encontrado_en_feed": 10,
+        "no_encontrado_en_feed": 352,
         "waf": 0,
         "timeout": 0,
         "parse_error": 0,
-        "marca_excluida": 0,
+        "marca_excluida": 1,
         "volumen_ambiguo": 0,
-        "entidad_no_coincide": 15
+        "entidad_no_coincide": 223
       },
       "trust_score": 92
     },
     "Elite Perfumes": {
-      "consultas": 25,
-      "exitos_en_vivo": 0,
-      "fallbacks_seguridad": 25,
+      "consultas": 840,
+      "exitos_en_vivo": 203,
+      "fallbacks_seguridad": 660,
       "bloqueos_waf": 0,
       "omitidos_circuit_breaker": 0,
-      "exclusiones_volumen_ambiguo": 0,
+      "exclusiones_volumen_ambiguo": 7,
       "fallos_por_codigo": {
-        "no_encontrado_en_feed": 10,
+        "no_encontrado_en_feed": 465,
         "waf": 0,
         "timeout": 0,
         "parse_error": 0,
-        "marca_excluida": 0,
+        "marca_excluida": 1,
         "volumen_ambiguo": 0,
-        "entidad_no_coincide": 15
+        "entidad_no_coincide": 195
       },
       "trust_score": 89
     },
@@ -132,310 +132,490 @@
         "waf": 0,
         "timeout": 0,
         "parse_error": 0,
-        "marca_excluida": 14,
+        "marca_excluida": 376,
         "volumen_ambiguo": 0,
         "entidad_no_coincide": 0
       },
       "trust_score": 91
     },
     "Alisha Perfumes": {
-      "consultas": 25,
-      "exitos_en_vivo": 0,
-      "fallbacks_seguridad": 25,
+      "consultas": 840,
+      "exitos_en_vivo": 254,
+      "fallbacks_seguridad": 610,
       "bloqueos_waf": 0,
       "omitidos_circuit_breaker": 0,
-      "exclusiones_volumen_ambiguo": 1,
+      "exclusiones_volumen_ambiguo": 0,
       "fallos_por_codigo": {
-        "no_encontrado_en_feed": 14,
+        "no_encontrado_en_feed": 379,
         "waf": 0,
         "timeout": 0,
         "parse_error": 0,
-        "marca_excluida": 0,
+        "marca_excluida": 1,
         "volumen_ambiguo": 0,
-        "entidad_no_coincide": 11
+        "entidad_no_coincide": 231
       },
       "trust_score": 88
     },
     "Yauras Perfumes": {
-      "consultas": 25,
-      "exitos_en_vivo": 0,
-      "fallbacks_seguridad": 25,
+      "consultas": 840,
+      "exitos_en_vivo": 84,
+      "fallbacks_seguridad": 762,
       "bloqueos_waf": 0,
       "omitidos_circuit_breaker": 0,
-      "exclusiones_volumen_ambiguo": 7,
+      "exclusiones_volumen_ambiguo": 6,
       "fallos_por_codigo": {
-        "no_encontrado_en_feed": 10,
+        "no_encontrado_en_feed": 556,
         "waf": 0,
         "timeout": 0,
         "parse_error": 0,
-        "marca_excluida": 0,
-        "volumen_ambiguo": 0,
-        "entidad_no_coincide": 15
+        "marca_excluida": 1,
+        "volumen_ambiguo": 1,
+        "entidad_no_coincide": 205
       },
       "trust_score": 88
     },
     "Oferta Perfumes": {
-      "consultas": 25,
-      "exitos_en_vivo": 0,
-      "fallbacks_seguridad": 25,
+      "consultas": 840,
+      "exitos_en_vivo": 146,
+      "fallbacks_seguridad": 716,
       "bloqueos_waf": 0,
       "omitidos_circuit_breaker": 0,
-      "exclusiones_volumen_ambiguo": 0,
+      "exclusiones_volumen_ambiguo": 7,
       "fallos_por_codigo": {
-        "no_encontrado_en_feed": 6,
+        "no_encontrado_en_feed": 443,
         "waf": 0,
         "timeout": 0,
         "parse_error": 0,
-        "marca_excluida": 0,
-        "volumen_ambiguo": 0,
-        "entidad_no_coincide": 19
+        "marca_excluida": 1,
+        "volumen_ambiguo": 1,
+        "entidad_no_coincide": 272
       },
       "trust_score": 90
     },
     "L'Odoro": {
-      "consultas": 25,
-      "exitos_en_vivo": 0,
-      "fallbacks_seguridad": 25,
+      "consultas": 840,
+      "exitos_en_vivo": 276,
+      "fallbacks_seguridad": 605,
       "bloqueos_waf": 0,
       "omitidos_circuit_breaker": 0,
-      "exclusiones_volumen_ambiguo": 4,
+      "exclusiones_volumen_ambiguo": 34,
       "fallos_por_codigo": {
-        "no_encontrado_en_feed": 12,
+        "no_encontrado_en_feed": 582,
         "waf": 0,
         "timeout": 0,
         "parse_error": 0,
-        "marca_excluida": 0,
-        "volumen_ambiguo": 0,
-        "entidad_no_coincide": 13
+        "marca_excluida": 1,
+        "volumen_ambiguo": 23,
+        "entidad_no_coincide": 0
       },
       "trust_score": 92
     },
     "Chile Perfume": {
-      "consultas": 25,
-      "exitos_en_vivo": 0,
-      "fallbacks_seguridad": 25,
+      "consultas": 840,
+      "exitos_en_vivo": 207,
+      "fallbacks_seguridad": 680,
       "bloqueos_waf": 0,
       "omitidos_circuit_breaker": 0,
       "exclusiones_volumen_ambiguo": 0,
       "fallos_por_codigo": {
-        "no_encontrado_en_feed": 15,
+        "no_encontrado_en_feed": 476,
         "waf": 0,
         "timeout": 0,
         "parse_error": 0,
-        "marca_excluida": 0,
+        "marca_excluida": 1,
         "volumen_ambiguo": 0,
-        "entidad_no_coincide": 10
+        "entidad_no_coincide": 204
       },
       "trust_score": 91
     },
     "Mundo Aromas": {
-      "consultas": 25,
-      "exitos_en_vivo": 0,
-      "fallbacks_seguridad": 25,
+      "consultas": 840,
+      "exitos_en_vivo": 243,
+      "fallbacks_seguridad": 637,
       "bloqueos_waf": 0,
       "omitidos_circuit_breaker": 0,
-      "exclusiones_volumen_ambiguo": 0,
+      "exclusiones_volumen_ambiguo": 32,
       "fallos_por_codigo": {
-        "no_encontrado_en_feed": 11,
+        "no_encontrado_en_feed": 617,
         "waf": 0,
         "timeout": 0,
         "parse_error": 0,
-        "marca_excluida": 0,
-        "volumen_ambiguo": 0,
-        "entidad_no_coincide": 14
+        "marca_excluida": 1,
+        "volumen_ambiguo": 20,
+        "entidad_no_coincide": 0
       },
       "trust_score": 90
     },
     "Cosmetic": {
-      "consultas": 25,
-      "exitos_en_vivo": 0,
-      "fallbacks_seguridad": 25,
+      "consultas": 840,
+      "exitos_en_vivo": 416,
+      "fallbacks_seguridad": 568,
       "bloqueos_waf": 0,
       "omitidos_circuit_breaker": 0,
-      "exclusiones_volumen_ambiguo": 1,
+      "exclusiones_volumen_ambiguo": 11,
       "fallos_por_codigo": {
-        "no_encontrado_en_feed": 7,
+        "no_encontrado_en_feed": 564,
         "waf": 0,
         "timeout": 0,
         "parse_error": 0,
-        "marca_excluida": 0,
-        "volumen_ambiguo": 0,
-        "entidad_no_coincide": 18
+        "marca_excluida": 1,
+        "volumen_ambiguo": 4,
+        "entidad_no_coincide": 0
       },
       "trust_score": 90
     },
     "Fragante": {
-      "consultas": 25,
-      "exitos_en_vivo": 0,
-      "fallbacks_seguridad": 25,
+      "consultas": 840,
+      "exitos_en_vivo": 35,
+      "fallbacks_seguridad": 805,
       "bloqueos_waf": 0,
       "omitidos_circuit_breaker": 0,
       "exclusiones_volumen_ambiguo": 0,
       "fallos_por_codigo": {
-        "no_encontrado_en_feed": 19,
+        "no_encontrado_en_feed": 805,
         "waf": 0,
         "timeout": 0,
         "parse_error": 0,
-        "marca_excluida": 0,
+        "marca_excluida": 1,
         "volumen_ambiguo": 0,
-        "entidad_no_coincide": 6
+        "entidad_no_coincide": 0
       },
       "trust_score": 90
     },
     "ComprarEnChile": {
-      "consultas": 25,
-      "exitos_en_vivo": 0,
-      "fallbacks_seguridad": 25,
+      "consultas": 840,
+      "exitos_en_vivo": 261,
+      "fallbacks_seguridad": 628,
       "bloqueos_waf": 0,
       "omitidos_circuit_breaker": 0,
-      "exclusiones_volumen_ambiguo": 0,
+      "exclusiones_volumen_ambiguo": 2,
       "fallos_por_codigo": {
-        "no_encontrado_en_feed": 12,
+        "no_encontrado_en_feed": 628,
         "waf": 0,
         "timeout": 0,
         "parse_error": 0,
-        "marca_excluida": 0,
+        "marca_excluida": 1,
         "volumen_ambiguo": 0,
-        "entidad_no_coincide": 13
+        "entidad_no_coincide": 0
       },
       "trust_score": 88
     },
     "Portal del Perfume": {
-      "consultas": 25,
-      "exitos_en_vivo": 0,
-      "fallbacks_seguridad": 25,
+      "consultas": 840,
+      "exitos_en_vivo": 15,
+      "fallbacks_seguridad": 825,
       "bloqueos_waf": 0,
       "omitidos_circuit_breaker": 0,
       "exclusiones_volumen_ambiguo": 0,
       "fallos_por_codigo": {
-        "no_encontrado_en_feed": 22,
+        "no_encontrado_en_feed": 767,
         "waf": 0,
         "timeout": 0,
         "parse_error": 0,
-        "marca_excluida": 0,
+        "marca_excluida": 1,
         "volumen_ambiguo": 0,
-        "entidad_no_coincide": 3
+        "entidad_no_coincide": 58
       },
       "trust_score": 89
     },
     "Aromata": {
-      "consultas": 25,
-      "exitos_en_vivo": 0,
-      "fallbacks_seguridad": 25,
+      "consultas": 840,
+      "exitos_en_vivo": 15,
+      "fallbacks_seguridad": 825,
       "bloqueos_waf": 0,
       "omitidos_circuit_breaker": 0,
       "exclusiones_volumen_ambiguo": 0,
       "fallos_por_codigo": {
-        "no_encontrado_en_feed": 24,
+        "no_encontrado_en_feed": 821,
         "waf": 0,
         "timeout": 0,
         "parse_error": 0,
-        "marca_excluida": 0,
+        "marca_excluida": 1,
         "volumen_ambiguo": 0,
-        "entidad_no_coincide": 1
+        "entidad_no_coincide": 4
       },
       "trust_score": 89
     }
   },
-  "muestra_capturas": [],
+  "muestra_capturas": [
+    {
+      "perfume": "White Latte",
+      "tienda": "Alisha Perfumes",
+      "precio_actual": 8990,
+      "precio_normal": 12990,
+      "tiene_descuento": true,
+      "origen": "Alisha Perfumes Bulk Cache",
+      "volumen_ml": 100,
+      "formato": "regular",
+      "en_stock": true
+    },
+    {
+      "perfume": "Fucking Fabolous",
+      "tienda": "Oferta Perfumes",
+      "precio_actual": 369900,
+      "precio_normal": 480987,
+      "tiene_descuento": true,
+      "origen": "Oferta Perfumes Bulk Cache",
+      "volumen_ml": 50,
+      "formato": "regular",
+      "en_stock": true
+    },
+    {
+      "perfume": "Fucking Fabolous",
+      "tienda": "Oferta Perfumes",
+      "precio_actual": 629900,
+      "precio_normal": 818987,
+      "tiene_descuento": true,
+      "origen": "Oferta Perfumes Bulk Cache",
+      "volumen_ml": 100,
+      "formato": "regular",
+      "en_stock": true
+    },
+    {
+      "perfume": "Ombre Leather",
+      "tienda": "Yauras Perfumes",
+      "precio_actual": 199990,
+      "precio_normal": 243990,
+      "tiene_descuento": true,
+      "origen": "Yauras Perfumes Bulk Cache",
+      "volumen_ml": 50,
+      "formato": "regular",
+      "en_stock": false
+    },
+    {
+      "perfume": "Ombre Leather",
+      "tienda": "Yauras Perfumes",
+      "precio_actual": 299990,
+      "precio_normal": 356990,
+      "tiene_descuento": true,
+      "origen": "Yauras Perfumes Bulk Cache",
+      "volumen_ml": 100,
+      "formato": "regular",
+      "en_stock": true
+    },
+    {
+      "perfume": "L'Homme A La Rose",
+      "tienda": "Oferta Perfumes",
+      "precio_actual": 339900,
+      "precio_normal": 441987,
+      "tiene_descuento": true,
+      "origen": "Oferta Perfumes Bulk Cache",
+      "volumen_ml": 70,
+      "formato": "tester",
+      "en_stock": true
+    },
+    {
+      "perfume": "Club De Nuit Untold U Nueva Versión 2026",
+      "tienda": "Elite Perfumes",
+      "precio_actual": 37990,
+      "precio_normal": 61990,
+      "tiene_descuento": true,
+      "origen": "Elite Perfumes Bulk Cache",
+      "volumen_ml": 105,
+      "formato": "regular",
+      "en_stock": true
+    },
+    {
+      "perfume": "Essence De Blanc",
+      "tienda": "Cosmetic",
+      "precio_actual": 22792,
+      "precio_normal": 38990,
+      "tiene_descuento": true,
+      "origen": "Shopify Multi-Suggest",
+      "volumen_ml": 100,
+      "formato": "regular",
+      "en_stock": true
+    },
+    {
+      "perfume": "Sultan Gems",
+      "tienda": "L'Odoro",
+      "precio_actual": 14900,
+      "precio_normal": 34990,
+      "tiene_descuento": true,
+      "origen": "Shopify Multi-Suggest",
+      "volumen_ml": 100,
+      "formato": "regular",
+      "en_stock": true
+    },
+    {
+      "perfume": "La Bellezza Intense",
+      "tienda": "L'Odoro",
+      "precio_actual": 11900,
+      "precio_normal": 46990,
+      "tiene_descuento": true,
+      "origen": "Shopify Multi-Suggest",
+      "volumen_ml": 85,
+      "formato": "regular",
+      "en_stock": true
+    },
+    {
+      "perfume": "Tres Nuit Lyric",
+      "tienda": "L'Odoro",
+      "precio_actual": 20490,
+      "precio_normal": 44990,
+      "tiene_descuento": true,
+      "origen": "Shopify Multi-Suggest",
+      "volumen_ml": 100,
+      "formato": "regular",
+      "en_stock": false
+    },
+    {
+      "perfume": "Nuit D'Issey",
+      "tienda": "Cosmetic",
+      "precio_actual": 34490,
+      "precio_normal": 34490,
+      "tiene_descuento": false,
+      "origen": "Shopify Multi-Suggest",
+      "volumen_ml": 125,
+      "formato": "regular",
+      "en_stock": false
+    },
+    {
+      "perfume": "La Vie Est Belle Lelixir",
+      "tienda": "ComprarEnChile",
+      "precio_actual": 112900,
+      "precio_normal": 112900,
+      "tiene_descuento": false,
+      "origen": "Shopify Multi-Suggest",
+      "volumen_ml": 100,
+      "formato": "regular",
+      "en_stock": true
+    },
+    {
+      "perfume": "Oath",
+      "tienda": "Cosmetic",
+      "precio_actual": 19690,
+      "precio_normal": 71990,
+      "tiene_descuento": true,
+      "origen": "Shopify Multi-Suggest",
+      "volumen_ml": 100,
+      "formato": "regular",
+      "en_stock": false
+    },
+    {
+      "perfume": "Brit Sheer",
+      "tienda": "L'Odoro",
+      "precio_actual": 37900,
+      "precio_normal": 47900,
+      "tiene_descuento": true,
+      "origen": "Shopify Multi-Suggest",
+      "volumen_ml": 100,
+      "formato": "regular",
+      "en_stock": false
+    },
+    {
+      "perfume": "Cool Water Wave",
+      "tienda": "Silk Perfumes",
+      "precio_actual": 6990,
+      "precio_normal": 9786,
+      "tiene_descuento": true,
+      "origen": "Silk Perfumes Bulk Cache",
+      "volumen_ml": 40,
+      "formato": "regular",
+      "en_stock": false
+    },
+    {
+      "perfume": "Cool Water Wave",
+      "tienda": "Alisha Perfumes",
+      "precio_actual": 19990,
+      "precio_normal": 20190,
+      "tiene_descuento": true,
+      "origen": "Alisha Perfumes Bulk Cache",
+      "volumen_ml": 125,
+      "formato": "regular",
+      "en_stock": false
+    },
+    {
+      "perfume": "Cool Water Wave",
+      "tienda": "Cosmetic",
+      "precio_actual": 7990,
+      "precio_normal": 8000,
+      "tiene_descuento": true,
+      "origen": "Shopify Multi-Suggest",
+      "volumen_ml": 40,
+      "formato": "regular",
+      "en_stock": false
+    },
+    {
+      "perfume": "Cool Water Wave",
+      "tienda": "Cosmetic",
+      "precio_actual": 12990,
+      "precio_normal": 14000,
+      "tiene_descuento": true,
+      "origen": "Shopify Multi-Suggest",
+      "volumen_ml": 50,
+      "formato": "regular",
+      "en_stock": false
+    },
+    {
+      "perfume": "Lily Beach",
+      "tienda": "Oferta Perfumes",
+      "precio_actual": 55900,
+      "precio_normal": 72787,
+      "tiene_descuento": true,
+      "origen": "Oferta Perfumes Bulk Cache",
+      "volumen_ml": 100,
+      "formato": "regular",
+      "en_stock": true
+    },
+    {
+      "perfume": "Casamorati 1888",
+      "tienda": "Silk Perfumes",
+      "precio_actual": 199990,
+      "precio_normal": 439990,
+      "tiene_descuento": true,
+      "origen": "Silk Perfumes Bulk Cache",
+      "volumen_ml": 100,
+      "formato": "regular",
+      "en_stock": false
+    },
+    {
+      "perfume": "Genius Vesper",
+      "tienda": "Cosmetic",
+      "precio_actual": 21990,
+      "precio_normal": 49990,
+      "tiene_descuento": true,
+      "origen": "Shopify Multi-Suggest",
+      "volumen_ml": 100,
+      "formato": "regular",
+      "en_stock": true
+    },
+    {
+      "perfume": "Wujood",
+      "tienda": "Elite Perfumes",
+      "precio_actual": 14990,
+      "precio_normal": 26990,
+      "tiene_descuento": true,
+      "origen": "Elite Perfumes Bulk Cache",
+      "volumen_ml": 100,
+      "formato": "regular",
+      "en_stock": true
+    },
+    {
+      "perfume": "Wujood",
+      "tienda": "Oferta Perfumes",
+      "precio_actual": 19710,
+      "precio_normal": 25728,
+      "tiene_descuento": true,
+      "origen": "Oferta Perfumes Bulk Cache",
+      "volumen_ml": 100,
+      "formato": "regular",
+      "en_stock": false
+    },
+    {
+      "perfume": "Thank U Next",
+      "tienda": "Silk Perfumes",
+      "precio_actual": 32990,
+      "precio_normal": 65990,
+      "tiene_descuento": true,
+      "origen": "Silk Perfumes Bulk Cache",
+      "volumen_ml": 100,
+      "formato": "tester",
+      "en_stock": false
+    }
+  ],
   "muestra_exclusiones_marca": [
     {
-      "perfume_id": 78,
-      "perfume": "Munchies Sugar Rush",
-      "marca": "Al Wataniah",
-      "es_arabe": true,
-      "tienda": "Falabella",
-      "motivo": "marca_excluida_por_perfil_tienda"
-    },
-    {
-      "perfume_id": 78,
-      "perfume": "Munchies Sugar Rush",
-      "marca": "Al Wataniah",
-      "es_arabe": true,
-      "tienda": "Paris",
-      "motivo": "marca_excluida_por_perfil_tienda"
-    },
-    {
-      "perfume_id": 78,
-      "perfume": "Munchies Sugar Rush",
-      "marca": "Al Wataniah",
-      "es_arabe": true,
-      "tienda": "Ripley",
-      "motivo": "marca_excluida_por_perfil_tienda"
-    },
-    {
-      "perfume_id": 78,
-      "perfume": "Munchies Sugar Rush",
-      "marca": "Al Wataniah",
-      "es_arabe": true,
-      "tienda": "DBS Beauty Store",
-      "motivo": "marca_excluida_por_perfil_tienda"
-    },
-    {
-      "perfume_id": 99,
-      "perfume": "Mythos",
-      "marca": "Zippo",
-      "es_arabe": false,
-      "tienda": "Falabella",
-      "motivo": "marca_excluida_por_perfil_tienda"
-    },
-    {
-      "perfume_id": 99,
-      "perfume": "Mythos",
-      "marca": "Zippo",
-      "es_arabe": false,
-      "tienda": "Paris",
-      "motivo": "marca_excluida_por_perfil_tienda"
-    },
-    {
-      "perfume_id": 99,
-      "perfume": "Mythos",
-      "marca": "Zippo",
-      "es_arabe": false,
-      "tienda": "Ripley",
-      "motivo": "marca_excluida_por_perfil_tienda"
-    },
-    {
-      "perfume_id": 99,
-      "perfume": "Mythos",
-      "marca": "Zippo",
-      "es_arabe": false,
-      "tienda": "DBS Beauty Store",
-      "motivo": "marca_excluida_por_perfil_tienda"
-    },
-    {
-      "perfume_id": 129,
-      "perfume": "John Gustav Homme Scandant Le 100 Mi",
-      "marca": "Fragrance World",
-      "es_arabe": true,
-      "tienda": "Falabella",
-      "motivo": "marca_excluida_por_perfil_tienda"
-    },
-    {
-      "perfume_id": 129,
-      "perfume": "John Gustav Homme Scandant Le 100 Mi",
-      "marca": "Fragrance World",
-      "es_arabe": true,
-      "tienda": "Paris",
-      "motivo": "marca_excluida_por_perfil_tienda"
-    },
-    {
-      "perfume_id": 129,
-      "perfume": "John Gustav Homme Scandant Le 100 Mi",
-      "marca": "Fragrance World",
-      "es_arabe": true,
-      "tienda": "Ripley",
-      "motivo": "marca_excluida_por_perfil_tienda"
-    },
-    {
-      "perfume_id": 129,
-      "perfume": "John Gustav Homme Scandant Le 100 Mi",
-      "marca": "Fragrance World",
-      "es_arabe": true,
-      "tienda": "DBS Beauty Store",
-      "motivo": "marca_excluida_por_perfil_tienda"
-    },
-    {
       "perfume_id": 258,
       "perfume": "Cedrat Boise Extrait De",
       "marca": "Mancera",
@@ -464,198 +644,6 @@
       "perfume": "Cedrat Boise Extrait De",
       "marca": "Mancera",
       "es_arabe": false,
-      "tienda": "DBS Beauty Store",
-      "motivo": "marca_excluida_por_perfil_tienda"
-    },
-    {
-      "perfume_id": 491,
-      "perfume": "Addiction Extrait De",
-      "marca": "Fragrance World",
-      "es_arabe": true,
-      "tienda": "Falabella",
-      "motivo": "marca_excluida_por_perfil_tienda"
-    },
-    {
-      "perfume_id": 491,
-      "perfume": "Addiction Extrait De",
-      "marca": "Fragrance World",
-      "es_arabe": true,
-      "tienda": "Paris",
-      "motivo": "marca_excluida_por_perfil_tienda"
-    },
-    {
-      "perfume_id": 491,
-      "perfume": "Addiction Extrait De",
-      "marca": "Fragrance World",
-      "es_arabe": true,
-      "tienda": "Ripley",
-      "motivo": "marca_excluida_por_perfil_tienda"
-    },
-    {
-      "perfume_id": 491,
-      "perfume": "Addiction Extrait De",
-      "marca": "Fragrance World",
-      "es_arabe": true,
-      "tienda": "DBS Beauty Store",
-      "motivo": "marca_excluida_por_perfil_tienda"
-    },
-    {
-      "perfume_id": 607,
-      "perfume": "Musamam Black",
-      "marca": "Lattafa",
-      "es_arabe": true,
-      "tienda": "Falabella",
-      "motivo": "marca_excluida_por_perfil_tienda"
-    },
-    {
-      "perfume_id": 607,
-      "perfume": "Musamam Black",
-      "marca": "Lattafa",
-      "es_arabe": true,
-      "tienda": "Paris",
-      "motivo": "marca_excluida_por_perfil_tienda"
-    },
-    {
-      "perfume_id": 607,
-      "perfume": "Musamam Black",
-      "marca": "Lattafa",
-      "es_arabe": true,
-      "tienda": "Ripley",
-      "motivo": "marca_excluida_por_perfil_tienda"
-    },
-    {
-      "perfume_id": 607,
-      "perfume": "Musamam Black",
-      "marca": "Lattafa",
-      "es_arabe": true,
-      "tienda": "DBS Beauty Store",
-      "motivo": "marca_excluida_por_perfil_tienda"
-    },
-    {
-      "perfume_id": 800,
-      "perfume": "Levante",
-      "marca": "Jo Milano",
-      "es_arabe": false,
-      "tienda": "Falabella",
-      "motivo": "marca_excluida_por_perfil_tienda"
-    },
-    {
-      "perfume_id": 800,
-      "perfume": "Levante",
-      "marca": "Jo Milano",
-      "es_arabe": false,
-      "tienda": "Paris",
-      "motivo": "marca_excluida_por_perfil_tienda"
-    },
-    {
-      "perfume_id": 800,
-      "perfume": "Levante",
-      "marca": "Jo Milano",
-      "es_arabe": false,
-      "tienda": "Ripley",
-      "motivo": "marca_excluida_por_perfil_tienda"
-    },
-    {
-      "perfume_id": 800,
-      "perfume": "Levante",
-      "marca": "Jo Milano",
-      "es_arabe": false,
-      "tienda": "DBS Beauty Store",
-      "motivo": "marca_excluida_por_perfil_tienda"
-    },
-    {
-      "perfume_id": 979,
-      "perfume": "Whiskey",
-      "marca": "Fragrance World",
-      "es_arabe": true,
-      "tienda": "Falabella",
-      "motivo": "marca_excluida_por_perfil_tienda"
-    },
-    {
-      "perfume_id": 979,
-      "perfume": "Whiskey",
-      "marca": "Fragrance World",
-      "es_arabe": true,
-      "tienda": "Paris",
-      "motivo": "marca_excluida_por_perfil_tienda"
-    },
-    {
-      "perfume_id": 979,
-      "perfume": "Whiskey",
-      "marca": "Fragrance World",
-      "es_arabe": true,
-      "tienda": "Ripley",
-      "motivo": "marca_excluida_por_perfil_tienda"
-    },
-    {
-      "perfume_id": 979,
-      "perfume": "Whiskey",
-      "marca": "Fragrance World",
-      "es_arabe": true,
-      "tienda": "DBS Beauty Store",
-      "motivo": "marca_excluida_por_perfil_tienda"
-    },
-    {
-      "perfume_id": 1178,
-      "perfume": "Raghba Wood",
-      "marca": "Lattafa",
-      "es_arabe": true,
-      "tienda": "Falabella",
-      "motivo": "marca_excluida_por_perfil_tienda"
-    },
-    {
-      "perfume_id": 1178,
-      "perfume": "Raghba Wood",
-      "marca": "Lattafa",
-      "es_arabe": true,
-      "tienda": "Paris",
-      "motivo": "marca_excluida_por_perfil_tienda"
-    },
-    {
-      "perfume_id": 1178,
-      "perfume": "Raghba Wood",
-      "marca": "Lattafa",
-      "es_arabe": true,
-      "tienda": "Ripley",
-      "motivo": "marca_excluida_por_perfil_tienda"
-    },
-    {
-      "perfume_id": 1178,
-      "perfume": "Raghba Wood",
-      "marca": "Lattafa",
-      "es_arabe": true,
-      "tienda": "DBS Beauty Store",
-      "motivo": "marca_excluida_por_perfil_tienda"
-    },
-    {
-      "perfume_id": 1184,
-      "perfume": "Al Kesar",
-      "marca": "Zimaya",
-      "es_arabe": true,
-      "tienda": "Falabella",
-      "motivo": "marca_excluida_por_perfil_tienda"
-    },
-    {
-      "perfume_id": 1184,
-      "perfume": "Al Kesar",
-      "marca": "Zimaya",
-      "es_arabe": true,
-      "tienda": "Paris",
-      "motivo": "marca_excluida_por_perfil_tienda"
-    },
-    {
-      "perfume_id": 1184,
-      "perfume": "Al Kesar",
-      "marca": "Zimaya",
-      "es_arabe": true,
-      "tienda": "Ripley",
-      "motivo": "marca_excluida_por_perfil_tienda"
-    },
-    {
-      "perfume_id": 1184,
-      "perfume": "Al Kesar",
-      "marca": "Zimaya",
-      "es_arabe": true,
       "tienda": "DBS Beauty Store",
       "motivo": "marca_excluida_por_perfil_tienda"
     },
@@ -692,63 +680,513 @@
       "motivo": "marca_excluida_por_perfil_tienda"
     },
     {
-      "perfume_id": 1247,
-      "perfume": "Game Of Spade Ruby",
-      "marca": "Jo Milano",
+      "perfume_id": 1318,
+      "perfume": "Club De Nuit Overdose",
+      "marca": "Armaf",
+      "es_arabe": true,
+      "tienda": "Falabella",
+      "motivo": "marca_excluida_por_perfil_tienda"
+    },
+    {
+      "perfume_id": 1318,
+      "perfume": "Club De Nuit Overdose",
+      "marca": "Armaf",
+      "es_arabe": true,
+      "tienda": "Paris",
+      "motivo": "marca_excluida_por_perfil_tienda"
+    },
+    {
+      "perfume_id": 1318,
+      "perfume": "Club De Nuit Overdose",
+      "marca": "Armaf",
+      "es_arabe": true,
+      "tienda": "Ripley",
+      "motivo": "marca_excluida_por_perfil_tienda"
+    },
+    {
+      "perfume_id": 1318,
+      "perfume": "Club De Nuit Overdose",
+      "marca": "Armaf",
+      "es_arabe": true,
+      "tienda": "DBS Beauty Store",
+      "motivo": "marca_excluida_por_perfil_tienda"
+    },
+    {
+      "perfume_id": 1807,
+      "perfume": "Oud Mystery",
+      "marca": "Al Wataniah",
+      "es_arabe": true,
+      "tienda": "Falabella",
+      "motivo": "marca_excluida_por_perfil_tienda"
+    },
+    {
+      "perfume_id": 1807,
+      "perfume": "Oud Mystery",
+      "marca": "Al Wataniah",
+      "es_arabe": true,
+      "tienda": "Paris",
+      "motivo": "marca_excluida_por_perfil_tienda"
+    },
+    {
+      "perfume_id": 1807,
+      "perfume": "Oud Mystery",
+      "marca": "Al Wataniah",
+      "es_arabe": true,
+      "tienda": "Ripley",
+      "motivo": "marca_excluida_por_perfil_tienda"
+    },
+    {
+      "perfume_id": 1807,
+      "perfume": "Oud Mystery",
+      "marca": "Al Wataniah",
+      "es_arabe": true,
+      "tienda": "DBS Beauty Store",
+      "motivo": "marca_excluida_por_perfil_tienda"
+    },
+    {
+      "perfume_id": 3155,
+      "perfume": "Whisky",
+      "marca": "Fragrance World",
+      "es_arabe": true,
+      "tienda": "Falabella",
+      "motivo": "marca_excluida_por_perfil_tienda"
+    },
+    {
+      "perfume_id": 3155,
+      "perfume": "Whisky",
+      "marca": "Fragrance World",
+      "es_arabe": true,
+      "tienda": "Paris",
+      "motivo": "marca_excluida_por_perfil_tienda"
+    },
+    {
+      "perfume_id": 3155,
+      "perfume": "Whisky",
+      "marca": "Fragrance World",
+      "es_arabe": true,
+      "tienda": "Ripley",
+      "motivo": "marca_excluida_por_perfil_tienda"
+    },
+    {
+      "perfume_id": 3155,
+      "perfume": "Whisky",
+      "marca": "Fragrance World",
+      "es_arabe": true,
+      "tienda": "DBS Beauty Store",
+      "motivo": "marca_excluida_por_perfil_tienda"
+    },
+    {
+      "perfume_id": 3960,
+      "perfume": "Flamenco Extrait",
+      "marca": "Ramón Monegal",
       "es_arabe": false,
       "tienda": "Falabella",
       "motivo": "marca_excluida_por_perfil_tienda"
     },
     {
-      "perfume_id": 1247,
-      "perfume": "Game Of Spade Ruby",
-      "marca": "Jo Milano",
+      "perfume_id": 3960,
+      "perfume": "Flamenco Extrait",
+      "marca": "Ramón Monegal",
       "es_arabe": false,
       "tienda": "Paris",
       "motivo": "marca_excluida_por_perfil_tienda"
     },
     {
-      "perfume_id": 1247,
-      "perfume": "Game Of Spade Ruby",
-      "marca": "Jo Milano",
+      "perfume_id": 3960,
+      "perfume": "Flamenco Extrait",
+      "marca": "Ramón Monegal",
       "es_arabe": false,
       "tienda": "Ripley",
       "motivo": "marca_excluida_por_perfil_tienda"
     },
     {
-      "perfume_id": 1247,
-      "perfume": "Game Of Spade Ruby",
-      "marca": "Jo Milano",
+      "perfume_id": 3960,
+      "perfume": "Flamenco Extrait",
+      "marca": "Ramón Monegal",
       "es_arabe": false,
       "tienda": "DBS Beauty Store",
       "motivo": "marca_excluida_por_perfil_tienda"
     },
     {
-      "perfume_id": 1302,
-      "perfume": "Luminos Extrait De",
-      "marca": "Mykonos",
+      "perfume_id": 4548,
+      "perfume": "Royal One Million",
+      "marca": "Cuba",
       "es_arabe": false,
       "tienda": "Falabella",
       "motivo": "marca_excluida_por_perfil_tienda"
     },
     {
-      "perfume_id": 1302,
-      "perfume": "Luminos Extrait De",
-      "marca": "Mykonos",
+      "perfume_id": 4548,
+      "perfume": "Royal One Million",
+      "marca": "Cuba",
       "es_arabe": false,
+      "tienda": "Paris",
+      "motivo": "marca_excluida_por_perfil_tienda"
+    },
+    {
+      "perfume_id": 4548,
+      "perfume": "Royal One Million",
+      "marca": "Cuba",
+      "es_arabe": false,
+      "tienda": "Ripley",
+      "motivo": "marca_excluida_por_perfil_tienda"
+    },
+    {
+      "perfume_id": 4548,
+      "perfume": "Royal One Million",
+      "marca": "Cuba",
+      "es_arabe": false,
+      "tienda": "DBS Beauty Store",
+      "motivo": "marca_excluida_por_perfil_tienda"
+    },
+    {
+      "perfume_id": 4586,
+      "perfume": "Milestone The Immencity L'Immencite",
+      "marca": "Emper",
+      "es_arabe": true,
+      "tienda": "Falabella",
+      "motivo": "marca_excluida_por_perfil_tienda"
+    },
+    {
+      "perfume_id": 4586,
+      "perfume": "Milestone The Immencity L'Immencite",
+      "marca": "Emper",
+      "es_arabe": true,
+      "tienda": "Paris",
+      "motivo": "marca_excluida_por_perfil_tienda"
+    },
+    {
+      "perfume_id": 4586,
+      "perfume": "Milestone The Immencity L'Immencite",
+      "marca": "Emper",
+      "es_arabe": true,
+      "tienda": "Ripley",
+      "motivo": "marca_excluida_por_perfil_tienda"
+    },
+    {
+      "perfume_id": 4586,
+      "perfume": "Milestone The Immencity L'Immencite",
+      "marca": "Emper",
+      "es_arabe": true,
+      "tienda": "DBS Beauty Store",
+      "motivo": "marca_excluida_por_perfil_tienda"
+    },
+    {
+      "perfume_id": 4610,
+      "perfume": "Chaos Extrait Kirsch",
+      "marca": "French Avenue",
+      "es_arabe": true,
+      "tienda": "Falabella",
+      "motivo": "marca_excluida_por_perfil_tienda"
+    },
+    {
+      "perfume_id": 4610,
+      "perfume": "Chaos Extrait Kirsch",
+      "marca": "French Avenue",
+      "es_arabe": true,
+      "tienda": "Paris",
+      "motivo": "marca_excluida_por_perfil_tienda"
+    },
+    {
+      "perfume_id": 4610,
+      "perfume": "Chaos Extrait Kirsch",
+      "marca": "French Avenue",
+      "es_arabe": true,
+      "tienda": "Ripley",
+      "motivo": "marca_excluida_por_perfil_tienda"
+    },
+    {
+      "perfume_id": 4610,
+      "perfume": "Chaos Extrait Kirsch",
+      "marca": "French Avenue",
+      "es_arabe": true,
+      "tienda": "DBS Beauty Store",
+      "motivo": "marca_excluida_por_perfil_tienda"
+    },
+    {
+      "perfume_id": 4661,
+      "perfume": "Intense Wayfarer The Most Wanted",
+      "marca": "Paris Corner",
+      "es_arabe": true,
+      "tienda": "Falabella",
+      "motivo": "marca_excluida_por_perfil_tienda"
+    },
+    {
+      "perfume_id": 4661,
+      "perfume": "Intense Wayfarer The Most Wanted",
+      "marca": "Paris Corner",
+      "es_arabe": true,
+      "tienda": "Paris",
+      "motivo": "marca_excluida_por_perfil_tienda"
+    },
+    {
+      "perfume_id": 4661,
+      "perfume": "Intense Wayfarer The Most Wanted",
+      "marca": "Paris Corner",
+      "es_arabe": true,
+      "tienda": "Ripley",
+      "motivo": "marca_excluida_por_perfil_tienda"
+    },
+    {
+      "perfume_id": 4661,
+      "perfume": "Intense Wayfarer The Most Wanted",
+      "marca": "Paris Corner",
+      "es_arabe": true,
+      "tienda": "DBS Beauty Store",
+      "motivo": "marca_excluida_por_perfil_tienda"
+    },
+    {
+      "perfume_id": 4874,
+      "perfume": "Yara Tous",
+      "marca": "Lattafa",
+      "es_arabe": true,
+      "tienda": "Falabella",
+      "motivo": "marca_excluida_por_perfil_tienda"
+    },
+    {
+      "perfume_id": 4874,
+      "perfume": "Yara Tous",
+      "marca": "Lattafa",
+      "es_arabe": true,
+      "tienda": "Paris",
+      "motivo": "marca_excluida_por_perfil_tienda"
+    },
+    {
+      "perfume_id": 4874,
+      "perfume": "Yara Tous",
+      "marca": "Lattafa",
+      "es_arabe": true,
+      "tienda": "Ripley",
+      "motivo": "marca_excluida_por_perfil_tienda"
+    },
+    {
+      "perfume_id": 4874,
+      "perfume": "Yara Tous",
+      "marca": "Lattafa",
+      "es_arabe": true,
+      "tienda": "DBS Beauty Store",
+      "motivo": "marca_excluida_por_perfil_tienda"
+    },
+    {
+      "perfume_id": 5142,
+      "perfume": "Sui Generis Society Extrême",
+      "marca": "Fragrance World",
+      "es_arabe": true,
+      "tienda": "Falabella",
+      "motivo": "marca_excluida_por_perfil_tienda"
+    },
+    {
+      "perfume_id": 5142,
+      "perfume": "Sui Generis Society Extrême",
+      "marca": "Fragrance World",
+      "es_arabe": true,
+      "tienda": "Paris",
+      "motivo": "marca_excluida_por_perfil_tienda"
+    },
+    {
+      "perfume_id": 5142,
+      "perfume": "Sui Generis Society Extrême",
+      "marca": "Fragrance World",
+      "es_arabe": true,
+      "tienda": "Ripley",
+      "motivo": "marca_excluida_por_perfil_tienda"
+    },
+    {
+      "perfume_id": 5142,
+      "perfume": "Sui Generis Society Extrême",
+      "marca": "Fragrance World",
+      "es_arabe": true,
+      "tienda": "DBS Beauty Store",
+      "motivo": "marca_excluida_por_perfil_tienda"
+    },
+    {
+      "perfume_id": 5158,
+      "perfume": "Shmallow Fluff",
+      "marca": "French Avenue",
+      "es_arabe": true,
+      "tienda": "Falabella",
+      "motivo": "marca_excluida_por_perfil_tienda"
+    },
+    {
+      "perfume_id": 5158,
+      "perfume": "Shmallow Fluff",
+      "marca": "French Avenue",
+      "es_arabe": true,
       "tienda": "Paris",
       "motivo": "marca_excluida_por_perfil_tienda"
     }
   ],
-  "outliers_detectados": [],
+  "outliers_detectados": [
+    {
+      "id": 25921,
+      "perfume_id": 5183,
+      "perfume": "Coach - Green (100ml)",
+      "tienda_id": 13,
+      "tienda": "Cosmetic",
+      "precio_actual": 27990,
+      "volumen_ml": 100,
+      "formato": "tester",
+      "en_stock": true,
+      "estado": "activa",
+      "url_producto": "https://cosmetic.cl/products/perfume-coach-green-edt-100-ml-coach-tester",
+      "regla_outlier": "tester_mayor_que_regular",
+      "estado_sugerido": "requiere_revision",
+      "mediana_referencia": 19900,
+      "motivo_outlier": "Tester ($27,990) supera precio de botella regular sellada ($19,900)"
+    },
+    {
+      "id": 32024,
+      "perfume_id": 5183,
+      "perfume": "Coach - Green (100ml)",
+      "tienda_id": 15,
+      "tienda": "ComprarEnChile",
+      "precio_actual": 29990,
+      "volumen_ml": 100,
+      "formato": "tester",
+      "en_stock": true,
+      "estado": "activa",
+      "url_producto": "https://comprarenchile.cl/products/coach-green-edt-100-ml-tester",
+      "regla_outlier": "tester_mayor_que_regular",
+      "estado_sugerido": "requiere_revision",
+      "mediana_referencia": 19900,
+      "motivo_outlier": "Tester ($29,990) supera precio de botella regular sellada ($19,900)"
+    },
+    {
+      "id": 7613,
+      "perfume_id": 946,
+      "perfume": "Estée Lauder - Pleasures (100ml)",
+      "tienda_id": 1,
+      "tienda": "Falabella",
+      "precio_actual": 150990,
+      "volumen_ml": 100,
+      "formato": "regular",
+      "en_stock": true,
+      "estado": "activa",
+      "url_producto": "https://www.falabella.com/falabella-cl/product/65038/Perfume-Pleasures-Edp-100-Ml-Estee-Lauder",
+      "regla_outlier": "sobre_mediana",
+      "estado_sugerido": "requiere_revision",
+      "mediana_referencia": 31490,
+      "motivo_outlier": "Precio $150,990 superior a 2.2x mediana ($31,490) sobre 4 ofertas"
+    },
+    {
+      "id": 22367,
+      "perfume_id": 3045,
+      "perfume": "Moschino - Toy 2 (100ml)",
+      "tienda_id": 11,
+      "tienda": "Chile Perfume",
+      "precio_actual": 65990,
+      "volumen_ml": 100,
+      "formato": "tester",
+      "en_stock": true,
+      "estado": "activa",
+      "url_producto": "https://www.chileperfume.cl/producto/moschino-toy-2-pearl-edp-100ml-unisex-tester-con-tapa/",
+      "regla_outlier": "tester_mayor_que_regular",
+      "estado_sugerido": "requiere_revision",
+      "mediana_referencia": 55400,
+      "motivo_outlier": "Tester ($65,990) supera precio de botella regular sellada ($55,400)"
+    },
+    {
+      "id": 10950,
+      "perfume_id": 400,
+      "perfume": "Burberry - For (100ml)",
+      "tienda_id": 12,
+      "tienda": "Mundo Aromas",
+      "precio_actual": 93990,
+      "volumen_ml": 100,
+      "formato": "regular",
+      "en_stock": true,
+      "estado": "activa",
+      "url_producto": "https://mundoaromas.cl/products/perfume-burberry-goddess-edp-100ml-mujer",
+      "regla_outlier": "sobre_mediana",
+      "estado_sugerido": "requiere_revision",
+      "mediana_referencia": 38990,
+      "motivo_outlier": "Precio $93,990 superior a 2.2x mediana ($38,990) sobre 5 ofertas"
+    },
+    {
+      "id": 6378,
+      "perfume_id": 484,
+      "perfume": "Oscar de la Renta - Oscar De La Renta (100ml)",
+      "tienda_id": 7,
+      "tienda": "Alisha Perfumes",
+      "precio_actual": 29990,
+      "volumen_ml": 100,
+      "formato": "tester",
+      "en_stock": true,
+      "estado": "activa",
+      "url_producto": "https://alishaperfumes.cl/products/oscar-de-la-renta-alibi-edt-100ml-tester",
+      "regla_outlier": "tester_mayor_que_regular",
+      "estado_sugerido": "requiere_revision",
+      "mediana_referencia": 26990,
+      "motivo_outlier": "Tester ($29,990) supera precio de botella regular sellada ($26,990)"
+    },
+    {
+      "id": 17298,
+      "perfume_id": 1276,
+      "perfume": "Moschino - Toy 2 Pearl (100ml)",
+      "tienda_id": 11,
+      "tienda": "Chile Perfume",
+      "precio_actual": 65990,
+      "volumen_ml": 100,
+      "formato": "tester",
+      "en_stock": true,
+      "estado": "activa",
+      "url_producto": "https://www.chileperfume.cl/producto/moschino-toy-2-pearl-edp-100ml-unisex-tester-con-tapa/",
+      "regla_outlier": "tester_mayor_que_regular",
+      "estado_sugerido": "requiere_revision",
+      "mediana_referencia": 56900,
+      "motivo_outlier": "Tester ($65,990) supera precio de botella regular sellada ($56,900)"
+    },
+    {
+      "id": 8975,
+      "perfume_id": 3788,
+      "perfume": "Bentley - Absolute (100ml)",
+      "tienda_id": 12,
+      "tienda": "Mundo Aromas",
+      "precio_actual": 26990,
+      "volumen_ml": 100,
+      "formato": "tester",
+      "en_stock": true,
+      "estado": "activa",
+      "url_producto": "https://mundoaromas.cl/products/tester-bentley-absolute-edp-100ml-hombre",
+      "regla_outlier": "tester_mayor_que_regular",
+      "estado_sugerido": "requiere_revision",
+      "mediana_referencia": 11990,
+      "motivo_outlier": "Tester ($26,990) supera precio de botella regular sellada ($11,990)"
+    },
+    {
+      "id": 15272,
+      "perfume_id": 647,
+      "perfume": "Azzaro - Sport (100ml)",
+      "tienda_id": 15,
+      "tienda": "ComprarEnChile",
+      "precio_actual": 27900,
+      "volumen_ml": 100,
+      "formato": "tester",
+      "en_stock": true,
+      "estado": "activa",
+      "url_producto": "https://comprarenchile.cl/products/azzaro-sport-edt-100-ml-tester-h",
+      "regla_outlier": "tester_mayor_que_regular",
+      "estado_sugerido": "requiere_revision",
+      "mediana_referencia": 23900,
+      "motivo_outlier": "Tester ($27,900) supera precio de botella regular sellada ($23,900)"
+    }
+  ],
   "descubrimiento": null,
   "rotaciones_detalle": [
     {
       "rotacion": 1,
-      "scraping_run_id": 175,
-      "perfumes": 25,
-      "actualizaciones": 0,
-      "duracion_segundos": 39.08,
+      "scraping_run_id": 176,
+      "perfumes": 500,
+      "actualizaciones": 111,
+      "duracion_segundos": 1103.07,
+      "estado": "EXITOSO"
+    },
+    {
+      "rotacion": 2,
+      "scraping_run_id": 180,
+      "perfumes": 341,
+      "actualizaciones": 58,
+      "duracion_segundos": 713.78,
       "estado": "EXITOSO"
     }
   ],
