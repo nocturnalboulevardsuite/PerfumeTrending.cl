@@ -5,10 +5,13 @@ Elimina la duplicación de ~1.500 líneas de SVGs, variables cromáticas y CSS d
 cabecera/popover/switch entre las 6 páginas del portal manteniendo 100% de fidelidad visual.
 """
 
+# Importación de componentes (dataclass) desde el módulo 'dataclasses'
 from dataclasses import dataclass
+# Importación de librería estándar o dependencia externa (streamlit)
 import streamlit as st
 
 
+# Asignamos 'PERFUME_SVG_FAVICON' con "data:image/svg+xml;utf8,<svg xmlns='http:...
 PERFUME_SVG_FAVICON = (
     "data:image/svg+xml;utf8,"
     "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 36' fill='none'>"
@@ -21,43 +24,75 @@ PERFUME_SVG_FAVICON = (
     "</svg>"
 )
 
+# Asignamos 'TREND_RED_SVG' con "data:image/svg+xml;utf8,<svg xmlns='http:...
 TREND_RED_SVG = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d83737' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='23 6 13.5 15.5 8.5 10.5 1 18'/><polyline points='17 6 23 6 23 12'/></svg>"
+# Asignamos 'SHIELD_RED_SVG' con "data:image/svg+xml;utf8,<svg xmlns='http:...
 SHIELD_RED_SVG = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d83737' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/><polyline points='9 12 11 14 15 10'/></svg>"
+# Asignamos 'TAG_RED_SVG' con "data:image/svg+xml;utf8,<svg xmlns='http:...
 TAG_RED_SVG = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d83737' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z'/><circle cx='7' cy='7' r='1.5' fill='%23d83737'/></svg>"
+# Asignamos 'HOME_RED_SVG' con "data:image/svg+xml;utf8,<svg xmlns='http:...
 HOME_RED_SVG = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d83737' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z'/><polyline points='9 22 9 12 15 12 15 22'/></svg>"
+# Asignamos 'FLAME_RED_SVG' con "data:image/svg+xml;utf8,<svg xmlns='http:...
 FLAME_RED_SVG = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d83737' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z'/></svg>"
+# Asignamos 'GRID_ICON_SVG' con "data:image/svg+xml;utf8,<svg xmlns='http:...
 GRID_ICON_SVG = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d83737' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><rect x='3' y='3' width='7' height='7'/><rect x='14' y='3' width='7' height='7'/><rect x='14' y='14' width='7' height='7'/><rect x='3' y='14' width='7' height='7'/></svg>"
+# Asignamos 'DIAMOND_ICON_SVG' con "data:image/svg+xml;utf8,<svg xmlns='http:...
 DIAMOND_ICON_SVG = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d83737' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M6 3h12l4 6-10 12L2 9z'/></svg>"
 
 
+# Definición de clase 'ThemePalette' que modela la estructura y lógica del componente
 @dataclass(frozen=True)
 class ThemePalette:
+    # Declaración de atributo o variable 'is_dark'
     is_dark: bool
+    # Declaración de atributo o variable 'app_bg'
     app_bg: str
+    # Declaración de atributo o variable 'app_bg_css'
     app_bg_css: str
+    # Declaración de atributo o variable 'card_bg'
     card_bg: str
+    # Declaración de atributo o variable 'border_color'
     border_color: str
+    # Declaración de atributo o variable 'text_color'
     text_color: str
+    # Declaración de atributo o variable 'subtext_color'
     subtext_color: str
+    # Declaración de atributo o variable 'btn_bg'
     btn_bg: str
+    # Declaración de atributo o variable 'btn_text'
     btn_text: str
+    # Declaración de atributo o variable 'btn_border'
     btn_border: str
+    # Declaración de atributo o variable 'input_bg'
     input_bg: str
+    # Declaración de atributo o variable 'input_text'
     input_text: str
+    # Declaración de atributo o variable 'input_border'
     input_border: str
+    # Declaración de atributo o variable 'bottle_left_pos'
     bottle_left_pos: str
+    # Declaración de atributo o variable 'static_icon_pos'
     static_icon_pos: str
+    # Declaración de atributo o variable 'static_icon_svg'
     static_icon_svg: str
+    # Declaración de atributo o variable 'bottle_svg'
     bottle_svg: str
+    # Declaración de atributo o variable 'user_icon_svg'
     user_icon_svg: str
+    # Declaración de atributo o variable 'settings_icon_svg'
     settings_icon_svg: str
+    # Declaración de atributo o variable 'logout_icon_svg'
     logout_icon_svg: str
+    # Declaración de atributo o variable 'camera_icon_svg'
     camera_icon_svg: str
+    # Declaración de atributo o variable 'logo_svg_data'
     logo_svg_data: str
 
 
+# Definición de función 'init_common_session_state' sin parámetros externos
 def init_common_session_state() -> None:
     """Inicializa el estado compartido de sesión para tema, autenticación y favoritos."""
+    # Asignamos 'defaults' con {'theme': 'dark', 'logged_in': False, 'use...
     defaults = {
         "theme": "dark",
         "logged_in": False,
@@ -69,61 +104,95 @@ def init_common_session_state() -> None:
         "login_failed_attempts": 0,
         "login_lockout_until": 0.0,
     }
+    # Recorremos iterativamente cada '(key, val)' en defaults.items()
     for key, val in defaults.items():
+        # Evaluamos la condición lógica (key not in st.session_state) para controlar el flujo
         if key not in st.session_state:
+            # Asignamos 'st.session_state[key]' con list(val) if isinstance(val, list) else val
             st.session_state[key] = list(val) if isinstance(val, list) else val
 
 
+# Definición de función 'toggle_theme' sin parámetros externos
 def toggle_theme() -> None:
     """Alterna entre modo oscuro y modo claro cerrando modales abiertos."""
+    # Asignamos 'cur' con st.session_state.get('theme', 'dark')
     cur = st.session_state.get("theme", "dark")
+    # Asignamos 'st.session_state['theme']' con 'dark' if cur == 'light' else 'light'
     st.session_state["theme"] = "dark" if cur == "light" else "light"
+    # Asignamos 'st.session_state['show_login_mod...' con False
     st.session_state["show_login_modal"] = False
+    # Asignamos 'st.session_state['show_visual_mo...' con False
     st.session_state["show_visual_modal"] = False
 
 
+# Definición de función 'get_theme_palette' (parámetros: light_bg)
 def get_theme_palette(light_bg: str = "#f8f9fa") -> ThemePalette:
     """Construye la paleta cromática y SVGs dinámicos según el tema activo."""
+    # Asignamos 'is_dark' con st.session_state.get('theme', 'dark') == '...
     is_dark = st.session_state.get("theme", "dark") == "dark"
+    # Asignamos 'app_bg' con '#0c0e12' if is_dark else light_bg
     app_bg = "#0c0e12" if is_dark else light_bg
+    # Asignamos 'app_bg_css' con 'radial-gradient(ellipse at top, #181c24 0...
     app_bg_css = "radial-gradient(ellipse at top, #181c24 0%, #0c0e12 75%)" if is_dark else app_bg
+    # Asignamos 'card_bg' con '#14171d' if is_dark else '#ffffff'
     card_bg = "#14171d" if is_dark else "#ffffff"
+    # Asignamos 'border_color' con '#2a2e39' if is_dark else '#e4e4e7'
     border_color = "#2a2e39" if is_dark else "#e4e4e7"
+    # Asignamos 'text_color' con '#f0f0f0' if is_dark else '#18181b'
     text_color = "#f0f0f0" if is_dark else "#18181b"
+    # Asignamos 'subtext_color' con '#888890' if is_dark else '#666670'
     subtext_color = "#888890" if is_dark else "#666670"
 
+    # Asignamos 'btn_bg' con '#181c24' if is_dark else '#ffffff'
     btn_bg = "#181c24" if is_dark else "#ffffff"
+    # Asignamos 'btn_text' con '#ffffff' if is_dark else '#18181b'
     btn_text = "#ffffff" if is_dark else "#18181b"
+    # Asignamos 'btn_border' con '#2a2e39' if is_dark else '#d1d5db'
     btn_border = "#2a2e39" if is_dark else "#d1d5db"
 
+    # Asignamos 'input_bg' con '#14171d' if is_dark else '#ffffff'
     input_bg = "#14171d" if is_dark else "#ffffff"
+    # Asignamos 'input_text' con '#f0f0f0' if is_dark else '#18181b'
     input_text = "#f0f0f0" if is_dark else "#18181b"
+    # Asignamos 'input_border' con '#2a2e39' if is_dark else '#d1d5db'
     input_border = "#2a2e39" if is_dark else "#d1d5db"
 
+    # Asignamos 'bottle_left_pos' con '42px' if is_dark else '-2px'
     bottle_left_pos = "42px" if is_dark else "-2px"
+    # Asignamos 'static_icon_pos' con '12px center' if is_dark else 'calc(100% -...
     static_icon_pos = "12px center" if is_dark else "calc(100% - 12px) center"
 
+    # Asignamos 'static_icon_svg' con "data:image/svg+xml;utf8,<svg xmlns='http:...
     static_icon_svg = (
         "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='4'/><line x1='12' y1='1' x2='12' y2='3'/><line x1='12' y1='21' x2='12' y2='23'/><line x1='4.22' y1='4.22' x2='5.64' y2='5.64'/><line x1='18.36' y1='18.36' x2='19.78' y2='19.78'/><line x1='1' y1='12' x2='3' y2='12'/><line x1='21' y1='12' x2='23' y2='12'/><line x1='4.22' y1='19.78' x2='5.64' y2='18.36'/><line x1='18.36' y1='5.64' x2='19.78' y2='4.22'/></svg>"
         if is_dark
         else "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M21 12.79A9 9 0 0 1 11.21 3 7 7 0 0 0 21 12.79z'/></svg>"
     )
 
+    # Asignamos 'bottle_svg' con "data:image/svg+xml;utf8,<svg xmlns='http:...
     bottle_svg = (
         "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 58'><rect x='18' y='2' width='14' height='7' rx='2' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><rect x='21' y='9' width='8' height='5' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='19' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><path d='M21 28a8 8 0 0 0 9 10.5 8.5 8.5 0 0 1-9-10.5z' fill='none' stroke='%23111111' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/></svg>"
         if is_dark
         else "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 58'><rect x='18' y='2' width='14' height='7' rx='2' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><rect x='21' y='9' width='8' height='5' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='19' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='5' fill='none' stroke='%23111111' stroke-width='2'/><line x1='25' y1='23' x2='25' y2='26' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='25' y1='42' x2='25' y2='45' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='14' y1='34' x2='17' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='33' y1='34' x2='36' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='17' y1='26' x2='19' y2='28' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='31' y1='40' x2='33' y2='42' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='17' y1='42' x2='19' y2='40' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='31' y1='28' x2='33' y2='26' stroke='%23111111' stroke-width='2' stroke-linecap='round'/></svg>"
     )
 
+    # Asignamos 'stroke_hex' con btn_text[1:]
     stroke_hex = btn_text[1:]
+    # Asignamos 'user_icon_svg' con f"data:image/svg+xml;utf8,<svg xmlns='http...
     user_icon_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23{stroke_hex}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2'/><circle cx='12' cy='7' r='4'/></svg>"
+    # Asignamos 'settings_icon_svg' con f"data:image/svg+xml;utf8,<svg xmlns='http...
     settings_icon_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23{stroke_hex}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z'/><circle cx='12' cy='12' r='3'/></svg>"
+    # Asignamos 'logout_icon_svg' con f"data:image/svg+xml;utf8,<svg xmlns='http...
     logout_icon_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23{stroke_hex}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4'/><polyline points='16 17 21 12 16 7'/><line x1='21' y1='12' x2='9' y2='12'/></svg>"
+    # Asignamos 'camera_icon_svg' con f"data:image/svg+xml;utf8,<svg xmlns='http...
     camera_icon_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23{stroke_hex}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z'/><circle cx='12' cy='13' r='4'/></svg>"
 
+    # Asignamos 'text_color_encoded' con '%23ffffff' if is_dark else '%2318181b'
     text_color_encoded = "%23ffffff" if is_dark else "%2318181b"
+    # Asignamos 'logo_svg_data' con f"data:image/svg+xml;utf8,<svg xmlns='http...
     logo_svg_data = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 36' fill='none' stroke-linecap='round' stroke-linejoin='round'><path d='M 6.8 21 L 29.2 21 C 30 25 27 32 18 32 C 9 32 6 25 6.8 21 Z' fill='%238c7b6d' /><line x1='6.8' y1='21' x2='29.2' y2='21' stroke='{text_color_encoded}' stroke-width='1.5' /><line x1='18' y1='10' x2='18' y2='30' stroke='{text_color_encoded}' stroke-width='1' /><path d='M 18 32 C 9 32 5 24 7.5 17 C 9 12 13 10 15 10 L 21 10 C 23 10 27 12 28.5 17 C 31 24 27 32 18 32 Z' stroke='{text_color_encoded}' stroke-width='2' /><rect x='15' y='7' width='6' height='3' stroke='{text_color_encoded}' stroke-width='1.5' /><rect x='13' y='3' width='10' height='4' rx='1' stroke='{text_color_encoded}' stroke-width='1.5' /><rect x='16' y='0' width='4' height='3' rx='1' fill='%238c7b6d' stroke='{text_color_encoded}' stroke-width='1' /></svg>"
 
+    # Retornamos el resultado procesado (ThemePalette(is_dark=is_dark, app_bg=app_bg, ap...)
     return ThemePalette(
         is_dark=is_dark,
         app_bg=app_bg,

@@ -1,25 +1,61 @@
-import json
-import os
-from datetime import datetime, timedelta
+"""
+PerfumeTrending.cl — Generador Automático de Esquema SQL para Supabase (PostgreSQL 15+)
+========================================================================================
+Propósito del archivo:
+Este módulo lee el catálogo semilla local (`APP/database/seed_catalogo.json`) y construye
+automáticamente el archivo de migración SQL inicial (`20261014000000_init_supabase_schema.sql`)
+con todas las tablas relacionales, índices B-Tree, políticas Row Level Security (RLS),
+vistas optimizadas (`vista_catalogo`, `vista_precios_actuales`) e inserciones base (`INSERT INTO`).
+"""
 
+# Importación de librería estándar o dependencia externa (json)
+import json  # Módulo estándar para deserializar el archivo seed_catalogo.json
+# Importación de librería estándar o dependencia externa (os)
+import os  # Módulo estándar para manejo de rutas y creación de directorios
+# Importación de componentes (datetime, timedelta) desde el módulo 'datetime'
+from datetime import datetime, timedelta  # Utilidades de fecha y tiempo para marcas temporales
+
+
+# - ¿Qué hace esta función principal (`main`)?:
+#   1. Resuelve las rutas hacia `seed_catalogo.json` y la carpeta `supabase/migrations/`.
+#   2. Construye el DDL completo de las 5 tablas iniciales (`tiendas`, `perfumes`, `precios_registro`,
+#      `tendencias_metricas`, `scraping_logs`), sus índices y políticas de seguridad RLS.
+#   3. Define las vistas SQL y otorga permisos de lectura/ejecución para PostgREST.
+#   4. Itera sobre tiendas, perfumes y enlaces iniciales generando sentencias `INSERT ... ON CONFLICT`.
+#   5. Escribe el script SQL resultante en disco listo para desplegarse en Supabase Cloud.
 def main():
+    # Obtenemos el directorio raíz de la carpeta APP (subiendo un nivel desde APP/backend/)
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    # Ruta absoluta hacia el archivo JSON con el catálogo semilla inicial
     seed_path = os.path.join(base_dir, "database", "seed_catalogo.json")
+    # Ruta absoluta hacia el directorio de migraciones de Supabase en la raíz del repositorio
     out_dir = os.path.join(os.path.dirname(base_dir), "supabase", "migrations")
+    # Creamos la carpeta de migraciones si aún no existe en el sistema de archivos
     os.makedirs(out_dir, exist_ok=True)
+    # Nombre del archivo SQL de migración inicial que se generará
     out_file = os.path.join(out_dir, "20261014000000_init_supabase_schema.sql")
 
+    # Abrimos y cargamos el contenido JSON del catálogo semilla en memoria con codificación UTF-8
     with open(seed_path, "r", encoding="utf-8") as f:
+        # Procesamiento de serialización o deserialización de estructura JSON
         catalogo = json.load(f)
 
+    # Lista acumuladora donde iremos concatenando cada bloque del script SQL
     sql_parts = []
+    # Encabezado descriptivo del archivo SQL generado
     sql_parts.append("-- =====================================================================")
+    # Operación de lectura o persistencia sobre tablas/RPC de Supabase Cloud
     sql_parts.append("-- PerfumeTrending.cl — Esquema Relacional de Producción en Supabase")
+    # Ejecutamos instrucción: sql_parts.append('-- ===============================...
     sql_parts.append("-- =====================================================================")
+    # Operación de lectura o persistencia sobre tablas/RPC de Supabase Cloud
     sql_parts.append("-- Compatible con PostgreSQL 15+ / Supabase con RLS habilitado")
+    # Ejecución de consulta SQL parametrizada sobre la base de datos SQLite local
     sql_parts.append("-- Generado automáticamente para migración desde SQLite")
+    # Ejecutamos instrucción: sql_parts.append('-- ===============================...
     sql_parts.append("-- =====================================================================\n")
 
+    # Bloque DDL principal: creación de tablas, índices B-Tree, políticas RLS y vistas públicas
     sql_parts.append("""
 -- 1. Directorio de Tiendas Auditadas (Trust Score)
 CREATE TABLE IF NOT EXISTS public.tiendas (
@@ -187,83 +223,134 @@ DROP POLICY IF EXISTS "Lectura publica scraping_logs" ON public.scraping_logs;
 DROP POLICY IF EXISTS "Escritura scraping_logs" ON public.scraping_logs;
 """)
 
-    # 1. Tiendas INSERTs
+    # 1. Generación de sentencias INSERT para las tiendas auditadas del catálogo semilla
     sql_parts.append("\n-- POBLADO INICIAL: TIENDAS AUDITADAS")
+    # Extraemos la lista de tiendas desde el diccionario del catálogo
     tiendas = catalogo.get("tiendas", [])
+    # Recorremos iterativamente cada 't' en tiendas
     for t in tiendas:
+        # Escapamos comillas simples para evitar errores de sintaxis SQL (ej. L'Odoro -> L''Odoro)
         nombre = t["nombre"].replace("'", "''")
+        # Asignamos 'url_base' con t['url_base'].replace("'", "''")
         url_base = t["url_base"].replace("'", "''")
+        # Asignamos 'trust_score' con t.get('trust_score', 85)
         trust_score = t.get("trust_score", 85)
+        # Asignamos 'badge' con t.get('badge', 'Verificado').replace("'", ...
         badge = t.get("badge", "Verificado").replace("'", "''")
+        # Asignamos 'logo_emoji' con t.get('logo_emoji', '').replace("'", "''")
         logo_emoji = t.get("logo_emoji", "").replace("'", "''")
+        # Asignamos 'rut' con t.get('rut', '').replace("'", "''")
         rut = t.get("rut", "").replace("'", "''")
+        # Asignamos 'tipo_tienda' con t.get('tipo_tienda', 'Comercio Especializa...
         tipo_tienda = t.get("tipo_tienda", "Comercio Especializado").replace("'", "''")
+        # Asignamos 'ssl' con 'TRUE' if t.get('ssl_seguro', 1) else 'FALSE'
         ssl = "TRUE" if t.get("ssl_seguro", 1) else "FALSE"
+        # Asignamos 'anios' con t.get('anios_antiguedad', 5)
         anios = t.get("anios_antiguedad", 5)
+        # Asignamos 'ccs' con 'TRUE' if t.get('sello_ccs', 0) else 'FALSE'
         ccs = "TRUE" if t.get("sello_ccs", 0) else "FALSE"
+        # Asignamos 'sernac' con t.get('reclamos_sernac', 'Bajo').replace("...
         sernac = t.get("reclamos_sernac", "Bajo").replace("'", "''")
+        # Asignamos 'devolucion' con t.get('politica_devolucion', '30 días').re...
         devolucion = t.get("politica_devolucion", "30 días").replace("'", "''")
+        # Asignamos 'direccion' con t.get('direccion_fiscal', 'Santiago, Chile...
         direccion = t.get("direccion_fiscal", "Santiago, Chile").replace("'", "''")
+        # Asignamos 'p_seg' con t.get('puntos_seguridad', 25)
         p_seg = t.get("puntos_seguridad", 25)
+        # Asignamos 'p_leg' con t.get('puntos_legalidad', 25)
         p_leg = t.get("puntos_legalidad", 25)
+        # Asignamos 'p_gar' con t.get('puntos_garantia', 20)
         p_gar = t.get("puntos_garantia", 20)
+        # Asignamos 'p_rep' con t.get('puntos_reputacion', 20)
         p_rep = t.get("puntos_reputacion", 20)
 
+        # Agregamos el INSERT idempotente con cláusula ON CONFLICT (nombre) DO UPDATE
         sql_parts.append(
             f"INSERT INTO public.tiendas (nombre, url_base, trust_score, badge, logo_emoji, rut, tipo_tienda, ssl_seguro, anios_antiguedad, sello_ccs, reclamos_sernac, politica_devolucion, direccion_fiscal, puntos_seguridad, puntos_legalidad, puntos_garantia, puntos_reputacion) "
             f"VALUES ('{nombre}', '{url_base}', {trust_score}, '{badge}', '{logo_emoji}', '{rut}', '{tipo_tienda}', {ssl}, {anios}, {ccs}, '{sernac}', '{devolucion}', '{direccion}', {p_seg}, {p_leg}, {p_gar}, {p_rep}) "
             f"ON CONFLICT (nombre) DO UPDATE SET trust_score = EXCLUDED.trust_score, badge = EXCLUDED.badge;"
         )
 
-    # 2. Perfumes INSERTs
+    # 2. Generación de sentencias INSERT para el catálogo maestro de perfumes
     sql_parts.append("\n-- POBLADO INICIAL: CATÁLOGO DE PERFUMES")
+    # Asignamos 'perfumes' con catalogo.get('perfumes', [])
     perfumes = catalogo.get("perfumes", [])
+    # Recorremos iterativamente cada 'p' en perfumes
     for p in perfumes:
+        # Extraemos y sanitizamos cada atributo del perfume para inserción SQL segura
         p_id = p["id"]
+        # Asignamos 'nombre' con p['nombre'].replace("'", "''")
         nombre = p["nombre"].replace("'", "''")
+        # Asignamos 'marca' con p['marca'].replace("'", "''")
         marca = p["marca"].replace("'", "''")
+        # Asignamos 'genero' con p.get('genero', 'Unisex').replace("'", "''")
         genero = p.get("genero", "Unisex").replace("'", "''")
+        # Asignamos 'tipo' con p.get('tipo', 'Eau de Parfum').replace("'"...
         tipo = p.get("tipo", "Eau de Parfum").replace("'", "''")
+        # Asignamos 'notas' con p['notas'].replace("'", "''")
         notas = p["notas"].replace("'", "''")
+        # Asignamos 'imagen_url' con p['imagen_url'].replace("'", "''")
         imagen_url = p["imagen_url"].replace("'", "''")
+        # Asignamos 'es_arabe' con 'TRUE' if p.get('es_arabe', False) else 'F...
         es_arabe = "TRUE" if p.get("es_arabe", False) else "FALSE"
+        # Asignamos 'en_tendencia' con 'TRUE' if p.get('en_tendencia', False) els...
         en_tendencia = "TRUE" if p.get("en_tendencia", False) else "FALSE"
+        # Asignamos 'en_remate' con 'TRUE' if p.get('en_remate', False) else '...
         en_remate = "TRUE" if p.get("en_remate", False) else "FALSE"
+        # Asignamos 'precio_ref' con p['precio_referencia']
         precio_ref = p["precio_referencia"]
 
+        # Insertamos el perfume preservando su ID explícito con OVERRIDING SYSTEM VALUE
         sql_parts.append(
             f"INSERT INTO public.perfumes (id, nombre, marca, genero, tipo, notas, imagen_url, es_arabe, en_tendencia, en_remate, precio_referencia) "
             f"OVERRIDING SYSTEM VALUE VALUES ({p_id}, '{nombre}', '{marca}', '{genero}', '{tipo}', '{notas}', '{imagen_url}', {es_arabe}, {en_tendencia}, {en_remate}, {precio_ref}) "
             f"ON CONFLICT (id) DO UPDATE SET precio_referencia = EXCLUDED.precio_referencia, imagen_url = EXCLUDED.imagen_url;"
         )
 
-    # Ajustar secuencia de ID de perfumes
+    # Sincronizamos la secuencia autoincremental de PostgreSQL con el ID máximo insertado
     sql_parts.append("\nSELECT setval(pg_get_serial_sequence('public.perfumes', 'id'), COALESCE(MAX(id), 1) + 1, false) FROM public.perfumes;")
 
-    # 3. Precios Iniciales Reales (sin fluctuaciones sintéticas artificiales)
+    # 3. Generación de observaciones iniciales reales de precios por tienda y volumen
     sql_parts.append("\n-- POBLADO INICIAL: OBSERVACIONES BASE DE PRECIOS")
+    # Recorremos iterativamente cada 'p' en perfumes
     for p in perfumes:
+        # Asignamos 'p_id' con p['id']
         p_id = p["id"]
+        # Recorremos cada enlace de tienda registrado en el catálogo semilla para este perfume
         for enlace in p.get("enlaces_tiendas", []):
+            # Asignamos 't_nombre' con enlace.get('tienda', '').replace("'", "''")
             t_nombre = enlace.get("tienda", "").replace("'", "''")
+            # Asignamos 'precio_act' con enlace.get('precio_actual', p['precio_refe...
             precio_act = enlace.get("precio_actual", p["precio_referencia"])
+            # Asignamos 'p_normal_val' con enlace.get('precio_normal')
             p_normal_val = enlace.get("precio_normal")
+            # Aseguramos que precio_normal nunca sea inferior al precio_actual
             precio_norm = p_normal_val if (p_normal_val and p_normal_val > precio_act) else precio_act
+            # Asignamos 'url_prod' con enlace.get('url_producto', '').replace("'"...
             url_prod = enlace.get("url_producto", "").replace("'", "''")
+            # Asignamos 'vol_ml' con enlace.get('volumen_ml', p.get('volumen_ml...
             vol_ml = enlace.get("volumen_ml", p.get("volumen_ml", 100))
 
+            # Insertamos la observación resolviendo el tienda_id por nombre de tienda
             sql_parts.append(
                 f"INSERT INTO public.precios_registro (perfume_id, tienda_id, precio_actual, precio_normal, en_stock, volumen_ml, url_producto, fecha_registro) "
                 f"SELECT {p_id}, t.id, {precio_act}, {precio_norm}, TRUE, {vol_ml}, '{url_prod}', NOW() "
                 f"FROM public.tiendas t WHERE t.nombre = '{t_nombre}';"
             )
 
+    # Unimos todas las secciones SQL separadas por salto de línea
     full_sql = "\n".join(sql_parts) + "\n"
 
+    # Guardamos el archivo SQL final en el directorio de migraciones
     with open(out_file, "w", encoding="utf-8") as f:
+        # Ejecutamos instrucción: f.write(full_sql)
         f.write(full_sql)
 
+    # Informamos en consola la ruta y el tamaño en bytes de la migración creada
     print(f"Migracion generada con exito en: {out_file} ({len(full_sql)} bytes)")
 
+
+# Punto de entrada cuando el script se ejecuta directamente desde la terminal
 if __name__ == "__main__":
+    # Ejecutamos instrucción: main()
     main()

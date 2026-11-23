@@ -1,97 +1,160 @@
+# Importación de librería estándar o dependencia externa (streamlit)
 import streamlit as st
+# Importación de librería estándar o dependencia externa (streamlit.components.v1)
 import streamlit.components.v1 as components
+# Importación de librería estándar o dependencia externa (sys)
 import sys
+# Importación de librería estándar o dependencia externa (os)
 import os
+# Importación de librería estándar o dependencia externa (base64)
 import base64
 
+# Asignamos 'BASE_DIR' con os.path.dirname(os.path.dirname(os.path.di...
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# Evaluamos la condición lógica (BASE_DIR not in sys.path) para controlar el flujo
 if BASE_DIR not in sys.path:
+    # Ejecutamos instrucción: sys.path.append(BASE_DIR)
     sys.path.append(BASE_DIR)
 
+# Definición de función 'get_image_src' (parámetros: img_path_or_url)
 def get_image_src(img_path_or_url):
+    # Evaluamos la condición lógica (not img_path_or_url) para controlar el flujo
     if not img_path_or_url:
+        # Retornamos el resultado procesado ('https://images.unsplash.com/photo-152233736078...)
         return "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=500&q=80"
+    # Evaluamos la condición lógica (img_path_or_url.startswith('http://') or img_path_or...) para controlar el flujo
     if img_path_or_url.startswith("http://") or img_path_or_url.startswith("https://") or img_path_or_url.startswith("data:"):
+        # Retornamos el resultado procesado (img_path_or_url)
         return img_path_or_url
+    # Asignamos 'local_path' con img_path_or_url
     local_path = img_path_or_url
+    # Evaluamos la condición lógica (not os.path.isabs(local_path)) para controlar el flujo
     if not os.path.isabs(local_path):
+        # Asignamos 'cand1' con os.path.join(BASE_DIR, local_path)
         cand1 = os.path.join(BASE_DIR, local_path)
+        # Asignamos 'cand2' con os.path.join(BASE_DIR, 'APP', local_path)
         cand2 = os.path.join(BASE_DIR, "APP", local_path)
+        # Evaluamos la condición lógica (os.path.exists(cand1)) para controlar el flujo
         if os.path.exists(cand1):
+            # Asignamos 'local_path' con cand1
             local_path = cand1
+        # Evaluamos la condición lógica (os.path.exists(cand2)) para controlar el flujo
         elif os.path.exists(cand2):
+            # Asignamos 'local_path' con cand2
             local_path = cand2
+    # Evaluamos la condición lógica (os.path.exists(local_path)) para controlar el flujo
     if os.path.exists(local_path):
+        # Asignamos 'ext' con os.path.splitext(local_path)[1].lower().re...
         ext = os.path.splitext(local_path)[1].lower().replace(".", "")
+        # Asignamos 'mime' con 'image/png' if ext == 'png' else 'image/jpeg'
         mime = "image/png" if ext == "png" else "image/jpeg"
+        # Bloque try/except para manejo seguro de errores y resiliencia operativa
         try:
+            # Gestión automática de contexto y recursos para: open(local_path, 'rb')
             with open(local_path, "rb") as f:
+                # Asignamos 'b64' con base64.b64encode(f.read()).decode('utf-8')
                 b64 = base64.b64encode(f.read()).decode("utf-8")
+                # Retornamos el resultado procesado (f'data:{mime};base64,{b64}')
                 return f"data:{mime};base64,{b64}"
         except Exception:
+            # Ejecutamos instrucción: pass
             pass
+    # Retornamos el resultado procesado (img_path_or_url)
     return img_path_or_url
 
 # 1. CONFIGURACIÓN DE PÁGINA Y ESTADO
 st.set_page_config(page_title="PerfumeTrending", layout="wide", initial_sidebar_state="collapsed")
 
+# Evaluamos la condición lógica ('current_page' not in st.session_state) para controlar el flujo
 if 'current_page' not in st.session_state:
+    # Asignamos 'st.session_state['current_page']' con 'home'
     st.session_state['current_page'] = 'home'
+# Evaluamos la condición lógica ('theme' not in st.session_state) para controlar el flujo
 if 'theme' not in st.session_state:
+    # Asignamos 'st.session_state['theme']' con 'dark'
     st.session_state['theme'] = 'dark'
+# Evaluamos la condición lógica ('selected_perfume' not in st.session_state) para controlar el flujo
 if 'selected_perfume' not in st.session_state:
+    # Asignamos 'st.session_state['selected_perfu...' con None
     st.session_state['selected_perfume'] = None
+# Evaluamos la condición lógica ('selected_month' not in st.session_state) para controlar el flujo
 if 'selected_month' not in st.session_state:
+    # Asignamos 'st.session_state['selected_month']' con 'Este Mes'
     st.session_state['selected_month'] = 'Este Mes'
 
+# Definición de función 'toggle_theme' sin parámetros externos
 def toggle_theme():
+    # Asignamos 'st.session_state['theme']' con 'dark' if st.session_state['theme'] == 'li...
     st.session_state['theme'] = 'dark' if st.session_state['theme'] == 'light' else 'light'
 
+# Definición de función 'navigate_to' (parámetros: page, perfume_data)
 def navigate_to(page, perfume_data=None):
+    # Asignamos 'st.session_state['current_page']' con page
     st.session_state['current_page'] = page
+    # Evaluamos la condición lógica (perfume_data) para controlar el flujo
     if perfume_data:
+        # Asignamos 'st.session_state['selected_perfu...' con perfume_data
         st.session_state['selected_perfume'] = perfume_data
 
+# Asignamos 'is_dark' con st.session_state['theme'] == 'dark'
 is_dark = st.session_state['theme'] == 'dark'
 
 # Colores dinámicos adaptables por tema
 app_bg = "#0c0e12" if is_dark else "#f9f9fb"
+# Asignamos 'card_bg' con '#14171d' if is_dark else '#ffffff'
 card_bg = "#14171d" if is_dark else "#ffffff"
+# Asignamos 'border_color' con '#2a2e39' if is_dark else '#e4e4e7'
 border_color = "#2a2e39" if is_dark else "#e4e4e7"
+# Asignamos 'text_color' con '#f0f0f0' if is_dark else '#18181b'
 text_color = "#f0f0f0" if is_dark else "#18181b"
+# Asignamos 'subtext_color' con '#888890' if is_dark else '#666670'
 subtext_color = "#888890" if is_dark else "#666670"
+# Asignamos 'accent_color' con '#d4c2a5' if is_dark else '#8c7b6d'
 accent_color = "#d4c2a5" if is_dark else "#8c7b6d"
 
+# Asignamos 'btn_bg' con '#161920' if is_dark else '#ffffff'
 btn_bg = "#161920" if is_dark else "#ffffff"
+# Asignamos 'btn_text' con '#ffffff' if is_dark else '#18181b'
 btn_text = "#ffffff" if is_dark else "#18181b"
+# Asignamos 'btn_border' con '#2a2e39' if is_dark else '#d1d5db'
 btn_border = "#2a2e39" if is_dark else "#d1d5db"
 
+# Asignamos 'input_bg' con '#14171d' if is_dark else '#ffffff'
 input_bg = "#14171d" if is_dark else "#ffffff"
+# Asignamos 'input_text' con '#f0f0f0' if is_dark else '#18181b'
 input_text = "#f0f0f0" if is_dark else "#18181b"
+# Asignamos 'input_border' con '#2a2e39' if is_dark else '#d1d5db'
 input_border = "#2a2e39" if is_dark else "#d1d5db"
 
 # Posicionamiento del Switch de Tema
 bottle_left_pos = "42px" if is_dark else "-2px"
+# Asignamos 'static_icon_pos' con '12px center' if is_dark else 'calc(100% -...
 static_icon_pos = "12px center" if is_dark else "calc(100% - 12px) center"
 
+# Asignamos 'static_icon_svg' con "data:image/svg+xml;utf8,<svg xmlns='http:...
 static_icon_svg = (
     "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='4'/><line x1='12' y1='1' x2='12' y2='3'/><line x1='12' y1='21' x2='12' y2='23'/><line x1='4.22' y1='4.22' x2='5.64' y2='5.64'/><line x1='18.36' y1='18.36' x2='19.78' y2='19.78'/><line x1='1' y1='12' x2='3' y2='12'/><line x1='21' y1='12' x2='23' y2='12'/><line x1='4.22' y1='19.78' x2='5.64' y2='18.36'/><line x1='18.36' y1='5.64' x2='19.78' y2='4.22'/></svg>"
     if is_dark else
     "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z'/></svg>"
 )
 
+# Asignamos 'bottle_svg' con "data:image/svg+xml;utf8,<svg xmlns='http:...
 bottle_svg = (
     "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 58'><rect x='18' y='2' width='14' height='7' rx='2' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><rect x='21' y='9' width='8' height='5' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='19' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><path d='M21 28a8 8 0 0 0 9 10.5 8.5 8.5 0 0 1-9-10.5z' fill='none' stroke='%23111111' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/></svg>"
     if is_dark else
     "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 58'><rect x='18' y='2' width='14' height='7' rx='2' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><rect x='21' y='9' width='8' height='5' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='19' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='5' fill='none' stroke='%23111111' stroke-width='2'/><line x1='25' y1='23' x2='25' y2='26' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='25' y1='42' x2='25' y2='45' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='14' y1='34' x2='17' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='33' y1='34' x2='36' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='17' y1='26' x2='19' y2='28' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='31' y1='40' x2='33' y2='42' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='17' y1='42' x2='19' y2='40' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='31' y1='28' x2='33' y2='26' stroke='%23111111' stroke-width='2' stroke-linecap='round'/></svg>"
 )
 
+# Asignamos 'camera_icon_svg' con f"data:image/svg+xml;utf8,<svg xmlns='http...
 camera_icon_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23{btn_text[1:]}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z'/><circle cx='12' cy='13' r='4'/></svg>"
+# Asignamos 'user_icon_svg' con f"data:image/svg+xml;utf8,<svg xmlns='http...
 user_icon_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23{btn_text[1:]}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2'/><circle cx='12' cy='7' r='4'/></svg>"
 
 # ICONOS ILUSTRATIVOS
 trend_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff3838' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'><path d='M2 19h20M2 22h20M5 19v3M9 19v3M13 19v3M17 19v3M21 19v3' stroke='%23ff3838'/><path d='M4 11h9v7H4z' fill='%23ff3838'/><path d='M13 7h6v11h-6z' fill='%23ff3838'/><rect x='15' y='9' width='3' height='3' fill='%23ffffff'/><path d='M6 7h2v4H6z' fill='%23ff3838'/><path d='M19 14l3 4h-3z' fill='%23ff3838'/><circle cx='6.5' cy='18.5' r='1.5' fill='%23ff3838' stroke='%23ffffff' stroke-width='0.5'/><circle cx='10.5' cy='18.5' r='1.5' fill='%23ff3838' stroke='%23ffffff' stroke-width='0.5'/><circle cx='16' cy='18.5' r='1.5' fill='%23ff3838' stroke='%23ffffff' stroke-width='0.5'/></svg>"
+# Asignamos 'shield_red_svg' con "data:image/svg+xml;utf8,<svg xmlns='http:...
 shield_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff3838' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/><path d='m9 12 2 2 4-4'/></svg>"
+# Asignamos 'tag_red_svg' con "data:image/svg+xml;utf8,<svg xmlns='http:...
 tag_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff3838' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12 2H2v10l11.29 11.29a1 1 0 0 0 1.41 0l7.58-7.58a1 1 0 0 0 0-1.41L12 2z'/><circle cx='7.5' cy='7.5' r='1.5' fill='%23ff3838'/></svg>"
 
 # 2. SISTEMA DE SONIDO Y EVENTOS DE TARJETAS
@@ -157,6 +220,7 @@ js_color_script = f"""
 </script>
 """
 
+# Ejecutamos instrucción: components.html(js_color_script, height=0, width=0)
 components.html(js_color_script, height=0, width=0)
 
 # 3. CSS ADAPTABLE, BOTONES Y SWITCH DE TEMA
@@ -663,8 +727,11 @@ st.markdown(f"""
 # 4. ENCABEZADO SUPERIOR: LOGO, BOTÓN "INGRESAR" Y SWITCH DE TEMA
 col_logo, col_login, col_theme = st.columns([5, 1.2, 0.8], vertical_alignment="center")
 
+# Gestión automática de contexto y recursos para: col_logo
 with col_logo:
+    # Asignamos 'logo_color' con '#8c7b6d'
     logo_color = "#8c7b6d"
+    # Asignamos 'logo_html' con f'\n <a href="/" target="_self" style="tex...
     logo_html = f"""
     <a href="/" target="_self" style="text-decoration: none; display: inline-flex; align-items: center; gap: 12px; cursor: pointer; width: fit-content;">
         <svg width="34" height="34" viewBox="0 0 36 36" fill="none" stroke-linecap="round" stroke-linejoin="round">
@@ -681,19 +748,27 @@ with col_logo:
         </span>
     </a>
     """
+    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
     st.markdown(logo_html, unsafe_allow_html=True)
 
+# Gestión automática de contexto y recursos para: col_login
 with col_login:
+    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
     st.button("Ingresar", key="login_btn")
 
+# Gestión automática de contexto y recursos para: col_theme
 with col_theme:
+    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
     st.button(" ", key="theme_toggle", on_click=toggle_theme)
 
 # 5. SECCIÓN DEL TÍTULO Y NAVEGACIÓN
 st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
+# Renderizado de componente visual o control interactivo en la interfaz Streamlit
 col_header_title, col_back_btn = st.columns([3.4, 1], vertical_alignment="center")
 
+# Gestión automática de contexto y recursos para: col_header_title
 with col_header_title:
+    # Asignamos 'title_html' con f'\n <div class="radar-title-container">\n...
     title_html = f"""
     <div class="radar-title-container">
         <h1 class="radar-title-text">RADAR DEL HYPE - VIRAL FRAGRANCES</h1>
@@ -706,28 +781,43 @@ with col_header_title:
         </div>
     </div>
     """
+    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
     st.markdown(title_html, unsafe_allow_html=True)
 
+# Gestión automática de contexto y recursos para: col_back_btn
 with col_back_btn:
+    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
     st.markdown('<a href="/" target="_self" class="nav-back-link">← Volver al Catálogo principal</a>', unsafe_allow_html=True)
 
+# Renderizado de componente visual o control interactivo en la interfaz Streamlit
 st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
 
 # 6. FILTROS Y BARRAS SUPERIORES
 col_title, col_fecha, col_red = st.columns([0.28, 0.42, 3.3], gap="small", vertical_alignment="center")
 
+# Gestión automática de contexto y recursos para: col_title
 with col_title:
+    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
     st.markdown("<div class='filter-label-text'>Filtrado por :</div>", unsafe_allow_html=True)
 
+# Gestión automática de contexto y recursos para: col_fecha
 with col_fecha:
+    # Asignamos 'opciones_fecha' con ['Este Mes', 'Hoy / Día', 'Esta Semana', '...
     opciones_fecha = ["Este Mes", "Hoy / Día", "Esta Semana", "Este Año", "Año Pasado"]
+    # Gestión automática de contexto y recursos para: st.popover(f'📅 {st.session_state.selected_month...
     with st.popover(f"📅 {st.session_state.selected_month}", use_container_width=False):
+        # Recorremos iterativamente cada 'opt' en opciones_fecha
         for opt in opciones_fecha:
+            # Evaluamos la condición lógica (st.button(opt, key=f'btn_m_{opt}', use_container_wid...) para controlar el flujo
             if st.button(opt, key=f"btn_m_{opt}", use_container_width=True):
+                # Asignamos 'st.session_state.selected_month' con opt
                 st.session_state.selected_month = opt
+                # Ejecutamos instrucción: st.rerun()
                 st.rerun()
 
+# Gestión automática de contexto y recursos para: col_red
 with col_red:
+    # Asignamos 'social_select_html' con f'\n <div class="social-select-box">\n <sp...
     social_select_html = f"""
     <div class="social-select-box">
         <span class="social-label">Red social analizada:</span>
@@ -741,8 +831,10 @@ with col_red:
         <span class="social-desc">(Mide la popularidad en tiempo real según menciones y reseñas en video)</span>
     </div>
     """
+    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
     st.markdown(social_select_html, unsafe_allow_html=True)
 
+# Renderizado de componente visual o control interactivo en la interfaz Streamlit
 st.write("")
 
 # 7. ESTRELLAS DE RANKING SVG
@@ -761,6 +853,7 @@ star_ruby_svg = """
 </div>
 """
 
+# Asignamos 'star_gold_svg' con '\n<div class="star-minimal-gold">\n <svg ...
 star_gold_svg = """
 <div class="star-minimal-gold">
     <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
@@ -777,6 +870,7 @@ star_gold_svg = """
 </div>
 """
 
+# Asignamos 'star_silver_svg' con '\n<div class="star-minimal-silver">\n <sv...
 star_silver_svg = """
 <div class="star-minimal-silver">
     <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
@@ -792,37 +886,44 @@ star_silver_svg = """
 </div>
 """
 
+# Asignamos 'hype_data' con [{'perfume_id': 1, 'rank': '#1', 'star': s...
 hype_data = [
+    # Configuración de elemento #1 (registro #1)
     {
         "perfume_id": 1, "rank": "#1", "star": star_ruby_svg, "name": "Bleu de Chanel", "score": "95%", "year": "2010", "price": "$145.990 CLP",
         "img": get_image_src("APP/assets/perfumes/bleu_de_chanel.jpg"),
         "stats": "↗ 75 videos y 1.5M<br>visitas este mes",
         "ai_text": "Tendencia por su versatilidad fresca y estética de 'lujo silencioso' en YouTube."
     },
+    # Configuración de elemento #2 (registro #2)
     {
         "perfume_id": 2, "rank": "#2", "star": star_gold_svg, "name": "YSL Libre EDP", "score": "90%", "year": "2019", "price": "$129.990 CLP",
         "img": get_image_src("APP/assets/perfumes/ysl_libre.jpg"),
         "stats": "↗ 60 videos y 1.0M<br>visitas este mes",
         "ai_text": "Gran popularidad por su elegante nota de lavanda floral para uso diario o de noche."
     },
+    # Configuración de elemento #3 (registro #3)
     {
         "perfume_id": 3, "rank": "#3", "star": star_silver_svg, "name": "Dior Sauvage", "score": "88%", "year": "2015", "price": "$149.990 CLP",
         "img": get_image_src("APP/assets/perfumes/dior_sauvage.jpg"),
         "stats": "↗ 55 videos y 900k<br>visitas este mes",
         "ai_text": "Dominio constante en redes por su proyección masiva y versatilidad inigualable."
     },
+    # Configuración de elemento #4 (registro #4)
     {
         "perfume_id": 6, "rank": "#4", "star": "", "name": "Baccarat Rouge 540", "score": "86%", "year": "2015", "price": "$310.000 CLP",
         "img": get_image_src("APP/assets/perfumes/baccarat_rouge.jpg"),
         "stats": "↗ 48 videos y 820k<br>visitas este mes",
         "ai_text": "El aroma nicho dulzón y ambarado más clonado e influyente de YouTube."
     },
+    # Configuración de elemento #5 (registro #5)
     {
         "perfume_id": 4, "rank": "#5", "star": "", "name": "Club de Nuit Intense", "score": "84%", "year": "2015", "price": "$39.990 CLP",
         "img": get_image_src("APP/assets/perfumes/club_de_nuit.jpg"),
         "stats": "↗ 42 videos y 750k<br>visitas este mes",
         "ai_text": "Rey indiscutido de las fragancias árabes relación precio-calidad."
     },
+    # Configuración de elemento #6 (registro #6)
     {
         "perfume_id": 5, "rank": "#6", "star": "", "name": "Khamrah Lattafa", "score": "82%", "year": "2022", "price": "$34.990 CLP",
         "img": get_image_src("APP/assets/perfumes/lattafa_khamrah.jpg"),
@@ -833,13 +934,21 @@ hype_data = [
 
 # 8. RENDERIZADO DE TARJETAS EN REJILLA
 cols_per_row = 3
+# Recorremos iterativamente cada 'row' en range(0, len(hype_data), cols_per_row)
 for row in range(0, len(hype_data), cols_per_row):
+    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
     cols = st.columns(cols_per_row, gap="medium")
+    # Recorremos iterativamente cada 'i' en range(cols_per_row)
     for i in range(cols_per_row):
+        # Asignamos 'idx' con row + i
         idx = row + i
+        # Evaluamos la condición lógica (idx < len(hype_data)) para controlar el flujo
         if idx < len(hype_data):
+            # Asignamos 'data' con hype_data[idx]
             data = hype_data[idx]
+            # Gestión automática de contexto y recursos para: cols[i]
             with cols[i]:
+                # Asignamos 'html_card' con f'''\n <div class="hype-card">\n <div clas...
                 html_card = f"""
                 <div class="hype-card">
                     <div class="rank-badge">{data['star']}{data['rank']}</div>
@@ -866,7 +975,11 @@ for row in range(0, len(hype_data), cols_per_row):
                     <div class="price-text">Precio prom. mercado: <b>{data['price']}</b></div>
                 </div>
                 """
+                # Renderizado de componente visual o control interactivo en la interfaz Streamlit
                 st.markdown(html_card, unsafe_allow_html=True)
+                # Evaluamos la condición lógica (st.button('Comparar Precios', key=f'btn_compare_{idx...) para controlar el flujo
                 if st.button("Comparar Precios", key=f"btn_compare_{idx}", use_container_width=True):
+                    # Asignamos 'st.session_state['selected_perfu...' con data['perfume_id']
                     st.session_state['selected_perfume'] = data['perfume_id']
+                    # Ejecutamos instrucción: st.switch_page('pages/compararprecios.py')
                     st.switch_page("pages/compararprecios.py")

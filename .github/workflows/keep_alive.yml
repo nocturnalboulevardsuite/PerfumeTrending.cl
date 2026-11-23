@@ -1,3 +1,10 @@
+# =============================================================================
+# PerfumeTrending.cl — Workflow CI/CD: Keep-Alive Streamlit Cloud
+# =============================================================================
+# Propósito:
+# Realiza una petición HTTP periódica cada 6 horas hacia la URL de producción
+# en Streamlit Community Cloud para evitar que el contenedor entre en estado
+# de hibernación por inactividad.
 name: Keep-Alive Streamlit Cloud
 
 on:
@@ -8,8 +15,10 @@ on:
 
 jobs:
   keepalive:
+    # Ejecuta sobre un runner liviano Ubuntu en GitHub Actions
     runs-on: ubuntu-latest
     steps:
+      # Paso único: Enviar petición GET con curl siguiendo redirecciones y verificar código HTTP
       - name: Ping Streamlit Production App
         run: |
           echo "Pinging https://perfumetrending-cl.streamlit.app/ ..."

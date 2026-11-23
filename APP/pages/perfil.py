@@ -8,32 +8,53 @@ Módulo de gestión de cuentas de usuario, listas de deseos y preferencias:
 - Historial de actividad y recomendaciones personalizadas según las familias olfativas guardadas.
 """
 
+# Importación de librería estándar o dependencia externa (streamlit)
 import streamlit as st
+# Importación de librería estándar o dependencia externa (streamlit.components.v1)
 import streamlit.components.v1 as components
+# Importación de librería estándar o dependencia externa (pandas)
 import pandas as pd
+# Importación de librería estándar o dependencia externa (sys)
 import sys
+# Importación de librería estándar o dependencia externa (os)
 import os
+# Importación de librería estándar o dependencia externa (base64)
 import base64
+# Importación de librería estándar o dependencia externa (urllib.parse)
 import urllib.parse
+# Importación de librería estándar o dependencia externa (random)
 import random
 
 # Configuración de rutas canónicas para importar backend
 APP_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# Asignamos 'BASE_DIR' con os.path.dirname(APP_DIR)
 BASE_DIR = os.path.dirname(APP_DIR)
+# Recorremos iterativamente cada '_p' en (APP_DIR, BASE_DIR)
 for _p in (APP_DIR, BASE_DIR):
+    # Evaluamos la condición lógica (_p not in sys.path) para controlar el flujo
     if _p not in sys.path:
+        # Ejecutamos instrucción: sys.path.insert(0, _p)
         sys.path.insert(0, _p)
+    # Evaluamos la condición lógica (sys.path[0] != _p) para controlar el flujo
     elif sys.path[0] != _p:
+        # Bloque try/except para manejo seguro de errores y resiliencia operativa
         try:
+            # Ejecutamos instrucción: sys.path.remove(_p)
             sys.path.remove(_p)
         except ValueError:
+            # Ejecutamos instrucción: pass
             pass
+        # Ejecutamos instrucción: sys.path.insert(0, _p)
         sys.path.insert(0, _p)
 
+# Importación de librería estándar o dependencia externa (hashlib)
 import hashlib
+# Importación de librería estándar o dependencia externa (math)
 import math
 
+# Bloque try/except para manejo seguro de errores y resiliencia operativa
 try:
+    # Importación de componentes (actualizar_perfil_usuario, actualizar_preferencias_notificacion, eliminar_favorito, obtener_catalogo, ...) desde el módulo 'backend.database'
     from backend.database import (
         actualizar_perfil_usuario,
         actualizar_preferencias_notificacion,
@@ -46,6 +67,7 @@ try:
         subir_avatar_usuario,
     )
 except (ImportError, ModuleNotFoundError):
+    # Importación de componentes (actualizar_perfil_usuario, actualizar_preferencias_notificacion, eliminar_favorito, obtener_catalogo, ...) desde el módulo 'APP.backend.database'
     from APP.backend.database import (
         actualizar_perfil_usuario,
         actualizar_preferencias_notificacion,
@@ -57,6 +79,7 @@ except (ImportError, ModuleNotFoundError):
         obtener_precios_actuales,
         subir_avatar_usuario,
     )
+# Importación de componentes (DEFAULT_AVATAR_SVG, HOME_RED_SVG, PERFUME_SVG_FAVICON, SHIELD_RED_SVG, ...) desde el módulo 'ui'
 from ui import (
     DEFAULT_AVATAR_SVG,
     HOME_RED_SVG as home_red_svg,
@@ -73,7 +96,9 @@ from ui import (
     is_valid_https_image_url,
     toggle_theme,
 )
+# Importación de componentes (modal_autenticacion) desde el módulo 'auth_email'
 from auth_email import modal_autenticacion
+# Importación de componentes (boton_abrir_perfume, boton_corazon, estilos_moviles, estilos_tarjetas_cliqueables, ...) desde el módulo 'perfume_actions'
 from perfume_actions import (
     boton_abrir_perfume,
     boton_corazon,
@@ -83,18 +108,24 @@ from perfume_actions import (
 )
 
 
+# Definición de función 'clean_html' (parámetros: html_str)
 def clean_html(html_str: str) -> str:
     """Limpia espacios iniciales y saltos de línea para evitar bloques de código accidentales."""
+    # Retornamos el resultado procesado (_shared_clean_html(html_str, join_char=' '))
     return _shared_clean_html(html_str, join_char=" ")
 
 
+# Definición de función 'get_cached_catalogo' sin parámetros externos
 @st.cache_data(ttl=120, show_spinner=False)
 def get_cached_catalogo():
+    # Retornamos el resultado procesado (obtener_catalogo())
     return obtener_catalogo()
 
 
+# Definición de función 'get_cached_precios' (parámetros: perfume_id)
 @st.cache_data(ttl=120, show_spinner=False)
 def get_cached_precios(perfume_id):
+    # Retornamos el resultado procesado (obtener_precios_actuales(perfume_id))
     return obtener_precios_actuales(perfume_id)
 
 
@@ -106,67 +137,117 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
+# Ejecutamos instrucción: init_common_session_state()
 init_common_session_state()
 
+# Asignamos 'pal' con get_theme_palette()
 pal = get_theme_palette()
+# Asignamos 'is_dark' con pal.is_dark
 is_dark = pal.is_dark
+# Asignamos 'app_bg' con pal.app_bg
 app_bg = pal.app_bg
+# Asignamos 'app_bg_css' con pal.app_bg_css
 app_bg_css = pal.app_bg_css
+# Asignamos 'text_color' con pal.text_color
 text_color = pal.text_color
+# Asignamos 'subtext_color' con pal.subtext_color
 subtext_color = pal.subtext_color
+# Asignamos 'btn_bg' con pal.btn_bg
 btn_bg = pal.btn_bg
+# Asignamos 'btn_text' con pal.btn_text
 btn_text = pal.btn_text
+# Asignamos 'btn_border' con pal.btn_border
 btn_border = pal.btn_border
+# Asignamos 'input_bg' con pal.input_bg
 input_bg = pal.input_bg
+# Asignamos 'input_text' con pal.input_text
 input_text = pal.input_text
+# Asignamos 'input_border' con pal.input_border
 input_border = pal.input_border
+# Asignamos 'bottle_left_pos' con pal.bottle_left_pos
 bottle_left_pos = pal.bottle_left_pos
+# Asignamos 'static_icon_pos' con pal.static_icon_pos
 static_icon_pos = pal.static_icon_pos
+# Asignamos 'static_icon_svg' con pal.static_icon_svg
 static_icon_svg = pal.static_icon_svg
+# Asignamos 'bottle_svg' con pal.bottle_svg
 bottle_svg = pal.bottle_svg
+# Asignamos 'user_icon_svg' con pal.user_icon_svg
 user_icon_svg = pal.user_icon_svg
+# Asignamos 'settings_icon_svg' con pal.settings_icon_svg
 settings_icon_svg = pal.settings_icon_svg
+# Asignamos 'logout_icon_svg' con pal.logout_icon_svg
 logout_icon_svg = pal.logout_icon_svg
 
 # Paleta clara reforzada: fondo blanco y texto oscuro legible en todos los componentes.
 # El modo oscuro conserva exactamente los valores de la paleta compartida.
 if not is_dark:
+    # Asignamos 'app_bg' con '#ffffff'
     app_bg = "#ffffff"
+    # Asignamos 'app_bg_css' con 'background: #ffffff !important; backgroun...
     app_bg_css = "background: #ffffff !important; background-color: #ffffff !important;"
+    # Asignamos 'text_color' con '#1c1917'
     text_color = "#1c1917"
+    # Asignamos 'subtext_color' con '#6b6159'
     subtext_color = "#6b6159"
+    # Asignamos 'btn_bg' con '#ffffff'
     btn_bg = "#ffffff"
+    # Asignamos 'btn_text' con '#1c1917'
     btn_text = "#1c1917"
+    # Asignamos 'btn_border' con '#d6cec5'
     btn_border = "#d6cec5"
+    # Asignamos 'input_bg' con '#ffffff'
     input_bg = "#ffffff"
+    # Asignamos 'input_text' con '#1c1917'
     input_text = "#1c1917"
+    # Asignamos 'input_border' con '#d6cec5'
     input_border = "#d6cec5"
 
 # Tokens visuales compartidos con Inicio, Trend del Hype y Páginas de Confianza
 card_bg = btn_bg
+# Asignamos 'border_color' con 'rgba(255, 255, 255, 0.10)' if is_dark els...
 border_color = "rgba(255, 255, 255, 0.10)" if is_dark else "#e6e1db"
+# Asignamos 'accent' con '#d83737'
 accent = "#d83737"
+# Asignamos 'accent_hover' con '#b92d2d'
 accent_hover = "#b92d2d"
+# Asignamos 'accent_soft' con 'rgba(216, 55, 55, 0.14)' if is_dark else ...
 accent_soft = "rgba(216, 55, 55, 0.14)" if is_dark else "rgba(216, 55, 55, 0.07)"
+# Asignamos 'gold' con '#d4c2a5' if is_dark else '#8c7b6d'
 gold = "#d4c2a5" if is_dark else "#8c7b6d"
+# Asignamos 'gold_soft' con 'rgba(212, 194, 165, 0.16)' if is_dark els...
 gold_soft = "rgba(212, 194, 165, 0.16)" if is_dark else "rgba(140, 123, 109, 0.14)"
+# Asignamos 'ok_green' con '#4ade80' if is_dark else '#15803d'
 ok_green = "#4ade80" if is_dark else "#15803d"
+# Asignamos 'warn_amber' con '#fbbf24' if is_dark else '#b45309'
 warn_amber = "#fbbf24" if is_dark else "#b45309"
+# Asignamos 'risk_red' con '#f87171' if is_dark else '#dc2626'
 risk_red = "#f87171" if is_dark else "#dc2626"
+# Asignamos 'info_blue' con '#60a5fa' if is_dark else '#1d4ed8'
 info_blue = "#60a5fa" if is_dark else "#1d4ed8"
+# Asignamos 'surface_soft' con 'rgba(255, 255, 255, 0.035)' if is_dark el...
 surface_soft = "rgba(255, 255, 255, 0.035)" if is_dark else "#faf8f5"
+# Asignamos 'img_stage_bg' con 'radial-gradient(circle at 50% 45%, #1d222...
 img_stage_bg = "radial-gradient(circle at 50% 45%, #1d222c 0%, #11141a 100%)" if is_dark else "radial-gradient(circle at 50% 45%, #ffffff 0%, #f6f4f1 100%)"
+# Asignamos 'shadow_sm' con '0 1px 2px rgba(0,0,0,0.35)' if is_dark el...
 shadow_sm = "0 1px 2px rgba(0,0,0,0.35)" if is_dark else "0 1px 2px rgba(40,30,20,0.06)"
+# Asignamos 'shadow_hover' con '0 6px 16px rgba(0,0,0,0.35)' if is_dark e...
 shadow_hover = "0 6px 16px rgba(0,0,0,0.35)" if is_dark else "0 6px 16px rgba(60,45,35,0.10)"
+# Asignamos 'font_sans' con "'Manrope', -apple-system, BlinkMacSystemF...
 font_sans = "'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
 
 
 # COMPONENTES VECTORIALES INLINE SVG PARA REEMPLAZO DE EMOJIS
 svg_mail = f'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="{subtext_color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px; margin-right: 4px;"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>'
+# Asignamos 'svg_phone' con f'<svg width="15" height="15" viewBox="0 0...
 svg_phone = f'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="{subtext_color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px; margin-right: 4px;"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>'
+# Asignamos 'svg_bell_active' con f'<svg width="14" height="14" viewBox="0 0...
 svg_bell_active = f'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px; margin-right: 5px;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>'
+# Asignamos 'svg_bell_off' con f'<svg width="14" height="14" viewBox="0 0...
 svg_bell_off = f'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px; margin-right: 5px;"><path d="M13.73 21a2 2 0 0 1-3.46 0"/><line x1="1" y1="1" x2="23" y2="23"/></svg>'
+# Asignamos 'svg_trend_down' con f'<svg width="14" height="14" viewBox="0 0...
 svg_trend_down = f'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px; margin-right: 5px;"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>'
+# Asignamos 'svg_pin' con f'<svg width="15" height="15" viewBox="0 0...
 svg_pin = f'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="{subtext_color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px; margin-right: 4px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>'
 
 # 2. CSS ADAPTABLE Y ESTILOS PRINCIPALES (MISMO SISTEMA VISUAL QUE EL RESTO DEL SITIO)
@@ -983,6 +1064,7 @@ st.markdown(f"""
 st.markdown(estilos_tarjetas_cliqueables(accent, card_bg, border_color, subtext_color, is_dark), unsafe_allow_html=True)
 # Diseño responsivo para celulares (común a todas las páginas)
 st.markdown(estilos_moviles(accent, border_color, is_dark), unsafe_allow_html=True)
+# Renderizado de componente visual o control interactivo en la interfaz Streamlit
 st.markdown(f"""
     <style>
     div[class*="st-key-pcard_favrow_"] {{ cursor: pointer; }}
@@ -994,19 +1076,29 @@ st.markdown(f"""
 _es_premium_cab = bool(st.session_state.get('logged_in')) and str(
     (st.session_state.get('user_info') or {}).get('plan') or 'free'
 ).strip().lower() in ('premium', 'vip', 'socios_vip')
+# Asignamos 'btn_col0' con None
 btn_col0 = None
+# Evaluamos la condición lógica (st.session_state['logged_in'] and _es_premium_cab) para controlar el flujo
 if st.session_state['logged_in'] and _es_premium_cab:
+    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
     col_logo, col_espacio, col_actions = st.columns([4.8, 0.4, 3.8], vertical_alignment="center")
+    # Asignamos '(btn_col0, btn_col1, btn_col2)' con col_actions.columns([0.6, 2.4, 0.8], verti...
     btn_col0, btn_col1, btn_col2 = col_actions.columns([0.6, 2.4, 0.8], vertical_alignment="center", gap="small")
+# Evaluamos la condición lógica (st.session_state['logged_in']) para controlar el flujo
 elif st.session_state['logged_in']:
     # Mismo tamaño del botón de usuario en todas las páginas: ni muy chico ni muy grande
     col_logo, col_espacio, col_actions = st.columns([5.2, 0.6, 3.2], vertical_alignment="center")
+    # Asignamos '(btn_col1, btn_col2)' con col_actions.columns([2.4, 0.8], vertical_a...
     btn_col1, btn_col2 = col_actions.columns([2.4, 0.8], vertical_alignment="center", gap="small")
 else:
+    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
     col_logo, col_espacio, col_actions = st.columns([5.6, 1.2, 2.4], vertical_alignment="center")
+    # Asignamos '(btn_col1, btn_col2)' con col_actions.columns([2.0, 0.8], vertical_a...
     btn_col1, btn_col2 = col_actions.columns([2.0, 0.8], vertical_alignment="center", gap="small")
 
+# Gestión automática de contexto y recursos para: col_logo
 with col_logo:
+    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
     st.markdown(clean_html(f"""
     <a href="/" target="_self" class="brand-logo-clean" title="PerfumeTrending">
         <svg width="34" height="34" viewBox="0 0 36 36" fill="none" stroke-linecap="round" stroke-linejoin="round">
@@ -1022,16 +1114,23 @@ with col_logo:
     </a>
     """), unsafe_allow_html=True)
 
+# Definición de función 'sello_verificado' (parámetros: size)
 def sello_verificado(size=22):
     """Insignia Premium verificada: sello ondulado naranjo (estilo verificado de Instagram)
     con un frasco de perfume negro y naranjo en el centro y un aura naranja animada.
     Es un SVG vectorial con animaciones SMIL, así que se anima tanto incrustado en HTML
     como usado de imagen (data URI)."""
+    # Asignamos 'pts' con []
     pts = []
+    # Recorremos iterativamente cada 'i' en range(24)
     for i in range(24):
+        # Asignamos 'r' con 11 if i % 2 == 0 else 9.4
         r = 11 if i % 2 == 0 else 9.4
+        # Asignamos 'a' con math.pi * i / 12 - math.pi / 2
         a = math.pi * i / 12 - math.pi / 2
+        # Ejecutamos instrucción: pts.append(f'{12 + r * math.cos(a):.2f},{12 + r * ma...
         pts.append(f"{12 + r * math.cos(a):.2f},{12 + r * math.sin(a):.2f}")
+    # Retornamos el resultado procesado (f'''<svg xmlns="http://www.w3.org/2000/svg" wid...)
     return (
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{size}" height="{size}" viewBox="-5 -5 34 34" '
         'role="img" aria-label="Premium verificado" style="overflow:visible">'
@@ -1076,7 +1175,9 @@ def sello_verificado(size=22):
 #   Se muestra grande y animada en su propia columna, a la izquierda del botón con la foto
 #   de perfil, para que se entienda que es la insignia de usuario verificado.
 _plan_header = str((st.session_state.get('user_info') or {}).get('plan') or 'free').strip().lower()
+# Evaluamos la condición lógica (st.session_state.get('logged_in') and _plan_header i...) para controlar el flujo
 if st.session_state.get('logged_in') and _plan_header in ('premium', 'vip', 'socios_vip'):
+    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
     st.markdown(f"""
         <style>
         .pt-header-seal {{
@@ -1096,72 +1197,115 @@ if st.session_state.get('logged_in') and _plan_header in ('premium', 'vip', 'soc
         }}
         </style>
     """, unsafe_allow_html=True)
+    # Asignamos '_header_premium_html' con f'<div class="pt-header-premium">{sello_ve...
     _header_premium_html = f'<div class="pt-header-premium">{sello_verificado(18)}<div>Premium verificado</div></div>'
 else:
+    # Asignamos '_header_premium_html' con ''
     _header_premium_html = ""
 
+# Asignamos '_header_seal_html' con f'<div class="pt-header-seal" title="Usuar...
 _header_seal_html = (
     '<div class="pt-header-seal" title="Usuario Premium verificado">'
     f'{sello_verificado(46)}</div>'
 ) if _header_premium_html else ""
+# Evaluamos la condición lógica (btn_col0 is not None and _header_seal_html) para controlar el flujo
 if btn_col0 is not None and _header_seal_html:
+    # Gestión automática de contexto y recursos para: btn_col0
     with btn_col0:
+        # Renderizado de componente visual o control interactivo en la interfaz Streamlit
         st.markdown(_header_seal_html, unsafe_allow_html=True)
 
+# Gestión automática de contexto y recursos para: btn_col1
 with btn_col1:
+    # Evaluamos la condición lógica (st.session_state['logged_in'] and st.session_state['...) para controlar el flujo
     if st.session_state['logged_in'] and st.session_state['user_info']:
+        # Renderizado de componente visual o control interactivo en la interfaz Streamlit
         st.markdown('<div class="user-popover-container"></div>', unsafe_allow_html=True)
+        # Asignamos 'u_header_display' con st.session_state['user_info'].get('nombre'...
         u_header_display = st.session_state['user_info'].get('nombre') or st.session_state['user_info'].get('email') or st.session_state['user_info'].get('telefono') or 'Mi Cuenta'
+        # Gestión automática de contexto y recursos para: st.popover(f'{u_header_display}', use_container...
         with st.popover(f"{u_header_display}", use_container_width=True):
+            # Evaluamos la condición lógica (_header_premium_html) para controlar el flujo
             if _header_premium_html:
+                # Renderizado de componente visual o control interactivo en la interfaz Streamlit
                 st.markdown(_header_premium_html, unsafe_allow_html=True)
+            # Renderizado de componente visual o control interactivo en la interfaz Streamlit
             st.write(f"**Conectado como:**")
+            # Renderizado de componente visual o control interactivo en la interfaz Streamlit
             st.write(st.session_state['user_info'].get('email') or st.session_state['user_info'].get('telefono') or 'Usuario')
+            # Evaluamos la condición lógica (st.button('Cerrar Sesión', key='btn_logout', use_con...) para controlar el flujo
             if st.button("Cerrar Sesión", key="btn_logout", use_container_width=True):
+                # Ejecutamos instrucción: cerrar_sesion_usuario()
                 cerrar_sesion_usuario()
+                # Ejecutamos instrucción: st.rerun()
                 st.rerun()
     else:
+        # Evaluamos la condición lógica (st.button('Ingresar', key='login_btn', use_container...) para controlar el flujo
         if st.button("Ingresar", key="login_btn", use_container_width=True):
+            # Asignamos 'st.session_state['show_login_mod...' con True
             st.session_state['show_login_modal'] = True
+            # Ejecutamos instrucción: st.rerun()
             st.rerun()
 
+# Gestión automática de contexto y recursos para: btn_col2
 with btn_col2:
+    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
     st.button(" ", key="theme_toggle", on_click=toggle_theme)
 
 # MONITOREO Y RENDERIZADO PERSISTENTE DEL MODAL
 if st.session_state.get('show_login_modal', False):
+    # Asignamos 'st.session_state['show_login_mod...' con False
     st.session_state['show_login_modal'] = False
+    # Ejecutamos instrucción: modal_autenticacion()
     modal_autenticacion()
+# Ejecutamos instrucción: mostrar_aviso_favoritos()
 mostrar_aviso_favoritos()
 
+# Renderizado de componente visual o control interactivo en la interfaz Streamlit
 st.markdown("<div style='margin-top: 22px;'></div>", unsafe_allow_html=True)
 
 # 4. CHIPS DE NAVEGACIÓN RÁPIDA
 col_chip_home, col_chip1, col_chip2, col_chip3, col_chip_remates = st.columns([1.6, 1.5, 2.0, 1.7, 1.8], vertical_alignment="center")
 
+# Gestión automática de contexto y recursos para: col_chip_home
 with col_chip_home:
+    # Ejecutamos instrucción: st.page_link('app.py', label='Inicio / Catálogo', us...
     st.page_link("app.py", label="Inicio / Catálogo", use_container_width=True)
+# Gestión automática de contexto y recursos para: col_chip1
 with col_chip1:
+    # Ejecutamos instrucción: st.page_link('pages/trendhype.py', label='Trend Del ...
     st.page_link("pages/trendhype.py", label="Trend Del Hype", use_container_width=True)
+# Gestión automática de contexto y recursos para: col_chip2
 with col_chip2:
+    # Ejecutamos instrucción: st.page_link('pages/trustpage.py', label='Páginas de...
     st.page_link("pages/trustpage.py", label="Páginas de Confianza", use_container_width=True)
+# Gestión automática de contexto y recursos para: col_chip3
 with col_chip3:
+    # Ejecutamos instrucción: st.page_link('pages/compararprecios.py', label='Comp...
     st.page_link("pages/compararprecios.py", label="Comparar Precios", use_container_width=True)
+# Gestión automática de contexto y recursos para: col_chip_remates
 with col_chip_remates:
+    # Ejecutamos instrucción: st.page_link('pages/remates.py', label='Remates & Fl...
     st.page_link("pages/remates.py", label="Remates & Flash", use_container_width=True)
 
+# Renderizado de componente visual o control interactivo en la interfaz Streamlit
 st.markdown("<div style='margin-top: 34px;'></div>", unsafe_allow_html=True)
 
 # 5. SECCIÓN PRINCIPAL: PERFIL DE USUARIO Y PREFERENCIAS
 col_title_text, col_title_back = st.columns([7, 3], vertical_alignment="center")
+# Gestión automática de contexto y recursos para: col_title_text
 with col_title_text:
+    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
     st.markdown(clean_html("""
         <div class="pt-title">Mi perfil</div>
         <div class="pt-lede">Tus datos, tus fragancias monitoreadas y cómo quieres recibir las alertas de precio.</div>
     """), unsafe_allow_html=True)
+# Gestión automática de contexto y recursos para: col_title_back
 with col_title_back:
+    # Ejecutamos instrucción: st.page_link('app.py', label='Volver al catálogo')
     st.page_link("app.py", label="Volver al catálogo")
 
+# Renderizado de componente visual o control interactivo en la interfaz Streamlit
 st.markdown("<div style='margin-top: 22px;'></div>", unsafe_allow_html=True)
 
 # =============================================================================
@@ -1175,37 +1319,60 @@ st.markdown("<div style='margin-top: 22px;'></div>", unsafe_allow_html=True)
 #    y prepara su nombre, correo, teléfono, bio y estado de alertas.
 # =============================================================================
 if not st.session_state['logged_in'] or not st.session_state.get('user_info'):
+    # Ejecutamos instrucción: st.info('Debes iniciar sesión para personalizar tu p...
     st.info("Debes iniciar sesión para personalizar tu perfil y administrar tus fragancias monitoreadas.")
+    # Evaluamos la condición lógica (st.button('Ingresar a mi cuenta', key='btn_must_login')) para controlar el flujo
     if st.button("Ingresar a mi cuenta", key="btn_must_login"):
+        # Asignamos 'st.session_state['show_login_mod...' con True
         st.session_state['show_login_modal'] = True
+        # Ejecutamos instrucción: st.rerun()
         st.rerun()
+    # Ejecutamos instrucción: st.stop()
     st.stop()
 
 # Sincronizar el perfil real desde Supabase Auth / SQLite cuando existe sesión activa
 u_info = st.session_state['user_info']
+# Asignamos 'u_ident' con u_info.get('id') or u_info.get('email')
 u_ident = u_info.get('id') or u_info.get('email')
+# Evaluamos la condición lógica (u_ident and (not st.session_state.get('_perfil_cloud...) para controlar el flujo
 if u_ident and not st.session_state.get('_perfil_cloud_synced'):
+    # Asignamos 'perfil_remoto' con obtener_perfil_usuario(u_ident)
     perfil_remoto = obtener_perfil_usuario(u_ident)
+    # Evaluamos la condición lógica (perfil_remoto) para controlar el flujo
     if perfil_remoto:
+        # Ejecutamos instrucción: st.session_state['user_info'].update(perfil_remoto)
         st.session_state['user_info'].update(perfil_remoto)
+        # Asignamos 'u_info' con st.session_state['user_info']
         u_info = st.session_state['user_info']
+    # Asignamos 'st.session_state['_perfil_cloud_...' con True
     st.session_state['_perfil_cloud_synced'] = True
 
+# Asignamos 'u_nombre' con (u_info.get('nombre') or '').strip()
 u_nombre = (u_info.get('nombre') or '').strip()
+# Asignamos 'u_email' con (u_info.get('email') or '').strip()
 u_email = (u_info.get('email') or '').strip()
+# Asignamos 'u_telefono' con (u_info.get('telefono') or '').strip()
 u_telefono = (u_info.get('telefono') or '').strip()
+# Asignamos 'u_ubicacion' con (u_info.get('ubicacion') or 'Santiago, Chi...
 u_ubicacion = (u_info.get('ubicacion') or 'Santiago, Chile').strip()
+# Asignamos 'u_bio' con (u_info.get('bio') or '').strip()
 u_bio = (u_info.get('bio') or '').strip()
+# Asignamos 'u_foto' con (u_info.get('foto_perfil') or '').strip()
 u_foto = (u_info.get('foto_perfil') or '').strip()
+# Asignamos 'u_alerta' con bool(u_info.get('alerta_email', True))
 u_alerta = bool(u_info.get('alerta_email', True))
+# Asignamos 'u_umbral' con int(u_info.get('umbral_descuento') or 10)
 u_umbral = int(u_info.get('umbral_descuento') or 10)
+# Asignamos 'u_notif_stock' con bool(u_info.get('notif_stock', True))
 u_notif_stock = bool(u_info.get('notif_stock', True))
+# Asignamos 'u_notif_resumen' con bool(u_info.get('notif_resumen', False))
 u_notif_resumen = bool(u_info.get('notif_resumen', False))
 
 # Plan del usuario: las alertas por correo son exclusivas de Premium (y de Socios VIP).
 # Se lee el campo 'plan' del perfil (ej. 'free', 'premium', 'vip'). Mientras el pago no esté
 # habilitado ningún usuario tiene este campo, por lo que la sección se muestra bloqueada.
 u_plan = str(u_info.get('plan') or 'free').strip().lower()
+# Asignamos 'u_es_premium' con u_plan in ('premium', 'vip', 'socios_vip')
 u_es_premium = u_plan in ('premium', 'vip', 'socios_vip')
 
 # Cierre total de LFI: jamás se permite leer rutas locales del servidor desde avatares (`allow_local=False`)
@@ -1213,22 +1380,33 @@ avatar_src = get_image_src(u_foto, allow_local=False, default_src=DEFAULT_AVATAR
 
 # Sanitización XSS estricta en todos los campos editables por el usuario
 u_nombre_safe = escape_html(u_nombre) if u_nombre else "Usuario Registrado"
+# Asignamos 'u_email_display' con escape_html(u_email) if u_email else "<i s...
 u_email_display = escape_html(u_email) if u_email else "<i style='opacity:0.6;'>Sin correo registrado</i>"
+# Asignamos 'u_telefono_display' con escape_html(u_telefono) if u_telefono else...
 u_telefono_display = escape_html(u_telefono) if u_telefono else "<i style='opacity:0.6;'>Sin teléfono registrado</i>"
+# Asignamos 'u_ubicacion_safe' con escape_html(u_ubicacion)
 u_ubicacion_safe = escape_html(u_ubicacion)
+# Asignamos 'u_bio_display' con escape_html(u_bio) if u_bio else "<i style...
 u_bio_display = (
     escape_html(u_bio)
     if u_bio
     else "<i style='opacity:0.7;'>Aún no has agregado una biografía. Completa tus datos personales en la pestaña 'Editar Datos Personales'.</i>"
 )
 
+# Evaluamos la condición lógica (not u_es_premium) para controlar el flujo
 if not u_es_premium:
+    # Asignamos 'badge_alerta' con f"<span class='pt-alert-off'>{svg_bell_off...
     badge_alerta = f"<span class='pt-alert-off'>{svg_bell_off} Alertas disponibles con Premium</span>"
+# Evaluamos la condición lógica (u_email and u_alerta) para controlar el flujo
 elif u_email and u_alerta:
+    # Asignamos 'badge_alerta' con f"<span class='pt-alert-on'>{svg_bell_acti...
     badge_alerta = f"<span class='pt-alert-on'>{svg_bell_active} Alertas activadas ({u_umbral}%)</span>"
+# Evaluamos la condición lógica (u_email and (not u_alerta)) para controlar el flujo
 elif u_email and not u_alerta:
+    # Asignamos 'badge_alerta' con f"<span class='pt-alert-off'>{svg_bell_off...
     badge_alerta = f"<span class='pt-alert-off'>{svg_bell_off} Alertas desactivadas</span>"
 else:
+    # Asignamos 'badge_alerta' con f"<span class='pt-alert-off'>{svg_bell_off...
     badge_alerta = f"<span class='pt-alert-off'>{svg_bell_off} Agrega un correo para recibir alertas</span>"
 
 
@@ -1236,13 +1414,17 @@ else:
 # BLOQUE 4: TARJETA DE PERFIL Y SUBIDA SEGURA DE AVATAR EN LA NUBE
 # =============================================================================
 profile_card = st.container(key="profile_card")
+# Gestión automática de contexto y recursos para: profile_card
 with profile_card:
+    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
     col_av, col_details = st.columns([1.7, 8.3], vertical_alignment="center", gap="large")
 
+# Gestión automática de contexto y recursos para: col_av
 with col_av:
     # Zona de foto: al hacer clic (o arrastrar una imagen encima) se abre el selector de archivos del PC
     # y la nueva foto se sube y guarda automáticamente, sin pasos adicionales.
     with st.container(key="avatar_box"):
+        # Renderizado de componente visual o control interactivo en la interfaz Streamlit
         st.markdown(clean_html(f'''
         <div class="avatar-click-zone" title="Haz clic para elegir una nueva foto de perfil o GIF desde tu PC">
             <img src="{avatar_src}" class="profile-avatar-img" alt="{u_nombre_safe}">
@@ -1260,25 +1442,37 @@ with col_av:
         </div>
         '''), unsafe_allow_html=True)
 
+        # Asignamos 'quick_file' con st.file_uploader('Cambiar foto de perfil',...
         quick_file = st.file_uploader(
             "Cambiar foto de perfil",
             type=["png", "jpg", "jpeg", "gif", "webp"],
             key="avatar_quick_uploader",
             label_visibility="collapsed",
         )
+    # Evaluamos la condición lógica (u_es_premium) para controlar el flujo
     if u_es_premium:
+        # Renderizado de componente visual o control interactivo en la interfaz Streamlit
         st.markdown(clean_html(f"""
             <div class="pt-verified-pill">{sello_verificado(18)}<div>Premium verificado</div></div>
         """), unsafe_allow_html=True)
+    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
     st.markdown("<div class='avatar-help'>PNG, JPG, GIF o WEBP desde tu PC.<br>Se guarda al instante.</div>", unsafe_allow_html=True)
 
+    # Evaluamos la condición lógica (quick_file is not None) para controlar el flujo
     if quick_file is not None:
+        # Asignamos 'bytes_data' con quick_file.getvalue()
         bytes_data = quick_file.getvalue()
+        # Asignamos 'file_digest' con hashlib.sha256(bytes_data).hexdigest()
         file_digest = hashlib.sha256(bytes_data).hexdigest()
+        # Evaluamos la condición lógica (st.session_state.get('_last_quick_avatar_digest') !=...) para controlar el flujo
         if st.session_state.get("_last_quick_avatar_digest") != file_digest:
+            # Asignamos 'st.session_state['_last_quick_av...' con file_digest
             st.session_state["_last_quick_avatar_digest"] = file_digest
+            # Asignamos '(ok_up, url_or_err)' con subir_avatar_usuario(u_ident, bytes_data, ...
             ok_up, url_or_err = subir_avatar_usuario(u_ident, bytes_data, quick_file.type or "")
+            # Evaluamos la condición lógica (ok_up) para controlar el flujo
             if ok_up:
+                # Asignamos '(ok_db, msg_db)' con actualizar_perfil_usuario(u_ident, nombre=...
                 ok_db, msg_db = actualizar_perfil_usuario(
                     u_ident,
                     nombre=u_nombre or "Usuario",
@@ -1288,20 +1482,29 @@ with col_av:
                     foto_perfil=url_or_err,
                     ubicacion=u_ubicacion,
                 )
+                # Evaluamos la condición lógica (ok_db) para controlar el flujo
                 if ok_db:
+                    # Asignamos 'st.session_state['user_info']['f...' con url_or_err
                     st.session_state['user_info']['foto_perfil'] = url_or_err
+                    # Ejecutamos instrucción: st.toast('¡Foto de perfil guardada de forma persiste...
                     st.toast("¡Foto de perfil guardada de forma persistente!", icon="✅")
+                    # Ejecutamos instrucción: st.rerun()
                     st.rerun()
                 else:
+                    # Ejecutamos instrucción: st.error(msg_db)
                     st.error(msg_db)
             else:
+                # Ejecutamos instrucción: st.error(url_or_err)
                 st.error(url_or_err)
 
+# Asignamos 'name_seal_html' con f'<div class="pt-name-seal" title="Premium...
 name_seal_html = (
     f'<div class="pt-name-seal" title="Premium verificado">{sello_verificado(24)}</div>' if u_es_premium else ""
 )
 
+# Gestión automática de contexto y recursos para: col_details
 with col_details:
+    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
     st.markdown(clean_html(f'''
     <div class="profile-top">
         <div>
@@ -1329,92 +1532,149 @@ tab_favs, tab_edit, tab_notif = st.tabs([
 
 # --- TAB 1: FRAGANCIAS FAVORITAS PERSISTENTES ---
 with tab_favs:
+    # Asignamos 'svg_heart_header' con f'<svg width="20" height="20" viewBox="0 0...
     svg_heart_header = f'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d83737" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -3px; margin-right: 8px;"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>'
+    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
     st.markdown(f"<div class='pt-section-title'>{svg_heart_header} Mis fragancias favoritas</div>", unsafe_allow_html=True)
+    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
     st.markdown("<div class='pt-section-help'>Tus fragancias guardadas se sincronizan con tu cuenta y comparan el mejor precio vigente en Chile frente al valor que tenían cuando iniciaste el seguimiento.</div>", unsafe_allow_html=True)
 
+    # Asignamos 'fav_items' con obtener_favoritos_usuario(u_ident) if u_id...
     fav_items = obtener_favoritos_usuario(u_ident) if u_ident else []
+    # Asignamos 'st.session_state['favoritos']' con [int(it['id']) for it in fav_items if it.g...
     st.session_state['favoritos'] = [int(it['id']) for it in fav_items if it.get('id')]
+    # Asignamos 'st.session_state['_favoritos_car...' con str(u_ident)
     st.session_state['_favoritos_cargados_para'] = str(u_ident)  # esta lista manda: corazones llenos en tus favoritos
 
+    # Evaluamos la condición lógica (not fav_items) para controlar el flujo
     if not fav_items:
+        # Ejecutamos instrucción: st.info("Aún no tienes fragancias guardadas en tu se...
         st.info("Aún no tienes fragancias guardadas en tu seguimiento. Explora el catálogo o el comparador y pulsa 'Guardar y Monitorear Baja de Precio'.")
+        # Evaluamos la condición lógica (st.button('Ir al Catálogo de Perfumes', key='btn_go_...) para controlar el flujo
         if st.button("Ir al Catálogo de Perfumes", key="btn_go_catalog"):
+            # Ejecutamos instrucción: st.switch_page('app.py')
             st.switch_page("app.py")
     else:
+        # Recorremos iterativamente cada 'item' en fav_items
         for item in fav_items:
+            # Asignamos 'p_id' con int(item['id'])
             p_id = int(item['id'])
+            # Asignamos 'p_nombre_safe' con escape_html(item.get('nombre', 'Perfume'))
             p_nombre_safe = escape_html(item.get('nombre', 'Perfume'))
+            # Asignamos 'p_marca_safe' con escape_html(item.get('marca', 'Marca'))
             p_marca_safe = escape_html(item.get('marca', 'Marca'))
+            # Asignamos 'p_min' con item.get('mejor_precio_actual') or item.ge...
             p_min = item.get('mejor_precio_actual') or item.get('mejor_precio')
+            # Asignamos 'p_guardado' con int(item.get('precio_guardado') or 0)
             p_guardado = int(item.get('precio_guardado') or 0)
+            # Asignamos 'baja_detectada' con bool(item.get('baja_detectada'))
             baja_detectada = bool(item.get('baja_detectada'))
+            # Asignamos 'pct_desc' con float(item.get('porcentaje_descuento') or ...
             pct_desc = float(item.get('porcentaje_descuento') or 0.0)
 
+            # Evaluamos la condición lógica (p_min and p_min > 0) para controlar el flujo
             if p_min and p_min > 0:
+                # Evaluamos la condición lógica (baja_detectada and pct_desc > 0) para controlar el flujo
                 if baja_detectada and pct_desc > 0:
+                    # Asignamos 'badge_precio' con f"<span class='pt-price-drop'>{svg_trend_d...
                     badge_precio = (
                         f"<span class='pt-price-drop'>{svg_trend_down} ¡Bajó {pct_desc:.0f}%! ${p_min:,.0f} CLP</span>"
                         f"<span class='pt-price-sub'>Guardado en ${p_guardado:,.0f} CLP</span>"
                     ).replace(",", ".")
                 else:
+                    # Asignamos 'sub_guardado' con f"<span class='pt-price-sub'>Base monitore...
                     sub_guardado = (
                         f"<span class='pt-price-sub'>Base monitoreada: ${p_guardado:,.0f} CLP</span>".replace(",", ".")
                         if p_guardado > 0 else ""
                     )
+                    # Asignamos 'badge_precio' con f"<span class='pt-price-now'>Mejor precio:...
                     badge_precio = f"<span class='pt-price-now'>Mejor precio: ${p_min:,.0f} CLP</span>".replace(",", ".") + sub_guardado
             else:
+                # Asignamos 'badge_precio' con "<span class='pt-price-out'>Temporalmente ...
                 badge_precio = "<span class='pt-price-out'>Temporalmente agotado en tiendas</span>"
 
+            # Gestión automática de contexto y recursos para: st.container(key=f'fav_row_{p_id}')
             with st.container(key=f"fav_row_{p_id}"):
+                # Renderizado de componente visual o control interactivo en la interfaz Streamlit
                 col_f0, col_f1, col_f2, col_f3, col_f4 = st.columns([0.55, 3, 2.5, 2, 1.5], vertical_alignment="center")
+            # Gestión automática de contexto y recursos para: col_f0
             with col_f0:
+                # Ejecutamos instrucción: boton_corazon(p_id, 'perfil', item.get('nombre', '')...
                 boton_corazon(p_id, "perfil", item.get('nombre', ''), en_linea=True)
+            # Gestión automática de contexto y recursos para: col_f1
             with col_f1:
                 # El nombre del perfume abre su comparativa
                 with st.container(key=f"pcard_favrow_{p_id}"):
+                    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
                     st.markdown(f"<div class='fav-name'>{p_nombre_safe}</div><div class='fav-brand'>{p_marca_safe}</div>", unsafe_allow_html=True)
+                    # Ejecutamos instrucción: boton_abrir_perfume(p_id, 'perfil')
                     boton_abrir_perfume(p_id, "perfil")
+            # Gestión automática de contexto y recursos para: col_f2
             with col_f2:
+                # Renderizado de componente visual o control interactivo en la interfaz Streamlit
                 st.markdown(f"<div>{badge_precio}</div>", unsafe_allow_html=True)
+            # Gestión automática de contexto y recursos para: col_f3
             with col_f3:
+                # Evaluamos la condición lógica (st.button('Comparar Precios', key=f'btn_comp_fav_{p_...) para controlar el flujo
                 if st.button("Comparar Precios", key=f"btn_comp_fav_{p_id}", use_container_width=True):
+                    # Asignamos 'st.session_state['selected_perfu...' con p_id
                     st.session_state['selected_perfume'] = p_id
+                    # Ejecutamos instrucción: st.switch_page('pages/compararprecios.py')
                     st.switch_page("pages/compararprecios.py")
+            # Gestión automática de contexto y recursos para: col_f4
             with col_f4:
+                # Evaluamos la condición lógica (st.button('Quitar', key=f'btn_rem_fav_{p_id}', use_c...) para controlar el flujo
                 if st.button("Quitar", key=f"btn_rem_fav_{p_id}", use_container_width=True):
+                    # Ejecutamos instrucción: eliminar_favorito(u_ident, p_id)
                     eliminar_favorito(u_ident, p_id)
+                    # Asignamos 'st.session_state['favoritos']' con [fid for fid in st.session_state.get('favo...
                     st.session_state['favoritos'] = [fid for fid in st.session_state.get('favoritos', []) if fid != p_id]
+                    # Ejecutamos instrucción: st.toast('Fragancia retirada de tus favoritos.', ico...
                     st.toast("Fragancia retirada de tus favoritos.", icon="🗑️")
+                    # Ejecutamos instrucción: st.rerun()
                     st.rerun()
 
 # --- TAB 2: EDITAR PERFIL Y SUBIR FOTO/GIF ---
 with tab_edit:
+    # Asignamos 'svg_edit_header' con f'<svg width="20" height="20" viewBox="0 0...
     svg_edit_header = f'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="{text_color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -3px; margin-right: 8px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>'
+    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
     st.markdown(f"<div class='pt-section-title'>{svg_edit_header} Completar y modificar datos personales</div>", unsafe_allow_html=True)
+    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
     st.markdown("<div class='pt-section-help'>Puedes cambiar tu foto aquí o directamente haciendo clic sobre ella en la tarjeta de arriba.</div>", unsafe_allow_html=True)
 
+    # Gestión automática de contexto y recursos para: st.form('form_edit_user_profile')
     with st.form("form_edit_user_profile"):
+        # Renderizado de componente visual o control interactivo en la interfaz Streamlit
         col_e1, col_e2 = st.columns(2, gap="medium")
 
+        # Gestión automática de contexto y recursos para: col_e1
         with col_e1:
+            # Renderizado de componente visual o control interactivo en la interfaz Streamlit
             e_nombre = st.text_input("Nombre completo / Nickname", value=u_nombre, placeholder="Ej: Carlos Mendoza", max_chars=80)
+            # Renderizado de componente visual o control interactivo en la interfaz Streamlit
             e_email = st.text_input("Correo Electrónico", value=u_email, placeholder="ejemplo@correo.cl", max_chars=120)
+            # Renderizado de componente visual o control interactivo en la interfaz Streamlit
             e_telefono = st.text_input("Número de Teléfono", value=u_telefono, placeholder="+56 9 1234 5678", max_chars=30)
+            # Renderizado de componente visual o control interactivo en la interfaz Streamlit
             e_ubicacion = st.text_input("Ciudad / Región", value=u_ubicacion, placeholder="Santiago, Chile", max_chars=80)
 
+        # Gestión automática de contexto y recursos para: col_e2
         with col_e2:
+            # Asignamos 'uploaded_file' con st.file_uploader('Seleccionar foto o GIF d...
             uploaded_file = st.file_uploader(
                 "Seleccionar foto o GIF desde PC (máx. 2 MB)",
                 type=["png", "jpg", "jpeg", "gif", "webp"],
                 help="Se valida y almacena de forma segura en la nube",
             )
+            # Renderizado de componente visual o control interactivo en la interfaz Streamlit
             e_foto_url = st.text_input(
                 "O ingresar URL pública HTTPS de imagen/GIF",
                 value=u_foto if u_foto.startswith("https://") else "",
                 placeholder="https://sitio.com/mi-foto.jpg",
                 help="Por seguridad solo se aceptan enlaces externos con HTTPS",
             )
+            # Asignamos 'e_bio' con st.text_area('Biografía / Notas Olfativas ...
             e_bio = st.text_area(
                 "Biografía / Notas Olfativas Preferidas",
                 value=u_bio,
@@ -1423,29 +1683,47 @@ with tab_edit:
                 height=100,
             )
 
+        # Asignamos 'btn_save' con st.form_submit_button('Guardar Cambios de ...
         btn_save = st.form_submit_button("Guardar Cambios de Perfil", use_container_width=True)
 
+        # Evaluamos la condición lógica (btn_save) para controlar el flujo
         if btn_save:
+            # Asignamos 'nueva_foto' con u_foto
             nueva_foto = u_foto
+            # Asignamos 'error_validacion' con None
             error_validacion = None
 
+            # Evaluamos la condición lógica (uploaded_file is not None) para controlar el flujo
             if uploaded_file is not None:
+                # Asignamos '(ok_up, res_up)' con subir_avatar_usuario(u_ident, uploaded_fil...
                 ok_up, res_up = subir_avatar_usuario(u_ident, uploaded_file.getvalue(), uploaded_file.type or "")
+                # Evaluamos la condición lógica (ok_up) para controlar el flujo
                 if ok_up:
+                    # Asignamos 'nueva_foto' con res_up
                     nueva_foto = res_up
                 else:
+                    # Asignamos 'error_validacion' con res_up
                     error_validacion = res_up
+            # Evaluamos la condición lógica (e_foto_url.strip()) para controlar el flujo
             elif e_foto_url.strip():
+                # Evaluamos la condición lógica (is_valid_https_image_url(e_foto_url.strip())) para controlar el flujo
                 if is_valid_https_image_url(e_foto_url.strip()):
+                    # Asignamos 'nueva_foto' con e_foto_url.strip()
                     nueva_foto = e_foto_url.strip()
                 else:
+                    # Asignamos 'error_validacion' con 'La URL de imagen debe comenzar estrictame...
                     error_validacion = "La URL de imagen debe comenzar estrictamente con https:// y ser válida."
+            # Evaluamos la condición lógica (u_foto.startswith('https://') and (not e_foto_url.st...) para controlar el flujo
             elif u_foto.startswith("https://") and not e_foto_url.strip():
+                # Asignamos 'nueva_foto' con ''
                 nueva_foto = ""
 
+            # Evaluamos la condición lógica (error_validacion) para controlar el flujo
             if error_validacion:
+                # Ejecutamos instrucción: st.error(error_validacion)
                 st.error(error_validacion)
             else:
+                # Asignamos '(exito_upd, msg_upd)' con actualizar_perfil_usuario(u_ident, nombre=...
                 exito_upd, msg_upd = actualizar_perfil_usuario(
                     u_ident,
                     nombre=e_nombre,
@@ -1455,7 +1733,9 @@ with tab_edit:
                     foto_perfil=nueva_foto,
                     ubicacion=e_ubicacion,
                 )
+                # Evaluamos la condición lógica (exito_upd) para controlar el flujo
                 if exito_upd:
+                    # Ejecutamos instrucción: st.session_state['user_info'].update({'nombre': e_no...
                     st.session_state['user_info'].update({
                         'nombre': e_nombre.strip(),
                         'email': e_email.strip().lower(),
@@ -1464,9 +1744,12 @@ with tab_edit:
                         'bio': e_bio.strip(),
                         'foto_perfil': nueva_foto,
                     })
+                    # Ejecutamos instrucción: st.success(msg_upd)
                     st.success(msg_upd)
+                    # Ejecutamos instrucción: st.rerun()
                     st.rerun()
                 else:
+                    # Ejecutamos instrucción: st.error(msg_upd)
                     st.error(msg_upd)
 
 # --- TAB 3: CONFIGURACIÓN DE NOTIFICACIONES Y ALERTAS (EXCLUSIVO PLAN PREMIUM) ---
@@ -1475,24 +1758,37 @@ with tab_edit:
 #   interruptores. Si no, muestra una vista previa difuminada con una tarjeta que explica que
 #   la función es parte del plan Premium y un botón que lleva a la sección Planes de app.py.
 with tab_notif:
+    # Asignamos 'gold_plan' con '#e2b857' if is_dark else '#a87b1c'
     gold_plan = "#e2b857" if is_dark else "#a87b1c"
+    # Asignamos 'gold_plan_soft' con 'rgba(226, 184, 87, 0.12)' if is_dark else...
     gold_plan_soft = "rgba(226, 184, 87, 0.12)" if is_dark else "rgba(168, 123, 28, 0.08)"
+    # Asignamos 'row_bg' con 'rgba(255, 255, 255, 0.025)' if is_dark el...
     row_bg = "rgba(255, 255, 255, 0.025)" if is_dark else "#fbfaf8"
 
+    # Asignamos 'svg_notif_header' con f'<svg width="20" height="20" viewBox="0 0...
     svg_notif_header = f'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="{text_color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -3px; margin-right: 8px;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>'
+    # Asignamos 'svg_lock' con f'<svg width="22" height="22" viewBox="0 0...
     svg_lock = f'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="{gold_plan}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>'
+    # Asignamos 'svg_check_gold' con '<svg width="10" height="10" viewBox="0 0 ...
     svg_check_gold = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#2a1f05" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>'
 
+    # Definición de función 'icono_fila' (parámetros: path_d, color)
     def icono_fila(path_d, color):
+        # Retornamos el resultado procesado (f'<div class="pt-notif-icon" style="color:{colo...)
         return (f'<div class="pt-notif-icon" style="color:{color}; background:{color}1f;">'
                 f'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" '
                 f'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{path_d}</svg></div>')
 
+    # Asignamos 'ico_precio' con icono_fila('<polyline points="23 18 13.5 8...
     ico_precio = icono_fila('<polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/>', "#22c55e" if is_dark else "#15803d")
+    # Asignamos 'ico_stock' con icono_fila('<path d="M21 16V8a2 2 0 0 0-1-...
     ico_stock = icono_fila('<path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>', "#60a5fa" if is_dark else "#1d4ed8")
+    # Asignamos 'ico_resumen' con icono_fila('<rect x="3" y="4" width="18" h...
     ico_resumen = icono_fila('<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>', gold_plan)
 
+    # Definición de función 'texto_fila' (parámetros: icono, titulo, descripcion)
     def texto_fila(icono, titulo, descripcion):
+        # Retornamos el resultado procesado (clean_html(f'\n <div class="pt-notif-text">\n {...)
         return clean_html(f"""
             <div class="pt-notif-text">
                 {icono}
@@ -1503,6 +1799,7 @@ with tab_notif:
             </div>
         """)
 
+    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
     st.markdown(f"""
         <style>
         .pt-notif-head {{
@@ -1608,15 +1905,19 @@ with tab_notif:
         </style>
     """, unsafe_allow_html=True)
 
+    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
     st.markdown(clean_html(f"""
         <div class="pt-notif-head">
             <div class="pt-section-title">{svg_notif_header} Alertas por correo</div>
             <div class="pt-premium-chip">Premium</div>
         </div>
     """), unsafe_allow_html=True)
+    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
     st.markdown("<div class='pt-section-help'>Avisos automáticos sobre tus fragancias favoritas: bajadas de precio, reposición de stock y un resumen semanal de liquidaciones.</div>", unsafe_allow_html=True)
 
+    # Evaluamos la condición lógica (not u_es_premium) para controlar el flujo
     if not u_es_premium:
+        # Asignamos 'filas_preview' con ''.join((f'<div class="pt-lock-row">{texto...
         filas_preview = "".join(
             f'<div class="pt-lock-row">{texto_fila(ic, t, d)}<div class="pt-lock-switch"></div></div>'
             for ic, t, d in [
@@ -1625,6 +1926,7 @@ with tab_notif:
                 (ico_resumen, "Resumen semanal", "Las mayores liquidaciones verificadas en Chile."),
             ]
         )
+        # Asignamos 'items_lock' con ''.join((f'<div class="pt-lock-item"><div ...
         items_lock = "".join(
             f'<div class="pt-lock-item"><div class="pt-lock-check">{svg_check_gold}</div><div>{t}</div></div>'
             for t in [
@@ -1633,6 +1935,7 @@ with tab_notif:
                 "Alertas de vuelta de stock y resumen semanal",
             ]
         )
+        # Renderizado de componente visual o control interactivo en la interfaz Streamlit
         st.markdown(clean_html(f"""
             <div class="pt-lock-wrap">
                 <div class="pt-lock-preview" aria-hidden="true">{filas_preview}</div>
@@ -1645,24 +1948,40 @@ with tab_notif:
                 </div>
             </div>
         """), unsafe_allow_html=True)
+        # Renderizado de componente visual o control interactivo en la interfaz Streamlit
         st.markdown("<div style='margin-top: 14px;'></div>", unsafe_allow_html=True)
+        # Renderizado de componente visual o control interactivo en la interfaz Streamlit
         _, c_planes, _ = st.columns([1, 1.2, 1])
+        # Gestión automática de contexto y recursos para: c_planes
         with c_planes:
+            # Evaluamos la condición lógica (st.button('Ver planes', key='btn_ver_planes', use_co...) para controlar el flujo
             if st.button("Ver planes", key="btn_ver_planes", use_container_width=True):
+                # Asignamos 'st.session_state['current_page']' con 'planes_page'
                 st.session_state['current_page'] = 'planes_page'
+                # Ejecutamos instrucción: st.switch_page('app.py')
                 st.switch_page("app.py")
 
     else:
+        # Evaluamos la condición lógica (not u_email) para controlar el flujo
         if not u_email:
+            # Ejecutamos instrucción: st.warning("Para recibir alertas por correo, primero...
             st.warning("Para recibir alertas por correo, primero registra un correo válido en la pestaña 'Editar Datos Personales'.")
 
+        # Gestión automática de contexto y recursos para: st.form('form_notif_settings', border=False)
         with st.form("form_notif_settings", border=False):
+            # Gestión automática de contexto y recursos para: st.container(key='notif_row_precio')
             with st.container(key="notif_row_precio"):
+                # Renderizado de componente visual o control interactivo en la interfaz Streamlit
                 c_txt, c_tgl = st.columns([8, 1.4], vertical_alignment="center")
+                # Gestión automática de contexto y recursos para: c_txt
                 with c_txt:
+                    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
                     st.markdown(texto_fila(ico_precio, "Bajadas de precio", "Correo cuando un perfume favorito baja de precio en una tienda auditada."), unsafe_allow_html=True)
+                # Gestión automática de contexto y recursos para: c_tgl
                 with c_tgl:
+                    # Asignamos 'alerta_check' con st.toggle('Bajadas de precio', value=u_ale...
                     alerta_check = st.toggle("Bajadas de precio", value=u_alerta, disabled=not bool(u_email), label_visibility="collapsed")
+                # Asignamos 'umbral_val' con st.slider('Bajada mínima para recibir el a...
                 umbral_val = st.slider(
                     "Bajada mínima para recibir el aviso",
                     min_value=5,
@@ -1672,27 +1991,45 @@ with tab_notif:
                     format="%d%%",
                 )
 
+            # Gestión automática de contexto y recursos para: st.container(key='notif_row_stock')
             with st.container(key="notif_row_stock"):
+                # Renderizado de componente visual o control interactivo en la interfaz Streamlit
                 c_txt, c_tgl = st.columns([8, 1.4], vertical_alignment="center")
+                # Gestión automática de contexto y recursos para: c_txt
                 with c_txt:
+                    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
                     st.markdown(texto_fila(ico_stock, "Vuelta de stock", "Correo cuando una fragancia agotada vuelve a tener stock verificado."), unsafe_allow_html=True)
+                # Gestión automática de contexto y recursos para: c_tgl
                 with c_tgl:
+                    # Asignamos 'notif_stock_check' con st.toggle('Vuelta de stock', value=u_notif...
                     notif_stock_check = st.toggle("Vuelta de stock", value=u_notif_stock, disabled=not bool(u_email), label_visibility="collapsed")
 
+            # Gestión automática de contexto y recursos para: st.container(key='notif_row_resumen')
             with st.container(key="notif_row_resumen"):
+                # Renderizado de componente visual o control interactivo en la interfaz Streamlit
                 c_txt, c_tgl = st.columns([8, 1.4], vertical_alignment="center")
+                # Gestión automática de contexto y recursos para: c_txt
                 with c_txt:
+                    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
                     st.markdown(texto_fila(ico_resumen, "Resumen semanal", "Las mayores liquidaciones verificadas en Chile, una vez por semana."), unsafe_allow_html=True)
+                # Gestión automática de contexto y recursos para: c_tgl
                 with c_tgl:
+                    # Asignamos 'notif_resumen_check' con st.toggle('Resumen semanal', value=u_notif...
                     notif_resumen_check = st.toggle("Resumen semanal", value=u_notif_resumen, disabled=not bool(u_email), label_visibility="collapsed")
 
+            # Evaluamos la condición lógica (u_email) para controlar el flujo
             if u_email:
+                # Renderizado de componente visual o control interactivo en la interfaz Streamlit
                 st.markdown(f"<div class='pt-notif-dest'>Los avisos se envían a <b>{escape_html(u_email)}</b></div>", unsafe_allow_html=True)
 
+            # Gestión automática de contexto y recursos para: st.container(key='notif_save')
             with st.container(key="notif_save"):
+                # Asignamos 'btn_save_notif' con st.form_submit_button('Guardar preferencias')
                 btn_save_notif = st.form_submit_button("Guardar preferencias")
 
+            # Evaluamos la condición lógica (btn_save_notif) para controlar el flujo
             if btn_save_notif:
+                # Asignamos '(ok_pref, msg_pref)' con actualizar_preferencias_notificacion(u_ide...
                 ok_pref, msg_pref = actualizar_preferencias_notificacion(
                     u_ident,
                     alerta_email=alerta_check,
@@ -1700,16 +2037,21 @@ with tab_notif:
                     notif_stock=notif_stock_check,
                     notif_resumen=notif_resumen_check,
                 )
+                # Evaluamos la condición lógica (ok_pref) para controlar el flujo
                 if ok_pref:
+                    # Ejecutamos instrucción: st.session_state['user_info'].update({'alerta_email'...
                     st.session_state['user_info'].update({
                         'alerta_email': alerta_check,
                         'umbral_descuento': umbral_val,
                         'notif_stock': notif_stock_check,
                         'notif_resumen': notif_resumen_check,
                     })
+                    # Ejecutamos instrucción: st.success(msg_pref)
                     st.success(msg_pref)
+                    # Ejecutamos instrucción: st.rerun()
                     st.rerun()
                 else:
+                    # Ejecutamos instrucción: st.error(msg_pref)
                     st.error(msg_pref)
 
 # 6. PIE DE PÁGINA

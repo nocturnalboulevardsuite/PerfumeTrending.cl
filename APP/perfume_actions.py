@@ -18,85 +18,137 @@ Las tarjetas se envuelven así:
         boton_corazon(pid, "<contexto>", nombre)
 """
 
+# Importación de librería estándar o dependencia externa (streamlit)
 import streamlit as st
+# Importación de librería estándar o dependencia externa (streamlit.components.v1)
 import streamlit.components.v1 as components
 
+# Importación de componentes (agregar_favorito, eliminar_favorito, obtener_favoritos_Ids_usuario) desde el módulo 'backend.database'
 from backend.database import (
     agregar_favorito,
     eliminar_favorito,
     obtener_favoritos_Ids_usuario,
 )
 
+# Bloque try/except para manejo seguro de errores y resiliencia operativa
 try:
+    # Importación de componentes (obtener_perfil_usuario) desde el módulo 'backend.database'
     from backend.database import obtener_perfil_usuario
 except Exception:  # pragma: no cover
+    # Asignamos 'obtener_perfil_usuario' con None
     obtener_perfil_usuario = None
 
+# Bloque try/except para manejo seguro de errores y resiliencia operativa
 try:
+    # Importación de componentes (get_image_src) desde el módulo 'ui'
     from ui import get_image_src
 except Exception:  # pragma: no cover
+    # Asignamos 'get_image_src' con None
     get_image_src = None
 
+# Bloque try/except para manejo seguro de errores y resiliencia operativa
 try:
+    # Importación de componentes (FLAME_RED_SVG) desde el módulo 'ui'
     from ui import FLAME_RED_SVG as _flame_red_svg
 except Exception:  # pragma: no cover
+    # Asignamos '_flame_red_svg' con ''
     _flame_red_svg = ""
 
 
+# Definición de función '_ident_usuario' sin parámetros externos
 def _ident_usuario():
+    # Evaluamos la condición lógica (not st.session_state.get('logged_in')) para controlar el flujo
     if not st.session_state.get("logged_in"):
+        # Retornamos el resultado procesado (None)
         return None
+    # Asignamos 'info' con st.session_state.get('user_info') or {}
     info = st.session_state.get("user_info") or {}
+    # Retornamos el resultado procesado (info.get('id') or info.get('email'))
     return info.get("id") or info.get("email")
 
 
+# Definición de función 'favoritos_ids' sin parámetros externos
 def favoritos_ids() -> set:
     """IDs de perfumes favoritos del usuario (se cargan una vez por sesión y usuario)."""
+    # Asignamos 'ident' con _ident_usuario()
     ident = _ident_usuario()
+    # Evaluamos la condición lógica (not ident) para controlar el flujo
     if not ident:
+        # Retornamos el resultado procesado (set())
         return set()
+    # Evaluamos la condición lógica (st.session_state.get('_favoritos_cargados_para') != ...) para controlar el flujo
     if st.session_state.get("_favoritos_cargados_para") != str(ident):
+        # Bloque try/except para manejo seguro de errores y resiliencia operativa
         try:
+            # Asignamos 'email' con (st.session_state.get('user_info') or {})....
             email = (st.session_state.get("user_info") or {}).get("email")
+            # Asignamos 'ids' con obtener_favoritos_Ids_usuario(ident, email...
             ids = obtener_favoritos_Ids_usuario(ident, email=email) or []
+            # Asignamos 'st.session_state['favoritos']' con [int(x) for x in ids if str(x).isdigit()]
             st.session_state["favoritos"] = [int(x) for x in ids if str(x).isdigit()]
         except Exception:
+            # Ejecutamos instrucción: st.session_state.setdefault('favoritos', [])
             st.session_state.setdefault("favoritos", [])
+        # Asignamos 'st.session_state['_favoritos_car...' con str(ident)
         st.session_state["_favoritos_cargados_para"] = str(ident)
+    # Retornamos el resultado procesado ({int(x) for x in st.session_state.get('favorito...)
     return {int(x) for x in (st.session_state.get("favoritos") or []) if str(x).isdigit()}
 
 
+# Definición de función '_toggle_favorito' (parámetros: pid, nombre, recargar_pagina)
 def _toggle_favorito(pid: int, nombre: str = "", recargar_pagina: bool = True):
     """Callback del corazón: guarda o quita el perfume de favoritos."""
+    # Asignamos 'pid' con int(pid)
     pid = int(pid)
+    # Asignamos 'ident' con _ident_usuario()
     ident = _ident_usuario()
+    # Evaluamos la condición lógica (not ident) para controlar el flujo
     if not ident:
+        # Asignamos 'st.session_state['_fav_pendiente']' con pid
         st.session_state["_fav_pendiente"] = pid
+        # Asignamos 'st.session_state['show_login_mod...' con True
         st.session_state["show_login_modal"] = True
+        # Asignamos 'st.session_state['_fav_aviso']' con ('Ingresa con tu correo para guardar tus f...
         st.session_state["_fav_aviso"] = ("Ingresa con tu correo para guardar tus fragancias favoritas.", "🔐")
         # Siempre se recarga la página completa para que se abra el ingreso,
         # incluso si el corazón estaba dentro de un fragmento o ventana.
         st.session_state["_fav_recargar_app"] = True
+        # Finalizamos la ejecución de la función retornando None
         return
+    # Evaluamos la condición lógica (recargar_pagina) para controlar el flujo
     if recargar_pagina:
+        # Asignamos 'st.session_state['_fav_recargar_...' con True
         st.session_state["_fav_recargar_app"] = True
 
+    # Asignamos 'actuales' con favoritos_ids()
     actuales = favoritos_ids()
+    # Asignamos 'etiqueta' con f' {nombre}' if nombre else ''
     etiqueta = f" {nombre}" if nombre else ""
+    # Bloque try/except para manejo seguro de errores y resiliencia operativa
     try:
+        # Evaluamos la condición lógica (pid in actuales) para controlar el flujo
         if pid in actuales:
+            # Ejecutamos instrucción: eliminar_favorito(ident, pid)
             eliminar_favorito(ident, pid)
+            # Ejecutamos instrucción: actuales.discard(pid)
             actuales.discard(pid)
+            # Asignamos 'st.session_state['_fav_aviso']' con (f'Quitaste{etiqueta} de tus favoritos.', ...
             st.session_state["_fav_aviso"] = (f"Quitaste{etiqueta} de tus favoritos.", "🤍")
         else:
+            # Ejecutamos instrucción: agregar_favorito(ident, pid)
             agregar_favorito(ident, pid)
+            # Ejecutamos instrucción: actuales.add(pid)
             actuales.add(pid)
+            # Asignamos 'st.session_state['_fav_aviso']' con (f'Guardaste{etiqueta} en tus favoritos.',...
             st.session_state["_fav_aviso"] = (f"Guardaste{etiqueta} en tus favoritos.", "❤️")
+        # Asignamos 'st.session_state['favoritos']' con sorted(actuales)
         st.session_state["favoritos"] = sorted(actuales)
     except Exception:
+        # Asignamos 'st.session_state['_fav_aviso']' con ('No pudimos actualizar tus favoritos. Int...
         st.session_state["_fav_aviso"] = ("No pudimos actualizar tus favoritos. Inténtalo de nuevo.", "⚠️")
 
 
+# Definición de función 'boton_corazon' (parámetros: pid, contexto, nombre, en_linea, ...)
 def boton_corazon(pid, contexto: str, nombre: str = "", en_linea: bool = False, recargar_pagina: bool = True):
     """Corazón para guardar/quitar favorito. Por defecto flota sobre la tarjeta (arriba a la derecha).
 
@@ -105,11 +157,17 @@ def boton_corazon(pid, contexto: str, nombre: str = "", en_linea: bool = False, 
     # Si un corazón se tocó dentro de un fragmento (p. ej. el catálogo paginado), se recarga
     # la página completa para actualizar todos los corazones, el aviso y abrir el ingreso si hace falta.
     if st.session_state.pop("_fav_recargar_app", False):
+        # Ejecutamos instrucción: st.rerun()
         st.rerun()
+    # Asignamos 'pid' con int(pid)
     pid = int(pid)
+    # Asignamos 'es_fav' con pid in favoritos_ids()
     es_fav = pid in favoritos_ids()
+    # Asignamos 'prefijo' con 'favline' if en_linea else 'favbtn'
     prefijo = "favline" if en_linea else "favbtn"
+    # Asignamos 'estado' con 'on' if es_fav else 'off'
     estado = "on" if es_fav else "off"
+    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
     st.button(
         "♥" if es_fav else "♡",
         key=f"{prefijo}_{estado}_{contexto}_{pid}",
@@ -119,27 +177,37 @@ def boton_corazon(pid, contexto: str, nombre: str = "", en_linea: bool = False, 
     )
 
 
+# Definición de función 'boton_abrir_perfume' (parámetros: pid, contexto, misma_pagina)
 def boton_abrir_perfume(pid, contexto: str, misma_pagina: bool = False):
     """Capa invisible que cubre la tarjeta: al hacer clic abre la comparativa del perfume."""
+    # Asignamos 'pid' con int(pid)
     pid = int(pid)
+    # Evaluamos la condición lógica (st.button('Ver perfume', key=f'open_{contexto}_{pid}')) para controlar el flujo
     if st.button("Ver perfume", key=f"open_{contexto}_{pid}"):
+        # Asignamos 'st.session_state['selected_perfu...' con pid
         st.session_state["selected_perfume"] = pid
+        # Evaluamos la condición lógica (misma_pagina) para controlar el flujo
         if misma_pagina:
             # No se escribe en st.query_params (crearía entradas extra en el historial del navegador);
             # el comparador actualiza la dirección con sincronizar_id_en_url().
             st.rerun()
         else:
+            # Ejecutamos instrucción: st.switch_page('pages/compararprecios.py')
             st.switch_page("pages/compararprecios.py")
 
 
+# Definición de función 'sincronizar_id_en_url' (parámetros: pid)
 def sincronizar_id_en_url(pid):
     """Pone ?id=<pid> en la dirección del navegador REEMPLAZANDO la entrada actual del historial.
 
     `st.query_params[...] = ...` agrega una entrada nueva cada vez y eso hacía que el botón
     "Atrás" pareciera no funcionar (había que pulsarlo dos veces). Aquí se usa replaceState.
     """
+    # Asignamos 'pid' con str(pid)
     pid = str(pid)
+    # Asignamos 'st.session_state['_cp_id_en_url']' con pid
     st.session_state["_cp_id_en_url"] = pid
+    # Asignamos 'script' con f'\n <script>\n (function() {{\n try {{\n ...
     script = f"""
     <script>
     (function() {{
@@ -154,9 +222,12 @@ def sincronizar_id_en_url(pid):
     }})();
     </script>
     """
+    # Bloque try/except para manejo seguro de errores y resiliencia operativa
     try:
+        # Ejecutamos instrucción: st.html(script, unsafe_allow_javascript=True)
         st.html(script, unsafe_allow_javascript=True)
     except Exception:
+        # Ejecutamos instrucción: components.html(script, height=0, width=0)
         components.html(script, height=0, width=0)
 
 
@@ -170,25 +241,39 @@ _TOAST_ICONOS = {
 }
 
 
+# Definición de función '_toast_svg' (parámetros: tipo)
 def _toast_svg(tipo: str) -> str:
+    # Asignamos 'base' con '<svg width="16" height="16" viewBox="0 0 ...
     base = ('<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffffff" '
             'stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">')
+    # Evaluamos la condición lógica (tipo == 'check') para controlar el flujo
     if tipo == "check":
+        # Retornamos el resultado procesado (base + '<polyline class="pt-toast-draw" points=...)
         return base + '<polyline class="pt-toast-draw" points="5 12.5 10 17.5 19 7.5"/></svg>'
+    # Evaluamos la condición lógica (tipo in ('heart', 'heart_off')) para controlar el flujo
     if tipo in ("heart", "heart_off"):
+        # Asignamos 'relleno' con '#ffffff' if tipo == 'heart' else 'none'
         relleno = "#ffffff" if tipo == "heart" else "none"
+        # Retornamos el resultado procesado ('<svg width="15" height="15" viewBox="0 0 24 24...)
         return ('<svg width="15" height="15" viewBox="0 0 24 24" fill="' + relleno + '" stroke="#ffffff" '
                 'stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
                 '<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>')
+    # Evaluamos la condición lógica (tipo == 'lock') para controlar el flujo
     if tipo == "lock":
+        # Retornamos el resultado procesado (base.replace('stroke-width="3"', 'stroke-width=...)
         return base.replace('stroke-width="3"', 'stroke-width="2.4"') + '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>'
+    # Retornamos el resultado procesado (base + '<line x1="12" y1="7" x2="12" y2="13"/><...)
     return base + '<line x1="12" y1="7" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>'
 
 
+# Definición de función 'mostrar_aviso' (parámetros: texto, icono)
 def mostrar_aviso(texto: str, icono: str = "✅"):
     """Aviso flotante minimalista en HTML/CSS: aparece, dibuja su ícono y se desvanece solo."""
+    # Importación de librería estándar o dependencia externa (html)
     import html as _html
+    # Petición HTTP GET hacia el servidor externo con control de timeout y cabeceras
     tipo, color = _TOAST_ICONOS.get(icono, ("check", "#ff7a1a"))
+    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
     st.markdown(f"""
 <style>
 div[data-testid="stElementContainer"]:has(.pt-toast),
@@ -248,21 +333,31 @@ div.element-container:has(.pt-toast) {{ height: 0 !important; min-height: 0 !imp
 """, unsafe_allow_html=True)
 
 
+# Definición de función 'mostrar_aviso_favoritos' sin parámetros externos
 def mostrar_aviso_favoritos():
     """Se llama al inicio de cada página (ejecución completa): muestra el aviso pendiente."""
     # Esta ejecución ya es completa, así que no hace falta recargar otra vez.
     st.session_state.pop("_fav_recargar_app", None)
+    # Asignamos 'aviso' con st.session_state.pop('_fav_aviso', None)
     aviso = st.session_state.pop("_fav_aviso", None)
+    # Evaluamos la condición lógica (aviso) para controlar el flujo
     if aviso:
+        # Asignamos '(texto, icono)' con aviso
         texto, icono = aviso
+        # Bloque try/except para manejo seguro de errores y resiliencia operativa
         try:
+            # Ejecutamos instrucción: mostrar_aviso(texto, icono)
             mostrar_aviso(texto, icono)
         except Exception:
+            # Ejecutamos instrucción: st.toast(texto)
             st.toast(texto)
 
 
+# Definición de función 'estilos_tarjetas_cliqueables' (parámetros: accent, card_bg, border_color, subtext_color, ...)
 def estilos_tarjetas_cliqueables(accent: str, card_bg: str, border_color: str, subtext_color: str, is_dark: bool) -> str:
+    # Asignamos 'fondo_corazon' con 'rgba(17, 20, 26, 0.78)' if is_dark else '...
     fondo_corazon = "rgba(17, 20, 26, 0.78)" if is_dark else "rgba(255, 255, 255, 0.92)"
+    # Retornamos el resultado procesado (f'''\n <style>\n /* Tarjeta de perfume cliqueab...)
     return f"""
     <style>
     /* Tarjeta de perfume cliqueable */
@@ -381,45 +476,71 @@ def estilos_tarjetas_cliqueables(accent: str, card_bg: str, border_color: str, s
 # -----------------------------------------------------------------------------
 def _foto_perfil_usuario() -> str:
     """URL segura de la foto de perfil del usuario conectado, o "" si no tiene."""
+    # Evaluamos la condición lógica (not st.session_state.get('logged_in')) para controlar el flujo
     if not st.session_state.get("logged_in"):
+        # Retornamos el resultado procesado ('')
         return ""
+    # Asignamos 'info' con st.session_state.get('user_info') or {}
     info = st.session_state.get("user_info") or {}
+    # Asignamos 'foto' con str(info.get('foto_perfil') or '').strip()
     foto = str(info.get("foto_perfil") or "").strip()
 
     # Si la sesión aún no trae la foto (p. ej. recién ingresó desde el Inicio), se consulta una vez.
     if not foto and not st.session_state.get("_avatar_sync_intentado") and obtener_perfil_usuario:
+        # Asignamos 'st.session_state['_avatar_sync_i...' con True
         st.session_state["_avatar_sync_intentado"] = True
+        # Asignamos 'ident' con info.get('id') or info.get('email')
         ident = info.get("id") or info.get("email")
+        # Evaluamos la condición lógica (ident) para controlar el flujo
         if ident:
+            # Bloque try/except para manejo seguro de errores y resiliencia operativa
             try:
+                # Asignamos 'perfil' con obtener_perfil_usuario(ident) or {}
                 perfil = obtener_perfil_usuario(ident) or {}
+                # Asignamos 'foto' con str(perfil.get('foto_perfil') or '').strip()
                 foto = str(perfil.get("foto_perfil") or "").strip()
+                # Evaluamos la condición lógica (foto) para controlar el flujo
                 if foto:
+                    # Asignamos 'st.session_state['user_info']['f...' con foto
                     st.session_state["user_info"]["foto_perfil"] = foto
             except Exception:
+                # Asignamos 'foto' con ''
                 foto = ""
+    # Evaluamos la condición lógica (not foto) para controlar el flujo
     if not foto:
+        # Retornamos el resultado procesado ('')
         return ""
 
+    # Asignamos 'src' con ''
     src = ""
+    # Evaluamos la condición lógica (get_image_src) para controlar el flujo
     if get_image_src:
+        # Bloque try/except para manejo seguro de errores y resiliencia operativa
         try:
             # Nunca se leen rutas locales del servidor desde el avatar (misma regla que en el perfil)
             src = get_image_src(foto, allow_local=False, default_src="") or ""
         except TypeError:
+            # Asignamos 'src' con ''
             src = ""
         except Exception:
+            # Asignamos 'src' con ''
             src = ""
+    # Evaluamos la condición lógica (not src and (foto.startswith('https://') or foto.sta...) para controlar el flujo
     if not src and (foto.startswith("https://") or foto.startswith("data:image/")):
+        # Asignamos 'src' con foto
         src = foto
+    # Evaluamos la condición lógica (not (src.startswith('https://') or src.startswith('d...) para controlar el flujo
     if not (src.startswith("https://") or src.startswith("data:image/")):
+        # Retornamos el resultado procesado ('')
         return ""
     # Escapes mínimos para usarla dentro de url("...") en CSS
     return src.replace("\\", "%5C").replace('"', "%22").replace("\n", "").replace("\r", "")
 
 
+# Definición de función 'estilos_avatar_usuario' (parámetros: borde)
 def estilos_avatar_usuario(borde: str = "#8c7b6d") -> str:
     """CSS que reemplaza el ícono genérico del botón de usuario por su foto en un círculo."""
+    # Asignamos 'base' con '\n <style>\n html body div[data-testid="s...
     base = """
     <style>
     html body div[data-testid="stHorizontalBlock"]:has(.st-key-theme_toggle) div[data-testid="stColumn"] button[data-testid="stPopoverButton"] {
@@ -427,9 +548,13 @@ def estilos_avatar_usuario(borde: str = "#8c7b6d") -> str:
     }
     </style>
     """
+    # Asignamos 'src' con _foto_perfil_usuario()
     src = _foto_perfil_usuario()
+    # Evaluamos la condición lógica (not src) para controlar el flujo
     if not src:
+        # Retornamos el resultado procesado (base if st.session_state.get('logged_in') else '')
         return base if st.session_state.get("logged_in") else ""
+    # Retornamos el resultado procesado (base + f'\n <style>\n html body div[data-testid...)
     return base + f"""
     <style>
     html body div[data-testid="stHorizontalBlock"]:has(.st-key-theme_toggle) div[data-testid="stColumn"] button[data-testid="stPopoverButton"] {{
@@ -461,7 +586,9 @@ def estilos_avatar_usuario(borde: str = "#8c7b6d") -> str:
 # -----------------------------------------------------------------------------
 def estilos_moviles(accent: str = "#d83737", border_color: str = "#e6e1db", is_dark: bool = True) -> str:
     """CSS responsivo común: cabecera ordenada, textos sin encimarse y tarjetas cómodas en celular."""
+    # Asignamos 'fila_riesgo' con 'rgba(239, 68, 68, 0.06)' if is_dark else ...
     fila_riesgo = "rgba(239, 68, 68, 0.06)" if is_dark else "rgba(239, 68, 68, 0.04)"
+    # Retornamos el resultado procesado (f'\n <style>\n @media (max-width: 768px) {{\n /...)
     return f"""
     <style>
     @media (max-width: 768px) {{

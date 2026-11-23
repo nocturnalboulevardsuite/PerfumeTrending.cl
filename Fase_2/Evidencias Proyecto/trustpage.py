@@ -1,11 +1,18 @@
+# Importación de librería estándar o dependencia externa (streamlit)
 import streamlit as st
+# Importación de librería estándar o dependencia externa (sys)
 import sys
+# Importación de librería estándar o dependencia externa (os)
 import os
 
+# Asignamos 'BASE_DIR' con os.path.dirname(os.path.dirname(os.path.di...
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# Evaluamos la condición lógica (BASE_DIR not in sys.path) para controlar el flujo
 if BASE_DIR not in sys.path:
+    # Ejecutamos instrucción: sys.path.append(BASE_DIR)
     sys.path.append(BASE_DIR)
 
+# Importación de componentes (obtener_tiendas) desde el módulo 'backend.database'
 from backend.database import obtener_tiendas
 
 # 1. CONFIGURACIÓN DE PÁGINA
@@ -18,34 +25,46 @@ st.set_page_config(
 
 # HELPER: Limpia espacios/indentaciones iniciales para evitar que Streamlit Markdown convierta HTML en código
 def clean_html(html_str: str) -> str:
+    # Retornamos el resultado procesado ('\n'.join((line.strip() for line in html_str.sp...)
     return "\n".join(line.strip() for line in html_str.splitlines())
 
 # 2. GESTIÓN DEL TEMA Y ESTADO
 if "theme" not in st.session_state:
+    # Asignamos 'st.session_state.theme' con 'dark'
     st.session_state.theme = "dark"
 
+# Definición de función 'toggle_theme' sin parámetros externos
 def toggle_theme():
+    # Asignamos 'st.session_state.theme' con 'light' if st.session_state.theme == 'dark...
     st.session_state.theme = "light" if st.session_state.theme == "dark" else "dark"
 
+# Asignamos 'is_dark' con st.session_state.theme == 'dark'
 is_dark = st.session_state.theme == "dark"
 
 # 3. PALETA DE COLORES Y SVGS
 bg_color = "#0c0e12" if is_dark else "#f8f9fa"
+# Asignamos 'card_bg' con '#14171d' if is_dark else '#ffffff'
 card_bg = "#14171d" if is_dark else "#ffffff"
+# Asignamos 'border_color' con '#232730' if is_dark else '#e2e8f0'
 border_color = "#232730" if is_dark else "#e2e8f0"
+# Asignamos 'text_color' con '#f3f4f6' if is_dark else '#0f172a'
 text_color = "#f3f4f6" if is_dark else "#0f172a"
+# Asignamos 'subtext_color' con '#8e95a5' if is_dark else '#64748b'
 subtext_color = "#8e95a5" if is_dark else "#64748b"
 
 # Configuración del Switch
 bottle_left_pos = "42px" if is_dark else "-2px"
+# Asignamos 'static_icon_pos' con '12px center' if is_dark else 'calc(100% -...
 static_icon_pos = "12px center" if is_dark else "calc(100% - 12px) center"
 
+# Asignamos 'static_icon_svg' con "data:image/svg+xml;utf8,<svg xmlns='http:...
 static_icon_svg = (
     "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='4'/><line x1='12' y1='1' x2='12' y2='3'/><line x1='12' y1='21' x2='12' y2='23'/><line x1='4.22' y1='4.22' x2='5.64' y2='5.64'/><line x1='18.36' y1='18.36' x2='19.78' y2='19.78'/><line x1='1' y1='12' x2='3' y2='12'/><line x1='21' y1='12' x2='23' y2='12'/><line x1='4.22' y1='19.78' x2='5.64' y2='18.36'/><line x1='18.36' y1='5.64' x2='19.78' y2='4.22'/></svg>"
     if is_dark else
     "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z'/></svg>"
 )
 
+# Asignamos 'bottle_svg' con "data:image/svg+xml;utf8,<svg xmlns='http:...
 bottle_svg = (
     "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 58'><rect x='18' y='2' width='14' height='7' rx='2' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><rect x='21' y='9' width='8' height='5' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='19' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><path d='M21 28a8 8 0 0 0 9 10.5 8.5 8.5 0 0 1-9-10.5z' fill='none' stroke='%23111111' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/></svg>"
     if is_dark else
@@ -333,13 +352,17 @@ div[data-testid="stElementContainer"].st-key-theme_toggle button {{
 }}
 </style>
 """
+# Renderizado de componente visual o control interactivo en la interfaz Streamlit
 st.markdown(clean_html(css_styles), unsafe_allow_html=True)
 
 # 5. HEADER (LOGO + SWITCH COPIADO EXACTO DE APP.PY)
 col_head_logo, col_head_switch = st.columns([8, 2], vertical_alignment="center")
 
+# Gestión automática de contexto y recursos para: col_head_logo
 with col_head_logo:
+    # Asignamos 'logo_color' con '#8c7b6d'
     logo_color = "#8c7b6d"
+    # Asignamos 'logo_html' con f'\n <div style="display: inline-flex; ali...
     logo_html = f"""
     <div style="display: inline-flex; align-items: center; gap: 12px; cursor: pointer; width: fit-content;" onclick="window.location.reload();">
         <svg width="34" height="34" viewBox="0 0 36 36" fill="none" stroke-linecap="round" stroke-linejoin="round">
@@ -356,11 +379,15 @@ with col_head_logo:
         </span>
     </div>
     """
+    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
     st.markdown(logo_html, unsafe_allow_html=True)
 
+# Gestión automática de contexto y recursos para: col_head_switch
 with col_head_switch:
+    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
     st.button(" ", on_click=toggle_theme, key="theme_toggle")
 
+# Renderizado de componente visual o control interactivo en la interfaz Streamlit
 st.markdown(f"<hr style='border: none; border-top: 1px solid {border_color}; margin: 20px 0 28px 0;' />", unsafe_allow_html=True)
 
 # 6. ESTRUCTURA PRINCIPAL
@@ -368,6 +395,7 @@ left_col, right_col = st.columns([1, 1.4], gap="large")
 
 # --- COLUMNA IZQUIERDA: TARJETA DE PRODUCTO MINIMALISTA ---
 with left_col:
+    # Asignamos 'bottle_sketch_svg' con f'\n <svg viewBox="0 0 200 240" fill="none...
     bottle_sketch_svg = f"""
     <svg viewBox="0 0 200 240" fill="none" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: auto; max-width: 160px;">
         <path d="M70 20 L130 20 L145 35 L145 55 L130 70 L70 70 L55 55 L55 35 Z" stroke="{text_color}" stroke-width="1.8" fill="{card_bg}"/>
@@ -381,6 +409,7 @@ with left_col:
     </svg>
     """
 
+    # Asignamos 'card_left_html' con f'\n <div class="product-card">\n <div sty...
     card_left_html = f"""
     <div class="product-card">
         <div style="width: 100%; display: flex; justify-content: center; margin-bottom: 12px;">
@@ -405,19 +434,28 @@ with left_col:
         </div>
     </div>
     """
+    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
     st.markdown(clean_html(card_left_html), unsafe_allow_html=True)
 
 # --- COLUMNA DERECHA: TABLA DE VERIFICACIÓN EN ESPAÑOL ---
 with right_col:
+    # Asignamos 'tiendas_auditadas' con obtener_tiendas()
     tiendas_auditadas = obtener_tiendas()
     
+    # Asignamos 'filas_html' con []
     filas_html = []
+    # Recorremos iterativamente cada '(idx, t)' en enumerate(tiendas_auditadas, 1)
     for idx, t in enumerate(tiendas_auditadas, 1):
+        # Asignamos 'num_str' con f'{idx:02d}'
         num_str = f"{idx:02d}"
+        # Asignamos 'score' con t.get('trust_score', 95)
         score = t.get('trust_score', 95)
+        # Asignamos 'badge_status' con '<span class="status-badge-safe">VERIFICAD...
         badge_status = '<span class="status-badge-safe">VERIFICADO</span>' if score >= 85 else '<span class="status-badge-danger">AUDITORÍA</span>'
+        # Asignamos 'accion_html' con f'''<a href="{t.get('url_base', '#')}" tar...
         accion_html = f'<a href="{t.get("url_base", "#")}" target="_blank" rel="noopener noreferrer" class="btn-buy-now">VISITAR</a>'
         
+        # Asignamos 'fila' con f"""\n <tr>\n <td>{num_str}</td>\n <td>\n ...
         fila = f"""
         <tr>
             <td>{num_str}</td>
@@ -430,10 +468,12 @@ with right_col:
             <td>{accion_html}</td>
         </tr>
         """
+        # Ejecutamos instrucción: filas_html.append(fila)
         filas_html.append(fila)
 
     # Fila de ejemplo de comercio de alto riesgo no verificado para alertar a compradores
     num_alerta = f"{len(tiendas_auditadas) + 1:02d}"
+    # Asignamos 'fila_riesgo' con f'\n <tr>\n <td>{num_alerta}</td>\n <td>\n...
     fila_riesgo = f"""
     <tr>
         <td>{num_alerta}</td>
@@ -446,8 +486,10 @@ with right_col:
         <td><span class="btn-buy-disabled">BLOQUEADO</span></td>
     </tr>
     """
+    # Ejecutamos instrucción: filas_html.append(fila_riesgo)
     filas_html.append(fila_riesgo)
 
+    # Asignamos 'table_html' con f"""\n <div class="trust-table-container">...
     table_html = f"""
     <div class="trust-table-container">
         <table class="trust-table">
@@ -466,4 +508,5 @@ with right_col:
         </table>
     </div>
     """
+    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
     st.markdown(clean_html(table_html), unsafe_allow_html=True)

@@ -1,6 +1,14 @@
+# =============================================================================
+# PerfumeTrending.cl — Workflow CI/CD: Sonda Diagnóstica WAF en Retailers
+# =============================================================================
+# Propósito:
+# Permite evaluar desde los runners de GitHub Actions la tasa de respuesta HTTP
+# y el comportamiento de los cortafuegos WAF (Cloudflare/Akamai) en Paris,
+# Ripley y Falabella comparando requests estándar frente a curl_cffi (TLS Chrome).
 name: Diagnostico WAF Retail (Paris, Ripley, Falabella)
 
 on:
+  # Ejecución manual bajo demanda con tamaño de muestra configurable
   workflow_dispatch:
     inputs:
       sample_size:
@@ -8,28 +16,35 @@ on:
         required: false
         default: '30'
 
+# Permisos de solo lectura sobre el repositorio
 permissions:
   contents: read
 
 jobs:
   probe-waf:
+    # Runner Linux Ubuntu en GitHub Actions
     runs-on: ubuntu-latest
+    # Límite máximo de ejecución de 15 minutos
     timeout-minutes: 15
     steps:
+      # Paso 1: Clonar el repositorio
       - name: Descargar codigo del repositorio
         uses: actions/checkout@v4
 
+      # Paso 2: Configurar Python 3.11 con caché pip
       - name: Configurar entorno Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
           cache: 'pip'
 
+      # Paso 3: Instalar librerías requeridas (incluyendo curl_cffi)
       - name: Instalar dependencias
         run: |
           pip install --upgrade pip
           pip install -r requirements.txt
 
+      # Paso 4: Ejecutar el script probe_waf.py contra una muestra real de ofertas en Supabase
       - name: Ejecutar sonda diagnostica WAF
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
@@ -38,6 +53,7 @@ jobs:
         run: |
           python APP/backend/mantenimiento/probe_waf.py --sample ${{ inputs.sample_size || '30' }}
 
+      # Paso 5: Publicar el informe JSON resultante como artefacto descargable
       - name: Subir resultado JSON como artefacto
         uses: actions/upload-artifact@v4
         if: always()

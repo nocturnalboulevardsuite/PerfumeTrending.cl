@@ -8,26 +8,43 @@ Módulo de transparencia y evaluación de legitimidad para tiendas de perfumerí
 - Guía al consumidor para evitar falsificaciones y compras en sitios no oficiales o fraudulentos.
 """
 
+# Importación de librería estándar o dependencia externa (streamlit)
 import streamlit as st
+# Importación de librería estándar o dependencia externa (sys)
 import sys
+# Importación de librería estándar o dependencia externa (os)
 import os
 
+# Asignamos 'APP_DIR' con os.path.dirname(os.path.dirname(os.path.ab...
 APP_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# Asignamos 'BASE_DIR' con os.path.dirname(APP_DIR)
 BASE_DIR = os.path.dirname(APP_DIR)
+# Recorremos iterativamente cada '_p' en (APP_DIR, BASE_DIR)
 for _p in (APP_DIR, BASE_DIR):
+    # Evaluamos la condición lógica (_p not in sys.path) para controlar el flujo
     if _p not in sys.path:
+        # Ejecutamos instrucción: sys.path.insert(0, _p)
         sys.path.insert(0, _p)
+    # Evaluamos la condición lógica (sys.path[0] != _p) para controlar el flujo
     elif sys.path[0] != _p:
+        # Bloque try/except para manejo seguro de errores y resiliencia operativa
         try:
+            # Ejecutamos instrucción: sys.path.remove(_p)
             sys.path.remove(_p)
         except ValueError:
+            # Ejecutamos instrucción: pass
             pass
+        # Ejecutamos instrucción: sys.path.insert(0, _p)
         sys.path.insert(0, _p)
 
+# Bloque try/except para manejo seguro de errores y resiliencia operativa
 try:
+    # Importación de componentes (auditar_tienda_por_url, obtener_tiendas) desde el módulo 'backend.database'
     from backend.database import auditar_tienda_por_url, obtener_tiendas
 except (ImportError, ModuleNotFoundError):
+    # Importación de componentes (auditar_tienda_por_url, obtener_tiendas) desde el módulo 'APP.backend.database'
     from APP.backend.database import auditar_tienda_por_url, obtener_tiendas
+# Importación de componentes (FLAME_RED_SVG, HOME_RED_SVG, PERFUME_SVG_FAVICON, SHIELD_RED_SVG, ...) desde el módulo 'ui'
 from ui import (
     FLAME_RED_SVG as flame_red_svg,
     HOME_RED_SVG as home_red_svg,
@@ -43,7 +60,9 @@ from ui import (
     sanitize_external_url,
     toggle_theme,
 )
+# Importación de componentes (modal_autenticacion) desde el módulo 'auth_email'
 from auth_email import modal_autenticacion
+# Importación de componentes (estilos_avatar_usuario, estilos_moviles, mostrar_aviso_favoritos) desde el módulo 'perfume_actions'
 from perfume_actions import estilos_avatar_usuario, estilos_moviles, mostrar_aviso_favoritos
 
 # 1. CONFIGURACIÓN DE PÁGINA Y ESTADO COMPARTIDO
@@ -54,58 +73,103 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
+# Ejecutamos instrucción: init_common_session_state()
 init_common_session_state()
 
+# Asignamos 'pal' con get_theme_palette()
 pal = get_theme_palette()
+# Asignamos 'is_dark' con pal.is_dark
 is_dark = pal.is_dark
+# Asignamos 'bg_color' con pal.app_bg
 bg_color = pal.app_bg
+# Asignamos 'card_bg' con pal.card_bg
 card_bg = pal.card_bg
+# Asignamos 'border_color' con pal.border_color
 border_color = pal.border_color
+# Asignamos 'text_color' con pal.text_color
 text_color = pal.text_color
+# Asignamos 'subtext_color' con pal.subtext_color
 subtext_color = pal.subtext_color
+# Asignamos 'btn_bg' con pal.btn_bg
 btn_bg = pal.btn_bg
+# Asignamos 'btn_text' con pal.btn_text
 btn_text = pal.btn_text
+# Asignamos 'btn_border' con pal.btn_border
 btn_border = pal.btn_border
+# Asignamos 'input_bg' con pal.input_bg
 input_bg = pal.input_bg
+# Asignamos 'input_text' con pal.input_text
 input_text = pal.input_text
+# Asignamos 'input_border' con pal.input_border
 input_border = pal.input_border
+# Asignamos 'bottle_left_pos' con pal.bottle_left_pos
 bottle_left_pos = pal.bottle_left_pos
+# Asignamos 'static_icon_pos' con pal.static_icon_pos
 static_icon_pos = pal.static_icon_pos
+# Asignamos 'static_icon_svg' con pal.static_icon_svg
 static_icon_svg = pal.static_icon_svg
+# Asignamos 'bottle_svg' con pal.bottle_svg
 bottle_svg = pal.bottle_svg
+# Asignamos 'user_icon_svg' con pal.user_icon_svg
 user_icon_svg = pal.user_icon_svg
+# Asignamos 'settings_icon_svg' con pal.settings_icon_svg
 settings_icon_svg = pal.settings_icon_svg
+# Asignamos 'logout_icon_svg' con pal.logout_icon_svg
 logout_icon_svg = pal.logout_icon_svg
+# Asignamos 'logo_svg_data' con pal.logo_svg_data
 logo_svg_data = pal.logo_svg_data
 
 # Paleta clara reforzada: fondo blanco y texto oscuro legible en todos los componentes.
 # El modo oscuro conserva exactamente los valores de la paleta compartida.
 if not is_dark:
+    # Asignamos 'bg_color' con '#ffffff'
     bg_color = "#ffffff"
+    # Asignamos 'card_bg' con '#ffffff'
     card_bg = "#ffffff"
+    # Asignamos 'border_color' con '#e6e1db'
     border_color = "#e6e1db"
+    # Asignamos 'text_color' con '#1c1917'
     text_color = "#1c1917"
+    # Asignamos 'subtext_color' con '#6b6159'
     subtext_color = "#6b6159"
+    # Asignamos 'btn_bg' con '#ffffff'
     btn_bg = "#ffffff"
+    # Asignamos 'btn_text' con '#1c1917'
     btn_text = "#1c1917"
+    # Asignamos 'btn_border' con '#d6cec5'
     btn_border = "#d6cec5"
+    # Asignamos 'input_bg' con '#ffffff'
     input_bg = "#ffffff"
+    # Asignamos 'input_text' con '#1c1917'
     input_text = "#1c1917"
+    # Asignamos 'input_border' con '#d6cec5'
     input_border = "#d6cec5"
 
 # Tokens visuales compartidos con Inicio y Trend del Hype
 accent = "#d83737"
+# Asignamos 'accent_hover' con '#b92d2d'
 accent_hover = "#b92d2d"
+# Asignamos 'accent_soft' con 'rgba(216, 55, 55, 0.14)' if is_dark else ...
 accent_soft = "rgba(216, 55, 55, 0.14)" if is_dark else "rgba(216, 55, 55, 0.07)"
+# Asignamos 'gold' con '#d4c2a5' if is_dark else '#8c7b6d'
 gold = "#d4c2a5" if is_dark else "#8c7b6d"
+# Asignamos 'gold_soft' con 'rgba(212, 194, 165, 0.16)' if is_dark els...
 gold_soft = "rgba(212, 194, 165, 0.16)" if is_dark else "rgba(140, 123, 109, 0.14)"
+# Asignamos 'ok_green' con '#4ade80' if is_dark else '#15803d'
 ok_green = "#4ade80" if is_dark else "#15803d"
+# Asignamos 'warn_amber' con '#fbbf24' if is_dark else '#b45309'
 warn_amber = "#fbbf24" if is_dark else "#b45309"
+# Asignamos 'risk_red' con '#f87171' if is_dark else '#dc2626'
 risk_red = "#f87171" if is_dark else "#dc2626"
+# Asignamos 'surface_soft' con 'rgba(255, 255, 255, 0.035)' if is_dark el...
 surface_soft = "rgba(255, 255, 255, 0.035)" if is_dark else "#faf8f5"
+# Asignamos 'meter_track' con 'rgba(255, 255, 255, 0.08)' if is_dark els...
 meter_track = "rgba(255, 255, 255, 0.08)" if is_dark else "#efebe6"
+# Asignamos 'shadow_sm' con '0 1px 2px rgba(0,0,0,0.35)' if is_dark el...
 shadow_sm = "0 1px 2px rgba(0,0,0,0.35)" if is_dark else "0 1px 2px rgba(40,30,20,0.06)"
+# Asignamos 'shadow_hover' con '0 6px 16px rgba(0,0,0,0.35)' if is_dark e...
 shadow_hover = "0 6px 16px rgba(0,0,0,0.35)" if is_dark else "0 6px 16px rgba(60,45,35,0.10)"
+# Asignamos 'font_sans' con "'Manrope', -apple-system, BlinkMacSystemF...
 font_sans = "'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
 
 # 4. ESTILOS CSS (MISMO SISTEMA VISUAL QUE INICIO Y TREND DEL HYPE)
@@ -881,6 +945,7 @@ a.brand-logo-clean:focus {{
 }}
 </style>
 """
+# Renderizado de componente visual o control interactivo en la interfaz Streamlit
 st.markdown(clean_html(css_styles), unsafe_allow_html=True)
 
 # Diseño responsivo para celulares (común a todas las páginas)
@@ -888,19 +953,26 @@ st.markdown(estilos_moviles(accent, border_color, is_dark), unsafe_allow_html=Tr
 
 # Foto de perfil en el botón del usuario (cabecera)
 _css_avatar = estilos_avatar_usuario(gold)
+# Evaluamos la condición lógica (_css_avatar) para controlar el flujo
 if _css_avatar:
+    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
     st.markdown(_css_avatar, unsafe_allow_html=True)
 
 # 5. HEADER (LOGO + INICIO DE SESIÓN DINÁMICO + SWITCH COPIADO EXACTO DE APP.PY)
 if st.session_state['logged_in']:
     # Mismo tamaño del botón de usuario en todas las páginas: ni muy chico ni muy grande
     col_logo, col_espacio, col_actions = st.columns([5.2, 0.6, 3.2], vertical_alignment="center")
+    # Asignamos '(btn_col1, btn_col2)' con col_actions.columns([2.4, 0.8], vertical_a...
     btn_col1, btn_col2 = col_actions.columns([2.4, 0.8], vertical_alignment="center", gap="small")
 else:
+    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
     col_logo, col_espacio, col_actions = st.columns([5.6, 1.2, 2.4], vertical_alignment="center")
+    # Asignamos '(btn_col1, btn_col2)' con col_actions.columns([2.0, 0.8], vertical_a...
     btn_col1, btn_col2 = col_actions.columns([2.0, 0.8], vertical_alignment="center", gap="small")
 
+# Gestión automática de contexto y recursos para: col_logo
 with col_logo:
+    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
     st.markdown(clean_html(f"""
     <a href="/" target="_self" class="brand-logo-clean" title="PerfumeTrending">
         <svg width="34" height="34" viewBox="0 0 36 36" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -916,55 +988,92 @@ with col_logo:
     </a>
     """), unsafe_allow_html=True)
 
+# Gestión automática de contexto y recursos para: btn_col1
 with btn_col1:
+    # Evaluamos la condición lógica (st.session_state['logged_in']) para controlar el flujo
     if st.session_state['logged_in']:
+        # Asignamos 'user_display' con st.session_state['user_info'].get('nombre'...
         user_display = st.session_state['user_info'].get('nombre') or st.session_state['user_info'].get('email', 'Usuario')
+        # Renderizado de componente visual o control interactivo en la interfaz Streamlit
         st.markdown('<div class="user-popover-container">', unsafe_allow_html=True)
+        # Gestión automática de contexto y recursos para: st.popover(f'{user_display}', use_container_wid...
         with st.popover(f"{user_display}", use_container_width=True):
+            # Renderizado de componente visual o control interactivo en la interfaz Streamlit
             st.write("**Conectado como:**")
+            # Renderizado de componente visual o control interactivo en la interfaz Streamlit
             st.write(st.session_state['user_info'].get('email', ''))
+            # Renderizado de componente visual o control interactivo en la interfaz Streamlit
             st.markdown("<div style='margin-top: 8px;'></div>", unsafe_allow_html=True)
 
+            # Evaluamos la condición lógica (st.button('Mi Perfil y Alertas', key='btn_go_profile...) para controlar el flujo
             if st.button("Mi Perfil y Alertas", key="btn_go_profile", use_container_width=True):
+                # Ejecutamos instrucción: st.switch_page('pages/perfil.py')
                 st.switch_page("pages/perfil.py")
 
+            # Evaluamos la condición lógica (st.button('Cerrar Sesión', key='btn_logout', use_con...) para controlar el flujo
             if st.button("Cerrar Sesión", key="btn_logout", use_container_width=True):
+                # Ejecutamos instrucción: cerrar_sesion_usuario()
                 cerrar_sesion_usuario()
+                # Ejecutamos instrucción: st.rerun()
                 st.rerun()
+        # Renderizado de componente visual o control interactivo en la interfaz Streamlit
         st.markdown('</div>', unsafe_allow_html=True)
     else:
+        # Evaluamos la condición lógica (st.button('Ingresar', key='login_btn', use_container...) para controlar el flujo
         if st.button("Ingresar", key="login_btn", use_container_width=True):
+            # Asignamos 'st.session_state['show_login_mod...' con True
             st.session_state['show_login_modal'] = True
 
+# Gestión automática de contexto y recursos para: btn_col2
 with btn_col2:
+    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
     st.button(" ", key="theme_toggle", on_click=toggle_theme)
 
 # MONITOREO Y RENDERIZADO DEL MODAL
 if st.session_state.get('show_login_modal', False):
+    # Asignamos 'st.session_state['show_login_mod...' con False
     st.session_state['show_login_modal'] = False
+    # Ejecutamos instrucción: modal_autenticacion()
     modal_autenticacion()
+# Ejecutamos instrucción: mostrar_aviso_favoritos()
 mostrar_aviso_favoritos()
 
+# Renderizado de componente visual o control interactivo en la interfaz Streamlit
 st.markdown("<div style='margin-top: 22px;'></div>", unsafe_allow_html=True)
 
 # CHIPS DE NAVEGACIÓN RÁPIDA
 col_chip_home, col_chip1, col_chip2, col_chip3, col_chip_remates = st.columns([1.6, 1.5, 2.0, 1.7, 1.8], vertical_alignment="center")
 
+# Gestión automática de contexto y recursos para: col_chip_home
 with col_chip_home:
+    # Ejecutamos instrucción: st.page_link('app.py', label='Inicio / Catálogo', us...
     st.page_link("app.py", label="Inicio / Catálogo", use_container_width=True)
+# Gestión automática de contexto y recursos para: col_chip1
 with col_chip1:
+    # Ejecutamos instrucción: st.page_link('pages/trendhype.py', label='Trend Del ...
     st.page_link("pages/trendhype.py", label="Trend Del Hype", use_container_width=True)
+# Gestión automática de contexto y recursos para: col_chip2
 with col_chip2:
+    # Ejecutamos instrucción: st.page_link('pages/trustpage.py', label='Páginas de...
     st.page_link("pages/trustpage.py", label="Páginas de Confianza", use_container_width=True)
+# Gestión automática de contexto y recursos para: col_chip3
 with col_chip3:
+    # Ejecutamos instrucción: st.page_link('pages/compararprecios.py', label='Comp...
     st.page_link("pages/compararprecios.py", label="Comparar Precios", use_container_width=True)
+# Gestión automática de contexto y recursos para: col_chip_remates
 with col_chip_remates:
+    # Evaluamos la condición lógica (st.button('Remates & Flash', key='chip_remates', use...) para controlar el flujo
     if st.button("Remates & Flash", key="chip_remates", use_container_width=True):
+        # Ejecutamos instrucción: st.switch_page('pages/remates.py')
         st.switch_page("pages/remates.py")
 
+# Renderizado de componente visual o control interactivo en la interfaz Streamlit
 st.markdown("<div style='margin-top: 34px;'></div>", unsafe_allow_html=True)
+# Renderizado de componente visual o control interactivo en la interfaz Streamlit
 col_sub_title, col_sub_back = st.columns([7, 3], vertical_alignment="center")
+# Gestión automática de contexto y recursos para: col_sub_title
 with col_sub_title:
+    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
     st.markdown(clean_html(f"""
         <div class="trust-head-title">
             <span class="trust-head-icon">
@@ -977,9 +1086,12 @@ with col_sub_title:
         </div>
         <div class="trust-head-sub">Revisa qué tan confiable es cada tienda de perfumes en Chile antes de comprar: RUT, respaldo legal y nivel de riesgo.</div>
     """), unsafe_allow_html=True)
+# Gestión automática de contexto y recursos para: col_sub_back
 with col_sub_back:
+    # Ejecutamos instrucción: st.page_link('app.py', label='Volver al catálogo')
     st.page_link("app.py", label="Volver al catálogo")
 
+# Renderizado de componente visual o control interactivo en la interfaz Streamlit
 st.markdown("<div class='pt-divider'></div>", unsafe_allow_html=True)
 
 # =============================================================================
@@ -989,6 +1101,7 @@ left_col, right_col = st.columns([1, 1.4], gap="large")
 
 # --- COLUMNA IZQUIERDA: TARJETA DE PRODUCTO MINIMALISTA ILUSTRADA ---
 with left_col:
+    # Asignamos 'bottle_sketch_svg' con f'\n <svg viewBox="0 0 200 240" fill="none...
     bottle_sketch_svg = f"""
     <svg viewBox="0 0 200 240" fill="none" xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: auto; max-width: 150px;" aria-hidden="true">
         <path d="M70 20 L130 20 L145 35 L145 55 L130 70 L70 70 L55 55 L55 35 Z" stroke="{text_color}" stroke-width="1.8" fill="{gold}" fill-opacity="0.35"/>
@@ -1004,6 +1117,7 @@ with left_col:
     </svg>
     """
 
+    # Asignamos 'card_left_html' con f'\n <div class="product-card">\n <div cla...
     card_left_html = f"""
     <div class="product-card">
         <div class="product-illustration">
@@ -1028,37 +1142,56 @@ with left_col:
         </div>
     </div>
     """
+    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
     st.markdown(clean_html(card_left_html), unsafe_allow_html=True)
 
 # --- COLUMNA DERECHA: TABLA DE VERIFICACIÓN EN ESPAÑOL + AUDITOR DE URL ---
 with right_col:
+    # Asignamos 'tiendas_auditadas' con obtener_tiendas()
     tiendas_auditadas = obtener_tiendas()
 
+    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
     st.markdown(clean_html("""
         <div class="section-label">Tiendas auditadas</div>
         <div class="section-help">Puntaje de confianza de 0 a 100. Desde 85 la tienda se considera verificada.</div>
     """), unsafe_allow_html=True)
 
+    # Asignamos 'filas_html' con []
     filas_html = []
+    # Recorremos iterativamente cada '(idx, t)' en enumerate(tiendas_auditadas, 1)
     for idx, t in enumerate(tiendas_auditadas, 1):
+        # Asignamos 'num_str' con f'{idx:02d}'
         num_str = f"{idx:02d}"
+        # Asignamos 'score' con int(t.get('trust_score', 95) or 95)
         score = int(t.get('trust_score', 95) or 95)
+        # Asignamos 'badge_status' con '<span class="status-badge-safe"><span cla...
         badge_status = (
             '<span class="status-badge-safe"><span class="status-dot"></span>Verificado</span>'
             if score >= 85
             else '<span class="status-badge-warn"><span class="status-dot"></span>En auditoría</span>'
         )
+        # Asignamos 'meter_color' con ok_green if score >= 85 else warn_amber if...
         meter_color = ok_green if score >= 85 else (warn_amber if score >= 70 else risk_red)
+        # Asignamos 'meter_w' con max(0, min(100, score))
         meter_w = max(0, min(100, score))
+        # Asignamos 'raw_url' con str(t.get('url_base') or '')
         raw_url = str(t.get("url_base") or "")
+        # Evaluamos la condición lógica ('alisha.cl' in raw_url and 'alishaperfumes.cl' not i...) para controlar el flujo
         if "alisha.cl" in raw_url and "alishaperfumes.cl" not in raw_url:
+            # Asignamos 'raw_url' con 'https://alishaperfumes.cl'
             raw_url = "https://alishaperfumes.cl"
+        # Asignamos 'safe_url' con escape_html(sanitize_external_url(raw_url,...
         safe_url = escape_html(sanitize_external_url(raw_url, fallback="#"))
+        # Asignamos 'safe_nombre' con escape_html(str(t.get('nombre', 'Tienda')))
         safe_nombre = escape_html(str(t.get('nombre', 'Tienda')))
+        # Asignamos 'safe_badge' con escape_html(str(t.get('badge') or 'Comerci...
         safe_badge = escape_html(str(t.get('badge') or 'Comercio Oficial'))
+        # Asignamos 'safe_rut' con escape_html(str(t.get('rut') or 'Verificad...
         safe_rut = escape_html(str(t.get('rut') or 'Verificado SII'))
+        # Asignamos 'accion_html' con f'<a href="{safe_url}" target="_blank" rel...
         accion_html = f'<a href="{safe_url}" target="_blank" rel="noopener noreferrer" class="btn-buy-now">Visitar</a>'
 
+        # Asignamos 'fila' con f'\n <tr>\n <td>{num_str}</td>\n <td>\n <d...
         fila = f"""
         <tr>
             <td>{num_str}</td>
@@ -1074,9 +1207,12 @@ with right_col:
             <td>{accion_html}</td>
         </tr>
         """
+        # Ejecutamos instrucción: filas_html.append(fila)
         filas_html.append(fila)
 
+    # Asignamos 'num_alerta' con f'{len(tiendas_auditadas) + 1:02d}'
     num_alerta = f"{len(tiendas_auditadas) + 1:02d}"
+    # Asignamos 'fila_riesgo' con f'\n <tr class="trust-row-risk">\n <td>{nu...
     fila_riesgo = f"""
     <tr class="trust-row-risk">
         <td>{num_alerta}</td>
@@ -1092,8 +1228,10 @@ with right_col:
         <td><span class="btn-buy-disabled">Bloqueado</span></td>
     </tr>
     """
+    # Ejecutamos instrucción: filas_html.append(fila_riesgo)
     filas_html.append(fila_riesgo)
 
+    # Asignamos 'table_html' con f"""\n <div class="trust-table-container">...
     table_html = f"""
     <div class="trust-table-container">
         <table class="trust-table">
@@ -1112,6 +1250,7 @@ with right_col:
         </table>
     </div>
     """
+    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
     st.markdown(clean_html(table_html), unsafe_allow_html=True)
 
     # - ¿Qué hace esta sección?:
@@ -1119,19 +1258,30 @@ with right_col:
     #   cuántos productos se inspeccionaron en los feeds de tiendas, cuántos fueron filtrados
     #   por calidad (cremas/testers/clones) y cuántas fragancias nuevas legítimas fueron incorporadas.
     try:
+        # Importación de componentes (obtener_ultimo_reporte_descubrimiento) desde el módulo 'backend.scraper_autonomo'
         from backend.scraper_autonomo import obtener_ultimo_reporte_descubrimiento
+        # Asignamos 'rep_desc' con obtener_ultimo_reporte_descubrimiento()
         rep_desc = obtener_ultimo_reporte_descubrimiento()
     except Exception:
+        # Asignamos 'rep_desc' con None
         rep_desc = None
 
+    # Evaluamos la condición lógica (rep_desc and isinstance(rep_desc, dict)) para controlar el flujo
     if rep_desc and isinstance(rep_desc, dict):
+        # Asignamos 'm_desc' con rep_desc.get('metricas', {})
         m_desc = rep_desc.get("metricas", {})
+        # Asignamos 'meta_desc' con rep_desc.get('metadata', {})
         meta_desc = rep_desc.get("metadata", {})
+        # Asignamos 'total_analizados' con m_desc.get('total_productos_analizados', 0)
         total_analizados = m_desc.get("total_productos_analizados", 0)
+        # Asignamos 'descartados_qa' con m_desc.get('descartados_no_perfume', 0)
         descartados_qa = m_desc.get("descartados_no_perfume", 0)
+        # Asignamos 'nuevos_perfumes' con m_desc.get('nuevos_perfumes_descubiertos', 0)
         nuevos_perfumes = m_desc.get("nuevos_perfumes_descubiertos", 0)
+        # Asignamos 'fecha_desc' con meta_desc.get('fecha_ejecucion', '')
         fecha_desc = meta_desc.get("fecha_ejecucion", "")
         
+        # Renderizado de componente visual o control interactivo en la interfaz Streamlit
         st.markdown(
             clean_html(f"""
             <div style="margin-top: 20px; padding: 18px 22px; border-radius: 12px; background: {card_bg}; border: 1px solid {border_color}; box-shadow: {shadow_sm};">
@@ -1165,8 +1315,11 @@ with right_col:
             unsafe_allow_html=True
         )
 
+    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
     st.markdown("<div style='margin-top: 26px;'></div>", unsafe_allow_html=True)
+    # Gestión automática de contexto y recursos para: st.form('form_auditar_url_tienda', clear_on_sub...
     with st.form("form_auditar_url_tienda", clear_on_submit=False):
+        # Renderizado de componente visual o control interactivo en la interfaz Streamlit
         st.markdown(
             clean_html("""
                 <div class="section-label">Auditor interactivo de sitios de perfumería</div>
@@ -1174,33 +1327,55 @@ with right_col:
             """),
             unsafe_allow_html=True,
         )
+        # Renderizado de componente visual o control interactivo en la interfaz Streamlit
         col_u1, col_u2 = st.columns([3.2, 1.3], vertical_alignment="bottom")
+        # Gestión automática de contexto y recursos para: col_u1
         with col_u1:
+            # Renderizado de componente visual o control interactivo en la interfaz Streamlit
             url_check = st.text_input(
                 "Ingresa el dominio o URL de una tienda para verificar su respaldo",
                 placeholder="Ej: silkperfumes.cl, eliteperfumes.cl o tienda-sospechosa.com",
                 label_visibility="collapsed",
             )
+        # Gestión automática de contexto y recursos para: col_u2
         with col_u2:
+            # Asignamos 'btn_audit' con st.form_submit_button('Auditar Sitio', use...
             btn_audit = st.form_submit_button("Auditar Sitio", use_container_width=True)
 
+        # Evaluamos la condición lógica (btn_audit) para controlar el flujo
         if btn_audit:
+            # Asignamos 'res_audit' con auditar_tienda_por_url(url_check)
             res_audit = auditar_tienda_por_url(url_check)
+            # Evaluamos la condición lógica (not res_audit) para controlar el flujo
             if not res_audit:
+                # Ejecutamos instrucción: st.warning('Ingresa un dominio o URL válido para ana...
                 st.warning("Ingresa un dominio o URL válido para analizar.")
             else:
+                # Asignamos 'sc_val' con int(res_audit.get('score', 0))
                 sc_val = int(res_audit.get("score", 0))
+                # Asignamos 'es_ok' con bool(res_audit.get('es_conocida')) and sc_...
                 es_ok = bool(res_audit.get("es_conocida")) and sc_val >= 85
+                # Asignamos 'borde_res' con '#10b981' if es_ok else '#f59e0b' if sc_va...
                 borde_res = "#10b981" if es_ok else ("#f59e0b" if sc_val >= 70 else "#ef4444")
+                # Asignamos 'safe_nom_aud' con escape_html(res_audit.get('nombre', ''))
                 safe_nom_aud = escape_html(res_audit.get("nombre", ""))
+                # Asignamos 'safe_dom_aud' con escape_html(res_audit.get('dominio', ''))
                 safe_dom_aud = escape_html(res_audit.get("dominio", ""))
+                # Asignamos 'safe_rec_aud' con escape_html(res_audit.get('recomendacion',...
                 safe_rec_aud = escape_html(res_audit.get("recomendacion", ""))
+                # Asignamos 'safe_rut_aud' con escape_html(res_audit.get('rut', ''))
                 safe_rut_aud = escape_html(res_audit.get("rut", ""))
+                # Asignamos 'alertas' con res_audit.get('senales_alerta') or []
                 alertas = res_audit.get("senales_alerta") or []
+                # Asignamos 'alertas_html' con ''
                 alertas_html = ""
+                # Evaluamos la condición lógica (alertas) para controlar el flujo
                 if alertas:
+                    # Asignamos 'items_al' con ''.join((f'<li>{escape_html(a)}</li>' for ...
                     items_al = "".join(f"<li>{escape_html(a)}</li>" for a in alertas)
+                    # Asignamos 'alertas_html' con f"<ul class='audit-result-alerts'>{items_a...
                     alertas_html = f"<ul class='audit-result-alerts'>{items_al}</ul>"
+                # Renderizado de componente visual o control interactivo en la interfaz Streamlit
                 st.markdown(
                     clean_html(f"""
                     <div class="audit-result" style="border-color: {borde_res};">

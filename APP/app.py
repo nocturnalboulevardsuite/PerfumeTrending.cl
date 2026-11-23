@@ -9,30 +9,50 @@ Punto de entrada de la plataforma chilena de comparación de precios de fraganci
 - Consumo resiliente de datos: consulta primaria a Supabase (PostgreSQL en la nube) con fallback a SQLite.
 """
 
+# Importación de librería estándar o dependencia externa (streamlit)
 import streamlit as st
+# Importación de librería estándar o dependencia externa (streamlit.components.v1)
 import streamlit.components.v1 as components
+# Importación de librería estándar o dependencia externa (pandas)
 import pandas as pd
+# Importación de librería estándar o dependencia externa (sys)
 import sys
+# Importación de librería estándar o dependencia externa (os)
 import os
+# Importación de librería estándar o dependencia externa (base64)
 import base64
+# Importación de librería estándar o dependencia externa (math)
 import math
+# Importación de librería estándar o dependencia externa (random)
 import random
+# Importación de librería estándar o dependencia externa (time)
 import time
 
 # Configurar rutas para importar backend con máxima resiliencia en Streamlit Cloud y local
 APP_DIR = os.path.dirname(os.path.abspath(__file__))
+# Asignamos 'BASE_DIR' con os.path.dirname(APP_DIR)
 BASE_DIR = os.path.dirname(APP_DIR)
+# Recorremos iterativamente cada '_p' en (APP_DIR, BASE_DIR)
 for _p in (APP_DIR, BASE_DIR):
+    # Evaluamos la condición lógica (_p not in sys.path) para controlar el flujo
     if _p not in sys.path:
+        # Ejecutamos instrucción: sys.path.insert(0, _p)
         sys.path.insert(0, _p)
+    # Evaluamos la condición lógica (sys.path[0] != _p) para controlar el flujo
     elif sys.path[0] != _p:
+        # Bloque try/except para manejo seguro de errores y resiliencia operativa
         try:
+            # Ejecutamos instrucción: sys.path.remove(_p)
             sys.path.remove(_p)
         except ValueError:
+            # Ejecutamos instrucción: pass
             pass
+        # Ejecutamos instrucción: sys.path.insert(0, _p)
         sys.path.insert(0, _p)
 
+# Bloque try/except para manejo seguro de errores y resiliencia operativa
 try:
+    # Importación de componentes (init_db, obtener_catalogo, obtener_detalle_perfume, obtener_mayores_bajadas_recientes, ...) desde el módulo 'backend.database'
     from backend.database import (
         init_db,
         obtener_catalogo,
@@ -42,6 +62,7 @@ try:
         obtener_tiendas,
     )
 except (ImportError, ModuleNotFoundError):
+    # Importación de componentes (init_db, obtener_catalogo, obtener_detalle_perfume, obtener_mayores_bajadas_recientes, ...) desde el módulo 'APP.backend.database'
     from APP.backend.database import (
         init_db,
         obtener_catalogo,
@@ -51,7 +72,9 @@ except (ImportError, ModuleNotFoundError):
         obtener_tiendas,
     )
 
+# Bloque try/except para manejo seguro de errores y resiliencia operativa
 try:
+    # Importación de componentes (DEFAULT_PERFUME_IMAGE, DIAMOND_ICON_SVG, FLAME_RED_SVG, GRID_ICON_SVG, ...) desde el módulo 'ui'
     from ui import (
         DEFAULT_PERFUME_IMAGE,
         DIAMOND_ICON_SVG as diamond_icon_svg,
@@ -71,7 +94,9 @@ try:
         init_common_session_state,
         toggle_theme as _shared_toggle_theme,
     )
+    # Importación de componentes (modal_autenticacion) desde el módulo 'auth_email'
     from auth_email import modal_autenticacion
+    # Importación de componentes (boton_abrir_perfume, boton_corazon, estilos_moviles, estilos_tarjetas_cliqueables, ...) desde el módulo 'perfume_actions'
     from perfume_actions import (
         boton_abrir_perfume,
         boton_corazon,
@@ -81,6 +106,7 @@ try:
         mostrar_aviso_favoritos,
     )
 except (ImportError, ModuleNotFoundError):
+    # Importación de componentes (DEFAULT_PERFUME_IMAGE, DIAMOND_ICON_SVG, FLAME_RED_SVG, GRID_ICON_SVG, ...) desde el módulo 'APP.ui'
     from APP.ui import (
         DEFAULT_PERFUME_IMAGE,
         DIAMOND_ICON_SVG as diamond_icon_svg,
@@ -100,7 +126,9 @@ except (ImportError, ModuleNotFoundError):
         init_common_session_state,
         toggle_theme as _shared_toggle_theme,
     )
+    # Importación de componentes (modal_autenticacion) desde el módulo 'APP.auth_email'
     from APP.auth_email import modal_autenticacion
+    # Importación de componentes (boton_abrir_perfume, boton_corazon, estilos_moviles, estilos_tarjetas_cliqueables, ...) desde el módulo 'APP.perfume_actions'
     from APP.perfume_actions import (
         boton_abrir_perfume,
         boton_corazon,
@@ -120,13 +148,17 @@ except (ImportError, ModuleNotFoundError):
 @st.cache_data(ttl=300, show_spinner=False)
 def get_cached_bajadas():
     """Consulta las mayores caídas de precio confirmadas en auditorías recientes."""
+    # Retornamos el resultado procesado (obtener_mayores_bajadas_recientes(dias=7, limit...)
     return obtener_mayores_bajadas_recientes(dias=7, limite=6)
 
 
+# Definición de función 'get_cached_catalogo' (parámetros: busqueda, esencias_tuple, categoria, orden)
 @st.cache_data(ttl=600, show_spinner=False)
 def get_cached_catalogo(busqueda=None, esencias_tuple=None, categoria=None, orden="id_asc"):
     """Consulta el catálogo consolidado calculando el mejor precio en vivo con invalidación TTL."""
+    # Asignamos 'esencias' con list(esencias_tuple) if esencias_tuple els...
     esencias = list(esencias_tuple) if esencias_tuple else None
+    # Retornamos el resultado procesado (obtener_catalogo(busqueda=busqueda, esencias=es...)
     return obtener_catalogo(busqueda=busqueda, esencias=esencias, categoria=categoria, orden=orden)
 
 
@@ -145,21 +177,36 @@ st.set_page_config(
 #   2. init_common_session_state(): Inicializa las variables reactivas de sesión de Streamlit
 #      (página actual, perfume seleccionado para comparar, página del catálogo y filtros activos).
 init_db()
+# Ejecutamos instrucción: init_common_session_state()
 init_common_session_state()
 
+# Evaluamos la condición lógica ('current_page' not in st.session_state) para controlar el flujo
 if 'current_page' not in st.session_state:
+    # Asignamos 'st.session_state['current_page']' con 'home'
     st.session_state['current_page'] = 'home'
+# Evaluamos la condición lógica ('selected_perfume' not in st.session_state) para controlar el flujo
 if 'selected_perfume' not in st.session_state:
+    # Asignamos 'st.session_state['selected_perfu...' con None
     st.session_state['selected_perfume'] = None
+# Evaluamos la condición lógica ('catalog_page' not in st.session_state) para controlar el flujo
 if 'catalog_page' not in st.session_state:
+    # Asignamos 'st.session_state['catalog_page']' con 1
     st.session_state['catalog_page'] = 1
+# Evaluamos la condición lógica ('items_per_page' not in st.session_state) para controlar el flujo
 if 'items_per_page' not in st.session_state:
+    # Asignamos 'st.session_state['items_per_page']' con 12
     st.session_state['items_per_page'] = 12
+# Evaluamos la condición lógica ('selected_category' not in st.session_state) para controlar el flujo
 if 'selected_category' not in st.session_state:
+    # Asignamos 'st.session_state['selected_categ...' con 'todos'
     st.session_state['selected_category'] = 'todos'
+# Evaluamos la condición lógica ('selected_order' not in st.session_state) para controlar el flujo
 if 'selected_order' not in st.session_state:
+    # Asignamos 'st.session_state['selected_order']' con 'id_asc'
     st.session_state['selected_order'] = 'id_asc'
+# Evaluamos la condición lógica ('selected_order_label' not in st.session_state) para controlar el flujo
 if 'selected_order_label' not in st.session_state:
+    # Asignamos 'st.session_state['selected_order...' con 'Destacados'
     st.session_state['selected_order_label'] = 'Destacados'
 
 
@@ -168,81 +215,126 @@ if 'selected_order_label' not in st.session_state:
 #   (login, búsqueda visual) quede abierto accidentalmente al cambiar de vista.
 def reset_modals():
     """Función para garantizar que ningún modal emergente quede abierto por error."""
+    # Asignamos 'st.session_state['show_login_mod...' con False
     st.session_state['show_login_modal'] = False
+    # Asignamos 'st.session_state['show_visual_mo...' con False
     st.session_state['show_visual_modal'] = False
 
 
 # - ¿Qué hace esta función?:
 #   Alterna la paleta de colores de toda la aplicación entre modo oscuro (Dark Mode) y modo claro (Light Mode).
 def toggle_theme():
+    # Ejecutamos instrucción: _shared_toggle_theme()
     _shared_toggle_theme()
+    # Ejecutamos instrucción: reset_modals()
     reset_modals()
 
 
 # - ¿Qué hace esta función?:
 #   Orquesta la navegación reactiva entre pantallas del sistema, actualizando st.session_state['current_page'].
 def navigate_to(page, perfume_data=None):
+    # Asignamos 'st.session_state['current_page']' con page
     st.session_state['current_page'] = page
+    # Ejecutamos instrucción: reset_modals()
     reset_modals()
+    # Evaluamos la condición lógica (perfume_data) para controlar el flujo
     if perfume_data:
+        # Asignamos 'st.session_state['selected_perfu...' con perfume_data
         st.session_state['selected_perfume'] = perfume_data
 
 
 # - ¿Qué hace esta función?:
 #   Restablece la vista al Home inicial, reiniciando filtros, paginación a la página 1 y selección de perfumes.
 def reset_to_home():
+    # Asignamos 'st.session_state['current_page']' con 'home'
     st.session_state['current_page'] = 'home'
+    # Asignamos 'st.session_state['selected_perfu...' con None
     st.session_state['selected_perfume'] = None
+    # Asignamos 'st.session_state['catalog_page']' con 1
     st.session_state['catalog_page'] = 1
+    # Asignamos 'st.session_state['selected_categ...' con 'todos'
     st.session_state['selected_category'] = 'todos'
+    # Asignamos 'st.session_state['selected_order']' con 'id_asc'
     st.session_state['selected_order'] = 'id_asc'
+    # Asignamos 'st.session_state['selected_order...' con 'Destacados'
     st.session_state['selected_order_label'] = 'Destacados'
 
 
+# Asignamos 'pal' con get_theme_palette()
 pal = get_theme_palette()
+# Asignamos 'is_dark' con pal.is_dark
 is_dark = pal.is_dark
+# Asignamos 'app_bg' con pal.app_bg
 app_bg = pal.app_bg
+# Asignamos 'app_bg_css' con pal.app_bg_css
 app_bg_css = pal.app_bg_css
+# Asignamos 'card_bg' con pal.card_bg
 card_bg = pal.card_bg
+# Asignamos 'border_color' con pal.border_color
 border_color = pal.border_color
+# Asignamos 'text_color' con pal.text_color
 text_color = pal.text_color
+# Asignamos 'subtext_color' con pal.subtext_color
 subtext_color = pal.subtext_color
+# Asignamos 'btn_bg' con pal.btn_bg
 btn_bg = pal.btn_bg
+# Asignamos 'btn_text' con pal.btn_text
 btn_text = pal.btn_text
+# Asignamos 'btn_border' con pal.btn_border
 btn_border = pal.btn_border
+# Asignamos 'input_bg' con pal.input_bg
 input_bg = pal.input_bg
+# Asignamos 'input_text' con pal.input_text
 input_text = pal.input_text
+# Asignamos 'input_border' con pal.input_border
 input_border = pal.input_border
 
 # Paleta clara reforzada: fondo blanco y texto oscuro legible en todos los componentes.
 # El modo oscuro conserva exactamente los valores de la paleta compartida.
 if not is_dark:
+    # Asignamos 'app_bg' con '#ffffff'
     app_bg = "#ffffff"
+    # Asignamos 'app_bg_css' con 'background: #ffffff !important; backgroun...
     app_bg_css = "background: #ffffff !important; background-color: #ffffff !important;"
+    # Asignamos 'card_bg' con '#ffffff'
     card_bg = "#ffffff"
+    # Asignamos 'border_color' con '#e6e1db'
     border_color = "#e6e1db"
+    # Asignamos 'text_color' con '#1c1917'
     text_color = "#1c1917"
+    # Asignamos 'subtext_color' con '#6b6159'
     subtext_color = "#6b6159"
+    # Asignamos 'btn_bg' con '#ffffff'
     btn_bg = "#ffffff"
+    # Asignamos 'btn_text' con '#1c1917'
     btn_text = "#1c1917"
+    # Asignamos 'btn_border' con '#d6cec5'
     btn_border = "#d6cec5"
+    # Asignamos 'input_bg' con '#ffffff'
     input_bg = "#ffffff"
+    # Asignamos 'input_text' con '#1c1917'
     input_text = "#1c1917"
+    # Asignamos 'input_border' con '#d6cec5'
     input_border = "#d6cec5"
 
 # MODAL FLOTANTE PARA BÚSQUEDA VISUAL CON DIBUJOS HTML VECTORIALES
 @st.dialog("Búsqueda Visual de Perfumes")
 def modal_busqueda_visual():
+    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
     st.markdown(clean_html(f"""
         <div style="font-size:0.92rem; margin-bottom:14px; color: {text_color}; line-height: 1.4;">
             Sube una foto del frasco o usa tu cámara para identificar la fragancia y comparar precios en Chile.
         </div>
     """), unsafe_allow_html=True)
     
+    # Asignamos '(tab_upload, tab_camera)' con st.tabs(['Subir Imagen', 'Usar Cámara'])
     tab_upload, tab_camera = st.tabs(["Subir Imagen", "Usar Cámara"])
     
+    # Asignamos 'uploaded_file' con None
     uploaded_file = None
+    # Gestión automática de contexto y recursos para: tab_upload
     with tab_upload:
+        # Renderizado de componente visual o control interactivo en la interfaz Streamlit
         st.markdown(clean_html(f"""
             <div style="display: flex; align-items: center; gap: 8px; margin: 8px 0 12px 0;">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="{text_color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -251,11 +343,16 @@ def modal_busqueda_visual():
                 <span style="font-weight: 600; font-size: 0.95rem; color: {text_color};">Arrastrar una imagen o seleccionar archivo</span>
             </div>
         """), unsafe_allow_html=True)
+        # Asignamos 'file_up' con st.file_uploader('Arrastra una imagen o se...
         file_up = st.file_uploader("Arrastra una imagen o selecciona un archivo", type=["jpg", "jpeg", "png", "webp"], key="vis_file_up", label_visibility="collapsed")
+        # Evaluamos la condición lógica (file_up) para controlar el flujo
         if file_up:
+            # Asignamos 'uploaded_file' con file_up
             uploaded_file = file_up
             
+    # Gestión automática de contexto y recursos para: tab_camera
     with tab_camera:
+        # Renderizado de componente visual o control interactivo en la interfaz Streamlit
         st.markdown(clean_html(f"""
             <div style="display: flex; align-items: center; gap: 8px; margin: 8px 0 12px 0;">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="{text_color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -265,17 +362,28 @@ def modal_busqueda_visual():
                 <span style="font-weight: 600; font-size: 0.95rem; color: {text_color};">Tomar fotografía en vivo</span>
             </div>
         """), unsafe_allow_html=True)
+        # Asignamos 'cam_up' con st.camera_input('Capturar foto del perfume...
         cam_up = st.camera_input("Capturar foto del perfume", key="vis_cam_up", label_visibility="collapsed")
+        # Evaluamos la condición lógica (cam_up) para controlar el flujo
         if cam_up:
+            # Asignamos 'uploaded_file' con cam_up
             uploaded_file = cam_up
 
+    # Evaluamos la condición lógica (uploaded_file) para controlar el flujo
     if uploaded_file:
+        # Renderizado de componente visual o control interactivo en la interfaz Streamlit
         col_preview, col_status = st.columns([1, 1])
+        # Gestión automática de contexto y recursos para: col_preview
         with col_preview:
+            # Ejecutamos instrucción: st.image(uploaded_file, caption='Imagen cargada', us...
             st.image(uploaded_file, caption="Imagen cargada", use_container_width=True)
+        # Gestión automática de contexto y recursos para: col_status
         with col_status:
+            # Gestión automática de contexto y recursos para: st.spinner('Analizando frasco, marca y silueta....
             with st.spinner("Analizando frasco, marca y silueta..."):
+                # Ejecutamos instrucción: time.sleep(0.4)
                 time.sleep(0.4)
+            # Renderizado de componente visual o control interactivo en la interfaz Streamlit
             st.markdown(clean_html(f"""
                 <div style="display: flex; align-items: center; gap: 8px; color: #4caf50; font-weight: 600;">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4caf50" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -285,8 +393,10 @@ def modal_busqueda_visual():
                 </div>
             """), unsafe_allow_html=True)
             
+        # Renderizado de componente visual o control interactivo en la interfaz Streamlit
         st.markdown(f"<hr style='margin: 12px 0; border: none; border-bottom: 1px solid {btn_border};'>", unsafe_allow_html=True)
         
+        # Renderizado de componente visual o control interactivo en la interfaz Streamlit
         st.markdown(clean_html(f"""
             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d83737" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -297,71 +407,122 @@ def modal_busqueda_visual():
             </div>
         """), unsafe_allow_html=True)
         
+        # Asignamos 'filename' con getattr(uploaded_file, 'name', 'foto_camar...
         filename = getattr(uploaded_file, 'name', 'foto_camara.jpg').lower()
+        # Asignamos 'catalogo_completo' con obtener_catalogo()
         catalogo_completo = obtener_catalogo()
+        # Asignamos 'coincidencias' con []
         coincidencias = []
         
+        # Evaluamos la condición lógica (catalogo_completo) para controlar el flujo
         if catalogo_completo:
+            # Recorremos iterativamente cada 'p' en catalogo_completo
             for p in catalogo_completo:
+                # Asignamos 'nombre_p' con p['nombre'].lower()
                 nombre_p = p['nombre'].lower()
+                # Asignamos 'marca_p' con p['marca'].lower()
                 marca_p = p['marca'].lower()
+                # Evaluamos la condición lógica (any((w in filename for w in nombre_p.split() if len(...) para controlar el flujo
                 if any(w in filename for w in nombre_p.split() if len(w) > 2) or any(w in filename for w in marca_p.split() if len(w) > 2):
+                    # Ejecutamos instrucción: coincidencias.append(p)
                     coincidencias.append(p)
             
+            # Evaluamos la condición lógica (not coincidencias) para controlar el flujo
             if not coincidencias:
+                # Bloque try/except para manejo seguro de errores y resiliencia operativa
                 try:
+                    # Asignamos 'img_bytes' con uploaded_file.getvalue()
                     img_bytes = uploaded_file.getvalue()
+                    # Asignamos 'img_hash' con sum(img_bytes) % len(catalogo_completo)
                     img_hash = sum(img_bytes) % len(catalogo_completo)
+                    # Recorremos iterativamente cada 'idx' en range(min(3, len(catalogo_completo)))
                     for idx in range(min(3, len(catalogo_completo))):
+                        # Ejecutamos instrucción: coincidencias.append(catalogo_completo[(img_hash + i...
                         coincidencias.append(catalogo_completo[(img_hash + idx) % len(catalogo_completo)])
                 except Exception:
+                    # Asignamos 'coincidencias' con catalogo_completo[:3]
                     coincidencias = catalogo_completo[:3]
 
+        # Evaluamos la condición lógica (coincidencias) para controlar el flujo
         if coincidencias:
+            # Recorremos iterativamente cada 'p' en coincidencias
             for p in coincidencias:
+                # Renderizado de componente visual o control interactivo en la interfaz Streamlit
                 c_img, c_info = st.columns([1, 2])
+                # Gestión automática de contexto y recursos para: c_img
                 with c_img:
+                    # Ejecutamos instrucción: st.image(get_image_src(p.get('imagen_url')), use_con...
                     st.image(get_image_src(p.get('imagen_url')), use_container_width=True)
+                # Gestión automática de contexto y recursos para: c_info
                 with c_info:
+                    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
                     st.markdown(f"**{p['nombre']}**")
+                    # Ejecutamos instrucción: st.caption(f"Marca: {p['marca']}")
                     st.caption(f"Marca: {p['marca']}")
+                    # Asignamos 'p_val' con p.get('mejor_precio')
                     p_val = p.get('mejor_precio')
+                    # Asignamos 'p_txt' con f'${p_val:,.0f} CLP'.replace(',', '.') if ...
                     p_txt = f"${p_val:,.0f} CLP".replace(",", ".") if p_val else "Ver tiendas"
+                    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
                     st.markdown(f"<span style='color:#4caf50; font-weight:600;'>Mejor precio: {p_txt}</span>", unsafe_allow_html=True)
+                    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
                     c_vis_cmp, c_vis_fav = st.columns([4, 1], vertical_alignment="center")
+                    # Gestión automática de contexto y recursos para: c_vis_cmp
                     with c_vis_cmp:
                         # - ¿Qué hace esta acción?:
                         #   Al pulsar "Comparar Precios", guarda el ID del perfume en st.session_state
                         #   y conmuta la navegación reactiva a 'pages/compararprecios.py' para abrir su ficha técnica.
                         if st.button("Comparar Precios", key=f"btn_vis_select_{p['id']}", use_container_width=True):
+                            # Asignamos 'st.session_state['selected_perfu...' con p['id']
                             st.session_state['selected_perfume'] = p['id']
+                            # Ejecutamos instrucción: reset_modals()
                             reset_modals()
+                            # Ejecutamos instrucción: st.switch_page('pages/compararprecios.py')
                             st.switch_page("pages/compararprecios.py")
+                    # Gestión automática de contexto y recursos para: c_vis_fav
                     with c_vis_fav:
+                        # Ejecutamos instrucción: boton_corazon(p['id'], 'visual', p.get('nombre', '')...
                         boton_corazon(p['id'], "visual", p.get('nombre', ''), en_linea=True, recargar_pagina=False)
+                # Renderizado de componente visual o control interactivo en la interfaz Streamlit
                 st.markdown("<div style='margin-bottom: 8px;'></div>", unsafe_allow_html=True)
 
+    # Ejecutamos instrucción: mostrar_aviso_favoritos()
     mostrar_aviso_favoritos()
+    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
     st.markdown(f"<hr style='margin: 14px 0; border: none; border-bottom: 1px solid {btn_border};'>", unsafe_allow_html=True)
+    # Evaluamos la condición lógica (st.button('Cerrar Ventana', key='btn_close_vis_modal...) para controlar el flujo
     if st.button("Cerrar Ventana", key="btn_close_vis_modal", use_container_width=True):
+        # Ejecutamos instrucción: reset_modals()
         reset_modals()
+        # Ejecutamos instrucción: st.rerun()
         st.rerun()
 
 # 3. RENDERIZADO EXCLUSIVO DE MODALES
 if st.session_state.get('show_login_modal', False):
+    # Asignamos 'st.session_state['show_login_mod...' con False
     st.session_state['show_login_modal'] = False
+    # Ejecutamos instrucción: modal_autenticacion()
     modal_autenticacion()
+# Ejecutamos instrucción: mostrar_aviso_favoritos()
 mostrar_aviso_favoritos()
 
 # Posicionamiento del Switch de Tema y SVGs dinámicos desde paleta compartida
 bottle_left_pos = pal.bottle_left_pos
+# Asignamos 'static_icon_pos' con pal.static_icon_pos
 static_icon_pos = pal.static_icon_pos
+# Asignamos 'static_icon_svg' con pal.static_icon_svg
 static_icon_svg = pal.static_icon_svg
+# Asignamos 'bottle_svg' con pal.bottle_svg
 bottle_svg = pal.bottle_svg
+# Asignamos 'camera_icon_svg' con pal.camera_icon_svg
 camera_icon_svg = pal.camera_icon_svg
+# Asignamos 'user_icon_svg' con pal.user_icon_svg
 user_icon_svg = pal.user_icon_svg
+# Asignamos 'settings_icon_svg' con pal.settings_icon_svg
 settings_icon_svg = pal.settings_icon_svg
+# Asignamos 'logout_icon_svg' con pal.logout_icon_svg
 logout_icon_svg = pal.logout_icon_svg
+# Asignamos 'logo_svg_data' con pal.logo_svg_data
 logo_svg_data = pal.logo_svg_data
 
 
@@ -484,29 +645,43 @@ js_color_script = f"""
 </script>
 """
 
+# Bloque try/except para manejo seguro de errores y resiliencia operativa
 try:
+    # Ejecutamos instrucción: st.html(js_color_script, unsafe_allow_javascript=True)
     st.html(js_color_script, unsafe_allow_javascript=True)
 except Exception:
+    # Ejecutamos instrucción: components.html(js_color_script, height=0, width=0)
     components.html(js_color_script, height=0, width=0)
 
 
 # 5. TOKENS VISUALES (derivados de la paleta compartida, no alteran el tema)
 accent = "#d83737"
+# Asignamos 'accent_hover' con '#b92d2d'
 accent_hover = "#b92d2d"
+# Asignamos 'accent_soft' con 'rgba(216, 55, 55, 0.14)' if is_dark else ...
 accent_soft = "rgba(216, 55, 55, 0.14)" if is_dark else "rgba(216, 55, 55, 0.07)"
+# Asignamos 'gold' con '#d4c2a5' if is_dark else '#8c7b6d'
 gold = "#d4c2a5" if is_dark else "#8c7b6d"
+# Asignamos 'gold_soft' con 'rgba(212, 194, 165, 0.16)' if is_dark els...
 gold_soft = "rgba(212, 194, 165, 0.16)" if is_dark else "rgba(140, 123, 109, 0.14)"
+# Asignamos 'price_green' con '#4ade80' if is_dark else '#15803d'
 price_green = "#4ade80" if is_dark else "#15803d"
+# Asignamos 'shadow_sm' con '0 1px 2px rgba(0,0,0,0.35)' if is_dark el...
 shadow_sm = "0 1px 2px rgba(0,0,0,0.35)" if is_dark else "0 1px 2px rgba(40,30,20,0.06)"
+# Asignamos 'shadow_hover' con '0 6px 16px rgba(0,0,0,0.35)' if is_dark e...
 shadow_hover = "0 6px 16px rgba(0,0,0,0.35)" if is_dark else "0 6px 16px rgba(60,45,35,0.10)"
+# Asignamos 'font_display' con "'Manrope', -apple-system, BlinkMacSystemF...
 font_display = "'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+# Asignamos 'font_sans' con "'Manrope', -apple-system, BlinkMacSystemF...
 font_sans = "'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
 
+# Asignamos '_search_svg' con f'<svg xmlns="http://www.w3.org/2000/svg" ...
 _search_svg = (
     f'<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" '
     f'stroke="{subtext_color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
     f'<circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.2" y2="16.2"/></svg>'
 )
+# Asignamos 'search_icon_svg' con 'data:image/svg+xml;base64,' + base64.b64e...
 search_icon_svg = "data:image/svg+xml;base64," + base64.b64encode(_search_svg.encode("utf-8")).decode("ascii")
 
 
@@ -1738,11 +1913,17 @@ def sello_verificado(size=22):
     con un frasco de perfume negro y naranjo en el centro y un aura naranja animada.
     Es un SVG vectorial con animaciones SMIL, así que se anima tanto incrustado en HTML
     como usado de imagen (data URI)."""
+    # Asignamos 'pts' con []
     pts = []
+    # Recorremos iterativamente cada 'i' en range(24)
     for i in range(24):
+        # Asignamos 'r' con 11 if i % 2 == 0 else 9.4
         r = 11 if i % 2 == 0 else 9.4
+        # Asignamos 'a' con math.pi * i / 12 - math.pi / 2
         a = math.pi * i / 12 - math.pi / 2
+        # Ejecutamos instrucción: pts.append(f'{12 + r * math.cos(a):.2f},{12 + r * ma...
         pts.append(f"{12 + r * math.cos(a):.2f},{12 + r * math.sin(a):.2f}")
+    # Retornamos el resultado procesado (f'''<svg xmlns="http://www.w3.org/2000/svg" wid...)
     return (
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{size}" height="{size}" viewBox="-5 -5 34 34" '
         'role="img" aria-label="Premium verificado" style="overflow:visible">'
@@ -1787,7 +1968,9 @@ def sello_verificado(size=22):
 #   Se muestra grande y animada en su propia columna, a la izquierda del botón con la foto
 #   de perfil, para que se entienda que es la insignia de usuario verificado.
 _plan_header = str((st.session_state.get('user_info') or {}).get('plan') or 'free').strip().lower()
+# Evaluamos la condición lógica (st.session_state.get('logged_in') and _plan_header i...) para controlar el flujo
 if st.session_state.get('logged_in') and _plan_header in ('premium', 'vip', 'socios_vip'):
+    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
     st.markdown(f"""
         <style>
         .pt-header-seal {{
@@ -1807,24 +1990,33 @@ if st.session_state.get('logged_in') and _plan_header in ('premium', 'vip', 'soc
         }}
         </style>
     """, unsafe_allow_html=True)
+    # Asignamos '_header_premium_html' con f'<div class="pt-header-premium">{sello_ve...
     _header_premium_html = f'<div class="pt-header-premium">{sello_verificado(18)}<div>Premium verificado</div></div>'
 else:
+    # Asignamos '_header_premium_html' con ''
     _header_premium_html = ""
 
+# Asignamos '_header_seal_html' con f'<div class="pt-header-seal" title="Usuar...
 _header_seal_html = (
     '<div class="pt-header-seal" title="Usuario Premium verificado">'
     f'{sello_verificado(46)}</div>'
 ) if _header_premium_html else ""
 
+# Evaluamos la condición lógica (st.session_state['logged_in'] and _header_seal_html) para controlar el flujo
 if st.session_state['logged_in'] and _header_seal_html:
+    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
     col_logo, col_espacio, col_actions = st.columns([4.8, 0.4, 3.8], vertical_alignment="center")
+# Evaluamos la condición lógica (st.session_state['logged_in']) para controlar el flujo
 elif st.session_state['logged_in']:
     # Mismo tamaño del botón de usuario en todas las páginas: ni muy chico ni muy grande
     col_logo, col_espacio, col_actions = st.columns([5.2, 0.6, 3.2], vertical_alignment="center")
 else:
+    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
     col_logo, col_espacio, col_actions = st.columns([5.6, 1.2, 2.4], vertical_alignment="center")
 
+# Gestión automática de contexto y recursos para: col_logo
 with col_logo:
+    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
     st.markdown(clean_html(f"""
     <a href="/" target="_self" class="brand-logo-clean" title="PerfumeTrending">
         <svg width="34" height="34" viewBox="0 0 36 36" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -1840,42 +2032,74 @@ with col_logo:
     </a>
     """), unsafe_allow_html=True)
 
+# Gestión automática de contexto y recursos para: col_actions
 with col_actions:
+    # Evaluamos la condición lógica (st.session_state['logged_in'] and _header_seal_html) para controlar el flujo
     if st.session_state['logged_in'] and _header_seal_html:
+        # Renderizado de componente visual o control interactivo en la interfaz Streamlit
         btn_col0, btn_col1, btn_col2 = st.columns([0.6, 2.4, 0.8], vertical_alignment="center", gap="small")
+        # Gestión automática de contexto y recursos para: btn_col0
         with btn_col0:
+            # Renderizado de componente visual o control interactivo en la interfaz Streamlit
             st.markdown(_header_seal_html, unsafe_allow_html=True)
+    # Evaluamos la condición lógica (st.session_state['logged_in']) para controlar el flujo
     elif st.session_state['logged_in']:
+        # Renderizado de componente visual o control interactivo en la interfaz Streamlit
         btn_col1, btn_col2 = st.columns([2.4, 0.8], vertical_alignment="center", gap="small")
     else:
+        # Renderizado de componente visual o control interactivo en la interfaz Streamlit
         btn_col1, btn_col2 = st.columns([2.0, 0.8], vertical_alignment="center", gap="small")
+    # Gestión automática de contexto y recursos para: btn_col1
     with btn_col1:
+        # Evaluamos la condición lógica (st.session_state['logged_in']) para controlar el flujo
         if st.session_state['logged_in']:
+            # Asignamos 'user_display' con st.session_state['user_info'].get('nombre'...
             user_display = st.session_state['user_info'].get('nombre') or st.session_state['user_info'].get('email', 'Usuario')
+            # Renderizado de componente visual o control interactivo en la interfaz Streamlit
             st.markdown('<div class="user-popover-container">', unsafe_allow_html=True)
+            # Gestión automática de contexto y recursos para: st.popover(f'{user_display}', use_container_wid...
             with st.popover(f"{user_display}", use_container_width=True):
+                # Evaluamos la condición lógica (_header_premium_html) para controlar el flujo
                 if _header_premium_html:
+                    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
                     st.markdown(_header_premium_html, unsafe_allow_html=True)
+                # Renderizado de componente visual o control interactivo en la interfaz Streamlit
                 st.write(f"**Conectado como:**")
+                # Renderizado de componente visual o control interactivo en la interfaz Streamlit
                 st.write(st.session_state['user_info'].get('email', ''))
+                # Renderizado de componente visual o control interactivo en la interfaz Streamlit
                 st.markdown("<div style='margin-top: 8px;'></div>", unsafe_allow_html=True)
                 
+                # Evaluamos la condición lógica (st.button('Mi Perfil y Alertas', key='btn_go_profile...) para controlar el flujo
                 if st.button("Mi Perfil y Alertas", key="btn_go_profile", use_container_width=True):
+                    # Ejecutamos instrucción: reset_modals()
                     reset_modals()
+                    # Ejecutamos instrucción: st.switch_page('pages/perfil.py')
                     st.switch_page("pages/perfil.py")
                     
+                # Evaluamos la condición lógica (st.button('Cerrar Sesión', key='btn_logout', use_con...) para controlar el flujo
                 if st.button("Cerrar Sesión", key="btn_logout", use_container_width=True):
+                    # Ejecutamos instrucción: cerrar_sesion_usuario()
                     cerrar_sesion_usuario()
+                    # Ejecutamos instrucción: reset_modals()
                     reset_modals()
+                    # Ejecutamos instrucción: st.rerun()
                     st.rerun()
+            # Renderizado de componente visual o control interactivo en la interfaz Streamlit
             st.markdown('</div>', unsafe_allow_html=True)
         else:
+            # Evaluamos la condición lógica (st.button('Ingresar', key='login_btn', use_container...) para controlar el flujo
             if st.button("Ingresar", key="login_btn", use_container_width=True):
+                # Asignamos 'st.session_state['show_login_mod...' con True
                 st.session_state['show_login_modal'] = True
+                # Asignamos 'st.session_state['show_visual_mo...' con False
                 st.session_state['show_visual_modal'] = False
+                # Ejecutamos instrucción: st.rerun()
                 st.rerun()
                 
+    # Gestión automática de contexto y recursos para: btn_col2
     with btn_col2:
+        # Renderizado de componente visual o control interactivo en la interfaz Streamlit
         st.button(" ", key="theme_toggle", on_click=toggle_theme)
 
 # - ¿Qué hace este bloque (Pestañas de Navegación)?:
@@ -1886,6 +2110,7 @@ active_nav_key = {
     'esencias_page': "n_esencias",
     'planes_page': "n_planes",
 }.get(st.session_state['current_page'], "n_perfumes")
+# Renderizado de componente visual o control interactivo en la interfaz Streamlit
 st.markdown(f"""
     <style>
     div.st-key-{active_nav_key} div.stButton > button {{ border-bottom-color: {accent} !important; }}
@@ -1893,16 +2118,25 @@ st.markdown(f"""
     </style>
 """, unsafe_allow_html=True)
 
+# Renderizado de componente visual o control interactivo en la interfaz Streamlit
 st.markdown("<div style='margin-top: 18px;'></div>", unsafe_allow_html=True)
+# Renderizado de componente visual o control interactivo en la interfaz Streamlit
 nav_cols = st.columns([1, 1, 1], gap="small")
 
+# Gestión automática de contexto y recursos para: nav_cols[0]
 with nav_cols[0]: 
+    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
     st.button("Perfumes", key="n_perfumes", on_click=navigate_to, args=('home',), use_container_width=True)
+# Gestión automática de contexto y recursos para: nav_cols[1]
 with nav_cols[1]: 
+    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
     st.button("Esencias", key="n_esencias", on_click=navigate_to, args=('esencias_page',), use_container_width=True)
+# Gestión automática de contexto y recursos para: nav_cols[2]
 with nav_cols[2]:
+    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
     st.button("Planes", key="n_planes", on_click=navigate_to, args=('planes_page',), use_container_width=True)
 
+# Renderizado de componente visual o control interactivo en la interfaz Streamlit
 st.markdown("<div class='pt-tabs-rule'></div>", unsafe_allow_html=True)
 
 # - ¿Qué hace este bloque (Buscador Semántico y Filtro de Notas)?:
@@ -1911,9 +2145,12 @@ st.markdown("<div class='pt-tabs-rule'></div>", unsafe_allow_html=True)
 # 9. BÚSQUEDA Y FILTRO DE ESENCIAS
 col_search, col_filter = st.columns([7.8, 2.2], vertical_alignment="center")
 
+# Gestión automática de contexto y recursos para: col_search
 with col_search:
+    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
     search_query = st.text_input("Buscar", placeholder="Buscar perfume, marca o esencias...", label_visibility="collapsed")
 
+# Asignamos 'raw_notes' con ['Bergamota', 'Clementina', 'Limón', 'Lima...
 raw_notes = [
     "Bergamota", "Clementina", "Limón", "Lima", "Mandarina", "Neroli", "Petit Grain", "Pomelo (Toronja)", "Yuzu",
     "Almendra", "Avellana", "Ciruela", "Coco", "Durazno (Melocotón)", "Frambuesa", "Grosellas Negras", 
@@ -1930,10 +2167,14 @@ raw_notes = [
     "Aldehídos", "Ambroxan", "Cachemira (Cashmeran)", "Cuero", "Iso E Super", "Notas Marinas", "Notas Solares", "Sangre (Metálica)"
 ]
 
+# Asignamos 'all_notes' con sorted(raw_notes)
 all_notes = sorted(raw_notes)
 
+# Gestión automática de contexto y recursos para: col_filter
 with col_filter:
+    # Gestión automática de contexto y recursos para: st.popover('Esencias', use_container_width=True)
     with st.popover("Esencias", use_container_width=True):
+        # Asignamos 'selected_essences' con st.multiselect('Selecciona notas olfativas...
         selected_essences = st.multiselect(
             "Selecciona notas olfativas:",
             options=all_notes,
@@ -1945,21 +2186,33 @@ with col_filter:
 #   Botones de navegación rápida para saltar a 'Trend Del Hype', 'Páginas de Confianza', 'Comparar Precios' o 'Remates'.
 # 10. CHIPS DE ENLACE RÁPIDO (4 ACCESOS DIRECTOS; los remates se filtran abajo, junto al catálogo)
 st.markdown("<div style='margin-top: 12px;'></div>", unsafe_allow_html=True)
+# Renderizado de componente visual o control interactivo en la interfaz Streamlit
 c_chip0, c_chip1, c_chip2, c_chip3 = st.columns([1.7, 1.6, 2.0, 1.8], vertical_alignment="center")
 
+# Gestión automática de contexto y recursos para: c_chip0
 with c_chip0:
+    # Evaluamos la condición lógica (st.button('Inicio / Catálogo', key='chip_home', use_...) para controlar el flujo
     if st.button("Inicio / Catálogo", key="chip_home", use_container_width=True, on_click=reset_to_home):
+        # Ejecutamos instrucción: pass
         pass
+# Gestión automática de contexto y recursos para: c_chip1
 with c_chip1:
+    # Ejecutamos instrucción: st.page_link('pages/trendhype.py', label='Trend Del ...
     st.page_link("pages/trendhype.py", label="Trend Del Hype", use_container_width=True)
+# Gestión automática de contexto y recursos para: c_chip2
 with c_chip2:
+    # Ejecutamos instrucción: st.page_link('pages/trustpage.py', label='Páginas de...
     st.page_link("pages/trustpage.py", label="Páginas de Confianza", use_container_width=True)
+# Gestión automática de contexto y recursos para: c_chip3
 with c_chip3:
+    # Ejecutamos instrucción: st.page_link('pages/compararprecios.py', label='Comp...
     st.page_link("pages/compararprecios.py", label="Comparar Precios", use_container_width=True)
+# Renderizado de componente visual o control interactivo en la interfaz Streamlit
 st.markdown("<div style='margin-top: 36px;'></div>", unsafe_allow_html=True)
 
 # 11. SECCIONES Y CONTENIDOS
 if st.session_state['current_page'] == 'home':
+    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
     st.markdown(clean_html("""
         <div class="pt-section-head">
             <div class="pt-display">Catálogo y tendencias en Chile</div>
@@ -1971,7 +2224,9 @@ if st.session_state['current_page'] == 'home':
     #   Extrae automáticamente las mayores bajadas de precio reales detectadas por el scraper nocturno
     #   y las presenta en una vitrina destacada de oportunidades antes del catálogo completo.
     bajadas_semana = get_cached_bajadas()
+    # Evaluamos la condición lógica (bajadas_semana and (not search_query) and (not selec...) para controlar el flujo
     if bajadas_semana and not search_query and not selected_essences and st.session_state.get('selected_category', 'todos') == 'todos':
+        # Renderizado de componente visual o control interactivo en la interfaz Streamlit
         st.markdown(clean_html(f"""
             <div style="margin-top: 20px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;">
                 <div style="font-size: 1.15rem; font-weight: 800; color: {text_color}; display: flex; align-items: center; gap: 8px;">
@@ -1981,18 +2236,30 @@ if st.session_state['current_page'] == 'home':
             </div>
         """), unsafe_allow_html=True)
 
+        # Renderizado de componente visual o control interactivo en la interfaz Streamlit
         cols_bajadas = st.columns(min(len(bajadas_semana), 3), gap="small")
+        # Recorremos iterativamente cada '(idx_b, item_b)' en enumerate(bajadas_semana[:3])
         for idx_b, item_b in enumerate(bajadas_semana[:3]):
+            # Gestión automática de contexto y recursos para: cols_bajadas[idx_b]
             with cols_bajadas[idx_b]:
+                # Asignamos 'p_act_b_str' con f"${int(item_b['precio_actual']):,.0f}".re...
                 p_act_b_str = f"${int(item_b['precio_actual']):,.0f}".replace(",", ".")
+                # Asignamos 'p_norm_b_str' con f"${int(item_b['precio_normal']):,.0f}".re...
                 p_norm_b_str = f"${int(item_b['precio_normal']):,.0f}".replace(",", ".")
+                # Asignamos 'ahorro_b_str' con f"${int(item_b['ahorro_clp']):,.0f}".repla...
                 ahorro_b_str = f"${int(item_b['ahorro_clp']):,.0f}".replace(",", ".")
+                # Asignamos 'pct_b' con item_b['descuento_pct']
                 pct_b = item_b['descuento_pct']
+                # Asignamos 'nom_b_safe' con escape_html(item_b['nombre'])
                 nom_b_safe = escape_html(item_b['nombre'])
+                # Asignamos 'marca_b_safe' con escape_html(item_b['marca'])
                 marca_b_safe = escape_html(item_b['marca'])
+                # Asignamos 'tienda_b_safe' con escape_html(item_b['tienda'])
                 tienda_b_safe = escape_html(item_b['tienda'])
+                # Asignamos 'img_b_safe' con get_image_src(item_b.get('imagen_url'))
                 img_b_safe = get_image_src(item_b.get('imagen_url'))
 
+                # Renderizado de componente visual o control interactivo en la interfaz Streamlit
                 st.markdown(clean_html(f"""
                     <div style="background: {card_bg}; border: 1px solid {border_color}; border-radius: 12px; padding: 12px; position: relative;">
                         <div style="position: absolute; top: 10px; right: 10px; background: rgba(220, 38, 38, 0.95); color: #fff; font-size: 11px; font-weight: 800; padding: 2px 7px; border-radius: 6px;">-{pct_b}%</div>
@@ -2010,10 +2277,14 @@ if st.session_state['current_page'] == 'home':
                         </div>
                     </div>
                 """), unsafe_allow_html=True)
+                # Evaluamos la condición lógica (st.button('Comparar Oferta', key=f"btn_baj_comp_{ite...) para controlar el flujo
                 if st.button("Comparar Oferta", key=f"btn_baj_comp_{item_b['perfume_id']}_{idx_b}", use_container_width=True):
+                    # Asignamos 'st.session_state['selected_perfu...' con item_b['perfume_id']
                     st.session_state['selected_perfume'] = item_b['perfume_id']
+                    # Ejecutamos instrucción: st.switch_page('pages/compararprecios.py')
                     st.switch_page("pages/compararprecios.py")
 
+        # Renderizado de componente visual o control interactivo en la interfaz Streamlit
         st.markdown("<div style='margin-bottom: 24px;'></div>", unsafe_allow_html=True)
     
     # =========================================================================
@@ -2031,8 +2302,11 @@ if st.session_state['current_page'] == 'home':
     # =========================================================================
     col_filter_chips, col_sort_select = st.columns([7, 3], vertical_alignment="center")
     
+    # Asignamos 'cur_cat' con st.session_state.get('selected_category', ...
     cur_cat = st.session_state.get('selected_category', 'todos')
+    # Asignamos 'cat_active_key' con f'btn_cat_{cur_cat}'
     cat_active_key = f"btn_cat_{cur_cat}"
+    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
     st.markdown(f"""
         <style>
         div.st-key-{cat_active_key} div.stButton > button {{
@@ -2043,48 +2317,79 @@ if st.session_state['current_page'] == 'home':
         </style>
     """, unsafe_allow_html=True)
 
+    # Gestión automática de contexto y recursos para: col_filter_chips
     with col_filter_chips:
+        # Renderizado de componente visual o control interactivo en la interfaz Streamlit
         c_cat1, c_cat2, c_cat3 = st.columns([1.8, 2.0, 2.1])
+        # Gestión automática de contexto y recursos para: c_cat1
         with c_cat1:
+            # Evaluamos la condición lógica (st.button('Todos los Perfumes', key='btn_cat_todos',...) para controlar el flujo
             if st.button("Todos los Perfumes", key="btn_cat_todos", use_container_width=True):
+                # Asignamos 'st.session_state['selected_categ...' con 'todos'
                 st.session_state['selected_category'] = 'todos'
+                # Asignamos 'st.session_state['catalog_page']' con 1
                 st.session_state['catalog_page'] = 1
+                # Ejecutamos instrucción: st.rerun()
                 st.rerun()
+        # Gestión automática de contexto y recursos para: c_cat2
         with c_cat2:
+            # Evaluamos la condición lógica (st.button('Árabes & Nicho', key='btn_cat_arabes', us...) para controlar el flujo
             if st.button("Árabes & Nicho", key="btn_cat_arabes", use_container_width=True):
+                # Asignamos 'st.session_state['selected_categ...' con 'arabes'
                 st.session_state['selected_category'] = 'arabes'
+                # Asignamos 'st.session_state['catalog_page']' con 1
                 st.session_state['catalog_page'] = 1
+                # Ejecutamos instrucción: st.rerun()
                 st.rerun()
+        # Gestión automática de contexto y recursos para: c_cat3
         with c_cat3:
+            # Evaluamos la condición lógica (st.button('Remates & Ofertas', key='btn_cat_remates'...) para controlar el flujo
             if st.button("Remates & Ofertas", key="btn_cat_remates", use_container_width=True):
+                # Asignamos 'st.session_state['selected_categ...' con 'remates'
                 st.session_state['selected_category'] = 'remates'
+                # Asignamos 'st.session_state['catalog_page']' con 1
                 st.session_state['catalog_page'] = 1
+                # Ejecutamos instrucción: st.rerun()
                 st.rerun()
                 
+    # Gestión automática de contexto y recursos para: col_sort_select
     with col_sort_select:
+        # Asignamos 'orden_map' con {'Destacados': 'id_asc', 'Precio: Menor a ...
         orden_map = {
             "Destacados": "id_asc",
             "Precio: Menor a Mayor": "precio_asc",
             "Precio: Mayor a Menor": "precio_desc",
             "Nombre: A - Z": "nombre_asc"
         }
+        # Asignamos 'labels' con list(orden_map.keys())
         labels = list(orden_map.keys())
+        # Asignamos 'current_label' con st.session_state.get('selected_order_label...
         current_label = st.session_state.get('selected_order_label', 'Destacados')
+        # Asignamos 'cur_idx' con labels.index(current_label) if current_lab...
         cur_idx = labels.index(current_label) if current_label in labels else 0
+        # Renderizado de componente visual o control interactivo en la interfaz Streamlit
         nuevo_orden = st.selectbox(
             "Ordenar catálogo", 
             options=labels, 
             index=cur_idx, 
             label_visibility="collapsed"
         )
+        # Evaluamos la condición lógica (nuevo_orden != current_label) para controlar el flujo
         if nuevo_orden != current_label:
+            # Asignamos 'st.session_state['selected_order...' con nuevo_orden
             st.session_state['selected_order_label'] = nuevo_orden
+            # Asignamos 'st.session_state['selected_order']' con orden_map[nuevo_orden]
             st.session_state['selected_order'] = orden_map[nuevo_orden]
+            # Asignamos 'st.session_state['catalog_page']' con 1
             st.session_state['catalog_page'] = 1
+            # Ejecutamos instrucción: st.rerun()
             st.rerun()
 
+    # Evaluamos la condición lógica (selected_essences) para controlar el flujo
     if selected_essences:
+        # Asignamos 'note_chips' con ''.join((f'<div class="pt-note-chip">{esca...
         note_chips = "".join(f'<div class="pt-note-chip">{escape_html(e)}</div>' for e in selected_essences)
+        # Renderizado de componente visual o control interactivo en la interfaz Streamlit
         st.markdown(clean_html(f"""
             <div class="pt-note-row">
                 <div class="pt-note-label">Notas activas:</div>
@@ -2104,6 +2409,7 @@ if st.session_state['current_page'] == 'home':
     #    y notas completas al posar el cursor, con botón para ir directo a la comparativa.
     # =========================================================================
     categoria_arg = None if st.session_state['selected_category'] == 'todos' else st.session_state['selected_category']
+    # Asignamos 'catalog_perfumes' con get_cached_catalogo(busqueda=search_query,...
     catalog_perfumes = get_cached_catalogo(
         busqueda=search_query, 
         esencias_tuple=tuple(selected_essences) if selected_essences else None,
@@ -2111,20 +2417,29 @@ if st.session_state['current_page'] == 'home':
         orden=st.session_state.get('selected_order', 'id_asc')
     )
 
+    # Definición de función 'render_catalogo_paginado' (parámetros: catalog_list)
     @st.fragment
     def render_catalogo_paginado(catalog_list):
+        # Evaluamos la condición lógica (not catalog_list) para controlar el flujo
         if not catalog_list:
+            # Renderizado de componente visual o control interactivo en la interfaz Streamlit
             st.markdown(clean_html("""
                 <div class="pt-empty">
                     <div class="pt-empty-title">Ninguna fragancia coincide</div>
                     <div class="pt-empty-text">Prueba con otro nombre o marca, o quita algunas notas del filtro de esencias.</div>
                 </div>
             """), unsafe_allow_html=True)
+            # Renderizado de componente visual o control interactivo en la interfaz Streamlit
             _, c_reset_mid, _ = st.columns([1, 1, 1])
+            # Gestión automática de contexto y recursos para: c_reset_mid
             with c_reset_mid:
+                # Evaluamos la condición lógica (st.button('Restablecer filtros', key='btn_reset_filt...) para controlar el flujo
                 if st.button("Restablecer filtros", key="btn_reset_filters", use_container_width=True):
+                    # Ejecutamos instrucción: reset_to_home()
                     reset_to_home()
+                    # Ejecutamos instrucción: st.rerun()
                     st.rerun()
+            # Finalizamos la ejecución de la función retornando None
             return
 
         # ---------------------------------------------------------------------
@@ -2135,10 +2450,15 @@ if st.session_state['current_page'] == 'home':
         # dibuja cientos de tarjetas y se mantiene rápida.
         # ---------------------------------------------------------------------
         total_perfumes = len(catalog_list)
+        # Asignamos 'opciones_por_carga' con [12, 24, 48]
         opciones_por_carga = [12, 24, 48]
+        # Asignamos 'por_carga' con int(st.session_state.get('items_per_page',...
         por_carga = int(st.session_state.get('items_per_page', 12))
+        # Evaluamos la condición lógica (por_carga not in opciones_por_carga) para controlar el flujo
         if por_carga not in opciones_por_carga:
+            # Asignamos 'por_carga' con 12
             por_carga = 12
+        # Asignamos 'max_ventana' con por_carga * 4
         max_ventana = por_carga * 4
 
         # Si cambian la búsqueda, los filtros o el orden, la ventana vuelve al inicio
@@ -2150,39 +2470,66 @@ if st.session_state['current_page'] == 'home':
             st.session_state.get('selected_order'),
             por_carga,
         )
+        # Evaluamos la condición lógica (st.session_state.get('_cat_firma') != firma) para controlar el flujo
         if st.session_state.get('_cat_firma') != firma:
+            # Asignamos 'st.session_state['_cat_firma']' con firma
             st.session_state['_cat_firma'] = firma
+            # Asignamos 'st.session_state['cat_win_start']' con 0
             st.session_state['cat_win_start'] = 0
+            # Asignamos 'st.session_state['cat_win_end']' con min(por_carga, total_perfumes)
             st.session_state['cat_win_end'] = min(por_carga, total_perfumes)
 
+        # Asignamos 'start_idx' con max(0, min(int(st.session_state.get('cat_w...
         start_idx = max(0, min(int(st.session_state.get('cat_win_start', 0)), total_perfumes - 1))
+        # Asignamos 'end_idx' con max(start_idx + 1, min(int(st.session_stat...
         end_idx = max(start_idx + 1, min(int(st.session_state.get('cat_win_end', por_carga)), total_perfumes))
 
+        # Definición de función '_cargar_mas' sin parámetros externos
         def _cargar_mas():
+            # Asignamos 'nuevo_fin' con min(total_perfumes, end_idx + por_carga)
             nuevo_fin = min(total_perfumes, end_idx + por_carga)
+            # Asignamos 'nuevo_ini' con start_idx
             nuevo_ini = start_idx
+            # Evaluamos la condición lógica (nuevo_fin - nuevo_ini > max_ventana) para controlar el flujo
             if nuevo_fin - nuevo_ini > max_ventana:
+                # Asignamos 'nuevo_ini' con nuevo_fin - max_ventana
                 nuevo_ini = nuevo_fin - max_ventana
+            # Asignamos 'st.session_state['cat_win_start']' con nuevo_ini
             st.session_state['cat_win_start'] = nuevo_ini
+            # Asignamos 'st.session_state['cat_win_end']' con nuevo_fin
             st.session_state['cat_win_end'] = nuevo_fin
+            # Asignamos 'st.session_state['_cat_scroll_to']' con catalog_list[end_idx].get('id')
             st.session_state['_cat_scroll_to'] = catalog_list[end_idx].get('id')
 
+        # Definición de función '_cargar_anteriores' sin parámetros externos
         def _cargar_anteriores():
+            # Asignamos 'nuevo_ini' con max(0, start_idx - por_carga)
             nuevo_ini = max(0, start_idx - por_carga)
+            # Asignamos 'nuevo_fin' con end_idx
             nuevo_fin = end_idx
+            # Evaluamos la condición lógica (nuevo_fin - nuevo_ini > max_ventana) para controlar el flujo
             if nuevo_fin - nuevo_ini > max_ventana:
+                # Asignamos 'nuevo_fin' con nuevo_ini + max_ventana
                 nuevo_fin = nuevo_ini + max_ventana
+            # Asignamos 'st.session_state['cat_win_start']' con nuevo_ini
             st.session_state['cat_win_start'] = nuevo_ini
+            # Asignamos 'st.session_state['cat_win_end']' con nuevo_fin
             st.session_state['cat_win_end'] = nuevo_fin
+            # Asignamos 'st.session_state['_cat_scroll_to']' con catalog_list[nuevo_ini].get('id')
             st.session_state['_cat_scroll_to'] = catalog_list[nuevo_ini].get('id')
 
+        # Renderizado de componente visual o control interactivo en la interfaz Streamlit
         col_stat_txt, col_per_page = st.columns([7.6, 2.4], vertical_alignment="center")
+        # Gestión automática de contexto y recursos para: col_stat_txt
         with col_stat_txt:
+            # Renderizado de componente visual o control interactivo en la interfaz Streamlit
             st.markdown(
                 f"<div class='pt-meta'>Mostrando <b>{start_idx + 1}–{end_idx}</b> de <b>{total_perfumes}</b> fragancias</div>",
                 unsafe_allow_html=True,
             )
+        # Gestión automática de contexto y recursos para: col_per_page
         with col_per_page:
+            # Renderizado de componente visual o control interactivo en la interfaz Streamlit
             sel_pp = st.selectbox(
                 "Perfumes por carga",
                 options=opciones_por_carga,
@@ -2191,14 +2538,20 @@ if st.session_state['current_page'] == 'home':
                 key="sel_items_per_load",
                 label_visibility="collapsed",
             )
+            # Evaluamos la condición lógica (sel_pp != por_carga) para controlar el flujo
             if sel_pp != por_carga:
+                # Asignamos 'st.session_state['items_per_page']' con sel_pp
                 st.session_state['items_per_page'] = sel_pp
+                # Ejecutamos instrucción: st.rerun(scope='fragment')
                 st.rerun(scope="fragment")
 
         # Botón superior para recuperar lo que se fue quitando al bajar
         if start_idx > 0:
+            # Renderizado de componente visual o control interactivo en la interfaz Streamlit
             _, c_prev_mid, _ = st.columns([1, 2, 1])
+            # Gestión automática de contexto y recursos para: c_prev_mid
             with c_prev_mid:
+                # Renderizado de componente visual o control interactivo en la interfaz Streamlit
                 st.button(
                     f"↑ Cargar {min(por_carga, start_idx)} anteriores",
                     key="btn_load_prev",
@@ -2206,55 +2559,86 @@ if st.session_state['current_page'] == 'home':
                     use_container_width=True,
                 )
 
+        # Renderizado de componente visual o control interactivo en la interfaz Streamlit
         st.markdown("<div style='margin-top: 12px;'></div>", unsafe_allow_html=True)
 
+        # Asignamos 'page_perfumes' con catalog_list[start_idx:end_idx]
         page_perfumes = catalog_list[start_idx:end_idx]
+        # Asignamos 'cols_per_row' con 3
         cols_per_row = 3
+        # Recorremos iterativamente cada 'i' en range(0, len(page_perfumes), cols_per_row)
         for i in range(0, len(page_perfumes), cols_per_row):
+            # Renderizado de componente visual o control interactivo en la interfaz Streamlit
             cols = st.columns(cols_per_row, gap="medium")
+            # Recorremos iterativamente cada 'j' en range(cols_per_row)
             for j in range(cols_per_row):
+                # Evaluamos la condición lógica (i + j < len(page_perfumes)) para controlar el flujo
                 if i + j < len(page_perfumes):
+                    # Asignamos 'p' con page_perfumes[i + j]
                     p = page_perfumes[i + j]
 
+                    # Asignamos 'pais_origen' con 'Emiratos Árabes' if p.get('es_arabe') els...
                     pais_origen = "Emiratos Árabes" if p.get('es_arabe') else "Francia" if p.get('marca') in ['Chanel', 'Dior', 'Yves Saint Laurent', 'Jean Paul Gaultier', 'Kilian', 'Maison Francis Kurkdjian'] else "Italia" if p.get('marca') in ['Giorgio Armani', 'Versace'] else "Estados Unidos" if p.get('marca') in ['Tom Ford'] else "Internacional"
+                    # Asignamos 'nombre_especifico' con formatear_nombre_especifico(p) or p.get('n...
                     nombre_especifico = formatear_nombre_especifico(p) or p.get('nombre', '')
+                    # Asignamos 'nombre_safe' con escape_html(nombre_especifico)
                     nombre_safe = escape_html(nombre_especifico)
+                    # Asignamos 'marca_safe' con escape_html(p.get('marca', ''))
                     marca_safe = escape_html(p.get('marca', ''))
+                    # Asignamos 'genero_safe' con escape_html(p.get('genero') or 'Unisex')
                     genero_safe = escape_html(p.get('genero') or 'Unisex')
+                    # Asignamos 'notas_safe' con escape_html(p.get('notas') or 'Notas aromá...
                     notas_safe = escape_html(p.get('notas') or 'Notas aromáticas selectas')
+                    # Asignamos 'tipo_safe' con escape_html(p.get('tipo') or 'Eau de Parfum')
                     tipo_safe = escape_html(p.get('tipo') or 'Eau de Parfum')
+                    # Asignamos 'img_src' con get_image_src(p.get('imagen_url'))
                     img_src = get_image_src(p.get('imagen_url'))
 
+                    # Asignamos 'mejor_p' con p.get('mejor_precio')
                     mejor_p = p.get('mejor_precio')
+                    # Asignamos 'precio_sin_rev' con p.get('precio_sin_reverificar')
                     precio_sin_rev = p.get('precio_sin_reverificar')
+                    # Asignamos 'es_solo_tester' con bool(p.get('mejor_precio_es_tester'))
                     es_solo_tester = bool(p.get('mejor_precio_es_tester'))
+                    # Evaluamos la condición lógica (mejor_p and mejor_p > 0) para controlar el flujo
                     if mejor_p and mejor_p > 0:
+                        # Asignamos 'precio_num_txt' con f'${mejor_p:,.0f} CLP'.replace(',', '.')
                         precio_num_txt = f"${mejor_p:,.0f} CLP".replace(",", ".")
+                        # Asignamos 'label_desde' con 'Tester desde' if es_solo_tester else 'Desde'
                         label_desde = "Tester desde" if es_solo_tester else "Desde"
+                        # Asignamos 'precio_html' con f'\n <div class="card-perfume-price">\n <d...
                         precio_html = f"""
                         <div class="card-perfume-price">
                             <div class="price-label">{label_desde}</div>
                             <div class="price-val">{precio_num_txt}</div>
                         </div>
                         """
+                        # Asignamos 'overlay_badge_html' con f'<div class="overlay-price-badge">Mejor o...
                         overlay_badge_html = f'<div class="overlay-price-badge">Mejor oferta: {precio_num_txt}</div>'
+                    # Evaluamos la condición lógica (precio_sin_rev and precio_sin_rev > 0) para controlar el flujo
                     elif precio_sin_rev and precio_sin_rev > 0:
+                        # Asignamos 'precio_ref_txt' con f'${precio_sin_rev:,.0f} CLP'.replace(',',...
                         precio_ref_txt = f"${precio_sin_rev:,.0f} CLP".replace(",", ".")
+                        # Asignamos 'precio_html' con f'\n <div class="card-perfume-price">\n <d...
                         precio_html = f"""
                         <div class="card-perfume-price">
                             <div class="price-label" style="color: #f59e0b;">Sin reverificar</div>
                             <div class="price-val" style="opacity: 0.85;">{precio_ref_txt}</div>
                         </div>
                         """
+                        # Asignamos 'overlay_badge_html' con '<div class="overlay-price-badge" style="b...
                         overlay_badge_html = '<div class="overlay-price-badge" style="background: rgba(245, 158, 11, 0.16); border-color: rgba(251, 191, 36, 0.4); color: #fbbf24;">⚠️ Precio pendiente de reverificación</div>'
                     else:
+                        # Asignamos 'precio_html' con '\n <div class="card-perfume-price out-of-...
                         precio_html = """
                         <div class="card-perfume-price out-of-stock-card-price">
                             <div class="price-val-agotado">Sin stock en tiendas</div>
                         </div>
                         """
+                        # Asignamos 'overlay_badge_html' con '<div class="overlay-price-badge" style="b...
                         overlay_badge_html = '<div class="overlay-price-badge" style="background: rgba(239, 68, 68, 0.16); border-color: rgba(239, 68, 68, 0.4); color: #f87171;">Agotado en tiendas</div>'
 
+                    # Asignamos 'card_html' con f'''\n <div class="catalog-card">\n <div c...
                     card_html = f"""
                     <div class="catalog-card">
                         <div class="square-img-box">
@@ -2276,23 +2660,35 @@ if st.session_state['current_page'] == 'home':
                         </div>
                     </div>
                     """
+                    # Gestión automática de contexto y recursos para: cols[j]
                     with cols[j]:
                         # Toda la tarjeta abre el perfume; el corazón lo guarda en favoritos
                         with st.container(key=f"pcard_cat_{p['id']}"):
+                            # Renderizado de componente visual o control interactivo en la interfaz Streamlit
                             st.markdown(clean_html(card_html), unsafe_allow_html=True)
+                            # Ejecutamos instrucción: boton_abrir_perfume(p['id'], 'cat')
                             boton_abrir_perfume(p['id'], "cat")
+                            # Ejecutamos instrucción: boton_corazon(p['id'], 'cat', p.get('nombre', ''))
                             boton_corazon(p['id'], "cat", p.get('nombre', ''))
+                        # Evaluamos la condición lógica (st.button('Comparar Precios', key=f"btn_comp_{p['id'...) para controlar el flujo
                         if st.button("Comparar Precios", key=f"btn_comp_{p['id']}", use_container_width=True):
+                            # Asignamos 'st.session_state['selected_perfu...' con p['id']
                             st.session_state['selected_perfume'] = p['id']
+                            # Ejecutamos instrucción: reset_modals()
                             reset_modals()
+                            # Ejecutamos instrucción: st.switch_page('pages/compararprecios.py')
                             st.switch_page("pages/compararprecios.py")
 
+        # Renderizado de componente visual o control interactivo en la interfaz Streamlit
         st.markdown("<div style='margin-top: 24px;'></div>", unsafe_allow_html=True)
 
         # Botón inferior: cargar el siguiente bloque
         if end_idx < total_perfumes:
+            # Renderizado de componente visual o control interactivo en la interfaz Streamlit
             _, c_more_mid, _ = st.columns([1, 2, 1])
+            # Gestión automática de contexto y recursos para: c_more_mid
             with c_more_mid:
+                # Renderizado de componente visual o control interactivo en la interfaz Streamlit
                 st.button(
                     f"Cargar {min(por_carga, total_perfumes - end_idx)} perfumes más",
                     key="btn_load_more",
@@ -2300,8 +2696,10 @@ if st.session_state['current_page'] == 'home':
                     use_container_width=True,
                 )
         else:
+            # Renderizado de componente visual o control interactivo en la interfaz Streamlit
             st.markdown("<div class='pt-meta pt-meta-center'>Llegaste al final del catálogo.</div>", unsafe_allow_html=True)
 
+        # Renderizado de componente visual o control interactivo en la interfaz Streamlit
         st.markdown(
             f"<div class='pt-meta pt-meta-center'>Mostrando <b>{start_idx + 1}–{end_idx}</b> de "
             f"<b>{total_perfumes}</b> fragancias.</div>",
@@ -2311,7 +2709,9 @@ if st.session_state['current_page'] == 'home':
         # Tras cargar, llevar la vista al primer perfume nuevo (las tarjetas de arriba
         # pudieron desaparecer, así que sin esto la página "saltaría").
         destino = st.session_state.pop('_cat_scroll_to', None)
+        # Evaluamos la condición lógica (destino is not None) para controlar el flujo
         if destino is not None:
+            # Asignamos 'script_scroll' con f"\n <script>\n (function() {{\n const doc...
             script_scroll = f"""
             <script>
             (function() {{
@@ -2329,17 +2729,25 @@ if st.session_state['current_page'] == 'home':
             }})();
             </script>
             """
+            # Bloque try/except para manejo seguro de errores y resiliencia operativa
             try:
+                # Ejecutamos instrucción: st.html(script_scroll, unsafe_allow_javascript=True)
                 st.html(script_scroll, unsafe_allow_javascript=True)
             except Exception:
+                # Ejecutamos instrucción: components.html(script_scroll, height=0, width=0)
                 components.html(script_scroll, height=0, width=0)
 
+    # Ejecutamos instrucción: render_catalogo_paginado(catalog_perfumes)
     render_catalogo_paginado(catalog_perfumes)
 
+# Evaluamos la condición lógica (st.session_state['current_page'] == 'esencias_page') para controlar el flujo
 elif st.session_state['current_page'] == 'esencias_page':
+    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
     col_dict_title, col_dict_mute = st.columns([9, 1], vertical_alignment="center")
     
+    # Gestión automática de contexto y recursos para: col_dict_title
     with col_dict_title:
+        # Renderizado de componente visual o control interactivo en la interfaz Streamlit
         st.markdown(clean_html("""
             <div class="pt-section-head">
                 <div class="pt-display">Diccionario de esencias</div>
@@ -2347,7 +2755,9 @@ elif st.session_state['current_page'] == 'esencias_page':
             </div>
         """), unsafe_allow_html=True)
     
+    # Gestión automática de contexto y recursos para: col_dict_mute
     with col_dict_mute:
+        # Renderizado de componente visual o control interactivo en la interfaz Streamlit
         st.markdown(f"""
         <div style="text-align: right;">
             <button id="sound-toggle-btn" class="sound-mute-btn" onclick="if(window.toggleSoundMute){{window.toggleSoundMute();}}else if(window.parent.toggleSoundMute){{window.parent.toggleSoundMute();}}" title="Activar / Desactivar sonido de burbujas">
@@ -2356,25 +2766,43 @@ elif st.session_state['current_page'] == 'esencias_page':
         </div>
         """, unsafe_allow_html=True)
 
+    # Definición de función 'get_essence_colors' (parámetros: name)
     def get_essence_colors(name):
+        # Asignamos 'n' con name.lower()
         n = name.lower()
+        # Evaluamos la condición lógica (any((k in n for k in ['sangre', 'cereza', 'frambuesa...) para controlar el flujo
         if any(k in n for k in ['sangre', 'cereza', 'frambuesa', 'pimienta rosa', 'rosa', 'ruibarbo', 'lichi', 'ciruela', 'grosella', 'peonía', 'geranio']):
+            # Retornamos el resultado procesado (('#5c282e' if is_dark else '#e2b3b7', '#3d1a1e'...)
             return ("#5c282e" if is_dark else "#e2b3b7", "#3d1a1e" if is_dark else "#f7eaec", "#f0adb4" if is_dark else "#5c1b22")
+        # Evaluamos la condición lógica (any((k in n for k in ['marina', 'marinas', 'agua', '...) para controlar el flujo
         elif any(k in n for k in ['marina', 'marinas', 'agua', 'océano', 'ozónica']):
+            # Retornamos el resultado procesado (('#224052' if is_dark else '#a8c7da', '#152933'...)
             return ("#224052" if is_dark else "#a8c7da", "#152933" if is_dark else "#eaf2f7", "#92ccdb" if is_dark else "#173a4b")
+        # Evaluamos la condición lógica (any((k in n for k in ['albahaca', 'bergamota', 'card...) para controlar el flujo
         elif any(k in n for k in ['albahaca', 'bergamota', 'cardamomo', 'higo', 'manzana', 'menta', 'pachulí', 'pera', 'romero', 'salvia', 'té verde', 'té blanco', 'vetiver', 'abedul', 'eucalipto', 'gálbano']):
+            # Retornamos el resultado procesado (('#234530' if is_dark else '#a4cca2', '#162b1e'...)
             return ("#234530" if is_dark else "#a4cca2", "#162b1e" if is_dark else "#ebf5ee", "#93d1a3" if is_dark else "#193d25")
+        # Evaluamos la condición lógica (any((k in n for k in ['iris', 'lavanda', 'jazmín', '...) para controlar el flujo
         elif any(k in n for k in ['iris', 'lavanda', 'jazmín', 'nardos', 'neroli', 'violeta', 'fresia', 'gardenia', 'ylang', 'magnolia', 'azahar']):
+            # Retornamos el resultado procesado (('#432d52' if is_dark else '#c3b1d4', '#2b1d33'...)
             return ("#432d52" if is_dark else "#c3b1d4", "#2b1d33" if is_dark else "#f2ebf7", "#c7a9db" if is_dark else "#391c47")
+        # Evaluamos la condición lógica (any((k in n for k in ['caramelo', 'miel', 'solares',...) para controlar el flujo
         elif any(k in n for k in ['caramelo', 'miel', 'solares', 'vainilla', 'cacao', 'café', 'canela', 'tonka', 'nuez moscada', 'praliné', 'almendra', 'avellana', 'ron', 'cognac', 'whisky']):
+            # Retornamos el resultado procesado (('#523522' if is_dark else '#d8bca7', '#332115'...)
             return ("#523522" if is_dark else "#d8bca7", "#332115" if is_dark else "#f7ede6", "#dbb193" if is_dark else "#452914")
+        # Evaluamos la condición lógica (any((k in n for k in ['ámbar gris', 'cedro', 'sándal...) para controlar el flujo
         elif any(k in n for k in ['ámbar gris', 'cedro', 'sándalo', 'tabaco', 'cuero', 'oud', 'incienso', 'ciprés', 'ébano', 'guayac', 'musgo', 'benjuí', 'ládano']):
+            # Retornamos el resultado procesado (('#373d47' if is_dark else '#bdc1c9', '#23272e'...)
             return ("#373d47" if is_dark else "#bdc1c9", "#23272e" if is_dark else "#edeef0", "#aeb5c2" if is_dark else "#292e36")
+        # Evaluamos la condición lógica (any((k in n for k in ['azafrán', 'ámbar', 'mandarina...) para controlar el flujo
         elif any(k in n for k in ['azafrán', 'ámbar', 'mandarina', 'melocotón', 'durazno', 'mirra', 'naranjo', 'pomelo', 'cítrico', 'cítricos', 'limón', 'lima', 'piña', 'jengibre', 'yuzu']):
+            # Retornamos el resultado procesado (('#59331e' if is_dark else '#debca8', '#382013'...)
             return ("#59331e" if is_dark else "#debca8", "#382013" if is_dark else "#f9ede6", "#dfab8c" if is_dark else "#4f2711")
         else:
+            # Retornamos el resultado procesado (('#333842' if is_dark else '#cad0d9', '#1f2228'...)
             return ("#333842" if is_dark else "#cad0d9", "#1f2228" if is_dark else "#f2f4f7", "#bcc2cc" if is_dark else "#2b3038")
 
+    # Asignamos 'essence_descriptions' con {'Bergamota': 'Cítrico efervescente y lumi...
     essence_descriptions = {
         "Bergamota": "Cítrico efervescente y luminoso con delicados matices florales.",
         "Clementina": "Cítrico dulce, jugoso y chispeante que transmite alegría inmediata.",
@@ -2485,28 +2913,42 @@ elif st.session_state['current_page'] == 'esencias_page':
         "Sangre (Metálica)": "Nota vanguardista nicho; evoca hierro y un matiz salado."
     }
 
+    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
     col_es_1, col_es_2 = st.columns(2, gap="medium")
+    # Asignamos 'html_col1' con []
     html_col1 = []
+    # Asignamos 'html_col2' con []
     html_col2 = []
     
+    # Recorremos iterativamente cada '(i, note)' en enumerate(all_notes)
     for i, note in enumerate(all_notes):
+        # Asignamos '(border_col, bg_col, text_c)' con get_essence_colors(note)
         border_col, bg_col, text_c = get_essence_colors(note)
+        # Petición HTTP GET hacia el servidor externo con control de timeout y cabeceras
         desc = essence_descriptions.get(note, "Nota olfativa distintiva que aporta carácter y equilibrio.")
         
+        # Asignamos 'tarjeta_html' con f'\n <div class="essence-card" onclick="(w...
         tarjeta_html = f"""
         <div class="essence-card" onclick="(window.playBubbleSound || window.parent.playBubbleSound || function(){{}})()" style="border-color: {border_col}; background-color: {bg_col}; color: {text_c};">
             <div class="essence-title" style="color: {text_c} !important;">{note}</div>
             <div class="essence-desc" style="color: {text_c} !important;">{desc}</div>
         </div>
         """
+        # Evaluamos la condición lógica (i % 2 == 0) para controlar el flujo
         if i % 2 == 0:
+            # Ejecutamos instrucción: html_col1.append(tarjeta_html)
             html_col1.append(tarjeta_html)
         else:
+            # Ejecutamos instrucción: html_col2.append(tarjeta_html)
             html_col2.append(tarjeta_html)
 
+    # Gestión automática de contexto y recursos para: col_es_1
     with col_es_1:
+        # Renderizado de componente visual o control interactivo en la interfaz Streamlit
         st.markdown("\n".join(html_col1), unsafe_allow_html=True)
+    # Gestión automática de contexto y recursos para: col_es_2
     with col_es_2:
+        # Renderizado de componente visual o control interactivo en la interfaz Streamlit
         st.markdown("\n".join(html_col2), unsafe_allow_html=True)
 
 # - ¿Qué hace este bloque (Planes)?:
@@ -2514,6 +2956,7 @@ elif st.session_state['current_page'] == 'esencias_page':
 #   de precio de los favoritos, $2.000 CLP/mes) y Socios VIP (próximamente, cata de perfumes
 #   con mystery box de decants). El plan VIP lleva un borde RGB animado y aún no tiene precio.
 elif st.session_state['current_page'] == 'planes_page':
+    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
     st.markdown(clean_html("""
         <div class="pt-section-head">
             <div class="pt-display">Planes</div>
@@ -2521,27 +2964,40 @@ elif st.session_state['current_page'] == 'planes_page':
         </div>
     """), unsafe_allow_html=True)
 
+    # Asignamos 'gold_plan' con '#e2b857' if is_dark else '#a87b1c'
     gold_plan = "#e2b857" if is_dark else "#a87b1c"
+    # Asignamos 'gold_plan_soft' con 'rgba(226, 184, 87, 0.10)' if is_dark else...
     gold_plan_soft = "rgba(226, 184, 87, 0.10)" if is_dark else "rgba(168, 123, 28, 0.07)"
+    # Asignamos 'vip_inner' con card_bg if str(card_bg).startswith('#') el...
     vip_inner = card_bg if str(card_bg).startswith("#") else ("#15171c" if is_dark else "#ffffff")
+    # Asignamos 'rgb_stops' con '#f5c542, #ff7a1a, #ff2d55, #ff4fb8, #8b3d...
     rgb_stops = "#f5c542, #ff7a1a, #ff2d55, #ff4fb8, #8b3dff, #2f6bff, #8b3dff, #ff4fb8, #f5c542"
+    # Asignamos 'logged_in' con bool(st.session_state.get('logged_in'))
     logged_in = bool(st.session_state.get('logged_in'))
+    # Asignamos 'plan_usuario' con str((st.session_state.get('user_info') or ...
     plan_usuario = str((st.session_state.get('user_info') or {}).get('plan') or 'free').strip().lower()
+    # Asignamos 'es_premium' con logged_in and plan_usuario in ('premium', ...
     es_premium = logged_in and plan_usuario in ('premium', 'vip', 'socios_vip')
 
+    # Definición de función 'check_icon' (parámetros: stroke)
     def check_icon(stroke):
+        # Retornamos el resultado procesado (f'<svg width="11" height="11" viewBox="0 0 24 2...)
         return (f'<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="{stroke}" '
                 f'stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
                 f'<polyline points="20 6 9 17 4 12"/></svg>')
 
+    # Definición de función 'lista' (parámetros: items, clase)
     def lista(items, clase):
+        # Asignamos 'filas' con ''.join((f"""<li><div class="pt-check {cla...
         filas = "".join(
             f'<li><div class="pt-check {clase}">{check_icon("#ffffff" if clase != "pt-check-premium" else "#2a1f05")}</div>'
             f'<div>{escape_html(t)}</div></li>'
             for t in items
         )
+        # Retornamos el resultado procesado (f'<ul class="pt-plan-list">{filas}</ul>')
         return f'<ul class="pt-plan-list">{filas}</ul>'
 
+    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
     st.markdown(f"""
         <style>
         .pt-plan {{
@@ -2793,10 +3249,14 @@ elif st.session_state['current_page'] == 'planes_page':
         </style>
     """, unsafe_allow_html=True)
 
+    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
     col_free, col_premium, col_vip = st.columns(3, gap="medium")
 
+    # Gestión automática de contexto y recursos para: col_free
     with col_free:
+        # Asignamos 'badge_free' con '<div class="pt-plan-badge">Plan actual</d...
         badge_free = '<div class="pt-plan-badge">Plan actual</div>' if logged_in and not es_premium else ""
+        # Renderizado de componente visual o control interactivo en la interfaz Streamlit
         st.markdown(clean_html(f"""
             <div class="pt-plan">
                 {badge_free}
@@ -2813,16 +3273,26 @@ elif st.session_state['current_page'] == 'planes_page':
                 ], "pt-check-free")}
             </div>
         """), unsafe_allow_html=True)
+        # Evaluamos la condición lógica (es_premium) para controlar el flujo
         if es_premium:
+            # Renderizado de componente visual o control interactivo en la interfaz Streamlit
             st.button("Incluido en Premium", key="btn_plan_free", disabled=True, use_container_width=True)
+        # Evaluamos la condición lógica (logged_in) para controlar el flujo
         elif logged_in:
+            # Renderizado de componente visual o control interactivo en la interfaz Streamlit
             st.button("Plan actual", key="btn_plan_free", disabled=True, use_container_width=True)
+        # Evaluamos la condición lógica (st.button('Crear cuenta', key='btn_plan_free', use_c...) para controlar el flujo
         elif st.button("Crear cuenta", key="btn_plan_free", use_container_width=True):
+            # Asignamos 'st.session_state['show_login_mod...' con True
             st.session_state['show_login_modal'] = True
+            # Asignamos 'st.session_state['show_visual_mo...' con False
             st.session_state['show_visual_modal'] = False
+            # Ejecutamos instrucción: st.rerun()
             st.rerun()
 
+    # Gestión automática de contexto y recursos para: col_premium
     with col_premium:
+        # Renderizado de componente visual o control interactivo en la interfaz Streamlit
         st.markdown(clean_html(f"""
             <div class="pt-plan pt-plan-premium">
                 {'<div class="pt-plan-badge">Plan actual</div>' if es_premium else ''}
@@ -2838,19 +3308,31 @@ elif st.session_state['current_page'] == 'planes_page':
                 ], "pt-check-premium")}
             </div>
         """), unsafe_allow_html=True)
+        # Evaluamos la condición lógica (es_premium) para controlar el flujo
         if es_premium:
+            # Evaluamos la condición lógica (st.button('Plan activo · Ver comprobante', key='btn_...) para controlar el flujo
             if st.button("Plan activo · Ver comprobante", key="btn_plan_premium", use_container_width=True):
+                # Ejecutamos instrucción: st.switch_page('pages/comprarplan.py')
                 st.switch_page("pages/comprarplan.py")
+        # Evaluamos la condición lógica (st.button('Suscribirse a Premium', key='btn_plan_pre...) para controlar el flujo
         elif st.button("Suscribirse a Premium", key="btn_plan_premium", use_container_width=True):
+            # Evaluamos la condición lógica (not logged_in) para controlar el flujo
             if not logged_in:
+                # Asignamos 'st.session_state['show_login_mod...' con True
                 st.session_state['show_login_modal'] = True
+                # Asignamos 'st.session_state['show_visual_mo...' con False
                 st.session_state['show_visual_modal'] = False
+                # Ejecutamos instrucción: st.rerun()
                 st.rerun()
             else:
+                # Ejecutamos instrucción: reset_modals()
                 reset_modals()
+                # Ejecutamos instrucción: st.switch_page('pages/comprarplan.py')
                 st.switch_page("pages/comprarplan.py")
 
+    # Gestión automática de contexto y recursos para: col_vip
     with col_vip:
+        # Renderizado de componente visual o control interactivo en la interfaz Streamlit
         st.markdown(clean_html(f"""
             <div class="pt-vip-wrap">
                 <div class="pt-vip-glow"></div>
@@ -2869,8 +3351,10 @@ elif st.session_state['current_page'] == 'planes_page':
                 </div>
             </div>
         """), unsafe_allow_html=True)
+        # Renderizado de componente visual o control interactivo en la interfaz Streamlit
         st.button("Próximamente", key="btn_plan_vip", disabled=True, use_container_width=True)
 
+    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
     st.markdown(clean_html("""
         <div class="pt-plan-note">El precio del plan Socios VIP se informará en su lanzamiento.</div>
     """), unsafe_allow_html=True)

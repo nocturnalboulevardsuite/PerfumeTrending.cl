@@ -1,9 +1,18 @@
+# =============================================================================
+# PerfumeTrending.cl — Workflow CI/CD: Actualización Nocturna de Precios y Stock
+# =============================================================================
+# Propósito:
+# Ejecuta diariamente el motor ETL de actualización de precios, stock y
+# auto-descubrimiento en 4 shards paralelos (Horizontal Sharding 25% c/u)
+# conectándose a Supabase Cloud.
 name: Actualizacion Nocturna de Precios y Stock
 
 on:
+  # Programación automática diaria mediante expresión Cron en UTC
   schedule:
-    # Se ejecuta todos los dias a las 04:00 AM hora de Chile (07:00 UTC)
+    # Se ejecuta todos los días a las 04:00 AM hora de Chile (07:00 UTC)
     - cron: '0 7 * * *'
+  # Permite ejecución manual bajo demanda desde la interfaz web de GitHub Actions
   workflow_dispatch:
     inputs:
       batch_size:
@@ -19,36 +28,44 @@ on:
         required: false
         default: '10'
 
+# Permisos de escritura en el repositorio para guardar reportes de auditoría JSON
 permissions:
   contents: write
 
 jobs:
   actualizar-precios:
+    # Entorno de ejecución Linux Ubuntu gestionado por GitHub Actions
     runs-on: ubuntu-latest
+    # Estrategia de particionamiento horizontal (4 runners simultáneos independientes)
     strategy:
       fail-fast: false
       matrix:
         shard: [1, 2, 3, 4]
+    # Control de concurrencia por shard para evitar ejecuciones duplicadas solapadas
     concurrency:
       group: scraper-nocturno-precios-shard-${{ matrix.shard }}
       cancel-in-progress: false
     steps:
+      # Paso 1: Clonar el código fuente del repositorio en el runner
       - name: Descargar codigo del repositorio
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
+      # Paso 2: Instalar Python 3.11 activando caché de paquetes pip para acelerar el arranque
       - name: Configurar entorno Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
           cache: 'pip'
 
+      # Paso 3: Actualizar gestor pip e instalar librerías desde requirements.txt (requests, curl_cffi, supabase, bs4)
       - name: Instalar dependencias
         run: |
           pip install --upgrade pip
           pip install -r requirements.txt
 
+      # Paso 4: Ejecutar el scraper periódico sobre el cuarto de catálogo asignado a este shard
       - name: Ejecutar Scraper Periodico de Precios y Stock (Rotaciones LRU - Shard ${{ matrix.shard }}/4)
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
@@ -63,6 +80,7 @@ jobs:
         run: |
           python APP/backend/scraper_periodico.py --shard ${{ matrix.shard }} --total-shards 4
 
+      # Paso 5: Generar tabla resumen de salud por tienda en el panel de GitHub Actions
       - name: Publicar tabla de salud por tienda y alertas no bloqueantes
         if: always()
         env:
@@ -72,6 +90,7 @@ jobs:
         run: |
           python APP/backend/mantenimiento/resumen_salud_ci.py --shard ${{ matrix.shard }}
 
+      # Paso 6: Respaldar los archivos JSON de reporte como artefactos descargables por 7 días
       - name: Guardar reporte de auditoria como artefacto
         uses: actions/upload-artifact@v4
         if: always()
@@ -80,6 +99,7 @@ jobs:
           path: APP/data/reportes/
           retention-days: 7
 
+      # Paso 7: Hacer commit y push automático con rebase seguro de los reportes de auditoría al repositorio
       - name: Sincronizar reporte de auditoria en GitHub si hubo cambios
         continue-on-error: true
         run: |

@@ -9,13 +9,21 @@ para la estandarización y validación estricta de perfumes y ofertas en e-comme
 - Motor determinista de resolución de entidades en 12 capas contra clones, keyword stuffing y cruces de flankers.
 """
 
+# Importación de componentes (contextmanager) desde el módulo 'contextlib'
 from contextlib import contextmanager
+# Importación de componentes (ContextVar) desde el módulo 'contextvars'
 from contextvars import ContextVar
+# Importación de componentes (dataclass) desde el módulo 'dataclasses'
 from dataclasses import dataclass
+# Importación de librería estándar o dependencia externa (re)
 import re
+# Importación de librería estándar o dependencia externa (statistics)
 import statistics
+# Importación de librería estándar o dependencia externa (unicodedata)
 import unicodedata
+# Importación de librería estándar o dependencia externa (urllib.parse)
 import urllib.parse
+# Importación de componentes (Any, Dict, Iterator, List, ...) desde el módulo 'typing'
 from typing import Any, Dict, Iterator, List, Optional, Set, Tuple
 
 # Género esperado del perfume que se está auditando en el hilo/tarea actual.
@@ -24,13 +32,18 @@ from typing import Any, Dict, Iterator, List, Optional, Set, Tuple
 _GENERO_ESPERADO_CTX: ContextVar[Optional[str]] = ContextVar("genero_esperado_perfume", default=None)
 
 
+# Definición de función 'contexto_genero_esperado' (parámetros: genero)
 @contextmanager
 def contexto_genero_esperado(genero: Optional[str]) -> Iterator[None]:
     """Establece temporalmente el género esperado para las validaciones de entidad del bloque."""
+    # Asignamos 'token' con _GENERO_ESPERADO_CTX.set(genero)
     token = _GENERO_ESPERADO_CTX.set(genero)
+    # Bloque try/except para manejo seguro de errores y resiliencia operativa
     try:
+        # Ejecutamos instrucción: yield
         yield
     finally:
+        # Ejecutamos instrucción: _GENERO_ESPERADO_CTX.reset(token)
         _GENERO_ESPERADO_CTX.reset(token)
 
 # =============================================================================
@@ -43,6 +56,9 @@ MARCAS_ARABES_CONOCIDAS: Set[str] = {
     "paris corner", "french avenue", "zimaya", "ard al zaafaran", "al wataniah",
     "khadlaj", "emper", "pendora scents", "riiffs", "anfar", "grandeur",
     "gulf orchid", "rayhaan", "dumont", "flavia", "oriental",
+    "bharara", "ajmal", "naseem", "mirada", "arabiyat prestige", "jo milano",
+    "le falcone", "rue broca", "ahmed al maghribi", "rave", "just jack",
+    "risala", "atralia", "borouj", "auraa", "amaran", "asdaaf", "al absar", "nusuk",
 }
 
 # Mapa de normalización canónica de marcas para evitar fragmentación de catálogo
@@ -274,6 +290,7 @@ ALIAS_MARCA: Dict[str, Tuple[str, ...]] = {
     "Auraa Desire": ("Auraa",),
 }
 
+# Asignamos 'MARCAS_INVALIDAS_CATALOGO' con {'', 'varios', 'perfumero', 'generico', 's...
 MARCAS_INVALIDAS_CATALOGO: Set[str] = {
     "", "varios", "perfumero", "generico", "sin marca", "otros",
     "accesorios", "pack", "set", "muestra", "decant", "test", "s/m",
@@ -326,11 +343,13 @@ PALABRAS_EXCLUSION: List[str] = [
     "whisky", "cama redonda", "para perro", "mitos y leyendas", "en hoja", "perfume corporal",
 ]
 
+# Asignamos '_RE_PALABRAS_EXCLUSION' con re.compile('\\b(?:' + '|'.join((re.escape(...
 _RE_PALABRAS_EXCLUSION = re.compile(
     r"\b(?:" + "|".join(re.escape(p.strip()) for p in PALABRAS_EXCLUSION if p.strip()) + r")\b",
     re.IGNORECASE,
 )
 
+# Asignamos 'RE_PRODUCTO_INVALIDO' con re.compile('(?:\\b\\d+(?:[.,]\\d+)?\\s*(?:...
 RE_PRODUCTO_INVALIDO = re.compile(
     r"(?:"
     r"\b\d+(?:[.,]\d+)?\s*(?:g|gr|grs|gramos)\b|"  # Cosméticos/desodorantes en gramos (ej. 1,5G, 75G)
@@ -343,11 +362,17 @@ RE_PRODUCTO_INVALIDO = re.compile(
 )
 
 
+# Definición de función '_norm_ascii' (parámetros: texto)
 def _norm_ascii(texto: str) -> str:
+    # Evaluamos la condición lógica (not texto) para controlar el flujo
     if not texto:
+        # Retornamos el resultado procesado ('')
         return ""
+    # Asignamos 't' con unicodedata.normalize('NFKD', str(texto))....
     t = unicodedata.normalize("NFKD", str(texto)).encode("ascii", "ignore").decode("utf-8")
+    # Asignamos 't' con re.sub('[^a-z0-9\\s]', ' ', t.lower())
     t = re.sub(r"[^a-z0-9\s]", " ", t.lower())
+    # Retornamos el resultado procesado (re.sub('\\s+', ' ', t).strip())
     return re.sub(r"\s+", " ", t).strip()
 
 
@@ -364,9 +389,13 @@ def normalizar_marca_canonica(marca: str) -> str:
     # de tienda web (ej. 'Perfumes femeninos', 'Tester'), se descarta retornando cadena vacía
     # para forzar la búsqueda de la marca real en el título del producto.
     if not marca or not isinstance(marca, str):
+        # Retornamos el resultado procesado ('')
         return ""
+    # Asignamos 'raw' con marca.strip()
     raw = marca.strip()
+    # Asignamos 'clave' con _norm_ascii(raw)
     clave = _norm_ascii(raw)
+    # Evaluamos la condición lógica (clave in MARCAS_INVALIDAS_CATALOGO or clave.startswi...) para controlar el flujo
     if (
         clave in MARCAS_INVALIDAS_CATALOGO
         or clave.startswith("tester ")
@@ -374,19 +403,27 @@ def normalizar_marca_canonica(marca: str) -> str:
         or clave.startswith("perfumes ")
         or clave.startswith("perfume ")
     ):
+        # Retornamos el resultado procesado ('')
         return ""
+    # Evaluamos la condición lógica (clave in CANONICAL_BRAND_MAP) para controlar el flujo
     if clave in CANONICAL_BRAND_MAP:
+        # Retornamos el resultado procesado (CANONICAL_BRAND_MAP[clave])
         return CANONICAL_BRAND_MAP[clave]
 
     # Comprobar sin espacios para variantes como 'maisonalhambra' o 'montblanc'
     compacta = clave.replace(" ", "")
+    # Recorremos iterativamente cada '(k, canon)' en CANONICAL_BRAND_MAP.items()
     for k, canon in CANONICAL_BRAND_MAP.items():
+        # Evaluamos la condición lógica (k.replace(' ', '') == compacta) para controlar el flujo
         if k.replace(" ", "") == compacta:
+            # Retornamos el resultado procesado (canon)
             return canon
 
     # Si está completamente en mayúsculas o minúsculas, aplicar Title Case limpio
     if raw.isupper() or raw.islower():
+        # Retornamos el resultado procesado (' '.join((w.capitalize() if len(w) > 2 else w.u...)
         return " ".join(w.capitalize() if len(w) > 2 else w.upper() if w.lower() in {"ck", "dkny", "ysl"} else w.capitalize() for w in raw.split())
+    # Retornamos el resultado procesado (re.sub('\\s+', ' ', raw))
     return re.sub(r"\s+", " ", raw)
 
 
@@ -394,9 +431,13 @@ def normalizar_marca_canonica(marca: str) -> str:
 #   Identifica si una oferta corresponde a una botella sellada comercial ('regular') o a una unidad de prueba ('tester').
 def detectar_formato_oferta(titulo: str, url: str = "") -> str:
     """Clasifica si una oferta corresponde a frasco comercial sellado ('regular') o 'tester'."""
+    # Asignamos 'combo' con f"{titulo or ''} {url or ''}".lower()
     combo = f"{titulo or ''} {url or ''}".lower()
+    # Evaluamos la condición lógica (re.search('\\btester\\b', combo)) para controlar el flujo
     if re.search(r"\btester\b", combo):
+        # Retornamos el resultado procesado ('tester')
         return "tester"
+    # Retornamos el resultado procesado ('regular')
     return "regular"
 
 
@@ -412,36 +453,61 @@ def extraer_volumen_ml_opcional(texto: str) -> Optional[int]:
     Extrae la capacidad en mililitros (ml) desde el título, URL o etiqueta de variante.
     Retorna `None` si no se encuentra un volumen explícito válido.
     """
+    # Evaluamos la condición lógica (not texto) para controlar el flujo
     if not texto:
+        # Retornamos el resultado procesado (None)
         return None
+    # Asignamos 't_strip' con urllib.parse.unquote(str(texto)).strip()
     t_strip = urllib.parse.unquote(str(texto)).strip()
+    # Evaluamos la condición lógica (not t_strip or t_strip.lower() in ('default title', ...) para controlar el flujo
     if not t_strip or t_strip.lower() in ("default title", "default", "unico", "único", "talla unica", "talla única"):
+        # Retornamos el resultado procesado (None)
         return None
 
     # Si hay decimales tipo '1,5 ml' o '7.5ml', redondear para detectar decants/viales pequeños
     match_dec_ml = re.search(r"(?<!\d)(\d{1,3}[.,]\d+)\s*[-_]?\s*ml(?![a-zA-Z])", t_strip, re.IGNORECASE)
+    # Evaluamos la condición lógica (match_dec_ml) para controlar el flujo
     if match_dec_ml:
+        # Asignamos 'val_f' con float(match_dec_ml.group(1).replace(',', '...
         val_f = float(match_dec_ml.group(1).replace(",", "."))
+        # Asignamos 'val_i' con max(1, int(round(val_f)))
         val_i = max(1, int(round(val_f)))
+        # Evaluamos la condición lógica (1 <= val_i <= 1000) para controlar el flujo
         if 1 <= val_i <= 1000:
+            # Retornamos el resultado procesado (val_i)
             return val_i
 
+    # Asignamos 'match_ml' con re.search('(?<!\\d)(\\d{1,4})\\s*[-_]?\\s*...
     match_ml = re.search(r"(?<!\d)(\d{1,4})\s*[-_]?\s*(?:ml(?![a-zA-Z])|m\b)", t_strip, re.IGNORECASE)
+    # Evaluamos la condición lógica (match_ml) para controlar el flujo
     if match_ml:
+        # Asignamos 'val' con int(match_ml.group(1))
         val = int(match_ml.group(1))
+        # Evaluamos la condición lógica (2 <= val <= 1000) para controlar el flujo
         if 2 <= val <= 1000:
+            # Retornamos el resultado procesado (val)
             return val
 
+    # Asignamos 'match_oz' con re.search('(?<!\\d)(\\d+(?:\\.\\d+)?)\\s*(...
     match_oz = re.search(r"(?<!\d)(\d+(?:\.\d+)?)\s*(?:fl\.?\s*oz|oz)(?![a-zA-Z])", t_strip, re.IGNORECASE)
+    # Evaluamos la condición lógica (match_oz) para controlar el flujo
     if match_oz:
+        # Asignamos 'val_oz' con float(match_oz.group(1))
         val_oz = float(match_oz.group(1))
+        # Asignamos 'ml_estimado' con int(round(val_oz * 29.5735))
         ml_estimado = int(round(val_oz * 29.5735))
+        # Recorremos iterativamente cada 'estandar' en [30, 50, 60, 75, 80, 90, 100, 105, 125, 15...
         for estandar in [30, 50, 60, 75, 80, 90, 100, 105, 125, 150, 200]:
+            # Evaluamos la condición lógica (abs(ml_estimado - estandar) <= 4) para controlar el flujo
             if abs(ml_estimado - estandar) <= 4:
+                # Retornamos el resultado procesado (estandar)
                 return estandar
+        # Evaluamos la condición lógica (2 <= ml_estimado <= 1000) para controlar el flujo
         if 2 <= ml_estimado <= 1000:
+            # Retornamos el resultado procesado (ml_estimado)
             return ml_estimado
 
+    # Retornamos el resultado procesado (None)
     return None
 
 
@@ -449,7 +515,9 @@ def extraer_volumen_ml_opcional(texto: str) -> Optional[int]:
 #   Mantiene compatibilidad con llamadas que requieren un entero por defecto cuando `extraer_volumen_ml_opcional` es `None`.
 def extraer_volumen_ml(texto: str, default: int = 100) -> int:
     """Wrapper retrocompatible sobre `extraer_volumen_ml_opcional`."""
+    # Asignamos 'val' con extraer_volumen_ml_opcional(texto)
     val = extraer_volumen_ml_opcional(texto)
+    # Retornamos el resultado procesado (val if val is not None else default)
     return val if val is not None else default
 
 
@@ -471,29 +539,47 @@ def resolver_volumen_oferta(
     es_tester: bool = False,
 ) -> Optional[int]:
     """Determina de forma verificable el volumen en ml de una oferta o retorna `None` si es ambiguo/contradictorio."""
+    # Asignamos 'vol_var' con extraer_volumen_ml_opcional(titulo_variante)
     vol_var = extraer_volumen_ml_opcional(titulo_variante)
+    # Asignamos 'vol_prod' con extraer_volumen_ml_opcional(titulo_producto)
     vol_prod = extraer_volumen_ml_opcional(titulo_producto)
+    # Asignamos 'slug_tail' con urllib.parse.unquote(str(url_slug or ''))....
     slug_tail = urllib.parse.unquote(str(url_slug or "")).split("?")[0].split("#")[0].rstrip("/").split("/")[-1]
+    # Asignamos 'vol_slug' con extraer_volumen_ml_opcional(slug_tail)
     vol_slug = extraer_volumen_ml_opcional(slug_tail)
 
     # En productos multivariante sin volumen en el título de la variante (y donde tampoco es par regular/tester único),
     # evitamos usar volumen_ml_defecto para no colapsar tallas distintas a 100 ml.
     vol_resuelto: Optional[int] = None
+    # Evaluamos la condición lógica (vol_var is not None) para controlar el flujo
     if vol_var is not None:
+        # Asignamos 'vol_resuelto' con vol_var
         vol_resuelto = vol_var
+    # Evaluamos la condición lógica (vol_prod is not None) para controlar el flujo
     elif vol_prod is not None:
+        # Asignamos 'vol_resuelto' con vol_prod
         vol_resuelto = vol_prod
+    # Evaluamos la condición lógica (vol_slug is not None) para controlar el flujo
     elif vol_slug is not None:
+        # Asignamos 'vol_resuelto' con vol_slug
         vol_resuelto = vol_slug
+    # Evaluamos la condición lógica (n_variantes_producto <= 1 and volumen_ml_defecto is ...) para controlar el flujo
     elif n_variantes_producto <= 1 and volumen_ml_defecto is not None:
+        # Bloque try/except para manejo seguro de errores y resiliencia operativa
         try:
+            # Asignamos 'v_def' con int(round(float(volumen_ml_defecto)))
             v_def = int(round(float(volumen_ml_defecto)))
+            # Evaluamos la condición lógica (25 <= v_def <= 1000) para controlar el flujo
             if 25 <= v_def <= 1000:
+                # Asignamos 'vol_resuelto' con v_def
                 vol_resuelto = v_def
         except (ValueError, TypeError):
+            # Asignamos 'vol_resuelto' con None
             vol_resuelto = None
 
+    # Evaluamos la condición lógica (vol_resuelto is None) para controlar el flujo
     if vol_resuelto is None:
+        # Retornamos el resultado procesado (None)
         return None
 
     # Guardia de coherencia URL <-> volumen en productos monovariante (no-tester):
@@ -507,8 +593,10 @@ def resolver_volumen_oferta(
         and vol_var is None
         and abs(vol_resuelto - vol_slug) > 1
     ):
+        # Retornamos el resultado procesado (None)
         return None
 
+    # Retornamos el resultado procesado (vol_resuelto)
     return vol_resuelto
 
 
@@ -516,23 +604,41 @@ def resolver_volumen_oferta(
 #   Identifica la concentración de la fragancia: Parfum / Extrait, Eau de Parfum (EDP), Eau de Toilette (EDT) o Eau de Cologne (EDC).
 def extraer_concentracion(texto: str) -> str:
     """Identifica y normaliza la concentración olfativa del perfume."""
+    # Asignamos 't' con (texto or '').lower()
     t = (texto or "").lower()
+    # Evaluamos la condición lógica ('elixir' in t) para controlar el flujo
     if "elixir" in t:
+        # Retornamos el resultado procesado ('Elixir')
         return "Elixir"
+    # Evaluamos la condición lógica ('extrait' in t or 'extract' in t or 'exdp' in t) para controlar el flujo
     if "extrait" in t or "extract" in t or "exdp" in t:
+        # Retornamos el resultado procesado ('Extrait de Parfum')
         return "Extrait de Parfum"
+    # Evaluamos la condición lógica ('eau de parfum intense' in t or 'edp intense' in t) para controlar el flujo
     if "eau de parfum intense" in t or "edp intense" in t:
+        # Retornamos el resultado procesado ('Eau de Parfum Intense')
         return "Eau de Parfum Intense"
+    # Evaluamos la condición lógica ('eau de parfum' in t or re.search('\\bedp\\b', t)) para controlar el flujo
     if "eau de parfum" in t or re.search(r"\bedp\b", t):
+        # Retornamos el resultado procesado ('Eau de Parfum')
         return "Eau de Parfum"
+    # Evaluamos la condición lógica ('eau de toilette intense' in t or 'edt intense' in t) para controlar el flujo
     if "eau de toilette intense" in t or "edt intense" in t:
+        # Retornamos el resultado procesado ('Eau de Toilette Intense')
         return "Eau de Toilette Intense"
+    # Evaluamos la condición lógica ('eau de toilette' in t or re.search('\\bedt\\b', t)) para controlar el flujo
     if "eau de toilette" in t or re.search(r"\bedt\b", t):
+        # Retornamos el resultado procesado ('Eau de Toilette')
         return "Eau de Toilette"
+    # Evaluamos la condición lógica ('eau de cologne' in t or re.search('\\bedc\\b', t) o...) para controlar el flujo
     if "eau de cologne" in t or re.search(r"\bedc\b", t) or "colonia" in t:
+        # Retornamos el resultado procesado ('Eau de Cologne')
         return "Eau de Cologne"
+    # Evaluamos la condición lógica ('parfum' in t) para controlar el flujo
     if "parfum" in t:
+        # Retornamos el resultado procesado ('Parfum')
         return "Parfum"
+    # Retornamos el resultado procesado ('Eau de Parfum')
     return "Eau de Parfum"
 
 
@@ -543,46 +649,72 @@ MARCADORES_GENERO_FEMENINO: Tuple[str, ...] = (
     "pour femme", "femme", "mujer", "mujeres", "women", "woman", "for her", "donna",
     "dama", "damas", "femenino", "femenina", "lady", "girl",
 )
+# Asignamos 'MARCADORES_GENERO_MASCULINO' con ('pour homme', 'homme', 'hombre', 'hombres...
 MARCADORES_GENERO_MASCULINO: Tuple[str, ...] = (
     "pour homme", "homme", "hombre", "hombres", "men", "man", "for him", "uomo",
     "caballero", "caballeros", "masculino", "varon", "male", "boy",
 )
+# Asignamos '_RE_FEMENINO' con re.compile('\\b(?:' + '|'.join((re.escape(...
 _RE_FEMENINO = re.compile(r"\b(?:" + "|".join(re.escape(k) for k in MARCADORES_GENERO_FEMENINO) + r")\b")
+# Asignamos '_RE_MASCULINO' con re.compile('\\b(?:' + '|'.join((re.escape(...
 _RE_MASCULINO = re.compile(r"\b(?:" + "|".join(re.escape(k) for k in MARCADORES_GENERO_MASCULINO) + r")\b")
 
 
+# Definición de función 'detectar_marcadores_genero' (parámetros: texto)
 def detectar_marcadores_genero(texto: str) -> Tuple[bool, bool]:
     """Retorna `(tiene_marcador_femenino, tiene_marcador_masculino)` evaluando palabras completas."""
+    # Asignamos 't' con _norm_ascii(texto)
     t = _norm_ascii(texto)
+    # Evaluamos la condición lógica (not t) para controlar el flujo
     if not t:
+        # Retornamos el resultado procesado ((False, False))
         return False, False
+    # Retornamos el resultado procesado ((bool(_RE_FEMENINO.search(t)), bool(_RE_MASCULI...)
     return bool(_RE_FEMENINO.search(t)), bool(_RE_MASCULINO.search(t))
 
 
+# Definición de función 'detectar_genero_explicito' (parámetros: texto)
 def detectar_genero_explicito(texto: str) -> Optional[str]:
     """
     Retorna 'Mujer' u 'Hombre' solo cuando el texto declara un único género de forma inequívoca.
     Retorna None si no hay marcadores o si aparecen marcadores de ambos géneros.
     """
+    # Asignamos '(fem, masc)' con detectar_marcadores_genero(texto)
     fem, masc = detectar_marcadores_genero(texto)
+    # Evaluamos la condición lógica (fem and (not masc)) para controlar el flujo
     if fem and not masc:
+        # Retornamos el resultado procesado ('Mujer')
         return "Mujer"
+    # Evaluamos la condición lógica (masc and (not fem)) para controlar el flujo
     if masc and not fem:
+        # Retornamos el resultado procesado ('Hombre')
         return "Hombre"
+    # Retornamos el resultado procesado (None)
     return None
 
 
+# Definición de función 'normalizar_genero' (parámetros: genero)
 def normalizar_genero(genero: Optional[str]) -> Optional[str]:
     """Normaliza etiquetas de género heterogéneas a 'Mujer', 'Hombre', 'Unisex' o None."""
+    # Asignamos 'g' con _norm_ascii(genero or '')
     g = _norm_ascii(genero or "")
+    # Evaluamos la condición lógica (not g) para controlar el flujo
     if not g:
+        # Retornamos el resultado procesado (None)
         return None
+    # Evaluamos la condición lógica (g in ('mujer', 'femenino', 'female', 'women', 'woman...) para controlar el flujo
     if g in ("mujer", "femenino", "female", "women", "woman", "dama", "f"):
+        # Retornamos el resultado procesado ('Mujer')
         return "Mujer"
+    # Evaluamos la condición lógica (g in ('hombre', 'masculino', 'male', 'men', 'man', '...) para controlar el flujo
     if g in ("hombre", "masculino", "male", "men", "man", "caballero", "h"):
+        # Retornamos el resultado procesado ('Hombre')
         return "Hombre"
+    # Evaluamos la condición lógica (g in ('unisex', 'u', 'ambos')) para controlar el flujo
     if g in ("unisex", "u", "ambos"):
+        # Retornamos el resultado procesado ('Unisex')
         return "Unisex"
+    # Retornamos el resultado procesado (None)
     return None
 
 
@@ -593,41 +725,72 @@ def normalizar_genero(genero: Optional[str]) -> Optional[str]:
 #   - Iguales             -> (True, genero_normalizado)
 #   - 'Hombre' vs 'Mujer' -> (False, '') (nunca fusionar automáticamente Pour Homme con Pour Femme).
 def generos_compatibles(g1: Optional[str], g2: Optional[str]) -> Tuple[bool, str]:
+    # Asignamos 'n1' con normalizar_genero(g1) or 'Unisex'
     n1 = normalizar_genero(g1) or "Unisex"
+    # Asignamos 'n2' con normalizar_genero(g2) or 'Unisex'
     n2 = normalizar_genero(g2) or "Unisex"
+    # Evaluamos la condición lógica (n1 == n2) para controlar el flujo
     if n1 == n2:
+        # Retornamos el resultado procesado ((True, n1))
         return True, n1
+    # Evaluamos la condición lógica (n1 == 'Unisex') para controlar el flujo
     if n1 == "Unisex":
+        # Retornamos el resultado procesado ((True, n2))
         return True, n2
+    # Evaluamos la condición lógica (n2 == 'Unisex') para controlar el flujo
     if n2 == "Unisex":
+        # Retornamos el resultado procesado ((True, n1))
         return True, n1
+    # Retornamos el resultado procesado ((False, ''))
     return False, ""
 
 
+# Definición de función 'extraer_genero' (parámetros: texto)
 def extraer_genero(texto: str) -> str:
     """Determina el género objetivo del perfume ('Mujer', 'Hombre' o 'Unisex')."""
+    # Asignamos 't_raw' con (texto or '').lower()
     t_raw = (texto or "").lower()
+    # Asignamos '(fem, masc)' con detectar_marcadores_genero(t_raw)
     fem, masc = detectar_marcadores_genero(t_raw)
+    # Evaluamos la condición lógica (re.search('\\(\\s*m\\s*\\)', t_raw)) para controlar el flujo
     if re.search(r"\(\s*m\s*\)", t_raw):
+        # Asignamos 'fem' con True
         fem = True
+    # Evaluamos la condición lógica (re.search('\\(\\s*h\\s*\\)', t_raw)) para controlar el flujo
     if re.search(r"\(\s*h\s*\)", t_raw):
+        # Asignamos 'masc' con True
         masc = True
+    # Evaluamos la condición lógica (fem and (not masc)) para controlar el flujo
     if fem and not masc:
+        # Retornamos el resultado procesado ('Mujer')
         return "Mujer"
+    # Evaluamos la condición lógica (masc and (not fem)) para controlar el flujo
     if masc and not fem:
+        # Retornamos el resultado procesado ('Hombre')
         return "Hombre"
+    # Evaluamos la condición lógica (fem and masc) para controlar el flujo
     if fem and masc:
         # Ambos marcadores: priorizar el identificador más específico del nombre comercial
         t = _norm_ascii(t_raw)
+        # Evaluamos la condición lógica (re.search('\\b(?:pour femme|femme|woman|for her)\\b'...) para controlar el flujo
         if re.search(r"\b(?:pour femme|femme|woman|for her)\b", t):
+            # Retornamos el resultado procesado ('Mujer')
             return "Mujer"
+        # Evaluamos la condición lógica (re.search('\\b(?:pour homme|homme|for him|uomo)\\b', t)) para controlar el flujo
         if re.search(r"\b(?:pour homme|homme|for him|uomo)\b", t):
+            # Retornamos el resultado procesado ('Hombre')
             return "Hombre"
+        # Retornamos el resultado procesado ('Unisex')
         return "Unisex"
+    # Evaluamos la condición lógica (re.search('\\s+m\\s*$', t_raw)) para controlar el flujo
     if re.search(r"\s+m\s*$", t_raw):
+        # Retornamos el resultado procesado ('Mujer')
         return "Mujer"
+    # Evaluamos la condición lógica (re.search('\\s+h\\s*$', t_raw)) para controlar el flujo
     if re.search(r"\s+h\s*$", t_raw):
+        # Retornamos el resultado procesado ('Hombre')
         return "Hombre"
+    # Retornamos el resultado procesado ('Unisex')
     return "Unisex"
 
 
@@ -635,11 +798,17 @@ def extraer_genero(texto: str) -> str:
 #   Determina si una marca o perfume pertenece a la perfumería árabe (ej. Lattafa, Armaf, Afnan, Rasasi).
 def es_arabe(marca: str, nombre: str = "") -> bool:
     """Indica si una fragancia pertenece a perfumería oriental / árabe."""
+    # Asignamos 'm_canon' con normalizar_marca_canonica(marca).lower()
     m_canon = normalizar_marca_canonica(marca).lower()
+    # Asignamos 'texto' con f"{m_canon} {(marca or '').lower()} {(nomb...
     texto = f"{m_canon} {(marca or '').lower()} {(nombre or '').lower()}"
+    # Evaluamos la condición lógica (any((m in texto for m in MARCAS_ARABES_CONOCIDAS))) para controlar el flujo
     if any(m in texto for m in MARCAS_ARABES_CONOCIDAS):
+        # Retornamos el resultado procesado (True)
         return True
+    # Asignamos 'lineas_iconicas' con ['khamrah', 'asad', 'club de nuit', 'hawas...
     lineas_iconicas = ["khamrah", "asad", "club de nuit", "hawas", "fakhar", "yara", "bade'e al oud", "badee al oud"]
+    # Retornamos el resultado procesado (any((k in texto for k in lineas_iconicas)))
     return any(k in texto for k in lineas_iconicas)
 
 
@@ -651,17 +820,27 @@ def es_precio_valido(precio: Optional[Any], min_clp: int = 5000) -> bool:
     Descarta nulos, valores menores al umbral comercial ($5.000 CLP por defecto),
     valores >= $1.000.000 CLP y placeholders de sin stock ($9.999.999 / $999.999).
     """
+    # Evaluamos la condición lógica (precio is None) para controlar el flujo
     if precio is None:
+        # Retornamos el resultado procesado (False)
         return False
+    # Bloque try/except para manejo seguro de errores y resiliencia operativa
     try:
+        # Asignamos 'p' con int(round(float(precio)))
         p = int(round(float(precio)))
     except (ValueError, TypeError):
+        # Retornamos el resultado procesado (False)
         return False
 
+    # Evaluamos la condición lógica (p < min_clp or p >= 1000000) para controlar el flujo
     if p < min_clp or p >= 1000000:
+        # Retornamos el resultado procesado (False)
         return False
+    # Evaluamos la condición lógica (p in (9999999, 9999990, 999999)) para controlar el flujo
     if p in (9999999, 9999990, 999999):
+        # Retornamos el resultado procesado (False)
         return False
+    # Retornamos el resultado procesado (True)
     return True
 
 
@@ -678,55 +857,86 @@ def es_producto_perfume_valido(
     Valida que un producto sea un frasco individual de perfume genuino y NO un accesorio,
     cosmético en gramos, bruma, crema, desodorante, set/combo multipieza ni decant (<25 ml).
     """
+    # Evaluamos la condición lógica (not titulo or not isinstance(titulo, str) or len(tit...) para controlar el flujo
     if not titulo or not isinstance(titulo, str) or len(titulo.strip()) < 3:
+        # Retornamos el resultado procesado (False)
         return False
 
+    # Evaluamos la condición lógica (marca and marca.strip()) para controlar el flujo
     if marca and marca.strip():
+        # Asignamos 'm_clean' con _norm_ascii(marca)
         m_clean = _norm_ascii(marca)
+        # Evaluamos la condición lógica (m_clean in MARCAS_INVALIDAS_CATALOGO) para controlar el flujo
         if m_clean in MARCAS_INVALIDAS_CATALOGO:
+            # Retornamos el resultado procesado (False)
             return False
 
+    # Asignamos 't' con titulo.lower()
     t = titulo.lower()
+    # Evaluamos la condición lógica (_RE_PALABRAS_EXCLUSION.search(t)) para controlar el flujo
     if _RE_PALABRAS_EXCLUSION.search(t):
+        # Retornamos el resultado procesado (False)
         return False
 
+    # Evaluamos la condición lógica (RE_PRODUCTO_INVALIDO.search(t)) para controlar el flujo
     if RE_PRODUCTO_INVALIDO.search(t):
+        # Retornamos el resultado procesado (False)
         return False
 
     # Si el título declara un volumen explícito inferior al mínimo de frasco comercial (ej. 5ml, 10ml, 15ml), descartar
     vol_explicito = extraer_volumen_ml(t, default=0)
+    # Evaluamos la condición lógica (0 < vol_explicito < volumen_min_ml) para controlar el flujo
     if 0 < vol_explicito < volumen_min_ml:
+        # Retornamos el resultado procesado (False)
         return False
 
+    # Evaluamos la condición lógica (tags) para controlar el flujo
     if tags:
+        # Asignamos 'tags_str' con ' '.join((str(x) for x in tags)).lower()
         tags_str = " ".join(str(x) for x in tags).lower()
+        # Evaluamos la condición lógica (_RE_PALABRAS_EXCLUSION.search(tags_str)) para controlar el flujo
         if _RE_PALABRAS_EXCLUSION.search(tags_str):
+            # Retornamos el resultado procesado (False)
             return False
 
+    # Retornamos el resultado procesado (True)
     return True
 
 
+# Asignamos 'PALABRAS_REPETIDAS_LEGITIMAS' con {'anais', 'amor', 'can', 'plus', 'ricci', ...
 PALABRAS_REPETIDAS_LEGITIMAS = {
     "anais", "amor", "can", "plus", "ricci", "love", "yum", "pyar", "ella"
 }
 
 
+# Definición de función 'eliminar_palabras_duplicadas' (parámetros: texto)
 def eliminar_palabras_duplicadas(texto: str) -> str:
     """
     Elimina palabras repetidas de forma consecutiva sin distinguir mayúsculas ni acentos.
     Ej: 'Good Girl Jasmine Absolute Absolute' -> 'Good Girl Jasmine Absolute'.
     Preserva nombres legítimos repetidos como 'Anais Anais', 'Amor Amor', 'Can Can', 'Plus Plus'.
     """
+    # Evaluamos la condición lógica (not texto) para controlar el flujo
     if not texto:
+        # Retornamos el resultado procesado ('')
         return ""
+    # Asignamos 'palabras' con str(texto).split()
     palabras = str(texto).split()
+    # Asignamos 'resultado' con []
     resultado: List[str] = []
+    # Recorremos iterativamente cada 'w' en palabras
     for w in palabras:
+        # Asignamos 'norm_w' con _norm_ascii(w)
         norm_w = _norm_ascii(w)
+        # Evaluamos la condición lógica (resultado and _norm_ascii(resultado[-1]) == norm_w a...) para controlar el flujo
         if resultado and _norm_ascii(resultado[-1]) == norm_w and norm_w:
+            # Evaluamos la condición lógica (norm_w not in PALABRAS_REPETIDAS_LEGITIMAS) para controlar el flujo
             if norm_w not in PALABRAS_REPETIDAS_LEGITIMAS:
+                # Saltamos a la siguiente iteración del ciclo descartando el elemento actual
                 continue
+        # Ejecutamos instrucción: resultado.append(w)
         resultado.append(w)
+    # Retornamos el resultado procesado (' '.join(resultado))
     return " ".join(resultado)
 
 
@@ -739,9 +949,12 @@ def limpiar_nombre_perfume(titulo: str, marca: str = "") -> str:
     PRESERVANDO flankers esenciales ('Intense', 'Elixir', 'Extreme', 'Absolu', 'Le Parfum',
     'Royal', 'Lucky', 'Profondo', 'Flame', 'Energy', 'Pour Homme', 'Pour Femme').
     """
+    # Evaluamos la condición lógica (not titulo) para controlar el flujo
     if not titulo:
+        # Retornamos el resultado procesado ('')
         return ""
 
+    # Asignamos 'limpio' con str(titulo).strip()
     limpio = str(titulo).strip()
 
     # 1. Remover prefijos genéricos de categoría o etiqueta 'Tester' inicial antes de extraer marca
@@ -754,16 +967,24 @@ def limpiar_nombre_perfume(titulo: str, marca: str = "") -> str:
 
     # 2. Remover marca (tanto cruda como canónica y sub-marcas declarativas en ALIAS_MARCA) si aparece como prefijo
     marcas_a_quitar = set()
+    # Evaluamos la condición lógica (marca) para controlar el flujo
     if marca:
+        # Ejecutamos instrucción: marcas_a_quitar.add(marca.strip())
         marcas_a_quitar.add(marca.strip())
+        # Asignamos 'm_canon' con normalizar_marca_canonica(marca)
         m_canon = normalizar_marca_canonica(marca)
+        # Evaluamos la condición lógica (m_canon) para controlar el flujo
         if m_canon:
+            # Ejecutamos instrucción: marcas_a_quitar.add(m_canon)
             marcas_a_quitar.add(m_canon)
+            # Recorremos iterativamente cada 'alias_m' en ALIAS_MARCA.get(m_canon, ())
             for alias_m in ALIAS_MARCA.get(m_canon, ()):
+                # Ejecutamos instrucción: marcas_a_quitar.add(alias_m)
                 marcas_a_quitar.add(alias_m)
 
     # 3. Remover especificaciones de mililitros (1 a 4 dígitos + decimales) y onzas primero
     limpio = re.sub(r"\b\d{1,4}(?:[.,]\d+)?\s*(?:ml|m)\b", "", limpio, flags=re.IGNORECASE)
+    # Asignamos 'limpio' con re.sub('\\b\\d+(?:[.,]\\d+)?\\s*(?:fl\\.?\...
     limpio = re.sub(r"\b\d+(?:[.,]\d+)?\s*(?:fl\.?\s*oz|oz)\b", "", limpio, flags=re.IGNORECASE)
 
     # 4. Remover concentraciones puras (pero conservar 'Elixir', 'Le Parfum', 'Intense', 'Extreme', 'Absolu'!)
@@ -776,42 +997,64 @@ def limpiar_nombre_perfume(titulo: str, marca: str = "") -> str:
 
     # 5. Remover ruido comercial y etiquetas de género genéricas que NO son parte del nombre oficial
     limpio = re.sub(r"\((?:h|m|u|hombre|mujer|unisex|men|women|tester)\)", "", limpio, flags=re.IGNORECASE)
+    # Evaluamos la condición lógica (marca) para controlar el flujo
     if marca:
+        # Recorremos iterativamente cada 'm_var' en sorted(marcas_a_quitar, key=len, reverse=T...
         for m_var in sorted(marcas_a_quitar, key=len, reverse=True):
+            # Evaluamos la condición lógica (m_var) para controlar el flujo
             if m_var:
+                # Asignamos 'limpio' con re.sub(f'\\bde\\s+{re.escape(m_var)}\\b', ...
                 limpio = re.sub(rf"\bde\s+{re.escape(m_var)}\b", "", limpio, flags=re.IGNORECASE)
+    # Asignamos 'limpio' con re.sub('\\bpara\\s+(?:hombre|mujer|unisex|...
     limpio = re.sub(r"\bpara\s+(?:hombre|mujer|unisex|caballero|dama|varon|varón)\b", "", limpio, flags=re.IGNORECASE)
 
+    # Asignamos 'ruidos' con ['tester', 'vaporizador', 'natural spray',...
     ruidos = [
         "tester", "vaporizador", "natural spray", "spray", "nuevo", "nueva coleccion",
         "nueva colección", "original", "oferta", "envio gratis", "despacho", "sellado",
         "hombre", "mujer", "unisex", "dama", "varon", "varón", "caballero",
     ]
+    # Recorremos iterativamente cada 'r' en ruidos
     for r in ruidos:
+        # Asignamos 'limpio' con re.sub(f'\\b{re.escape(r)}\\b', '', limpio...
         limpio = re.sub(rf"\b{re.escape(r)}\b", "", limpio, flags=re.IGNORECASE)
 
     # Ordenar variantes de marca de más larga a más corta para remover prefijo o sufijo redundante
     # preservando nombres epónimos ('Azzaro', 'Animale', 'Halloween') y líneas ('Dior Homme', 'Miss Dior', 'Bleu de Chanel').
     limpio = re.sub(r"\s+", " ", limpio).strip()
+    # Recorremos iterativamente cada 'm_var' en sorted(marcas_a_quitar, key=len, reverse=T...
     for m_var in sorted(marcas_a_quitar, key=len, reverse=True):
+        # Evaluamos la condición lógica (not m_var) para controlar el flujo
         if not m_var:
+            # Saltamos a la siguiente iteración del ciclo descartando el elemento actual
             continue
+        # Evaluamos la condición lógica (not re.match(f'^{re.escape(m_var)}\\s+(?:homme|addic...) para controlar el flujo
         if not re.match(rf"^{re.escape(m_var)}\s+(?:homme|addict|issimo)\b", limpio, flags=re.IGNORECASE):
+            # Asignamos 'cand_ini' con re.sub(f'^(?:{re.escape(m_var)}\\s*[-|:/]?...
             cand_ini = re.sub(rf"^(?:{re.escape(m_var)}\s*[-|:/]?\s*)+", "", limpio, flags=re.IGNORECASE).strip()
+            # Evaluamos la condición lógica (len(cand_ini) >= 2) para controlar el flujo
             if len(cand_ini) >= 2:
+                # Asignamos 'limpio' con cand_ini
                 limpio = cand_ini
+        # Evaluamos la condición lógica (not re.search(f"\\b(?:miss|bleu\\s+de|coco|l['’]eau\...) para controlar el flujo
         if not re.search(rf"\b(?:miss|bleu\s+de|coco|l['’]eau\s+d['’]|eau\s+de)\s+{re.escape(m_var)}\s*$", limpio, flags=re.IGNORECASE):
+            # Asignamos 'cand_fin' con re.sub(f'\\s+(?:(?:de|by)\\s+)?{re.escape(...
             cand_fin = re.sub(rf"\s+(?:(?:de|by)\s+)?{re.escape(m_var)}\s*$", "", limpio, flags=re.IGNORECASE).strip()
+            # Evaluamos la condición lógica (len(cand_fin) >= 2) para controlar el flujo
             if len(cand_fin) >= 2:
+                # Asignamos 'limpio' con cand_fin
                 limpio = cand_fin
 
     # Remover colas truncadas de concentración ('... Extrait De', '... Eau De') y preposiciones finales
     limpio = re.sub(r"\s+\b(?:extrait\s+de|eau\s+de)\b\s*$", "", limpio, flags=re.IGNORECASE)
+    # Asignamos 'limpio' con re.sub('\\s+\\b(?:de|para|for|by)\\b\\s*$'...
     limpio = re.sub(r"\s+\b(?:de|para|for|by)\b\s*$", "", limpio, flags=re.IGNORECASE)
 
     # Remover 'for men'/'men' o 'for women'/'woman' sueltos al final salvo cuando forman parte del nombre (ej. '212 Men', '212 VIP Men', 'CH Men')
     if not re.search(r"\b(?:212|ch|solo|boss)\s+(?:vip\s+)?men\b", limpio, flags=re.IGNORECASE):
+        # Asignamos 'limpio' con re.sub('\\s+\\b(?:for\\s+)?(?:men|man|wome...
         limpio = re.sub(r"\s+\b(?:for\s+)?(?:men|man|women|woman)\b\s*$", "", limpio, flags=re.IGNORECASE)
+    # Asignamos 'limpio' con re.sub('\\s+\\b(?:de|para|for)\\b\\s*$', '...
     limpio = re.sub(r"\s+\b(?:de|para|for)\b\s*$", "", limpio, flags=re.IGNORECASE)
 
     # 6. Remover códigos finales de catálogo (' H', ' M', ' U')
@@ -819,25 +1062,37 @@ def limpiar_nombre_perfume(titulo: str, marca: str = "") -> str:
 
     # 7. Limpiar signos residuales respetando apóstrofes y '&' dentro de nombres (ej. J'adore, D&G, Bade'e)
     limpio = re.sub(r"\s*[.]+\s*$", "", limpio)
+    # Asignamos 'limpio' con re.sub('[-–—/|()\\[\\]:+]+', ' ', limpio)
     limpio = re.sub(r"[-–—/|()\[\]:+]+", " ", limpio)
+    # Asignamos 'limpio' con re.sub('\\s+', ' ', limpio).strip()
     limpio = re.sub(r"\s+", " ", limpio).strip()
 
     # 8. Eliminar palabras consecutivas repetidas (ej. 'Good Girl Jasmine Absolute Absolute')
     limpio = eliminar_palabras_duplicadas(limpio)
 
+    # Evaluamos la condición lógica (len(limpio) < 2) para controlar el flujo
     if len(limpio) < 2:
+        # Asignamos 'limpio' con titulo.split('-')[0].strip()
         limpio = titulo.split("-")[0].strip()
 
     # Capitalización inteligente preservando números romanos o siglas cortas
     palabras = []
+    # Recorremos iterativamente cada 'w' en limpio.split()
     for w in limpio.split():
+        # Evaluamos la condición lógica (w.upper() in {'II', 'III', 'IV', 'VI', 'VIP', 'NYC',...) para controlar el flujo
         if w.upper() in {"II", "III", "IV", "VI", "VIP", "NYC", "YSL", "CH", "CK", "XS"}:
+            # Ejecutamos instrucción: palabras.append(w.upper())
             palabras.append(w.upper())
+        # Evaluamos la condición lógica ("'" in w or '’' in w) para controlar el flujo
         elif "'" in w or "’" in w:
+            # Asignamos 'partes' con re.split("(['’])", w)
             partes = re.split(r"(['’])", w)
+            # Ejecutamos instrucción: palabras.append(''.join((p.capitalize() if p not in ...
             palabras.append("".join(p.capitalize() if p not in ("'", "’") else p for p in partes))
         else:
+            # Ejecutamos instrucción: palabras.append(w.capitalize())
             palabras.append(w.capitalize())
+    # Retornamos el resultado procesado (' '.join(palabras))
     return " ".join(palabras)
 
 
@@ -845,16 +1100,25 @@ def limpiar_nombre_perfume(titulo: str, marca: str = "") -> str:
 #   Infiere el género explícito ('Hombre' o 'Mujer') cuando `genero_actual` es vacío o 'Unisex'
 #   pero el propio nombre contiene un marcador inequívoco ('Pour Femme', 'For Him', 'Pour Homme', etc.).
 def inferir_genero_explicito_nombre(nombre: str, genero_actual: Optional[str] = None) -> str:
+    # Asignamos 'g_norm' con normalizar_genero(genero_actual) or 'Unisex'
     g_norm = normalizar_genero(genero_actual) or "Unisex"
+    # Evaluamos la condición lógica (g_norm in ('Hombre', 'Mujer')) para controlar el flujo
     if g_norm in ("Hombre", "Mujer"):
+        # Retornamos el resultado procesado (g_norm)
         return g_norm
+    # Asignamos 's_low' con ''.join((c for c in unicodedata.normalize(...
     s_low = "".join(
         c for c in unicodedata.normalize("NFKD", str(nombre or "")) if not unicodedata.combining(c)
     ).lower()
+    # Evaluamos la condición lógica (re.search('\\b(pour\\s+femme|for\\s+women|for\\s+her...) para controlar el flujo
     if re.search(r"\b(pour\s+femme|for\s+women|for\s+her|for\s+woman|women|woman|femme|mujer|dama)\b", s_low):
+        # Retornamos el resultado procesado ('Mujer')
         return "Mujer"
+    # Evaluamos la condición lógica (re.search('\\b(pour\\s+homme|for\\s+men|for\\s+him|f...) para controlar el flujo
     if re.search(r"\b(pour\s+homme|for\s+men|for\s+him|for\s+man|men|man|homme|hombre|varon)\b", s_low):
+        # Retornamos el resultado procesado ('Hombre')
         return "Hombre"
+    # Retornamos el resultado procesado ('Unisex')
     return "Unisex"
 
 
@@ -874,40 +1138,65 @@ def clave_identidad_perfume(
     concentracion: str = "",
     incluir_genero_nombre: bool = False,
 ) -> str:
+    # Asignamos 'm_can' con normalizar_marca_canonica(marca) or (marca...
     m_can = normalizar_marca_canonica(marca) or (marca or "").strip()
+    # Asignamos 'base' con limpiar_nombre_perfume(nombre, m_can or ma...
     base = limpiar_nombre_perfume(nombre, m_can or marca) or str(nombre or "").strip()
+    # Asignamos 's' con ''.join((c for c in unicodedata.normalize(...
     s = "".join(c for c in unicodedata.normalize("NFKD", base) if not unicodedata.combining(c)).lower()
+    # Asignamos 't' con ''.join((c for c in unicodedata.normalize(...
     t = "".join(c for c in unicodedata.normalize("NFKD", str(concentracion or "")) if not unicodedata.combining(c)).lower()
 
+    # Evaluamos la condición lógica (m_can == 'Hugo Boss') para controlar el flujo
     if m_can == "Hugo Boss":
+        # Asignamos 'cand_boss' con re.sub('^boss\\s+', '', s).strip()
         cand_boss = re.sub(r"^boss\s+", "", s).strip()
+        # Evaluamos la condición lógica (len(cand_boss) >= 2) para controlar el flujo
         if len(cand_boss) >= 2:
+            # Asignamos 's' con cand_boss
             s = cand_boss
 
+    # Asignamos 's' con re.sub('\\b(\\d+)\\s*(am|pm)\\b', '\\1 \\2...
     s = re.sub(r"\b(\d+)\s*(am|pm)\b", r"\1 \2", s)
+    # Asignamos 's' con re.sub('(\\d),(\\d)', '\\1.\\2', s)
     s = re.sub(r"(\d),(\d)", r"\1.\2", s)
+    # Asignamos 's' con re.sub('\\bgame\\s+of\\s+spade\\b', 'game ...
     s = re.sub(r"\bgame\s+of\s+spade\b", "game of spades", s)
 
+    # Asignamos 's' con re.sub("\\b([a-z]{2,})\\s+(?:&|and|n['’]|[...
     s = re.sub(r"\b([a-z]{2,})\s+(?:&|and|n['’]|['’]n['’]|['’]n|n)\s+([a-z]{2,})\b", r"\1 & \2", s)
+    # Asignamos 's' con re.sub("['’`]", '', s)
     s = re.sub(r"['’`]", "", s)
 
+    # Evaluamos la condición lógica ('intense' in t) para controlar el flujo
     if "intense" in t:
+        # Asignamos 's' con re.sub('\\bintense\\b', ' ', s)
         s = re.sub(r"\bintense\b", " ", s)
+    # Evaluamos la condición lógica (t in ('parfum', 'extrait de parfum')) para controlar el flujo
     if t in ("parfum", "extrait de parfum"):
+        # Asignamos 's' con re.sub('(?<!\\ble\\s)\\bparfum\\b', ' ', s)
         s = re.sub(r"(?<!\ble\s)\bparfum\b", " ", s)
 
+    # Evaluamos la condición lógica (not incluir_genero_nombre) para controlar el flujo
     if not incluir_genero_nombre:
+        # Asignamos 'sin_gen' con re.sub('\\b(?:pour\\s+homme|pour\\s+femme|...
         sin_gen = re.sub(
             r"\b(?:pour\s+homme|pour\s+femme|for\s+men|for\s+women|for\s+him|for\s+her|for\s+man|for\s+woman|men|man|women|woman|homme|femme|hombre|mujer|unisex)\b",
             " ",
             s,
         )
+        # Asignamos 'sin_gen' con re.sub('[^a-z0-9.&]+', ' ', sin_gen)
         sin_gen = re.sub(r"[^a-z0-9.&]+", " ", sin_gen)
+        # Asignamos 'sin_gen' con ' '.join(sin_gen.split())
         sin_gen = " ".join(sin_gen.split())
+        # Evaluamos la condición lógica (len(sin_gen) >= 2) para controlar el flujo
         if len(sin_gen) >= 2:
+            # Retornamos el resultado procesado (sin_gen)
             return sin_gen
 
+    # Asignamos 's' con re.sub('[^a-z0-9.&]+', ' ', s)
     s = re.sub(r"[^a-z0-9.&]+", " ", s)
+    # Retornamos el resultado procesado (' '.join(s.split()))
     return " ".join(s.split())
 
 
@@ -918,17 +1207,27 @@ def clave_identidad_perfume(
 @dataclass
 class ResultadoCoincidencia:
     """Estructura de trazabilidad para validación y auditoría de ofertas."""
+    # Declaración de atributo o variable 'coincide'
     coincide: bool
+    # Declaración de atributo o variable 'confianza'
     confianza: float
+    # Declaración de atributo o variable 'motivo'
     motivo: str
+    # Asignamos 'marca_detectada' con None
     marca_detectada: Optional[str] = None
+    # Asignamos 'flanker_detectado' con None
     flanker_detectado: Optional[str] = None
+    # Asignamos 'concentracion_detectada' con None
     concentracion_detectada: Optional[str] = None
+    # Asignamos 'volumen_detectado' con None
     volumen_detectado: Optional[int] = None
+    # Asignamos 'formato_invalido' con None
     formato_invalido: Optional[str] = None
+    # Asignamos 'formato_detectado' con 'regular'
     formato_detectado: str = "regular"
 
 
+# Asignamos 'CASAS_CLON_DEDICADAS' con {'fragrance world', 'fragance world', 'mai...
 CASAS_CLON_DEDICADAS: Set[str] = {
     "fragrance world", "fragance world", "maison alhambra", "maison al hambra", "alhambra",
     "paris corner", "la french", "french avenue", "barakkat", "orientica", "zimaya",
@@ -941,6 +1240,7 @@ CASAS_CLON_DEDICADAS: Set[str] = {
     "grandeur", "jo milano", "riiffs", "zakat",
 }
 
+# Asignamos 'MARCAS_DISENADOR_PRESTIGIO' con {'dior': ['dior', 'christian dior'], 'chri...
 MARCAS_DISENADOR_PRESTIGIO: Dict[str, List[str]] = {
     "dior": ["dior", "christian dior"],
     "christian dior": ["dior", "christian dior"],
@@ -995,6 +1295,7 @@ MARCAS_DISENADOR_PRESTIGIO: Dict[str, List[str]] = {
     "lacoste": ["lacoste"],
 }
 
+# Asignamos 'MARCAS_ORIENTALES_RECONOCIDAS' con {'lattafa': ['lattafa'], 'armaf': ['armaf'...
 MARCAS_ORIENTALES_RECONOCIDAS: Dict[str, List[str]] = {
     "lattafa": ["lattafa"],
     "armaf": ["armaf"],
@@ -1004,6 +1305,7 @@ MARCAS_ORIENTALES_RECONOCIDAS: Dict[str, List[str]] = {
     "swiss arabian": ["swiss arabian"],
 }
 
+# Asignamos 'FORMATOS_EXCLUIDOS' con [('\\brecarga\\b', 'recarga'), ('\\brecarg...
 FORMATOS_EXCLUIDOS: List[Tuple[str, str]] = [
     (r"\brecarga\b", "recarga"),
     (r"\brecargable\b", "recargable"),
@@ -1062,6 +1364,7 @@ FORMATOS_EXCLUIDOS: List[Tuple[str, str]] = [
     (r"\+\s*(?:sg|bl|deo|mini|travel|crema|locion|loci[oó]n|shower)\b", "set con regalo"),
 ]
 
+# Asignamos 'FLANKERS_EXCLUSIVOS' con {'elixir', 'intense', 'intenso', 'extreme'...
 FLANKERS_EXCLUSIVOS: Set[str] = {
     "elixir", "intense", "intenso", "extreme", "absolu", "absolute", "absolue",
     "profondo", "profumo", "flame", "energy", "lucky", "royal", "prive", "privé",
@@ -1081,6 +1384,7 @@ FLANKERS_EXCLUSIVOS: Set[str] = {
     "heroes", "vip", "wins", "crush", "nova", "blossom", "extradose",
 }
 
+# Asignamos 'PALABRAS_GENERICAS_NOMBRE' con {'eau', 'de', 'parfum', 'toilette', 'colog...
 PALABRAS_GENERICAS_NOMBRE: Set[str] = {
     "eau", "de", "parfum", "toilette", "cologne", "edp", "edt", "edc",
     "perfume", "fragancia", "spray", "vaporizador", "hombre", "mujer",
@@ -1089,36 +1393,65 @@ PALABRAS_GENERICAS_NOMBRE: Set[str] = {
 }
 
 
+# Definición de función '_normalizar_texto_match' (parámetros: s)
 def _normalizar_texto_match(s: str) -> str:
+    # Evaluamos la condición lógica (not s) para controlar el flujo
     if not s:
+        # Retornamos el resultado procesado ('')
         return ""
+    # Asignamos 's' con unicodedata.normalize('NFKD', str(s)).enco...
     s = unicodedata.normalize("NFKD", str(s)).encode("ascii", "ignore").decode("utf-8").lower()
+    # Asignamos 's' con s.replace('&', ' and ')
     s = s.replace("&", " and ")
+    # Asignamos 's' con re.sub('[^a-z0-9\\s\\+]', ' ', s)
     s = re.sub(r"[^a-z0-9\s\+]", " ", s)
+    # Retornamos el resultado procesado (re.sub('\\s+', ' ', s).strip())
     return re.sub(r"\s+", " ", s).strip()
 
 
+# Definición de función '_aliases_marca' (parámetros: marca_norm)
 def _aliases_marca(marca_norm: str) -> List[str]:
+    # Evaluamos la condición lógica (not marca_norm) para controlar el flujo
     if not marca_norm:
+        # Retornamos el resultado procesado ([])
         return []
+    # Asignamos 'resultado' con [marca_norm]
     resultado: List[str] = [marca_norm]
+    # Recorremos iterativamente cada '(k, aliases)' en MARCAS_DISENADOR_PRESTIGIO.items()
     for k, aliases in MARCAS_DISENADOR_PRESTIGIO.items():
+        # Evaluamos la condición lógica (k in marca_norm or any((a == marca_norm for a in ali...) para controlar el flujo
         if k in marca_norm or any(a == marca_norm for a in aliases):
+            # Recorremos iterativamente cada 'a' en aliases
             for a in aliases:
+                # Evaluamos la condición lógica (a not in resultado) para controlar el flujo
                 if a not in resultado:
+                    # Ejecutamos instrucción: resultado.append(a)
                     resultado.append(a)
+    # Recorremos iterativamente cada '(k, aliases)' en MARCAS_ORIENTALES_RECONOCIDAS.items()
     for k, aliases in MARCAS_ORIENTALES_RECONOCIDAS.items():
+        # Evaluamos la condición lógica (k in marca_norm or any((a == marca_norm for a in ali...) para controlar el flujo
         if k in marca_norm or any(a == marca_norm for a in aliases):
+            # Recorremos iterativamente cada 'a' en aliases
             for a in aliases:
+                # Evaluamos la condición lógica (a not in resultado) para controlar el flujo
                 if a not in resultado:
+                    # Ejecutamos instrucción: resultado.append(a)
                     resultado.append(a)
+    # Recorremos iterativamente cada '(canon, tup_als)' en ALIAS_MARCA.items()
     for canon, tup_als in ALIAS_MARCA.items():
+        # Asignamos 'canon_n' con _normalizar_texto_match(canon)
         canon_n = _normalizar_texto_match(canon)
+        # Asignamos 'als_n' con [_normalizar_texto_match(x) for x in tup_als]
         als_n = [_normalizar_texto_match(x) for x in tup_als]
+        # Evaluamos la condición lógica (marca_norm == canon_n or marca_norm in als_n) para controlar el flujo
         if marca_norm == canon_n or marca_norm in als_n:
+            # Recorremos iterativamente cada 'item' en [canon_n] + als_n
             for item in [canon_n] + als_n:
+                # Evaluamos la condición lógica (item and item not in resultado) para controlar el flujo
                 if item and item not in resultado:
+                    # Ejecutamos instrucción: resultado.append(item)
                     resultado.append(item)
+    # Retornamos el resultado procesado (resultado)
     return resultado
 
 
@@ -1147,27 +1480,43 @@ def coincide_entidad_detallada(
     `genero_esperado` ('Mujer' | 'Hombre' | 'Unisex'): si no se entrega explícitamente,
     se toma del contexto activo (`contexto_genero_esperado`) establecido por el scraper.
     """
+    # Evaluamos la condición lógica (not titulo or not perfume_nombre) para controlar el flujo
     if not titulo or not perfume_nombre:
+        # Retornamos el resultado procesado (ResultadoCoincidencia(coincide=False, confianza...)
         return ResultadoCoincidencia(coincide=False, confianza=0.0, motivo="Título o nombre vacío")
 
+    # Evaluamos la condición lógica (genero_esperado is None) para controlar el flujo
     if genero_esperado is None:
+        # Asignamos 'genero_esperado' con _GENERO_ESPERADO_CTX.get()
         genero_esperado = _GENERO_ESPERADO_CTX.get()
 
+    # Asignamos 'tit_raw' con str(titulo)
     tit_raw = str(titulo)
+    # Asignamos 'url_raw' con str(url or '')
     url_raw = str(url or "")
+    # Asignamos 'tit' con _normalizar_texto_match(tit_raw)
     tit = _normalizar_texto_match(tit_raw)
+    # Asignamos 'url_norm' con _normalizar_texto_match(url_raw.replace('-...
     url_norm = _normalizar_texto_match(url_raw.replace("-", " ").replace("/", " ").replace("_", " "))
+    # Asignamos 'combo_text' con f'{tit} {url_norm}'.strip()
     combo_text = f"{tit} {url_norm}".strip()
 
+    # Asignamos 'p_norm' con _normalizar_texto_match(perfume_nombre)
     p_norm = _normalizar_texto_match(perfume_nombre)
+    # Asignamos 'm_canon' con normalizar_marca_canonica(marca)
     m_canon = normalizar_marca_canonica(marca)
+    # Asignamos 'm_norm' con _normalizar_texto_match(m_canon or marca)
     m_norm = _normalizar_texto_match(m_canon or marca)
+    # Asignamos 'c_norm' con _normalizar_texto_match(concentracion)
     c_norm = _normalizar_texto_match(concentracion)
+    # Asignamos 'formato_det' con detectar_formato_oferta(tit_raw, url_raw)
     formato_det = detectar_formato_oferta(tit_raw, url_raw)
 
     # 0.0 Validación estricta de perfume genuino (descarta limpiadores, cosméticos, cremas, accesorios)
     vol_min_chk = min(25, int(volumen_esperado)) if (volumen_esperado and volumen_esperado > 0) else 25
+    # Evaluamos la condición lógica (not es_producto_perfume_valido(tit_raw, marca=marca ...) para controlar el flujo
     if not es_producto_perfume_valido(tit_raw, marca=marca or None, volumen_min_ml=vol_min_chk):
+        # Retornamos el resultado procesado (ResultadoCoincidencia(coincide=False, confianza...)
         return ResultadoCoincidencia(
             coincide=False,
             confianza=0.0,
@@ -1175,11 +1524,17 @@ def coincide_entidad_detallada(
             formato_detectado=formato_det,
         )
 
+    # Evaluamos la condición lógica (url_raw) para controlar el flujo
     if url_raw:
+        # Asignamos 'path_url' con urllib.parse.urlparse(url_raw).path.replac...
         path_url = urllib.parse.urlparse(url_raw).path.replace("-", " ").replace("_", " ")
+        # Asignamos 'segments' con [s.strip() for s in path_url.split('/') if...
         segments = [s.strip() for s in path_url.split("/") if len(s.strip()) > 2 and not s.strip().isdigit()]
+        # Recorremos iterativamente cada 'seg' en segments
         for seg in segments:
+            # Evaluamos la condición lógica (not es_producto_perfume_valido(seg, marca=marca or N...) para controlar el flujo
             if not es_producto_perfume_valido(seg, marca=marca or None, volumen_min_ml=0):
+                # Retornamos el resultado procesado (ResultadoCoincidencia(coincide=False, confianza...)
                 return ResultadoCoincidencia(
                     coincide=False,
                     confianza=0.0,
@@ -1189,6 +1544,7 @@ def coincide_entidad_detallada(
 
     # 0. Guardia de formato esperado ('regular' vs 'tester') si el llamador lo restringe explícitamente
     if formato_esperado and formato_esperado in ("regular", "tester") and formato_det != formato_esperado:
+        # Retornamos el resultado procesado (ResultadoCoincidencia(coincide=False, confianza...)
         return ResultadoCoincidencia(
             coincide=False,
             confianza=0.0,
@@ -1203,8 +1559,11 @@ def coincide_entidad_detallada(
         "repelente", "roedores", "extractor de leche", "brillo labial", "lip gloss",
         "voluminizador", "suero", "serum", "mascara pestanas",
     ]
+    # Recorremos iterativamente cada 'f_bad' en frases_clon_no_perfume
     for f_bad in frases_clon_no_perfume:
+        # Evaluamos la condición lógica (f_bad in combo_text) para controlar el flujo
         if f_bad in combo_text:
+            # Retornamos el resultado procesado (ResultadoCoincidencia(coincide=False, confianza...)
             return ResultadoCoincidencia(
                 coincide=False,
                 confianza=0.0,
@@ -1213,10 +1572,13 @@ def coincide_entidad_detallada(
                 formato_detectado=formato_det,
             )
 
+    # Recorremos iterativamente cada '(regex_fmt, label_fmt)' en FORMATOS_EXCLUIDOS
     for regex_fmt, label_fmt in FORMATOS_EXCLUIDOS:
+        # Evaluamos la condición lógica (re.search(regex_fmt, combo_text, re.IGNORECASE)) para controlar el flujo
         if re.search(regex_fmt, combo_text, re.IGNORECASE):
             # Permitir solo si el propio perfume canónico lo lleva explícitamente en su nombre
             if label_fmt not in p_norm:
+                # Retornamos el resultado procesado (ResultadoCoincidencia(coincide=False, confianza...)
                 return ResultadoCoincidencia(
                     coincide=False,
                     confianza=0.0,
@@ -1227,6 +1589,7 @@ def coincide_entidad_detallada(
 
     # Bloquear combos '+' en el título cuando el perfume buscado no es un combo
     if "+" in tit_raw and "+" not in perfume_nombre:
+        # Retornamos el resultado procesado (ResultadoCoincidencia(coincide=False, confianza...)
         return ResultadoCoincidencia(
             coincide=False,
             confianza=0.0,
@@ -1240,18 +1603,27 @@ def coincide_entidad_detallada(
         k in m_norm or any(a == m_norm for a in als)
         for k, als in MARCAS_DISENADOR_PRESTIGIO.items()
     )
+    # Evaluamos la condición lógica (es_busqueda_disenador and re.search('[\\-–—|/]', tit...) para controlar el flujo
     if es_busqueda_disenador and re.search(r"[\-–—|/]", tit_raw):
+        # Asignamos 'partes_sep' con [p.strip() for p in re.split('[\\-–—|/]', ...
         partes_sep = [p.strip() for p in re.split(r"[\-–—|/]", tit_raw) if len(p.strip()) >= 3]
+        # Evaluamos la condición lógica (len(partes_sep) >= 2) para controlar el flujo
         if len(partes_sep) >= 2:
+            # Asignamos 'aliases_propios' con _aliases_marca(m_norm)
             aliases_propios = _aliases_marca(m_norm)
+            # Asignamos 'p_tokens_check' con [w for w in p_norm.split() if len(w) >= 3 ...
             p_tokens_check = [w for w in p_norm.split() if len(w) >= 3 and w not in PALABRAS_GENERICAS_NOMBRE]
+            # Asignamos 'primera_norm' con _normalizar_texto_match(partes_sep[0])
             primera_norm = _normalizar_texto_match(partes_sep[0])
+            # Asignamos 'ultima_norm' con _normalizar_texto_match(partes_sep[-1])
             ultima_norm = _normalizar_texto_match(partes_sep[-1])
 
             # Si el perfume/marca buscada solo aparece en el último segmento tras un separador
             # y el primer segmento tiene otra marca/nombre extraño (ej. "VELINNE NAZIRE - TOM FORD TOBACCO VANILLE")
             marca_en_primera = any(re.search(rf"\b{re.escape(a)}\b", primera_norm) for a in aliases_propios)
+            # Asignamos 'nombre_en_primera' con any((re.search(f'\\b{re.escape(t)}\\b', pr...
             nombre_en_primera = any(re.search(rf"\b{re.escape(t)}\b", primera_norm) for t in p_tokens_check)
+            # Asignamos 'marca_o_nombre_en_ultima' con any((re.search(f'\\b{re.escape(a)}\\b', ul...
             marca_o_nombre_en_ultima = (
                 any(re.search(rf"\b{re.escape(a)}\b", ultima_norm) for a in aliases_propios)
                 or any(re.search(rf"\b{re.escape(t)}\b", ultima_norm) for t in p_tokens_check)
@@ -1264,7 +1636,9 @@ def coincide_entidad_detallada(
                     "",
                     primera_norm,
                 ).strip()
+                # Evaluamos la condición lógica (len(primera_sin_gen) >= 3) para controlar el flujo
                 if len(primera_sin_gen) >= 3:
+                    # Retornamos el resultado procesado (ResultadoCoincidencia(coincide=False, confianza...)
                     return ResultadoCoincidencia(
                         coincide=False,
                         confianza=0.0,
@@ -1274,8 +1648,11 @@ def coincide_entidad_detallada(
 
     # 3. Guardia de Casas Clon Dedicadas y Casas Orientales Ajenas sobre Marcas de Prestigio
     if es_busqueda_disenador:
+        # Recorremos iterativamente cada 'casa_clon' en CASAS_CLON_DEDICADAS
         for casa_clon in CASAS_CLON_DEDICADAS:
+            # Evaluamos la condición lógica (re.search(f'\\b{re.escape(casa_clon)}\\b', combo_text)) para controlar el flujo
             if re.search(rf"\b{re.escape(casa_clon)}\b", combo_text):
+                # Retornamos el resultado procesado (ResultadoCoincidencia(coincide=False, confianza...)
                 return ResultadoCoincidencia(
                     coincide=False,
                     confianza=0.0,
@@ -1283,9 +1660,13 @@ def coincide_entidad_detallada(
                     marca_detectada=casa_clon,
                     formato_detectado=formato_det,
                 )
+        # Recorremos iterativamente cada '(casa_or, als_or)' en MARCAS_ORIENTALES_RECONOCIDAS.items()
         for casa_or, als_or in MARCAS_ORIENTALES_RECONOCIDAS.items():
+            # Recorremos iterativamente cada 'al' en als_or
             for al in als_or:
+                # Evaluamos la condición lógica (re.search(f'\\b{re.escape(al)}\\b', combo_text)) para controlar el flujo
                 if re.search(rf"\b{re.escape(al)}\b", combo_text):
+                    # Retornamos el resultado procesado (ResultadoCoincidencia(coincide=False, confianza...)
                     return ResultadoCoincidencia(
                         coincide=False,
                         confianza=0.0,
@@ -1296,9 +1677,13 @@ def coincide_entidad_detallada(
 
         # Si proviene de un vendedor externo de Marketplace que es una casa de equivalencias
         if vendedor:
+            # Asignamos 'vend_norm' con _normalizar_texto_match(vendedor)
             vend_norm = _normalizar_texto_match(vendedor)
+            # Recorremos iterativamente cada 'casa_clon' en CASAS_CLON_DEDICADAS
             for casa_clon in CASAS_CLON_DEDICADAS:
+                # Evaluamos la condición lógica (casa_clon in vend_norm) para controlar el flujo
                 if casa_clon in vend_norm:
+                    # Retornamos el resultado procesado (ResultadoCoincidencia(coincide=False, confianza...)
                     return ResultadoCoincidencia(
                         coincide=False,
                         confianza=0.0,
@@ -1309,18 +1694,30 @@ def coincide_entidad_detallada(
 
     # 4. Guardia de Conflicto Directo entre Marcas Reconocidas
     if m_norm:
+        # Asignamos 'aliases_esperados' con _aliases_marca(m_norm)
         aliases_esperados = _aliases_marca(m_norm)
+        # Asignamos 'todas_marcas_conocidas' con {}
         todas_marcas_conocidas: Dict[str, List[str]] = {}
+        # Ejecutamos instrucción: todas_marcas_conocidas.update(MARCAS_DISENADOR_PREST...
         todas_marcas_conocidas.update(MARCAS_DISENADOR_PRESTIGIO)
+        # Ejecutamos instrucción: todas_marcas_conocidas.update(MARCAS_ORIENTALES_RECO...
         todas_marcas_conocidas.update(MARCAS_ORIENTALES_RECONOCIDAS)
 
+        # Recorremos iterativamente cada '(otra_key, otros_aliases)' en todas_marcas_conocidas.items()
         for otra_key, otros_aliases in todas_marcas_conocidas.items():
+            # Evaluamos la condición lógica (any((a in aliases_esperados for a in otros_aliases))...) para controlar el flujo
             if any(a in aliases_esperados for a in otros_aliases) or otra_key == m_norm:
+                # Saltamos a la siguiente iteración del ciclo descartando el elemento actual
                 continue
+            # Recorremos iterativamente cada 'alias_ajeno' en otros_aliases
             for alias_ajeno in otros_aliases:
+                # Evaluamos la condición lógica (len(alias_ajeno) <= 3) para controlar el flujo
                 if len(alias_ajeno) <= 3:
+                    # Saltamos a la siguiente iteración del ciclo descartando el elemento actual
                     continue  # Evitar falsos positivos con siglas cortas como 'ch' o 'ck' dentro de palabras
+                # Evaluamos la condición lógica (re.search(f'\\b{re.escape(alias_ajeno)}\\b', combo_t...) para controlar el flujo
                 if re.search(rf"\b{re.escape(alias_ajeno)}\b", combo_text):
+                    # Retornamos el resultado procesado (ResultadoCoincidencia(coincide=False, confianza...)
                     return ResultadoCoincidencia(
                         coincide=False,
                         confianza=0.0,
@@ -1336,13 +1733,16 @@ def coincide_entidad_detallada(
             w for w in p_norm.split()
             if w not in PALABRAS_GENERICAS_NOMBRE and w not in aliases_esperados
         ]
+        # Asignamos 'palabras_ambiguas_sin_marca' con {'libre', 'solo', 'fame', 'luna', 'halo', ...
         palabras_ambiguas_sin_marca = {
             "libre", "solo", "fame", "luna", "halo", "pure", "noir", "gold", "code",
             "yara", "girl", "adan", "arya", "celeste", "tradicional", "angel", "alien",
         }
+        # Asignamos 'tiene_vocabulario_perfume' con bool(re.search('\\b(?:perfume|fragancia|ed...
         tiene_vocabulario_perfume = bool(
             re.search(r"\b(?:perfume|fragancia|edp|edt|parfum|extrait|toilette|colonia|cologne|edc|elixir)\b", combo_text)
         )
+        # Asignamos 'exige_marca' con bool(tokens_significativos) and (len(''.jo...
         exige_marca = (
             bool(tokens_significativos)
             and (
@@ -1351,8 +1751,11 @@ def coincide_entidad_detallada(
                 or not tiene_vocabulario_perfume
             )
         )
+        # Evaluamos la condición lógica (exige_marca and aliases_esperados) para controlar el flujo
         if exige_marca and aliases_esperados:
+            # Evaluamos la condición lógica (not any((re.search(f'\\b{re.escape(a)}\\b', combo_te...) para controlar el flujo
             if not any(re.search(rf"\b{re.escape(a)}\b", combo_text) for a in aliases_esperados):
+                # Retornamos el resultado procesado (ResultadoCoincidencia(coincide=False, confianza...)
                 return ResultadoCoincidencia(
                     coincide=False,
                     confianza=0.0,
@@ -1362,32 +1765,49 @@ def coincide_entidad_detallada(
 
     # 5. Extracción de Tokens Nucleares del Nombre del Perfume
     aliases_m = _aliases_marca(m_norm) if m_norm else []
+    # Asignamos 'tokens' con []
     tokens = []
+    # Recorremos iterativamente cada 'w' en p_norm.split()
     for w in p_norm.split():
+        # Evaluamos la condición lógica (w in PALABRAS_GENERICAS_NOMBRE) para controlar el flujo
         if w in PALABRAS_GENERICAS_NOMBRE:
+            # Saltamos a la siguiente iteración del ciclo descartando el elemento actual
             continue
+        # Evaluamos la condición lógica (len(w) >= 3 and w in aliases_m and (len(p_norm.split...) para controlar el flujo
         if len(w) >= 3 and w in aliases_m and len(p_norm.split()) > 1:
+            # Saltamos a la siguiente iteración del ciclo descartando el elemento actual
             continue
+        # Ejecutamos instrucción: tokens.append(w)
         tokens.append(w)
 
+    # Evaluamos la condición lógica (not tokens) para controlar el flujo
     if not tokens:
+        # Asignamos 'tokens' con [w for w in p_norm.split() if len(w) >= 1 ...
         tokens = [w for w in p_norm.split() if len(w) >= 1 and w not in PALABRAS_GENERICAS_NOMBRE]
 
     # 6. Guardia de Flankers No Solicitados (ej. buscar 'Sauvage' y recibir 'Sauvage Elixir' o 'Yara' y recibir 'Yara Candy')
     slug_path_norm = _normalizar_texto_match(urllib.parse.urlparse(url_raw).path) if url_raw else ""
+    # Asignamos 'texto_flanker_chk' con f'{tit} {slug_path_norm}'.strip()
     texto_flanker_chk = f"{tit} {slug_path_norm}".strip()
+    # Recorremos iterativamente cada 'flanker' en FLANKERS_EXCLUSIVOS
     for flanker in FLANKERS_EXCLUSIVOS:
         # 'parfum' suelto no se trata como flanker prohibido cuando solo expresa concentración 'Eau de Parfum'
         if flanker == "parfum":
+            # Saltamos a la siguiente iteración del ciclo descartando el elemento actual
             continue
+        # Evaluamos la condición lógica (re.search(f'\\b{re.escape(flanker)}\\b', texto_flank...) para controlar el flujo
         if re.search(rf"\b{re.escape(flanker)}\b", texto_flanker_chk):
+            # Asignamos 'en_buscado' con re.search(f'\\b{re.escape(flanker)}\\b', p...
             en_buscado = re.search(rf"\b{re.escape(flanker)}\b", p_norm) or (
                 c_norm and re.search(rf"\b{re.escape(flanker)}\b", c_norm)
             )
+            # Evaluamos la condición lógica (not en_buscado) para controlar el flujo
             if not en_buscado:
                 # Permitir 'oud' o 'rose' o 'vanilla' solo si es parte de la marca buscada
                 if flanker in m_norm:
+                    # Saltamos a la siguiente iteración del ciclo descartando el elemento actual
                     continue
+                # Retornamos el resultado procesado (ResultadoCoincidencia(coincide=False, confianza...)
                 return ResultadoCoincidencia(
                     coincide=False,
                     confianza=0.0,
@@ -1400,25 +1820,34 @@ def coincide_entidad_detallada(
     #    Todas las comparaciones usan palabra completa para no confundir 'Romance'/'Armani' con 'man'
     #    ni 'Hermès' con 'her'.
     es_femenino_cand, es_masculino_cand = detectar_marcadores_genero(combo_text)
+    # Asignamos '(p_pide_mujer, p_pide_hombre)' con detectar_marcadores_genero(p_norm)
     p_pide_mujer, p_pide_hombre = detectar_marcadores_genero(p_norm)
+    # Evaluamos la condición lógica (not p_pide_mujer and re.search('\\b(?:her|elle|madem...) para controlar el flujo
     if not p_pide_mujer and re.search(r"\b(?:her|elle|mademoiselle)\b", p_norm):
+        # Asignamos 'p_pide_mujer' con True
         p_pide_mujer = True
 
+    # Evaluamos la condición lógica (p_pide_hombre and es_femenino_cand and (not es_mascu...) para controlar el flujo
     if p_pide_hombre and es_femenino_cand and not es_masculino_cand:
+        # Retornamos el resultado procesado (ResultadoCoincidencia(coincide=False, confianza...)
         return ResultadoCoincidencia(
             coincide=False,
             confianza=0.0,
             motivo=f"Conflicto de género: '{perfume_nombre}' es masculino pero candidato es femenino",
             formato_detectado=formato_det,
         )
+    # Evaluamos la condición lógica (p_pide_mujer and es_masculino_cand and (not es_femen...) para controlar el flujo
     if p_pide_mujer and es_masculino_cand and not es_femenino_cand:
+        # Retornamos el resultado procesado (ResultadoCoincidencia(coincide=False, confianza...)
         return ResultadoCoincidencia(
             coincide=False,
             confianza=0.0,
             motivo=f"Conflicto de género: '{perfume_nombre}' es femenino pero candidato es masculino",
             formato_detectado=formato_det,
         )
+    # Evaluamos la condición lógica ('eros' in p_norm.split() and (not p_pide_mujer) and ...) para controlar el flujo
     if "eros" in p_norm.split() and not p_pide_mujer and re.search(r"\b(?:pour femme|femme|woman|mujer)\b", combo_text):
+        # Retornamos el resultado procesado (ResultadoCoincidencia(coincide=False, confianza...)
         return ResultadoCoincidencia(
             coincide=False,
             confianza=0.0,
@@ -1430,21 +1859,30 @@ def coincide_entidad_detallada(
     #     El nombre comercial tiene prioridad (ej. 'Light Blue Pour Homme' siempre es masculino);
     #     si el nombre no declara género, se usa el género almacenado de la ficha.
     genero_ficha = None
+    # Evaluamos la condición lógica (p_pide_mujer and (not p_pide_hombre)) para controlar el flujo
     if p_pide_mujer and not p_pide_hombre:
+        # Asignamos 'genero_ficha' con 'Mujer'
         genero_ficha = "Mujer"
+    # Evaluamos la condición lógica (p_pide_hombre and (not p_pide_mujer)) para controlar el flujo
     elif p_pide_hombre and not p_pide_mujer:
+        # Asignamos 'genero_ficha' con 'Hombre'
         genero_ficha = "Hombre"
     else:
+        # Asignamos 'genero_ficha' con normalizar_genero(genero_esperado)
         genero_ficha = normalizar_genero(genero_esperado)
 
+    # Evaluamos la condición lógica (genero_ficha == 'Mujer' and es_masculino_cand and (n...) para controlar el flujo
     if genero_ficha == "Mujer" and es_masculino_cand and not es_femenino_cand:
+        # Retornamos el resultado procesado (ResultadoCoincidencia(coincide=False, confianza...)
         return ResultadoCoincidencia(
             coincide=False,
             confianza=0.0,
             motivo=f"Conflicto de género: ficha '{perfume_nombre}' es de Mujer pero candidato declara Hombre",
             formato_detectado=formato_det,
         )
+    # Evaluamos la condición lógica (genero_ficha == 'Hombre' and es_femenino_cand and (n...) para controlar el flujo
     if genero_ficha == "Hombre" and es_femenino_cand and not es_masculino_cand:
+        # Retornamos el resultado procesado (ResultadoCoincidencia(coincide=False, confianza...)
         return ResultadoCoincidencia(
             coincide=False,
             confianza=0.0,
@@ -1454,13 +1892,21 @@ def coincide_entidad_detallada(
 
     # 8. Presencia Obligatoria de Todos los Tokens Nucleares de la Fragancia
     for tok in tokens:
+        # Evaluamos la condición lógica (tok == 'ysl' and ('yves saint laurent' in combo_text...) para controlar el flujo
         if tok == "ysl" and ("yves saint laurent" in combo_text or "saint laurent" in combo_text):
+            # Saltamos a la siguiente iteración del ciclo descartando el elemento actual
             continue
+        # Evaluamos la condición lógica (tok in ('sweet', 'tooth') and re.search('\\bsweettoo...) para controlar el flujo
         if tok in ("sweet", "tooth") and re.search(r"\bsweettooth\b", combo_text):
+            # Saltamos a la siguiente iteración del ciclo descartando el elemento actual
             continue
+        # Evaluamos la condición lógica (tok == 'dior' and 'dior' in m_norm and ('dior' in co...) para controlar el flujo
         if tok == "dior" and "dior" in m_norm and ("dior" in combo_text):
+            # Saltamos a la siguiente iteración del ciclo descartando el elemento actual
             continue
+        # Evaluamos la condición lógica (not re.search(f'\\b{re.escape(tok)}\\b', combo_text)) para controlar el flujo
         if not re.search(rf"\b{re.escape(tok)}\b", combo_text):
+            # Retornamos el resultado procesado (ResultadoCoincidencia(coincide=False, confianza...)
             return ResultadoCoincidencia(
                 coincide=False,
                 confianza=0.0,
@@ -1470,34 +1916,47 @@ def coincide_entidad_detallada(
 
     # 9. Guardia de Concentración (EDT vs EDP vs EDC vs Elixir)
     if c_norm:
+        # Asignamos 'es_elixir_p' con 'elixir' in c_norm or 'elixir' in p_norm
         es_elixir_p = "elixir" in c_norm or "elixir" in p_norm
+        # Asignamos 'es_edt_p' con ('toilette' in c_norm or 'edt' in c_norm) ...
         es_edt_p = ("toilette" in c_norm or "edt" in c_norm) and not es_elixir_p
+        # Asignamos 'es_edc_p' con 'cologne' in c_norm or 'edc' in c_norm or ...
         es_edc_p = ("cologne" in c_norm or "edc" in c_norm or "colonia" in c_norm)
+        # Asignamos 'es_edp_p' con ('eau de parfum' in c_norm or 'edp' in c_n...
         es_edp_p = ("eau de parfum" in c_norm or "edp" in c_norm) and not es_edt_p and not es_elixir_p
 
+        # Asignamos 'es_edt_t' con bool(re.search('\\b(?:eau de toilette|toil...
         es_edt_t = bool(re.search(r"\b(?:eau de toilette|toilette|edt)\b", combo_text)) and not bool(
             re.search(r"\b(?:eau de parfum|edp)\b", combo_text)
         )
+        # Asignamos 'es_edp_t' con bool(re.search('\\b(?:eau de parfum|edp)\\...
         es_edp_t = bool(re.search(r"\b(?:eau de parfum|edp)\b", combo_text)) and not bool(
             re.search(r"\b(?:eau de toilette|toilette|edt)\b", combo_text)
         )
+        # Asignamos 'es_edc_t' con bool(re.search('\\b(?:eau de cologne|edc|c...
         es_edc_t = bool(re.search(r"\b(?:eau de cologne|edc|colonia)\b", combo_text))
 
+        # Evaluamos la condición lógica (es_edt_p and es_edp_t) para controlar el flujo
         if es_edt_p and es_edp_t:
+            # Retornamos el resultado procesado (ResultadoCoincidencia(coincide=False, confianza...)
             return ResultadoCoincidencia(
                 coincide=False,
                 confianza=0.0,
                 motivo="Incompatibilidad de concentración: esperado EDT, candidato es EDP",
                 formato_detectado=formato_det,
             )
+        # Evaluamos la condición lógica (es_edp_p and es_edt_t) para controlar el flujo
         if es_edp_p and es_edt_t:
+            # Retornamos el resultado procesado (ResultadoCoincidencia(coincide=False, confianza...)
             return ResultadoCoincidencia(
                 coincide=False,
                 confianza=0.0,
                 motivo="Incompatibilidad de concentración: esperado EDP, candidato es EDT",
                 formato_detectado=formato_det,
             )
+        # Evaluamos la condición lógica ((es_edp_p or es_edt_p) and es_edc_t and (not es_edc_p)) para controlar el flujo
         if (es_edp_p or es_edt_p) and es_edc_t and not es_edc_p:
+            # Retornamos el resultado procesado (ResultadoCoincidencia(coincide=False, confianza...)
             return ResultadoCoincidencia(
                 coincide=False,
                 confianza=0.0,
@@ -1509,22 +1968,28 @@ def coincide_entidad_detallada(
         texto_sin_compuestos = re.sub(
             r"\b(?:eau de parfum|extrait de parfum|le parfum|parfums?\s+de\s+\w+)\b", " ", combo_text
         )
+        # Asignamos 'es_parfum_puro_t' con bool(re.search('\\bparfum\\b', texto_sin_c...
         es_parfum_puro_t = bool(re.search(r"\bparfum\b", texto_sin_compuestos)) and not bool(
             re.search(r"\b(?:eau de parfum|edp|eau de toilette|edt)\b", combo_text)
         )
+        # Asignamos 'es_parfum_puro_p' con bool(re.search('\\b(?:parfum|extrait)\\b',...
         es_parfum_puro_p = (
             bool(re.search(r"\b(?:parfum|extrait)\b", c_norm))
             and "eau de" not in c_norm
             and not es_elixir_p
         )
+        # Evaluamos la condición lógica (es_parfum_puro_p and (es_edp_t or es_edt_t)) para controlar el flujo
         if es_parfum_puro_p and (es_edp_t or es_edt_t):
+            # Retornamos el resultado procesado (ResultadoCoincidencia(coincide=False, confianza...)
             return ResultadoCoincidencia(
                 coincide=False,
                 confianza=0.0,
                 motivo="Incompatibilidad de concentración: esperado Parfum/Extrait, candidato es EDP/EDT",
                 formato_detectado=formato_det,
             )
+        # Evaluamos la condición lógica ((es_edp_p or es_edt_p) and es_parfum_puro_t and ('pa...) para controlar el flujo
         if (es_edp_p or es_edt_p) and es_parfum_puro_t and "parfum" not in p_norm:
+            # Retornamos el resultado procesado (ResultadoCoincidencia(coincide=False, confianza...)
             return ResultadoCoincidencia(
                 coincide=False,
                 confianza=0.0,
@@ -1534,13 +1999,16 @@ def coincide_entidad_detallada(
 
         # Elixir / Intense exigidos por la concentración de la ficha deben estar en el candidato
         if es_elixir_p and not re.search(r"\belixir\b", combo_text):
+            # Retornamos el resultado procesado (ResultadoCoincidencia(coincide=False, confianza...)
             return ResultadoCoincidencia(
                 coincide=False,
                 confianza=0.0,
                 motivo="Incompatibilidad de concentración: esperado Elixir, candidato no lo declara",
                 formato_detectado=formato_det,
             )
+        # Evaluamos la condición lógica ('intense' in c_norm and (not re.search('\\b(?:intens...) para controlar el flujo
         if "intense" in c_norm and not re.search(r"\b(?:intense|intenso)\b", combo_text):
+            # Retornamos el resultado procesado (ResultadoCoincidencia(coincide=False, confianza...)
             return ResultadoCoincidencia(
                 coincide=False,
                 confianza=0.0,
@@ -1552,6 +2020,7 @@ def coincide_entidad_detallada(
     vol_candidato = extraer_volumen_ml(combo_text, default=0)
     # Incluso cuando volumen_esperado es None (búsqueda multi-variante), prohibir decants/viales < 25ml
     if 0 < vol_candidato < 25 and (volumen_esperado is None or volumen_esperado >= 25):
+        # Retornamos el resultado procesado (ResultadoCoincidencia(coincide=False, confianza...)
         return ResultadoCoincidencia(
             coincide=False,
             confianza=0.0,
@@ -1561,8 +2030,11 @@ def coincide_entidad_detallada(
             formato_detectado=formato_det,
         )
 
+    # Evaluamos la condición lógica (volumen_esperado) para controlar el flujo
     if volumen_esperado:
+        # Evaluamos la condición lógica (vol_candidato > 0 and abs(vol_candidato - volumen_es...) para controlar el flujo
         if vol_candidato > 0 and abs(vol_candidato - volumen_esperado) > 5:
+            # Retornamos el resultado procesado (ResultadoCoincidencia(coincide=False, confianza...)
             return ResultadoCoincidencia(
                 coincide=False,
                 confianza=0.0,
@@ -1573,12 +2045,17 @@ def coincide_entidad_detallada(
 
     # 11. Guardia de Sanidad Comercial de Precio vs Referencia de Mercado (Ajustada por Volumen y Tester)
     if precio_candidato and precio_referencia and precio_referencia >= 65000:
+        # Asignamos 'vol_base' con volumen_esperado or (vol_candidato if vol_...
         vol_base = volumen_esperado or (vol_candidato if vol_candidato >= 25 else 100)
+        # Asignamos 'vol_ratio' con max(0.42, min(1.5, vol_base / 100.0))
         vol_ratio = max(0.42, min(1.5, vol_base / 100.0))
+        # Asignamos 'ref_ajustada' con precio_referencia * vol_ratio
         ref_ajustada = precio_referencia * vol_ratio
         # Los testers legítimos pueden costar algo menos que el retail sellado, pero nunca < 28% del valor oficial
         umbral_min = 0.28 if formato_det == "tester" else 0.35
+        # Evaluamos la condición lógica (precio_candidato < umbral_min * ref_ajustada) para controlar el flujo
         if precio_candidato < (umbral_min * ref_ajustada):
+            # Retornamos el resultado procesado (ResultadoCoincidencia(coincide=False, confianza...)
             return ResultadoCoincidencia(
                 coincide=False,
                 confianza=0.0,
@@ -1590,6 +2067,7 @@ def coincide_entidad_detallada(
                 formato_detectado=formato_det,
             )
 
+    # Retornamos el resultado procesado (ResultadoCoincidencia(coincide=True, confianza=...)
     return ResultadoCoincidencia(
         coincide=True,
         confianza=0.98,
@@ -1617,6 +2095,7 @@ def coincide_con_perfume(
     genero_esperado: Optional[str] = None,
 ) -> bool:
     """Wrapper retrocompatible que devuelve un booleano para los scrapers y vistas."""
+    # Retornamos el resultado procesado (coincide_entidad_detallada(titulo=titulo, perfu...)
     return coincide_entidad_detallada(
         titulo=titulo,
         perfume_nombre=perfume_nombre,
@@ -1645,116 +2124,210 @@ def detectar_precios_atipicos(
     ofertas_de_variante: List[Dict[str, Any]],
     ofertas_regulares_mismo_volumen: Optional[List[Dict[str, Any]]] = None,
 ) -> List[Dict[str, Any]]:
+    # Asignamos 'activas' con []
     activas: List[Dict[str, Any]] = []
+    # Recorremos iterativamente cada 'o' en ofertas_de_variante or []
     for o in (ofertas_de_variante or []):
+        # Evaluamos la condición lógica (not bool(o.get('en_stock', True))) para controlar el flujo
         if not bool(o.get("en_stock", True)):
+            # Saltamos a la siguiente iteración del ciclo descartando el elemento actual
             continue
+        # Evaluamos la condición lógica (str(o.get('estado') or 'activa').lower() != 'activa') para controlar el flujo
         if str(o.get("estado") or "activa").lower() != "activa":
+            # Saltamos a la siguiente iteración del ciclo descartando el elemento actual
             continue
+        # Bloque try/except para manejo seguro de errores y resiliencia operativa
         try:
+            # Asignamos 'p_val' con int(round(float(o.get('precio_actual') or ...
             p_val = int(round(float(o.get("precio_actual") or 0)))
         except (ValueError, TypeError):
+            # Saltamos a la siguiente iteración del ciclo descartando el elemento actual
             continue
+        # Evaluamos la condición lógica (p_val <= 0) para controlar el flujo
         if p_val <= 0:
+            # Saltamos a la siguiente iteración del ciclo descartando el elemento actual
             continue
+        # Asignamos 'copia' con dict(o)
         copia = dict(o)
+        # Asignamos 'copia['precio_actual']' con p_val
         copia["precio_actual"] = p_val
+        # Ejecutamos instrucción: activas.append(copia)
         activas.append(copia)
 
+    # Evaluamos la condición lógica (not activas) para controlar el flujo
     if not activas:
+        # Retornamos el resultado procesado ([])
         return []
 
+    # Asignamos 'regulares' con [o for o in activas if str(o.get('formato'...
     regulares = [o for o in activas if str(o.get("formato") or "regular").lower() != "tester"]
+    # Asignamos 'testers' con [o for o in activas if str(o.get('formato'...
     testers = [o for o in activas if str(o.get("formato") or "regular").lower() == "tester"]
 
+    # Asignamos 'outliers' con []
     outliers: List[Dict[str, Any]] = []
+    # Asignamos 'ids_marcados' con set()
     ids_marcados: Set[int] = set()
+    # Asignamos 'regulares_outliers_idx' con set()
     regulares_outliers_idx: Set[int] = set()
 
     # Regla 1 y 2: Outliers estadísticos respecto de la mediana (requiere >= 4 ofertas activas del mismo formato)
     for grupo_fmt in (regulares, testers):
+        # Evaluamos la condición lógica (len(grupo_fmt) < 4) para controlar el flujo
         if len(grupo_fmt) < 4:
+            # Saltamos a la siguiente iteración del ciclo descartando el elemento actual
             continue
+        # Asignamos 'precios_g' con [int(x['precio_actual']) for x in grupo_fmt]
         precios_g = [int(x["precio_actual"]) for x in grupo_fmt]
+        # Asignamos 'med' con float(statistics.median(precios_g))
         med = float(statistics.median(precios_g))
+        # Asignamos 'med_int' con int(round(med))
         med_int = int(round(med))
+        # Recorremos iterativamente cada '(idx_g, item)' en enumerate(grupo_fmt)
         for idx_g, item in enumerate(grupo_fmt):
+            # Asignamos 'p' con int(item['precio_actual'])
             p = int(item["precio_actual"])
+            # Asignamos 'regla' con None
             regla = None
+            # Asignamos 'motivo' con ''
             motivo = ""
+            # Evaluamos la condición lógica (p < 0.5 * med) para controlar el flujo
             if p < 0.5 * med:
+                # Asignamos 'regla' con 'bajo_mediana'
                 regla = "bajo_mediana"
+                # Asignamos 'motivo' con f'Precio ${p:,} inferior a 0.5x mediana ($...
                 motivo = f"Precio ${p:,} inferior a 0.5x mediana (${med_int:,}) sobre {len(grupo_fmt)} ofertas"
+            # Evaluamos la condición lógica (p > 2.2 * med) para controlar el flujo
             elif p > 2.2 * med:
+                # Asignamos 'regla' con 'sobre_mediana'
                 regla = "sobre_mediana"
+                # Asignamos 'motivo' con f'Precio ${p:,} superior a 2.2x mediana ($...
                 motivo = f"Precio ${p:,} superior a 2.2x mediana (${med_int:,}) sobre {len(grupo_fmt)} ofertas"
+            # Evaluamos la condición lógica (regla) para controlar el flujo
             if regla:
+                # Asignamos 'out_d' con dict(item)
                 out_d = dict(item)
+                # Asignamos 'out_d['regla_outlier']' con regla
                 out_d["regla_outlier"] = regla
+                # Asignamos 'out_d['estado_sugerido']' con 'requiere_revision'
                 out_d["estado_sugerido"] = "requiere_revision"
+                # Asignamos 'out_d['mediana_referencia']' con med_int
                 out_d["mediana_referencia"] = med_int
+                # Asignamos 'out_d['motivo_outlier']' con motivo
                 out_d["motivo_outlier"] = motivo
+                # Ejecutamos instrucción: outliers.append(out_d)
                 outliers.append(out_d)
+                # Evaluamos la condición lógica (item.get('id') is not None) para controlar el flujo
                 if item.get("id") is not None:
+                    # Ejecutamos instrucción: ids_marcados.add(int(item['id']))
                     ids_marcados.add(int(item["id"]))
+                # Evaluamos la condición lógica (grupo_fmt is regulares) para controlar el flujo
                 if grupo_fmt is regulares:
+                    # Ejecutamos instrucción: regulares_outliers_idx.add(idx_g)
                     regulares_outliers_idx.add(idx_g)
 
     # Regla 3: Tester más caro que la botella regular sellada del mismo volumen
     pool_reg_raw = ofertas_regulares_mismo_volumen if ofertas_regulares_mismo_volumen is not None else regulares
+    # Asignamos 'pool_reg_sano' con []
     pool_reg_sano: List[Dict[str, Any]] = []
+    # Recorremos iterativamente cada '(idx_r, r_item)' en enumerate(pool_reg_raw or [])
     for idx_r, r_item in enumerate(pool_reg_raw or []):
+        # Evaluamos la condición lógica (pool_reg_raw is regulares and idx_r in regulares_out...) para controlar el flujo
         if pool_reg_raw is regulares and idx_r in regulares_outliers_idx:
+            # Saltamos a la siguiente iteración del ciclo descartando el elemento actual
             continue
+        # Evaluamos la condición lógica (not bool(r_item.get('en_stock', True))) para controlar el flujo
         if not bool(r_item.get("en_stock", True)):
+            # Saltamos a la siguiente iteración del ciclo descartando el elemento actual
             continue
+        # Evaluamos la condición lógica (str(r_item.get('estado') or 'activa').lower() != 'ac...) para controlar el flujo
         if str(r_item.get("estado") or "activa").lower() != "activa":
+            # Saltamos a la siguiente iteración del ciclo descartando el elemento actual
             continue
+        # Evaluamos la condición lógica (str(r_item.get('formato') or 'regular').lower() == '...) para controlar el flujo
         if str(r_item.get("formato") or "regular").lower() == "tester":
+            # Saltamos a la siguiente iteración del ciclo descartando el elemento actual
             continue
+        # Bloque try/except para manejo seguro de errores y resiliencia operativa
         try:
+            # Asignamos 'pr_val' con int(round(float(r_item.get('precio_actual'...
             pr_val = int(round(float(r_item.get("precio_actual") or 0)))
         except (ValueError, TypeError):
+            # Saltamos a la siguiente iteración del ciclo descartando el elemento actual
             continue
+        # Evaluamos la condición lógica (pr_val > 0) para controlar el flujo
         if pr_val > 0:
+            # Ejecutamos instrucción: pool_reg_sano.append(dict(r_item, precio_actual=pr_v...
             pool_reg_sano.append(dict(r_item, precio_actual=pr_val))
 
+    # Evaluamos la condición lógica (testers and pool_reg_sano) para controlar el flujo
     if testers and pool_reg_sano:
+        # Asignamos 'precios_reg_sanos' con [int(x['precio_actual']) for x in pool_reg...
         precios_reg_sanos = [int(x["precio_actual"]) for x in pool_reg_sano]
+        # Asignamos 'med_reg' con float(statistics.median(precios_reg_sanos))
         med_reg = float(statistics.median(precios_reg_sanos))
+        # Asignamos 'med_reg_int' con int(round(med_reg))
         med_reg_int = int(round(med_reg))
+        # Asignamos 'techo_mercado' con med_reg * 1.15 if len(precios_reg_sanos) >...
         techo_mercado = (med_reg * 1.15) if len(precios_reg_sanos) >= 3 else float(max(precios_reg_sanos))
+        # Asignamos 'reg_por_tienda' con {}
         reg_por_tienda: Dict[Any, int] = {}
+        # Recorremos iterativamente cada 'rx' en pool_reg_sano
         for rx in pool_reg_sano:
+            # Asignamos 'tid_r' con rx.get('tienda_id')
             tid_r = rx.get("tienda_id")
+            # Evaluamos la condición lógica (tid_r is not None) para controlar el flujo
             if tid_r is not None:
+                # Asignamos 'p_rx' con int(rx['precio_actual'])
                 p_rx = int(rx["precio_actual"])
+                # Evaluamos la condición lógica (tid_r not in reg_por_tienda or p_rx < reg_por_tienda...) para controlar el flujo
                 if tid_r not in reg_por_tienda or p_rx < reg_por_tienda[tid_r]:
+                    # Asignamos 'reg_por_tienda[tid_r]' con p_rx
                     reg_por_tienda[tid_r] = p_rx
 
+        # Recorremos iterativamente cada 'tst' en testers
         for tst in testers:
+            # Asignamos 'oid_t' con tst.get('id')
             oid_t = tst.get("id")
+            # Evaluamos la condición lógica (oid_t is not None and int(oid_t) in ids_marcados) para controlar el flujo
             if oid_t is not None and int(oid_t) in ids_marcados:
+                # Saltamos a la siguiente iteración del ciclo descartando el elemento actual
                 continue
+            # Asignamos 'p_tst' con int(tst['precio_actual'])
             p_tst = int(tst["precio_actual"])
+            # Asignamos 'tid_t' con tst.get('tienda_id')
             tid_t = tst.get("tienda_id")
+            # Asignamos 'p_misma_tienda' con reg_por_tienda.get(tid_t) if tid_t is not ...
             p_misma_tienda = reg_por_tienda.get(tid_t) if tid_t is not None else None
 
+            # Asignamos 'es_mayor_misma_tienda' con p_misma_tienda is not None and p_tst > p_m...
             es_mayor_misma_tienda = p_misma_tienda is not None and p_tst > p_misma_tienda
+            # Asignamos 'es_mayor_mercado' con p_tst > techo_mercado
             es_mayor_mercado = p_tst > techo_mercado
 
+            # Evaluamos la condición lógica (es_mayor_misma_tienda or es_mayor_mercado) para controlar el flujo
             if es_mayor_misma_tienda or es_mayor_mercado:
+                # Asignamos 'ref_cmp' con p_misma_tienda if es_mayor_misma_tienda el...
                 ref_cmp = p_misma_tienda if es_mayor_misma_tienda else med_reg_int
+                # Asignamos 'out_t' con dict(tst)
                 out_t = dict(tst)
+                # Asignamos 'out_t['regla_outlier']' con 'tester_mayor_que_regular'
                 out_t["regla_outlier"] = "tester_mayor_que_regular"
+                # Asignamos 'out_t['estado_sugerido']' con 'requiere_revision'
                 out_t["estado_sugerido"] = "requiere_revision"
+                # Asignamos 'out_t['mediana_referencia']' con int(ref_cmp)
                 out_t["mediana_referencia"] = int(ref_cmp)
+                # Asignamos 'out_t['motivo_outlier']' con f'Tester (${p_tst:,}) supera precio de bot...
                 out_t["motivo_outlier"] = (
                     f"Tester (${p_tst:,}) supera precio de botella regular sellada (${int(ref_cmp):,})"
                 )
+                # Ejecutamos instrucción: outliers.append(out_t)
                 outliers.append(out_t)
+                # Evaluamos la condición lógica (oid_t is not None) para controlar el flujo
                 if oid_t is not None:
+                    # Ejecutamos instrucción: ids_marcados.add(int(oid_t))
                     ids_marcados.add(int(oid_t))
 
+    # Retornamos el resultado procesado (outliers)
     return outliers
 

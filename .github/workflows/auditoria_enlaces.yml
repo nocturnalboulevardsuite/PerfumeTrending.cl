@@ -1,9 +1,18 @@
+# =============================================================================
+# PerfumeTrending.cl — Workflow CI/CD: Auditoría Semanal de Enlaces Activos
+# =============================================================================
+# Propósito:
+# Verifica semanalmente la disponibilidad HTTP de las URLs de ofertas activas
+# utilizando una política de histéresis de 2 strikes para dar de baja enlaces
+# rotos (HTTP 404 / Soft-404 / redirección al home) sin afectar bloqueos WAF.
 name: Auditoria Semanal de Enlaces Activos
 
 on:
+  # Programación semanal automática
   schedule:
     # Todos los domingos a las 05:30 AM hora de Chile (08:30 UTC)
     - cron: '30 8 * * 0'
+  # Ejecución manual configurable desde GitHub Actions
   workflow_dispatch:
     inputs:
       sample_size:
@@ -15,30 +24,37 @@ on:
         required: false
         default: 'false'
 
+# Permisos de lectura y escritura sobre el contenido del repositorio
 permissions:
   contents: write
 
 jobs:
   auditar-enlaces:
+    # Runner Linux Ubuntu en la nube de GitHub
     runs-on: ubuntu-latest
+    # Tiempo máximo de seguridad de 25 minutos para evitar bloqueos colgados
     timeout-minutes: 25
     steps:
+      # Paso 1: Descargar el código fuente del proyecto
       - name: Descargar codigo del repositorio
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
+      # Paso 2: Preparar Python 3.11 con caché de dependencias pip
       - name: Configurar entorno Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
           cache: 'pip'
 
+      # Paso 3: Instalar todas las dependencias necesarias del proyecto
       - name: Instalar dependencias
         run: |
           pip install --upgrade pip
           pip install -r requirements.txt
 
+      # Paso 4: Ejecutar el motor de auditoría de enlaces conectándose a Supabase Cloud
       - name: Ejecutar auditoria de enlaces con histeresis de 2 strikes
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
@@ -51,6 +67,7 @@ jobs:
           fi
           python APP/backend/auditoria_enlaces.py --sample ${{ inputs.sample_size || '1000' }} $EXTRA_ARGS
 
+      # Paso 5: Almacenar el archivo JSON con el detalle de la auditoría como artefacto por 14 días
       - name: Subir reporte de auditoria de enlaces
         uses: actions/upload-artifact@v4
         if: always()

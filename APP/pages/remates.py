@@ -9,29 +9,48 @@ Módulo de visualización y filtrado de ofertas con rebajas genuinas en el merca
 - Tarjetas de producto interactivas con acceso directo a la compra en el comercio respectivo.
 """
 
+# Importación de librería estándar o dependencia externa (streamlit)
 import streamlit as st
+# Importación de librería estándar o dependencia externa (streamlit.components.v1)
 import streamlit.components.v1 as components
+# Importación de librería estándar o dependencia externa (pandas)
 import pandas as pd
+# Importación de librería estándar o dependencia externa (sys)
 import sys
+# Importación de librería estándar o dependencia externa (os)
 import os
+# Importación de librería estándar o dependencia externa (base64)
 import base64
+# Importación de librería estándar o dependencia externa (urllib.parse)
 import urllib.parse
+# Importación de librería estándar o dependencia externa (random)
 import random
 
 # Configuración de rutas canónicas para importar backend
 APP_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# Asignamos 'BASE_DIR' con os.path.dirname(APP_DIR)
 BASE_DIR = os.path.dirname(APP_DIR)
+# Recorremos iterativamente cada '_p' en (APP_DIR, BASE_DIR)
 for _p in (APP_DIR, BASE_DIR):
+    # Evaluamos la condición lógica (_p not in sys.path) para controlar el flujo
     if _p not in sys.path:
+        # Ejecutamos instrucción: sys.path.insert(0, _p)
         sys.path.insert(0, _p)
+    # Evaluamos la condición lógica (sys.path[0] != _p) para controlar el flujo
     elif sys.path[0] != _p:
+        # Bloque try/except para manejo seguro de errores y resiliencia operativa
         try:
+            # Ejecutamos instrucción: sys.path.remove(_p)
             sys.path.remove(_p)
         except ValueError:
+            # Ejecutamos instrucción: pass
             pass
+        # Ejecutamos instrucción: sys.path.insert(0, _p)
         sys.path.insert(0, _p)
 
+# Bloque try/except para manejo seguro de errores y resiliencia operativa
 try:
+    # Importación de componentes (es_minimo_historico, obtener_catalogo, obtener_minimo_historico, obtener_remates_reales, ...) desde el módulo 'backend.database'
     from backend.database import (
         es_minimo_historico,
         obtener_catalogo,
@@ -40,6 +59,7 @@ try:
         obtener_tiendas,
     )
 except (ImportError, ModuleNotFoundError):
+    # Importación de componentes (es_minimo_historico, obtener_catalogo, obtener_minimo_historico, obtener_remates_reales, ...) desde el módulo 'APP.backend.database'
     from APP.backend.database import (
         es_minimo_historico,
         obtener_catalogo,
@@ -47,6 +67,7 @@ except (ImportError, ModuleNotFoundError):
         obtener_remates_reales,
         obtener_tiendas,
     )
+# Importación de componentes (DEFAULT_PERFUME_IMAGE, FLAME_RED_SVG, HOME_RED_SVG, PERFUME_SVG_FAVICON, ...) desde el módulo 'ui'
 from ui import (
     DEFAULT_PERFUME_IMAGE,
     FLAME_RED_SVG as flame_red_svg,
@@ -65,7 +86,9 @@ from ui import (
     sanitize_external_url,
     toggle_theme,
 )
+# Importación de componentes (modal_autenticacion) desde el módulo 'auth_email'
 from auth_email import modal_autenticacion
+# Importación de componentes (boton_abrir_perfume, boton_corazon, estilos_moviles, estilos_tarjetas_cliqueables, ...) desde el módulo 'perfume_actions'
 from perfume_actions import (
     boton_abrir_perfume,
     boton_corazon,
@@ -79,6 +102,7 @@ from perfume_actions import (
 #   Limpia espacios en blanco y saltos de línea para renderizar HTML limpio sin bloques de código no deseados en Streamlit.
 def clean_html(html_str: str) -> str:
     """Limpia espacios iniciales y elimina saltos de línea para evitar bloques de código accidentales."""
+    # Retornamos el resultado procesado (_shared_clean_html(html_str, join_char=' '))
     return _shared_clean_html(html_str, join_char=" ")
 
 
@@ -87,11 +111,14 @@ def clean_html(html_str: str) -> str:
 #   Elimina falsas rebajas y frascos testers para ofrecer solo gangas legítimas en comercios verificados.
 @st.cache_data(ttl=120, show_spinner=False)
 def get_cached_remates():
+    # Retornamos el resultado procesado (obtener_remates_reales(limite=60, descuento_min...)
     return obtener_remates_reales(limite=60, descuento_min_pct=12)
 
 
+# Definición de función 'get_cached_minimo_historico' (parámetros: perfume_id, volumen_ml)
 @st.cache_data(ttl=120, show_spinner=False)
 def get_cached_minimo_historico(perfume_id, volumen_ml=None):
+    # Retornamos el resultado procesado (obtener_minimo_historico(perfume_id, volumen_ml...)
     return obtener_minimo_historico(perfume_id, volumen_ml=volumen_ml)
 
 
@@ -103,67 +130,116 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
+# Ejecutamos instrucción: init_common_session_state()
 init_common_session_state()
+# Evaluamos la condición lógica ('selected_perfume' not in st.session_state) para controlar el flujo
 if 'selected_perfume' not in st.session_state:
+    # Asignamos 'st.session_state['selected_perfu...' con None
     st.session_state['selected_perfume'] = None
 
+# Asignamos 'pal' con get_theme_palette()
 pal = get_theme_palette()
+# Asignamos 'is_dark' con pal.is_dark
 is_dark = pal.is_dark
+# Asignamos 'app_bg' con pal.app_bg
 app_bg = pal.app_bg
+# Asignamos 'app_bg_css' con pal.app_bg_css
 app_bg_css = pal.app_bg_css
+# Asignamos 'card_bg' con pal.card_bg
 card_bg = pal.card_bg
+# Asignamos 'border_color' con pal.border_color
 border_color = pal.border_color
+# Asignamos 'text_color' con pal.text_color
 text_color = pal.text_color
+# Asignamos 'subtext_color' con pal.subtext_color
 subtext_color = pal.subtext_color
+# Asignamos 'btn_bg' con pal.btn_bg
 btn_bg = pal.btn_bg
+# Asignamos 'btn_text' con pal.btn_text
 btn_text = pal.btn_text
+# Asignamos 'btn_border' con pal.btn_border
 btn_border = pal.btn_border
+# Asignamos 'input_bg' con pal.input_bg
 input_bg = pal.input_bg
+# Asignamos 'input_text' con pal.input_text
 input_text = pal.input_text
+# Asignamos 'input_border' con pal.input_border
 input_border = pal.input_border
+# Asignamos 'bottle_left_pos' con pal.bottle_left_pos
 bottle_left_pos = pal.bottle_left_pos
+# Asignamos 'static_icon_pos' con pal.static_icon_pos
 static_icon_pos = pal.static_icon_pos
+# Asignamos 'static_icon_svg' con pal.static_icon_svg
 static_icon_svg = pal.static_icon_svg
+# Asignamos 'bottle_svg' con pal.bottle_svg
 bottle_svg = pal.bottle_svg
+# Asignamos 'user_icon_svg' con pal.user_icon_svg
 user_icon_svg = pal.user_icon_svg
+# Asignamos 'settings_icon_svg' con pal.settings_icon_svg
 settings_icon_svg = pal.settings_icon_svg
+# Asignamos 'logout_icon_svg' con pal.logout_icon_svg
 logout_icon_svg = pal.logout_icon_svg
 
 # Paleta clara reforzada: fondo blanco y texto oscuro legible en todos los componentes.
 # El modo oscuro conserva exactamente los valores de la paleta compartida.
 if not is_dark:
+    # Asignamos 'app_bg' con '#ffffff'
     app_bg = "#ffffff"
+    # Asignamos 'app_bg_css' con 'background: #ffffff !important; backgroun...
     app_bg_css = "background: #ffffff !important; background-color: #ffffff !important;"
+    # Asignamos 'card_bg' con '#ffffff'
     card_bg = "#ffffff"
+    # Asignamos 'border_color' con '#e6e1db'
     border_color = "#e6e1db"
+    # Asignamos 'text_color' con '#1c1917'
     text_color = "#1c1917"
+    # Asignamos 'subtext_color' con '#6b6159'
     subtext_color = "#6b6159"
+    # Asignamos 'btn_bg' con '#ffffff'
     btn_bg = "#ffffff"
+    # Asignamos 'btn_text' con '#1c1917'
     btn_text = "#1c1917"
+    # Asignamos 'btn_border' con '#d6cec5'
     btn_border = "#d6cec5"
+    # Asignamos 'input_bg' con '#ffffff'
     input_bg = "#ffffff"
+    # Asignamos 'input_text' con '#1c1917'
     input_text = "#1c1917"
+    # Asignamos 'input_border' con '#d6cec5'
     input_border = "#d6cec5"
 
 # Tokens visuales compartidos con el resto del sitio
 accent = "#d83737"
+# Asignamos 'accent_hover' con '#b92d2d'
 accent_hover = "#b92d2d"
+# Asignamos 'accent_soft' con 'rgba(216, 55, 55, 0.14)' if is_dark else ...
 accent_soft = "rgba(216, 55, 55, 0.14)" if is_dark else "rgba(216, 55, 55, 0.07)"
+# Asignamos 'gold' con '#d4c2a5' if is_dark else '#8c7b6d'
 gold = "#d4c2a5" if is_dark else "#8c7b6d"
+# Asignamos 'gold_soft' con 'rgba(212, 194, 165, 0.16)' if is_dark els...
 gold_soft = "rgba(212, 194, 165, 0.16)" if is_dark else "rgba(140, 123, 109, 0.14)"
+# Asignamos 'ok_green' con '#4ade80' if is_dark else '#15803d'
 ok_green = "#4ade80" if is_dark else "#15803d"
+# Asignamos 'risk_red' con '#f87171' if is_dark else '#dc2626'
 risk_red = "#f87171" if is_dark else "#dc2626"
+# Asignamos 'surface_soft' con 'rgba(255, 255, 255, 0.035)' if is_dark el...
 surface_soft = "rgba(255, 255, 255, 0.035)" if is_dark else "#faf8f5"
+# Asignamos 'img_stage_bg' con 'radial-gradient(circle at 50% 45%, #1d222...
 img_stage_bg = "radial-gradient(circle at 50% 45%, #1d222c 0%, #11141a 100%)" if is_dark else "radial-gradient(circle at 50% 45%, #ffffff 0%, #f6f4f1 100%)"
+# Asignamos 'shadow_sm' con '0 1px 2px rgba(0,0,0,0.35)' if is_dark el...
 shadow_sm = "0 1px 2px rgba(0,0,0,0.35)" if is_dark else "0 1px 2px rgba(40,30,20,0.06)"
+# Asignamos 'shadow_hover' con '0 6px 16px rgba(0,0,0,0.35)' if is_dark e...
 shadow_hover = "0 6px 16px rgba(0,0,0,0.35)" if is_dark else "0 6px 16px rgba(60,45,35,0.10)"
+# Asignamos 'font_sans' con "'Manrope', -apple-system, BlinkMacSystemF...
 font_sans = "'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
 
+# Asignamos '_search_svg' con f'<svg xmlns="http://www.w3.org/2000/svg" ...
 _search_svg = (
     f'<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" '
     f'stroke="{subtext_color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
     f'<circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.2" y2="16.2"/></svg>'
 )
+# Asignamos 'search_icon_svg' con 'data:image/svg+xml;base64,' + base64.b64e...
 search_icon_svg = "data:image/svg+xml;base64," + base64.b64encode(_search_svg.encode("utf-8")).decode("ascii")
 
 # 2. CSS ADAPTABLE Y ESTILOS DE LA PÁGINA (MISMO SISTEMA VISUAL QUE EL RESTO DEL SITIO)
@@ -885,6 +961,7 @@ st.markdown(f"""
 st.markdown(estilos_tarjetas_cliqueables(accent, card_bg, border_color, subtext_color, is_dark), unsafe_allow_html=True)
 # Diseño responsivo para celulares (común a todas las páginas)
 st.markdown(estilos_moviles(accent, border_color, is_dark), unsafe_allow_html=True)
+# Renderizado de componente visual o control interactivo en la interfaz Streamlit
 st.markdown(f"""
     <style>
     div[class*="st-key-pcard_rem_"] {{ --heart-top: 22px; --heart-right: 22px; }}
@@ -897,12 +974,17 @@ st.markdown(f"""
 if st.session_state['logged_in']:
     # Mismo tamaño del botón de usuario en todas las páginas: ni muy chico ni muy grande
     col_logo, col_espacio, col_actions = st.columns([5.2, 0.6, 3.2], vertical_alignment="center")
+    # Asignamos '(btn_col1, btn_col2)' con col_actions.columns([2.4, 0.8], vertical_a...
     btn_col1, btn_col2 = col_actions.columns([2.4, 0.8], vertical_alignment="center", gap="small")
 else:
+    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
     col_logo, col_espacio, col_actions = st.columns([5.6, 1.2, 2.4], vertical_alignment="center")
+    # Asignamos '(btn_col1, btn_col2)' con col_actions.columns([2.0, 0.8], vertical_a...
     btn_col1, btn_col2 = col_actions.columns([2.0, 0.8], vertical_alignment="center", gap="small")
 
+# Gestión automática de contexto y recursos para: col_logo
 with col_logo:
+    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
     st.markdown(clean_html(f"""
     <a href="/" target="_self" class="brand-logo-clean" title="PerfumeTrending">
         <svg width="34" height="34" viewBox="0 0 36 36" fill="none" stroke-linecap="round" stroke-linejoin="round">
@@ -918,58 +1000,93 @@ with col_logo:
     </a>
     """), unsafe_allow_html=True)
 
+# Gestión automática de contexto y recursos para: btn_col1
 with btn_col1:
+    # Evaluamos la condición lógica (st.session_state['logged_in']) para controlar el flujo
     if st.session_state['logged_in']:
+        # Asignamos 'user_display' con st.session_state['user_info'].get('nombre'...
         user_display = st.session_state['user_info'].get('nombre') or st.session_state['user_info'].get('email', 'Usuario')
+        # Renderizado de componente visual o control interactivo en la interfaz Streamlit
         st.markdown('<div class="user-popover-container">', unsafe_allow_html=True)
+        # Gestión automática de contexto y recursos para: st.popover(f'{user_display}', use_container_wid...
         with st.popover(f"{user_display}", use_container_width=True):
+            # Renderizado de componente visual o control interactivo en la interfaz Streamlit
             st.write(f"**Conectado como:**")
+            # Renderizado de componente visual o control interactivo en la interfaz Streamlit
             st.write(st.session_state['user_info'].get('email', ''))
+            # Renderizado de componente visual o control interactivo en la interfaz Streamlit
             st.markdown("<div style='margin-top: 8px;'></div>", unsafe_allow_html=True)
             
             # LINK DIRECTO A MI PERFIL Y ALERTAS
             if st.button("Mi Perfil y Alertas", key="btn_go_profile", use_container_width=True):
+                # Ejecutamos instrucción: st.switch_page('pages/perfil.py')
                 st.switch_page("pages/perfil.py")
                 
+            # Evaluamos la condición lógica (st.button('Cerrar Sesión', key='btn_logout', use_con...) para controlar el flujo
             if st.button("Cerrar Sesión", key="btn_logout", use_container_width=True):
+                # Ejecutamos instrucción: cerrar_sesion_usuario()
                 cerrar_sesion_usuario()
+                # Ejecutamos instrucción: st.rerun()
                 st.rerun()
+        # Renderizado de componente visual o control interactivo en la interfaz Streamlit
         st.markdown('</div>', unsafe_allow_html=True)
     else:
+        # Evaluamos la condición lógica (st.button('Ingresar', key='login_btn', use_container...) para controlar el flujo
         if st.button("Ingresar", key="login_btn", use_container_width=True):
+            # Asignamos 'st.session_state['show_login_mod...' con True
             st.session_state['show_login_modal'] = True
+            # Ejecutamos instrucción: st.rerun()
             st.rerun()
 
+# Gestión automática de contexto y recursos para: btn_col2
 with btn_col2:
+    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
     st.button(" ", key="theme_toggle", on_click=toggle_theme)
 
 # MONITOREO Y RENDERIZADO PERSISTENTE DEL MODAL
 if st.session_state.get('show_login_modal', False):
+    # Asignamos 'st.session_state['show_login_mod...' con False
     st.session_state['show_login_modal'] = False
+    # Ejecutamos instrucción: modal_autenticacion()
     modal_autenticacion()
+# Ejecutamos instrucción: mostrar_aviso_favoritos()
 mostrar_aviso_favoritos()
 
+# Renderizado de componente visual o control interactivo en la interfaz Streamlit
 st.markdown("<div style='margin-top: 22px;'></div>", unsafe_allow_html=True)
 
 # 4. CHIPS DE NAVEGACIÓN RÁPIDA
 col_chip_home, col_chip1, col_chip2, col_chip3, col_chip4 = st.columns([1.6, 1.5, 2.0, 1.7, 1.6], vertical_alignment="center")
 
+# Gestión automática de contexto y recursos para: col_chip_home
 with col_chip_home:
+    # Ejecutamos instrucción: st.page_link('app.py', label='Inicio / Catálogo', us...
     st.page_link("app.py", label="Inicio / Catálogo", use_container_width=True)
+# Gestión automática de contexto y recursos para: col_chip1
 with col_chip1:
+    # Ejecutamos instrucción: st.page_link('pages/trendhype.py', label='Trend Del ...
     st.page_link("pages/trendhype.py", label="Trend Del Hype", use_container_width=True)
+# Gestión automática de contexto y recursos para: col_chip2
 with col_chip2:
+    # Ejecutamos instrucción: st.page_link('pages/trustpage.py', label='Páginas de...
     st.page_link("pages/trustpage.py", label="Páginas de Confianza", use_container_width=True)
+# Gestión automática de contexto y recursos para: col_chip3
 with col_chip3:
+    # Ejecutamos instrucción: st.page_link('pages/compararprecios.py', label='Comp...
     st.page_link("pages/compararprecios.py", label="Comparar Precios", use_container_width=True)
+# Gestión automática de contexto y recursos para: col_chip4
 with col_chip4:
+    # Ejecutamos instrucción: st.page_link('pages/remates.py', label='Remates & Fl...
     st.page_link("pages/remates.py", label="Remates & Flash", use_container_width=True)
 
+# Renderizado de componente visual o control interactivo en la interfaz Streamlit
 st.markdown("<div style='margin-top: 34px;'></div>", unsafe_allow_html=True)
 
 # 5. TITULO PRINCIPAL DE LA SECCIÓN
 col_title_text, col_title_back = st.columns([7, 3], vertical_alignment="center")
+# Gestión automática de contexto y recursos para: col_title_text
 with col_title_text:
+    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
     st.markdown(clean_html(f"""
     <div class="pt-title">
         <span class="pt-title-icon">
@@ -982,9 +1099,12 @@ with col_title_text:
     <div class="pt-lede">Ofertas relámpago con stock limitado y descuentos excepcionales auditados en tiendas chilenas.</div>
     """), unsafe_allow_html=True)
 
+# Gestión automática de contexto y recursos para: col_title_back
 with col_title_back:
+    # Ejecutamos instrucción: st.page_link('app.py', label='Volver al catálogo')
     st.page_link("app.py", label="Volver al catálogo")
 
+# Renderizado de componente visual o control interactivo en la interfaz Streamlit
 st.markdown("<div style='margin-top: 22px;'></div>", unsafe_allow_html=True)
 
 # =============================================================================
@@ -1001,70 +1121,116 @@ st.markdown("<div style='margin-top: 22px;'></div>", unsafe_allow_html=True)
 # =============================================================================
 remates_data = get_cached_remates() or []
 
+# Asignamos 'tiendas_unicas' con sorted({str(r.get('tienda') or '').strip()...
 tiendas_unicas = sorted({str(r.get("tienda") or "").strip() for r in remates_data if r.get("tienda")})
+# Evaluamos la condición lógica (not tiendas_unicas) para controlar el flujo
 if not tiendas_unicas:
+    # Asignamos 'tiendas_unicas' con [t['nombre'] for t in obtener_tiendas() or...
     tiendas_unicas = [t["nombre"] for t in (obtener_tiendas() or []) if t.get("nombre")]
 
+# Renderizado de componente visual o control interactivo en la interfaz Streamlit
 col_search, col_order, col_tienda = st.columns([4, 3, 3], gap="small", vertical_alignment="center")
 
+# Gestión automática de contexto y recursos para: col_search
 with col_search:
+    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
     search_remate = st.text_input("Buscar remates...", placeholder="Filtrar por perfume, marca o tienda...", label_visibility="collapsed")
 
+# Gestión automática de contexto y recursos para: col_order
 with col_order:
+    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
     orden_opt = st.selectbox("Ordenar por:", ["Mayor % Descuento", "Mayor Ahorro ($ CLP)", "Menor Precio", "Mayor Precio"], label_visibility="collapsed")
 
+# Gestión automática de contexto y recursos para: col_tienda
 with col_tienda:
+    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
     tienda_opt = st.selectbox("Tienda:", ["Todas las tiendas"] + tiendas_unicas, label_visibility="collapsed")
 
+# Renderizado de componente visual o control interactivo en la interfaz Streamlit
 st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
 
+# Asignamos 'items_filtrados' con []
 items_filtrados = []
+# Asignamos 'q_lower' con (search_remate or '').strip().lower()
 q_lower = (search_remate or "").strip().lower()
+# Recorremos iterativamente cada 'item' en remates_data
 for item in remates_data:
+    # Asignamos 'match_search' con not q_lower or q_lower in str(item.get('no...
     match_search = (
         not q_lower
         or q_lower in str(item.get("nombre") or "").lower()
         or q_lower in str(item.get("marca") or "").lower()
         or q_lower in str(item.get("tienda") or "").lower()
     )
+    # Asignamos 'match_tienda' con tienda_opt == 'Todas las tiendas' or tiend...
     match_tienda = (tienda_opt == "Todas las tiendas" or tienda_opt.lower() == str(item.get("tienda") or "").lower())
+    # Evaluamos la condición lógica (match_search and match_tienda) para controlar el flujo
     if match_search and match_tienda:
+        # Ejecutamos instrucción: items_filtrados.append(item)
         items_filtrados.append(item)
 
+# Evaluamos la condición lógica (orden_opt == 'Mayor % Descuento') para controlar el flujo
 if orden_opt == "Mayor % Descuento":
+    # Ejecutamos instrucción: items_filtrados.sort(key=lambda x: (-int(x.get('desc...
     items_filtrados.sort(key=lambda x: (-int(x.get("descuento_pct") or 0), -int(x.get("ahorro_clp") or 0)))
+# Evaluamos la condición lógica (orden_opt == 'Mayor Ahorro ($ CLP)') para controlar el flujo
 elif orden_opt == "Mayor Ahorro ($ CLP)":
+    # Ejecutamos instrucción: items_filtrados.sort(key=lambda x: (-int(x.get('ahor...
     items_filtrados.sort(key=lambda x: (-int(x.get("ahorro_clp") or 0), -int(x.get("descuento_pct") or 0)))
+# Evaluamos la condición lógica (orden_opt == 'Menor Precio') para controlar el flujo
 elif orden_opt == "Menor Precio":
+    # Ejecutamos instrucción: items_filtrados.sort(key=lambda x: int(x.get('precio...
     items_filtrados.sort(key=lambda x: int(x.get("precio_remate") or 999999999))
+# Evaluamos la condición lógica (orden_opt == 'Mayor Precio') para controlar el flujo
 elif orden_opt == "Mayor Precio":
+    # Ejecutamos instrucción: items_filtrados.sort(key=lambda x: -int(x.get('preci...
     items_filtrados.sort(key=lambda x: -int(x.get("precio_remate") or 0))
 
+# Evaluamos la condición lógica (not items_filtrados) para controlar el flujo
 if not items_filtrados:
+    # Ejecutamos instrucción: st.info('No se encontraron ofertas con descuento rea...
     st.info("No se encontraron ofertas con descuento real verificado para los filtros actuales.")
 else:
+    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
     st.markdown(
         f"<div class='pt-meta'>"
         f"Mostrando <b>{len(items_filtrados)}</b> liquidaciones reales en stock verificadas sobre botellas selladas (&ge; 25 ml)</div>",
         unsafe_allow_html=True,
     )
+    # Asignamos 'cols_per_row' con 3
     cols_per_row = 3
+    # Recorremos iterativamente cada 'row' en range(0, len(items_filtrados), cols_per_row)
     for row in range(0, len(items_filtrados), cols_per_row):
+        # Renderizado de componente visual o control interactivo en la interfaz Streamlit
         cols = st.columns(cols_per_row, gap="medium")
+        # Recorremos iterativamente cada 'i' en range(cols_per_row)
         for i in range(cols_per_row):
+            # Asignamos 'idx' con row + i
             idx = row + i
+            # Evaluamos la condición lógica (idx < len(items_filtrados)) para controlar el flujo
             if idx < len(items_filtrados):
+                # Asignamos 'item' con items_filtrados[idx]
                 item = items_filtrados[idx]
+                # Asignamos 'p_norm_str' con f"${int(item['precio_normal']):,.0f}".repl...
                 p_norm_str = f"${int(item['precio_normal']):,.0f}".replace(",", ".")
+                # Asignamos 'p_rem_str' con f"${int(item['precio_remate']):,.0f}".repl...
                 p_rem_str = f"${int(item['precio_remate']):,.0f}".replace(",", ".")
+                # Asignamos 'ahorro_str' con f"${int(item.get('ahorro_clp') or 0):,.0f}...
                 ahorro_str = f"${int(item.get('ahorro_clp') or 0):,.0f}".replace(",", ".")
+                # Asignamos 'pct_val' con int(item.get('descuento_pct') or 0)
                 pct_val = int(item.get("descuento_pct") or 0)
+                # Asignamos 'vol_ml' con int(item.get('volumen_ml') or 100)
                 vol_ml = int(item.get("volumen_ml") or 100)
 
+                # Asignamos 'nombre_safe' con escape_html(item.get('nombre', ''))
                 nombre_safe = escape_html(item.get("nombre", ""))
+                # Asignamos 'marca_safe' con escape_html(item.get('marca', ''))
                 marca_safe = escape_html(item.get("marca", ""))
+                # Asignamos 'tienda_safe' con escape_html(item.get('tienda', 'Tienda Ofi...
                 tienda_safe = escape_html(item.get("tienda", "Tienda Oficial"))
+                # Asignamos 'img_safe' con get_image_src(item.get('imagen_url'))
                 img_safe = get_image_src(item.get("imagen_url"))
+                # Asignamos 'safe_url' con sanitize_external_url(resolver_url_oferta(...
                 safe_url = sanitize_external_url(
                     resolver_url_oferta(
                         tienda_nombre=str(item.get("tienda") or ""),
@@ -1075,21 +1241,29 @@ else:
                     )
                 )
 
+                # Asignamos 'min_h' con get_cached_minimo_historico(item['perfume_...
                 min_h = get_cached_minimo_historico(item['perfume_id'], vol_ml)
+                # Asignamos 'p_rem_val' con int(item['precio_remate'])
                 p_rem_val = int(item['precio_remate'])
+                # Asignamos 'es_alltime' con bool(min_h is not None and p_rem_val <= mi...
                 es_alltime = bool(min_h is not None and p_rem_val <= min_h)
+                # Asignamos 'badge_alltime_html' con '<div class="badge-alltime" style="positio...
                 badge_alltime_html = (
                     '<div class="badge-alltime" style="position: absolute; bottom: 8px; left: 8px; background: rgba(220, 38, 38, 0.92); color: #ffffff; font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.3); text-transform: uppercase;">🔥 Mínimo Histórico</div>'
                     if es_alltime else ""
                 )
+                # Asignamos 'dias_rem_raw' con item.get('dias_sin_verificar')
                 dias_rem_raw = item.get("dias_sin_verificar")
+                # Asignamos 'stock_label_rem' con f'Verif. hace {max(1, int(round(float(dias...
                 stock_label_rem = (
                     f"Verif. hace {max(1, int(round(float(dias_rem_raw))))} d"
                     if (dias_rem_raw is not None and float(dias_rem_raw) > 3.0)
                     else "En stock"
                 )
 
+                # Gestión automática de contexto y recursos para: cols[i]
                 with cols[i]:
+                    # Asignamos 'html_card' con f'''\n <div class="remate-card">\n <div cl...
                     html_card = f"""
                     <div class="remate-card">
                         <div class="remate-img-box">
@@ -1115,11 +1289,17 @@ else:
                     # Toda la tarjeta abre el perfume (el botón "Ir a la oferta" sigue llevando a la tienda);
                     # el corazón lo guarda en favoritos
                     with st.container(key=f"pcard_rem_{idx}_{item['perfume_id']}"):
+                        # Renderizado de componente visual o control interactivo en la interfaz Streamlit
                         st.markdown(clean_html(html_card), unsafe_allow_html=True)
+                        # Ejecutamos instrucción: boton_abrir_perfume(item['perfume_id'], f'rem{idx}')
                         boton_abrir_perfume(item['perfume_id'], f"rem{idx}")
+                        # Ejecutamos instrucción: boton_corazon(item['perfume_id'], f'rem{idx}', item....
                         boton_corazon(item['perfume_id'], f"rem{idx}", item.get("nombre", ""))
+                    # Evaluamos la condición lógica (st.button('Comparar en todas las tiendas', key=f"btn...) para controlar el flujo
                     if st.button("Comparar en todas las tiendas", key=f"btn_remate_comp_{item['perfume_id']}_{idx}", use_container_width=True):
+                        # Asignamos 'st.session_state['selected_perfu...' con item['perfume_id']
                         st.session_state['selected_perfume'] = item['perfume_id']
+                        # Ejecutamos instrucción: st.switch_page('pages/compararprecios.py')
                         st.switch_page("pages/compararprecios.py")
 
 # PIE DE PÁGINA

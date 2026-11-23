@@ -2,6 +2,7 @@
 Paquete compartido de interfaz, seguridad, tema y autenticación de PerfumeTrending.cl.
 """
 
+# Importación de componentes (DEFAULT_AVATAR_SVG, DEFAULT_PERFUME_IMAGE, clean_html, escape_html, ...) desde el módulo 'security'
 from .security import (
     DEFAULT_AVATAR_SVG,
     DEFAULT_PERFUME_IMAGE,
@@ -13,6 +14,7 @@ from .security import (
     resolver_url_oferta,
     sanitize_external_url,
 )
+# Importación de componentes (DIAMOND_ICON_SVG, FLAME_RED_SVG, GRID_ICON_SVG, HOME_RED_SVG, ...) desde el módulo 'theme'
 from .theme import (
     DIAMOND_ICON_SVG,
     FLAME_RED_SVG,
@@ -27,12 +29,14 @@ from .theme import (
     init_common_session_state,
     toggle_theme,
 )
+# Importación de componentes (cerrar_sesion_usuario, hidratar_sesion_usuario, modal_autenticacion) desde el módulo 'auth_modal'
 from .auth_modal import (
     cerrar_sesion_usuario,
     hidratar_sesion_usuario,
     modal_autenticacion,
 )
 
+# Asignamos '__all__' con ['DEFAULT_AVATAR_SVG', 'DEFAULT_PERFUME_IM...
 __all__ = [
     "DEFAULT_AVATAR_SVG",
     "DEFAULT_PERFUME_IMAGE",

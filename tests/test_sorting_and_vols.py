@@ -1,16 +1,26 @@
+# Importación de librería estándar o dependencia externa (unittest)
 import unittest
+# Importación de librería estándar o dependencia externa (sys, os)
 import sys, os
+# Ejecutamos instrucción: sys.path.insert(0, os.path.abspath('APP'))
 sys.path.insert(0, os.path.abspath("APP"))
+# Ejecutamos instrucción: sys.path.insert(0, os.path.abspath('.'))
 sys.path.insert(0, os.path.abspath("."))
+# Importación de componentes (obtener_precios_actuales) desde el módulo 'backend.database'
 from backend.database import obtener_precios_actuales
 
+# Definición de clase 'TestSortingAndVols' que modela la estructura y lógica del componente
 class TestSortingAndVols(unittest.TestCase):
+    # Definición de función 'test_bleu_de_chanel_stock_first' sin parámetros externos
     def test_bleu_de_chanel_stock_first(self):
+        # Asignamos 'precios' con obtener_precios_actuales(1)
         precios = obtener_precios_actuales(1)
+        # Aserción de prueba unitaria: self.assertTrue(len(precios) > 0)
         self.assertTrue(len(precios) > 0)
         
         # Test 100ml filter
         vols_100 = [t for t in precios if int(round(float(t.get('volumen_ml') or 100))) == 100]
+        # Aserción de prueba unitaria: self.assertGreaterEqual(len(vols_100), 2)
         self.assertGreaterEqual(len(vols_100), 2) # Falabella, Ripley (y Paris si vigente)
         
         # Sort key: stock first, then price
@@ -24,14 +34,22 @@ class TestSortingAndVols(unittest.TestCase):
         
         # Verify all in-stock items appear before any out-of-stock items
         seen_out = False
+        # Recorremos iterativamente cada 'item' en sorted_vols
         for item in sorted_vols:
+            # Evaluamos la condición lógica (not item.get('en_stock', True)) para controlar el flujo
             if not item.get('en_stock', True):
+                # Asignamos 'seen_out' con True
                 seen_out = True
+            # Evaluamos la condición lógica (seen_out) para controlar el flujo
             elif seen_out:
+                # Ejecutamos instrucción: self.fail(f"In-stock item {item['tienda_nombre']} fo...
                 self.fail(f"In-stock item {item['tienda_nombre']} found after out-of-stock item!")
 
+    # Definición de función 'test_sort_order_all_perfume_2' sin parámetros externos
     def test_sort_order_all_perfume_2(self):
+        # Asignamos 'precios' con obtener_precios_actuales(2)
         precios = obtener_precios_actuales(2)
+        # Asignamos 'sorted_precios' con sorted(precios, key=lambda x: (0 if bool(x...
         sorted_precios = sorted(
             precios,
             key=lambda x: (0 if bool(x.get('en_stock', True)) else 1, x.get('precio_actual', 0) if x.get('precio_actual', 0) > 0 else 999999999)
@@ -39,19 +57,32 @@ class TestSortingAndVols(unittest.TestCase):
         
         # Verify all en_stock=True come before any en_stock=False
         seen_out_of_stock = False
+        # Recorremos iterativamente cada 'p' en sorted_precios
         for p in sorted_precios:
+            # Evaluamos la condición lógica (not p.get('en_stock', True)) para controlar el flujo
             if not p.get('en_stock', True):
+                # Asignamos 'seen_out_of_stock' con True
                 seen_out_of_stock = True
+            # Evaluamos la condición lógica (seen_out_of_stock) para controlar el flujo
             if seen_out_of_stock:
+                # Aserción de prueba unitaria: self.assertFalse(p.get('en_stock', True), 'In-stock ...
                 self.assertFalse(p.get('en_stock', True), "In-stock item found after out-of-stock item!")
 
+    # Definición de función 'test_obtener_catalogo_real_price' sin parámetros externos
     def test_obtener_catalogo_real_price(self):
+        # Importación de componentes (obtener_catalogo) desde el módulo 'backend.database'
         from backend.database import obtener_catalogo
+        # Asignamos 'catalogo' con obtener_catalogo()
         catalogo = obtener_catalogo()
+        # Aserción de prueba unitaria: self.assertTrue(len(catalogo) > 0)
         self.assertTrue(len(catalogo) > 0)
+        # Asignamos 'bleu' con next((p for p in catalogo if p['id'] == 1)...
         bleu = next((p for p in catalogo if p['id'] == 1), None)
+        # Aserción de prueba unitaria: self.assertIsNotNone(bleu)
         self.assertIsNotNone(bleu)
+        # Asignamos 'precios_bleu' con obtener_precios_actuales(1)
         precios_bleu = obtener_precios_actuales(1)
+        # Asignamos 'candidatos_frescos' con [p['precio_actual'] for p in precios_bleu ...
         candidatos_frescos = [
             p['precio_actual']
             for p in precios_bleu
@@ -60,7 +91,9 @@ class TestSortingAndVols(unittest.TestCase):
             and (p.get('volumen_ml') or 100) >= 25
             and not p.get('excluida_mejor_precio')
         ]
+        # Asignamos 'esperado_min' con min(candidatos_frescos) if candidatos_fres...
         esperado_min = min(candidatos_frescos) if candidatos_frescos else None
+        # Aserción de prueba unitaria: self.assertEqual(bleu['mejor_precio'], esperado_min)
         self.assertEqual(bleu['mejor_precio'], esperado_min)
 
     # - ¿Qué hace este test?:
@@ -68,11 +101,17 @@ class TestSortingAndVols(unittest.TestCase):
     #   y que buscar sin tildes (ej. 'chloe') encuentre marcas o perfumes con tildes ('Chloé').
     def test_busqueda_insensible_a_tildes(self):
         """Verifica que la normalización de búsqueda soporte tildes y diacríticos transparentemente."""
+        # Importación de componentes (normalizar_texto_busqueda, obtener_catalogo) desde el módulo 'backend.database'
         from backend.database import normalizar_texto_busqueda, obtener_catalogo
+        # Aserción de prueba unitaria: self.assertEqual(normalizar_texto_busqueda('Chloé No...
         self.assertEqual(normalizar_texto_busqueda("Chloé Nomade"), "chloe nomade")
+        # Aserción de prueba unitaria: self.assertEqual(normalizar_texto_busqueda('Ramón Mo...
         self.assertEqual(normalizar_texto_busqueda("Ramón Monegal Flamenco"), "ramon monegal flamenco")
+        # Asignamos 'res_chloe' con obtener_catalogo(busqueda='chloe')
         res_chloe = obtener_catalogo(busqueda="chloe")
+        # Evaluamos la condición lógica (res_chloe) para controlar el flujo
         if res_chloe:
+            # Aserción de prueba unitaria: self.assertTrue(any(('chlo' in normalizar_texto_busq...
             self.assertTrue(any("chlo" in normalizar_texto_busqueda(p.get("marca") or "") or "chlo" in normalizar_texto_busqueda(p.get("nombre") or "") for p in res_chloe))
 
     # - ¿Qué hace este test?:
@@ -80,11 +119,17 @@ class TestSortingAndVols(unittest.TestCase):
     #   el orden base por ID del catálogo maestro almacenado en memoria RAM.
     def test_inmutabilidad_catalogo_master(self):
         """Verifica que ordenar el catálogo por precio en una vista no altere el orden base del catálogo."""
+        # Importación de componentes (obtener_catalogo) desde el módulo 'backend.database'
         from backend.database import obtener_catalogo
+        # Asignamos 'cat_por_precio' con obtener_catalogo(orden='precio_asc')
         cat_por_precio = obtener_catalogo(orden="precio_asc")
+        # Asignamos 'cat_por_id' con obtener_catalogo(orden='id_asc')
         cat_por_id = obtener_catalogo(orden="id_asc")
+        # Aserción de prueba unitaria: self.assertEqual(len(cat_por_precio), len(cat_por_id))
         self.assertEqual(len(cat_por_precio), len(cat_por_id))
+        # Asignamos 'ids' con [p['id'] for p in cat_por_id[:10]]
         ids = [p["id"] for p in cat_por_id[:10]]
+        # Aserción de prueba unitaria: self.assertEqual(ids, sorted(ids))
         self.assertEqual(ids, sorted(ids))
 
     # - ¿Qué hace este test?:
@@ -92,40 +137,62 @@ class TestSortingAndVols(unittest.TestCase):
     #   y comprueba que la segunda consulta se resuelva en microsegundos (<0.05s) mediante caché RAM.
     def test_remates_reales_estructura_y_cache(self):
         """Verifica que obtener_remates_reales devuelva los campos requeridos y opere en microsegundos vía caché."""
+        # Importación de librería estándar o dependencia externa (time)
         import time
+        # Importación de componentes (obtener_remates_reales) desde el módulo 'backend.database'
         from backend.database import obtener_remates_reales
+        # Asignamos 'remates' con obtener_remates_reales(limite=10)
         remates = obtener_remates_reales(limite=10)
+        # Aserción de prueba unitaria: self.assertTrue(len(remates) > 0)
         self.assertTrue(len(remates) > 0)
+        # Asignamos 'primer_remate' con remates[0]
         primer_remate = remates[0]
+        # Asignamos 'campos_esperados' con ['precio_remate', 'precio_normal', 'ahorro...
         campos_esperados = ["precio_remate", "precio_normal", "ahorro_clp", "descuento_pct", "tienda", "url"]
+        # Recorremos iterativamente cada 'campo' en campos_esperados
         for campo in campos_esperados:
+            # Aserción de prueba unitaria: self.assertIn(campo, primer_remate, f'Falta campo {c...
             self.assertIn(campo, primer_remate, f"Falta campo {campo} en remate")
+        # Aserción de prueba unitaria: self.assertGreater(primer_remate['precio_normal'], p...
         self.assertGreater(primer_remate["precio_normal"], primer_remate["precio_remate"])
 
+        # Asignamos 't0' con time.time()
         t0 = time.time()
+        # Asignamos 'remates_cached' con obtener_remates_reales(limite=10)
         remates_cached = obtener_remates_reales(limite=10)
+        # Asignamos 't_duracion' con time.time() - t0
         t_duracion = time.time() - t0
+        # Aserción de prueba unitaria: self.assertLess(t_duracion, 0.05, f'Caché de remates...
         self.assertLess(t_duracion, 0.05, f"Caché de remates demoró {t_duracion:.4f}s, esperado < 0.05s")
+        # Aserción de prueba unitaria: self.assertEqual(len(remates_cached), len(remates))
         self.assertEqual(len(remates_cached), len(remates))
 
 
+# Definición de clase 'TestResolucionEstrictaVolumenFase3' que modela la estructura y lógica del componente
 class TestResolucionEstrictaVolumenFase3(unittest.TestCase):
     # - ¿Qué hace esta suite de tests?:
     #   Verifica que ningún extractor ni helper invente 100 ml por defecto ante títulos sin volumen
     #   (como 'Default Title' en Shopify), preserve multivariantes reales y rechace contradicciones.
 
     def test_extraer_volumen_ml_opcional_no_inventa_100(self):
+        # Importación de componentes (extraer_volumen_ml, extraer_volumen_ml_opcional) desde el módulo 'backend.normalizador'
         from backend.normalizador import extraer_volumen_ml, extraer_volumen_ml_opcional
 
+        # Aserción de prueba unitaria: self.assertIsNone(extraer_volumen_ml_opcional('Defau...
         self.assertIsNone(extraer_volumen_ml_opcional("Default Title"))
+        # Aserción de prueba unitaria: self.assertIsNone(extraer_volumen_ml_opcional('Bleu ...
         self.assertIsNone(extraer_volumen_ml_opcional("Bleu de Chanel Eau de Parfum Vaporizador"))
+        # Aserción de prueba unitaria: self.assertEqual(extraer_volumen_ml_opcional('Perfum...
         self.assertEqual(extraer_volumen_ml_opcional("Perfume X 50 ml"), 50)
         # Retrocompatibilidad explícita de extraer_volumen_ml cuando se pide default
         self.assertEqual(extraer_volumen_ml("Default Title", default=100), 100)
 
+    # Definición de función 'test_resolver_volumen_slug_50ml' sin parámetros externos
     def test_resolver_volumen_slug_50ml(self):
+        # Importación de componentes (resolver_volumen_oferta) desde el módulo 'backend.normalizador'
         from backend.normalizador import resolver_volumen_oferta
 
+        # Asignamos 'vol' con resolver_volumen_oferta(titulo_variante='D...
         vol = resolver_volumen_oferta(
             titulo_variante="Default Title",
             titulo_producto="Perfume Emporio Armani Stronger With You PowerFully EDP Hombre",
@@ -134,11 +201,15 @@ class TestResolucionEstrictaVolumenFase3(unittest.TestCase):
             n_variantes_producto=1,
             es_tester=False,
         )
+        # Aserción de prueba unitaria: self.assertEqual(vol, 50)
         self.assertEqual(vol, 50)
 
+    # Definición de función 'test_resolver_volumen_sin_volumen_multivariante_retorna_none' sin parámetros externos
     def test_resolver_volumen_sin_volumen_multivariante_retorna_none(self):
+        # Importación de componentes (resolver_volumen_oferta) desde el módulo 'backend.normalizador'
         from backend.normalizador import resolver_volumen_oferta
 
+        # Asignamos 'vol' con resolver_volumen_oferta(titulo_variante='O...
         vol = resolver_volumen_oferta(
             titulo_variante="Opción A",
             titulo_producto="Perfume Sauvage Eau de Parfum",
@@ -147,11 +218,15 @@ class TestResolucionEstrictaVolumenFase3(unittest.TestCase):
             n_variantes_producto=3,
             es_tester=False,
         )
+        # Aserción de prueba unitaria: self.assertIsNone(vol)
         self.assertIsNone(vol)
 
+    # Definición de función 'test_resolver_volumen_univariante_con_default_30_y_sin_default' sin parámetros externos
     def test_resolver_volumen_univariante_con_default_30_y_sin_default(self):
+        # Importación de componentes (resolver_volumen_oferta) desde el módulo 'backend.normalizador'
         from backend.normalizador import resolver_volumen_oferta
 
+        # Asignamos 'vol_30' con resolver_volumen_oferta(titulo_variante='D...
         vol_30 = resolver_volumen_oferta(
             titulo_variante="Default Title",
             titulo_producto="Perfume Libre Eau de Parfum",
@@ -160,8 +235,10 @@ class TestResolucionEstrictaVolumenFase3(unittest.TestCase):
             n_variantes_producto=1,
             es_tester=False,
         )
+        # Aserción de prueba unitaria: self.assertEqual(vol_30, 30)
         self.assertEqual(vol_30, 30)
 
+        # Asignamos 'vol_none' con resolver_volumen_oferta(titulo_variante='D...
         vol_none = resolver_volumen_oferta(
             titulo_variante="Default Title",
             titulo_producto="Perfume Libre Eau de Parfum",
@@ -170,12 +247,17 @@ class TestResolucionEstrictaVolumenFase3(unittest.TestCase):
             n_variantes_producto=1,
             es_tester=False,
         )
+        # Aserción de prueba unitaria: self.assertIsNone(vol_none)
         self.assertIsNone(vol_none)
 
+    # Definición de función 'test_regresion_armani_mundo_aromas_50ml_no_cae_en_100ml' sin parámetros externos
     def test_regresion_armani_mundo_aromas_50ml_no_cae_en_100ml(self):
+        # Importación de componentes (CatalogoTiendaBulk) desde el módulo 'backend.scraper_periodico'
         from backend.scraper_periodico import CatalogoTiendaBulk
 
+        # Asignamos 'cat' con CatalogoTiendaBulk('Mundo Aromas', 'shopif...
         cat = CatalogoTiendaBulk("Mundo Aromas", "shopify", "https://mundoaromas.cl")
+        # Ejecutamos instrucción: cat.ingestar_productos([{'title': 'Perfume Emporio A...
         cat.ingestar_productos([
             {
                 "title": "Perfume Emporio Armani Stronger With You PowerFully EDP 50 Ml Hombre",
@@ -214,25 +296,33 @@ class TestResolucionEstrictaVolumenFase3(unittest.TestCase):
             },
         ])
 
+        # Asignamos 'res_armani' con cat.extraer_variedades(perfume_nombre='Str...
         res_armani = cat.extraer_variedades(
             perfume_nombre="Stronger With You Powerfully",
             marca="Giorgio Armani",
             volumen_ml_defecto=100,
             concentracion="Eau de Parfum",
         )
+        # Aserción de prueba unitaria: self.assertEqual(len(res_armani), 1)
         self.assertEqual(len(res_armani), 1)
+        # Aserción de prueba unitaria: self.assertEqual(res_armani[0]['volumen_ml'], 50)
         self.assertEqual(res_armani[0]["volumen_ml"], 50)
+        # Aserción de prueba unitaria: self.assertEqual(res_armani[0]['precio_actual'], 82990)
         self.assertEqual(res_armani[0]["precio_actual"], 82990)
 
+        # Asignamos 'res_bleu' con cat.extraer_variedades(perfume_nombre='Ble...
         res_bleu = cat.extraer_variedades(
             perfume_nombre="Bleu de Chanel",
             marca="Chanel",
             volumen_ml_defecto=100,
             concentracion="Eau de Parfum",
         )
+        # Aserción de prueba unitaria: self.assertEqual(sorted((v['volumen_ml'] for v in re...
         self.assertEqual(sorted(v["volumen_ml"] for v in res_bleu), [50, 100])
 
+        # Asignamos 'diag' con {}
         diag = {}
+        # Asignamos 'res_contradictorio' con cat.extraer_variedades(perfume_nombre='Sau...
         res_contradictorio = cat.extraer_variedades(
             perfume_nombre="Sauvage",
             marca="Dior",
@@ -240,9 +330,13 @@ class TestResolucionEstrictaVolumenFase3(unittest.TestCase):
             concentracion="Eau de Parfum",
             diagnostico=diag,
         )
+        # Aserción de prueba unitaria: self.assertEqual(res_contradictorio, [])
         self.assertEqual(res_contradictorio, [])
+        # Aserción de prueba unitaria: self.assertGreaterEqual(diag.get('exclusiones_volume...
         self.assertGreaterEqual(diag.get("exclusiones_volumen_ambiguo", 0), 1)
 
 
+# Punto de entrada principal cuando el script se invoca directamente desde consola
 if __name__ == '__main__':
+    # Ejecutamos instrucción: unittest.main()
     unittest.main()

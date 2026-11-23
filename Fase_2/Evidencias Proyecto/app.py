@@ -1,18 +1,30 @@
+# Importación de librería estándar o dependencia externa (streamlit)
 import streamlit as st
+# Importación de librería estándar o dependencia externa (streamlit.components.v1)
 import streamlit.components.v1 as components
+# Importación de librería estándar o dependencia externa (pandas)
 import pandas as pd
+# Importación de librería estándar o dependencia externa (sys)
 import sys
+# Importación de librería estándar o dependencia externa (os)
 import os
+# Importación de librería estándar o dependencia externa (base64)
 import base64
 
 # Configurar rutas para importar backend
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# Asignamos 'APP_DIR' con os.path.dirname(os.path.abspath(__file__))
 APP_DIR = os.path.dirname(os.path.abspath(__file__))
+# Evaluamos la condición lógica (BASE_DIR not in sys.path) para controlar el flujo
 if BASE_DIR not in sys.path:
+    # Ejecutamos instrucción: sys.path.append(BASE_DIR)
     sys.path.append(BASE_DIR)
+# Evaluamos la condición lógica (APP_DIR not in sys.path) para controlar el flujo
 if APP_DIR not in sys.path:
+    # Ejecutamos instrucción: sys.path.append(APP_DIR)
     sys.path.append(APP_DIR)
 
+# Importación de componentes (obtener_catalogo, obtener_detalle_perfume, obtener_precios_actuales, obtener_tiendas, ...) desde el módulo 'backend.database'
 from backend.database import (
     obtener_catalogo,
     obtener_detalle_perfume,
@@ -21,33 +33,55 @@ from backend.database import (
     init_db
 )
 
+# Definición de función 'get_image_src' (parámetros: img_path_or_url)
 def get_image_src(img_path_or_url):
     """Retorna URL remota o data URI en base64 para imágenes locales."""
+    # Evaluamos la condición lógica (not img_path_or_url) para controlar el flujo
     if not img_path_or_url:
+        # Retornamos el resultado procesado ('https://images.unsplash.com/photo-152233736078...)
         return "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=500&q=80"
     
+    # Evaluamos la condición lógica (img_path_or_url.startswith('http://') or img_path_or...) para controlar el flujo
     if img_path_or_url.startswith("http://") or img_path_or_url.startswith("https://") or img_path_or_url.startswith("data:"):
+        # Retornamos el resultado procesado (img_path_or_url)
         return img_path_or_url
 
+    # Asignamos 'local_path' con img_path_or_url
     local_path = img_path_or_url
+    # Evaluamos la condición lógica (not os.path.isabs(local_path)) para controlar el flujo
     if not os.path.isabs(local_path):
+        # Asignamos 'cand1' con os.path.join(BASE_DIR, local_path)
         cand1 = os.path.join(BASE_DIR, local_path)
+        # Asignamos 'cand2' con os.path.join(BASE_DIR, 'APP', local_path)
         cand2 = os.path.join(BASE_DIR, "APP", local_path)
+        # Evaluamos la condición lógica (os.path.exists(cand1)) para controlar el flujo
         if os.path.exists(cand1):
+            # Asignamos 'local_path' con cand1
             local_path = cand1
+        # Evaluamos la condición lógica (os.path.exists(cand2)) para controlar el flujo
         elif os.path.exists(cand2):
+            # Asignamos 'local_path' con cand2
             local_path = cand2
 
+    # Evaluamos la condición lógica (os.path.exists(local_path)) para controlar el flujo
     if os.path.exists(local_path):
+        # Asignamos 'ext' con os.path.splitext(local_path)[1].lower().re...
         ext = os.path.splitext(local_path)[1].lower().replace(".", "")
+        # Asignamos 'mime' con 'image/png' if ext == 'png' else 'image/jpeg'
         mime = "image/png" if ext == "png" else "image/jpeg"
+        # Bloque try/except para manejo seguro de errores y resiliencia operativa
         try:
+            # Gestión automática de contexto y recursos para: open(local_path, 'rb')
             with open(local_path, "rb") as f:
+                # Asignamos 'b64' con base64.b64encode(f.read()).decode('utf-8')
                 b64 = base64.b64encode(f.read()).decode("utf-8")
+                # Retornamos el resultado procesado (f'data:{mime};base64,{b64}')
                 return f"data:{mime};base64,{b64}"
         except Exception:
+            # Ejecutamos instrucción: pass
             pass
 
+    # Retornamos el resultado procesado (img_path_or_url)
     return img_path_or_url
 
 # 1. CONFIGURACIÓN DE LA PÁGINA Y ESTADO
@@ -56,60 +90,89 @@ st.set_page_config(page_title="PerfumeTrending", layout="wide", initial_sidebar_
 # Inicializar esquema de base de datos relacional
 init_db()
 
+# Evaluamos la condición lógica ('current_page' not in st.session_state) para controlar el flujo
 if 'current_page' not in st.session_state:
+    # Asignamos 'st.session_state['current_page']' con 'home'
     st.session_state['current_page'] = 'home'
+# Evaluamos la condición lógica ('theme' not in st.session_state) para controlar el flujo
 if 'theme' not in st.session_state:
+    # Asignamos 'st.session_state['theme']' con 'dark'
     st.session_state['theme'] = 'dark'
+# Evaluamos la condición lógica ('selected_perfume' not in st.session_state) para controlar el flujo
 if 'selected_perfume' not in st.session_state:
+    # Asignamos 'st.session_state['selected_perfu...' con None
     st.session_state['selected_perfume'] = None
 
+# Definición de función 'toggle_theme' sin parámetros externos
 def toggle_theme():
+    # Asignamos 'st.session_state['theme']' con 'dark' if st.session_state['theme'] == 'li...
     st.session_state['theme'] = 'dark' if st.session_state['theme'] == 'light' else 'light'
 
+# Definición de función 'navigate_to' (parámetros: page, perfume_data)
 def navigate_to(page, perfume_data=None):
+    # Asignamos 'st.session_state['current_page']' con page
     st.session_state['current_page'] = page
+    # Evaluamos la condición lógica (perfume_data) para controlar el flujo
     if perfume_data:
+        # Asignamos 'st.session_state['selected_perfu...' con perfume_data
         st.session_state['selected_perfume'] = perfume_data
 
+# Asignamos 'is_dark' con st.session_state['theme'] == 'dark'
 is_dark = st.session_state['theme'] == 'dark'
 
 # Colores dinámicos adaptables por tema
 app_bg = "#0c0e12" if is_dark else "#f9f9fb"
+# Asignamos 'app_bg_css' con f'background-color: {app_bg} !important;'
 app_bg_css = f"background-color: {app_bg} !important;"
 
+# Asignamos 'text_color' con '#f0f0f0' if is_dark else '#18181b'
 text_color = "#f0f0f0" if is_dark else "#18181b"
+# Asignamos 'subtext_color' con '#888890' if is_dark else '#666670'
 subtext_color = "#888890" if is_dark else "#666670"
 
+# Asignamos 'btn_bg' con '#161920' if is_dark else '#ffffff'
 btn_bg = "#161920" if is_dark else "#ffffff"
+# Asignamos 'btn_text' con '#ffffff' if is_dark else '#18181b'
 btn_text = "#ffffff" if is_dark else "#18181b"
+# Asignamos 'btn_border' con '#2a2e39' if is_dark else '#d1d5db'
 btn_border = "#2a2e39" if is_dark else "#d1d5db"
 
+# Asignamos 'input_bg' con '#14171d' if is_dark else '#ffffff'
 input_bg = "#14171d" if is_dark else "#ffffff"
+# Asignamos 'input_text' con '#f0f0f0' if is_dark else '#18181b'
 input_text = "#f0f0f0" if is_dark else "#18181b"
+# Asignamos 'input_border' con '#2a2e39' if is_dark else '#d1d5db'
 input_border = "#2a2e39" if is_dark else "#d1d5db"
 
 # Posicionamiento del Switch de Tema
 bottle_left_pos = "42px" if is_dark else "-2px"
+# Asignamos 'static_icon_pos' con '12px center' if is_dark else 'calc(100% -...
 static_icon_pos = "12px center" if is_dark else "calc(100% - 12px) center"
 
+# Asignamos 'static_icon_svg' con "data:image/svg+xml;utf8,<svg xmlns='http:...
 static_icon_svg = (
     "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='4'/><line x1='12' y1='1' x2='12' y2='3'/><line x1='12' y1='21' x2='12' y2='23'/><line x1='4.22' y1='4.22' x2='5.64' y2='5.64'/><line x1='18.36' y1='18.36' x2='19.78' y2='19.78'/><line x1='1' y1='12' x2='3' y2='12'/><line x1='21' y1='12' x2='23' y2='12'/><line x1='4.22' y1='19.78' x2='5.64' y2='18.36'/><line x1='18.36' y1='5.64' x2='19.78' y2='4.22'/></svg>"
     if is_dark else
     "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z'/></svg>"
 )
 
+# Asignamos 'bottle_svg' con "data:image/svg+xml;utf8,<svg xmlns='http:...
 bottle_svg = (
     "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 58'><rect x='18' y='2' width='14' height='7' rx='2' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><rect x='21' y='9' width='8' height='5' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='19' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><path d='M21 28a8 8 0 0 0 9 10.5 8.5 8.5 0 0 1-9-10.5z' fill='none' stroke='%23111111' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/></svg>"
     if is_dark else
     "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 58'><rect x='18' y='2' width='14' height='7' rx='2' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><rect x='21' y='9' width='8' height='5' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='19' fill='%23ffffff' stroke='%23111111' stroke-width='2.5'/><circle cx='25' cy='34' r='5' fill='none' stroke='%23111111' stroke-width='2'/><line x1='25' y1='23' x2='25' y2='26' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='25' y1='42' x2='25' y2='45' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='14' y1='34' x2='17' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='33' y1='34' x2='36' y2='34' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='17' y1='26' x2='19' y2='28' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='31' y1='40' x2='33' y2='42' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='17' y1='42' x2='19' y2='40' stroke='%23111111' stroke-width='2' stroke-linecap='round'/><line x1='31' y1='28' x2='33' y2='26' stroke='%23111111' stroke-width='2' stroke-linecap='round'/></svg>"
 )
 
+# Asignamos 'camera_icon_svg' con f"data:image/svg+xml;utf8,<svg xmlns='http...
 camera_icon_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23{btn_text[1:]}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z'/><circle cx='12' cy='13' r='4'/></svg>"
+# Asignamos 'user_icon_svg' con f"data:image/svg+xml;utf8,<svg xmlns='http...
 user_icon_svg = f"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23{btn_text[1:]}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2'/><circle cx='12' cy='7' r='4'/></svg>"
 
 # ICONOS ILUSTRADOS EN ROJO
 trend_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff3838' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'><path d='M2 19h20M2 22h20M5 19v3M9 19v3M13 19v3M17 19v3M21 19v3' stroke='%23ff3838'/><path d='M4 11h9v7H4z' fill='%23ff3838'/><path d='M13 7h6v11h-6z' fill='%23ff3838'/><rect x='15' y='9' width='3' height='3' fill='%23ffffff'/><path d='M6 7h2v4H6z' fill='%23ff3838'/><path d='M19 14l3 4h-3z' fill='%23ff3838'/><circle cx='6.5' cy='18.5' r='1.5' fill='%23ff3838' stroke='%23ffffff' stroke-width='0.5'/><circle cx='10.5' cy='18.5' r='1.5' fill='%23ff3838' stroke='%23ffffff' stroke-width='0.5'/><circle cx='16' cy='18.5' r='1.5' fill='%23ff3838' stroke='%23ffffff' stroke-width='0.5'/></svg>"
+# Asignamos 'shield_red_svg' con "data:image/svg+xml;utf8,<svg xmlns='http:...
 shield_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff3838' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'/><path d='m9 12 2 2 4-4'/></svg>"
+# Asignamos 'tag_red_svg' con "data:image/svg+xml;utf8,<svg xmlns='http:...
 tag_red_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff3838' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12 2H2v10l11.29 11.29a1 1 0 0 0 1.41 0l7.58-7.58a1 1 0 0 0 0-1.41L12 2z'/><circle cx='7.5' cy='7.5' r='1.5' fill='%23ff3838'/></svg>"
 
 # 2. SISTEMA DE SONIDO Y EVENTOS DE TARJETAS
@@ -193,6 +256,7 @@ js_color_script = f"""
 </script>
 """
 
+# Ejecutamos instrucción: components.html(js_color_script, height=0, width=0)
 components.html(js_color_script, height=0, width=0)
 
 # 3. CSS ADAPTABLE Y SWITCH
@@ -665,8 +729,11 @@ st.markdown(f"""
 # 4. CABECERA CON LOGO COMPACTO
 col_logo, col_espacio, col_actions = st.columns([5.5, 1.3, 2.4], vertical_alignment="center")
 
+# Gestión automática de contexto y recursos para: col_logo
 with col_logo:
+    # Asignamos 'logo_color' con '#8c7b6d'
     logo_color = "#8c7b6d"
+    # Asignamos 'logo_html' con f'\n <div style="display: inline-flex; ali...
     logo_html = f"""
     <div style="display: inline-flex; align-items: center; gap: 10px; cursor: pointer; width: fit-content;" onclick="window.location.reload();">
         <svg width="32" height="32" viewBox="0 0 36 36" fill="none" stroke-linecap="round" stroke-linejoin="round">
@@ -683,34 +750,52 @@ with col_logo:
         </span>
     </div>
     """
+    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
     st.markdown(logo_html, unsafe_allow_html=True)
 
+# Gestión automática de contexto y recursos para: col_actions
 with col_actions:
+    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
     btn_col1, btn_col2 = st.columns([1.4, 1], vertical_alignment="center")
+    # Gestión automática de contexto y recursos para: btn_col1
     with btn_col1:
+        # Renderizado de componente visual o control interactivo en la interfaz Streamlit
         st.button("Ingresar", key="login_btn", use_container_width=True)
+    # Gestión automática de contexto y recursos para: btn_col2
     with btn_col2:
+        # Renderizado de componente visual o control interactivo en la interfaz Streamlit
         st.button(" ", key="theme_toggle", on_click=toggle_theme)
 
 # 5. NAVEGACIÓN PRINCIPAL
 st.markdown("<div style='margin-top: 14px;'></div>", unsafe_allow_html=True)
+# Renderizado de componente visual o control interactivo en la interfaz Streamlit
 nav_cols = st.columns([1, 1, 1], vertical_alignment="center")
 
+# Gestión automática de contexto y recursos para: nav_cols[0]
 with nav_cols[0]: 
+    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
     st.button("PERFUMES", key="n_perfumes", on_click=navigate_to, args=('home',), use_container_width=True)
+# Gestión automática de contexto y recursos para: nav_cols[1]
 with nav_cols[1]: 
+    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
     st.button("REMATES", key="n_remates", on_click=lambda: st.switch_page("pages/trendhype.py"), use_container_width=True)
+# Gestión automática de contexto y recursos para: nav_cols[2]
 with nav_cols[2]: 
+    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
     st.button("ESENCIAS", key="n_esencias", on_click=navigate_to, args=('esencias_page',), use_container_width=True)
 
+# Renderizado de componente visual o control interactivo en la interfaz Streamlit
 st.markdown(f"<hr style='margin: 10px 0 24px 0; border: none; border-bottom: 1px solid {btn_border}; opacity: 0.3;'>", unsafe_allow_html=True)
 
 # 6. BÚSQUEDA Y FILTRO DE ESENCIAS
 col_search, col_filter, col_separator, col_photo = st.columns([5.5, 1.8, 0.1, 2.0], vertical_alignment="center")
 
+# Gestión automática de contexto y recursos para: col_search
 with col_search:
+    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
     search_query = st.text_input("Buscar", placeholder="Buscar perfume, marca o esencias...", label_visibility="collapsed")
 
+# Asignamos 'raw_notes' con ['Bergamota', 'Clementina', 'Limón', 'Lima...
 raw_notes = [
     "Bergamota", "Clementina", "Limón", "Lima", "Mandarina", "Neroli", "Petit Grain", "Pomelo (Toronja)", "Yuzu",
     "Almendra", "Avellana", "Ciruela", "Coco", "Durazno (Melocotón)", "Frambuesa", "Grosellas Negras", 
@@ -727,10 +812,14 @@ raw_notes = [
     "Aldehídos", "Ambroxan", "Cachemira (Cashmeran)", "Cuero", "Iso E Super", "Notas Marinas", "Notas Solares", "Sangre (Metálica)"
 ]
 
+# Asignamos 'all_notes' con sorted(raw_notes)
 all_notes = sorted(raw_notes)
 
+# Gestión automática de contexto y recursos para: col_filter
 with col_filter:
+    # Gestión automática de contexto y recursos para: st.popover('Esencias', use_container_width=True)
     with st.popover("Esencias", use_container_width=True):
+        # Asignamos 'selected_essences' con st.multiselect('Selecciona notas olfativas...
         selected_essences = st.multiselect(
             "Selecciona notas olfativas:",
             options=all_notes,
@@ -738,54 +827,83 @@ with col_filter:
             label_visibility="collapsed"
         )
 
+# Gestión automática de contexto y recursos para: col_separator
 with col_separator:
+    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
     st.markdown(f"<div style='border-left: 1px solid {btn_border}; height: 32px; margin: auto;'></div>", unsafe_allow_html=True)
 
+# Gestión automática de contexto y recursos para: col_photo
 with col_photo:
+    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
     st.button("Búsqueda visual", key="btn_photo_search", help="Buscar por imagen", use_container_width=True)
 
 # 7. CHIPS DE ENLACE RÁPIDO A PÁGINAS INDEPENDIENTES
 st.markdown("<div style='margin-top: 14px;'></div>", unsafe_allow_html=True)
+# Renderizado de componente visual o control interactivo en la interfaz Streamlit
 col_chip1, col_chip2, col_chip3, col_chip_space = st.columns([1.5, 2.0, 1.7, 3.8], vertical_alignment="center")
 
+# Gestión automática de contexto y recursos para: col_chip1
 with col_chip1:
+    # Ejecutamos instrucción: st.page_link('pages/trendhype.py', label='Trend Del ...
     st.page_link("pages/trendhype.py", label="Trend Del Hype", use_container_width=True)
+# Gestión automática de contexto y recursos para: col_chip2
 with col_chip2:
+    # Ejecutamos instrucción: st.page_link('pages/trustpage.py', label='Páginas de...
     st.page_link("pages/trustpage.py", label="Páginas de Confianza", use_container_width=True)
+# Gestión automática de contexto y recursos para: col_chip3
 with col_chip3:
+    # Ejecutamos instrucción: st.page_link('pages/compararprecios.py', label='Comp...
     st.page_link("pages/compararprecios.py", label="Comparar Precios", use_container_width=True)
 
+# Renderizado de componente visual o control interactivo en la interfaz Streamlit
 st.markdown("<div style='margin-top: 24px;'></div>", unsafe_allow_html=True)
 
 # 8. SECCIONES Y CONTENIDOS
 if st.session_state['current_page'] == 'home':
+    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
     st.markdown(f"<div style='text-align: center; margin-bottom: 24px; color: {text_color}; letter-spacing: 1.5px; font-weight: 300; font-size: 1.1rem; text-transform: uppercase;'>CATÁLOGO Y TENDENCIAS EN CHILE</div>", unsafe_allow_html=True)
     
+    # Evaluamos la condición lógica (selected_essences) para controlar el flujo
     if selected_essences:
+        # Renderizado de componente visual o control interactivo en la interfaz Streamlit
         st.write(f"**Filtro activo por notas:** {', '.join(selected_essences)}")
 
     # Obtener catálogo desde base de datos con filtros
     catalog_perfumes = obtener_catalogo(busqueda=search_query, esencias=selected_essences)
 
+    # Evaluamos la condición lógica (not catalog_perfumes) para controlar el flujo
     if not catalog_perfumes:
+        # Ejecutamos instrucción: st.info('No se encontraron perfumes que coincidan co...
         st.info("No se encontraron perfumes que coincidan con la búsqueda o notas seleccionadas.")
     else:
+        # Asignamos 'cols_per_row' con 3
         cols_per_row = 3
+        # Recorremos iterativamente cada 'i' en range(0, len(catalog_perfumes), cols_per_row)
         for i in range(0, len(catalog_perfumes), cols_per_row):
+            # Renderizado de componente visual o control interactivo en la interfaz Streamlit
             cols = st.columns(cols_per_row, gap="medium")
+            # Recorremos iterativamente cada 'j' en range(cols_per_row)
             for j in range(cols_per_row):
+                # Evaluamos la condición lógica (i + j < len(catalog_perfumes)) para controlar el flujo
                 if i + j < len(catalog_perfumes):
+                    # Asignamos 'p' con catalog_perfumes[i + j]
                     p = catalog_perfumes[i + j]
                     
                     # Determinar país y notas para el hover overlay
                     pais_origen = "Emiratos Árabes 🇦🇪" if p.get('es_arabe') else "Francia 🇫🇷" if p.get('marca') in ['Chanel', 'Dior', 'Yves Saint Laurent', 'Jean Paul Gaultier', 'Kilian', 'Maison Francis Kurkdjian'] else "Italia 🇮🇹" if p.get('marca') in ['Giorgio Armani', 'Versace'] else "Estados Unidos 🇺🇸" if p.get('marca') in ['Tom Ford'] else "Internacional"
+                    # Asignamos 'notas_txt' con p.get('notas', 'Notas aromáticas selectas')
                     notas_txt = p.get('notas', 'Notas aromáticas selectas')
+                    # Asignamos 'tipo_txt' con p.get('tipo', 'Eau de Parfum')
                     tipo_txt = p.get('tipo', 'Eau de Parfum')
+                    # Asignamos 'img_src' con get_image_src(p.get('imagen_url'))
                     img_src = get_image_src(p.get('imagen_url'))
                     
+                    # Asignamos 'mejor_p' con p.get('mejor_precio')
                     mejor_p = p.get('mejor_precio')
+                    # Asignamos 'mejor_p_txt' con f'${mejor_p:,.0f} CLP'.replace(',', '.') i...
                     mejor_p_txt = f"${mejor_p:,.0f} CLP".replace(",", ".") if mejor_p else "Ver tiendas"
 
+                    # Asignamos 'card_html' con f'''\n <div class="catalog-card">\n <div c...
                     card_html = f"""
                     <div class="catalog-card">
                         <div class="square-img-box">
@@ -804,19 +922,30 @@ if st.session_state['current_page'] == 'home':
                         </div>
                     </div>
                     """
+                    # Gestión automática de contexto y recursos para: cols[j]
                     with cols[j]:
+                        # Renderizado de componente visual o control interactivo en la interfaz Streamlit
                         st.markdown(card_html, unsafe_allow_html=True)
+                        # Evaluamos la condición lógica (st.button('📊 Comparar Precios', key=f"btn_comp_{p['i...) para controlar el flujo
                         if st.button("📊 Comparar Precios", key=f"btn_comp_{p['id']}", use_container_width=True):
+                            # Asignamos 'st.session_state['selected_perfu...' con p['id']
                             st.session_state['selected_perfume'] = p['id']
+                            # Ejecutamos instrucción: st.switch_page('pages/compararprecios.py')
                             st.switch_page("pages/compararprecios.py")
 
+# Evaluamos la condición lógica (st.session_state['current_page'] == 'esencias_page') para controlar el flujo
 elif st.session_state['current_page'] == 'esencias_page':
+    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
     col_dict_title, col_dict_mute = st.columns([9, 1], vertical_alignment="center")
     
+    # Gestión automática de contexto y recursos para: col_dict_title
     with col_dict_title:
+        # Renderizado de componente visual o control interactivo en la interfaz Streamlit
         st.markdown(f"<div style='text-align: center; color: {text_color}; letter-spacing: 1px; font-weight: 300; margin-bottom: 24px; font-size: 1.1rem; text-transform: uppercase;'>DICCIONARIO DE ESENCIAS Y NOTAS</div>", unsafe_allow_html=True)
     
+    # Gestión automática de contexto y recursos para: col_dict_mute
     with col_dict_mute:
+        # Renderizado de componente visual o control interactivo en la interfaz Streamlit
         st.markdown(f"""
         <div style="text-align: right;">
             <button id="sound-toggle-btn" class="sound-mute-btn" onclick="if(window.toggleSoundMute){{window.toggleSoundMute();}}else if(window.parent.toggleSoundMute){{window.parent.toggleSoundMute();}}" title="Activar / Desactivar sonido de burbujas">
@@ -825,25 +954,43 @@ elif st.session_state['current_page'] == 'esencias_page':
         </div>
         """, unsafe_allow_html=True)
 
+    # Definición de función 'get_essence_colors' (parámetros: name)
     def get_essence_colors(name):
+        # Asignamos 'n' con name.lower()
         n = name.lower()
+        # Evaluamos la condición lógica (any((k in n for k in ['sangre', 'cereza', 'frambuesa...) para controlar el flujo
         if any(k in n for k in ['sangre', 'cereza', 'frambuesa', 'pimienta rosa', 'rosa', 'ruibarbo', 'lichi', 'ciruela', 'grosella', 'peonía', 'geranio']):
+            # Retornamos el resultado procesado (('#5c282e' if is_dark else '#e2b3b7', '#3d1a1e'...)
             return ("#5c282e" if is_dark else "#e2b3b7", "#3d1a1e" if is_dark else "#f7eaec", "#f0adb4" if is_dark else "#5c1b22")
+        # Evaluamos la condición lógica (any((k in n for k in ['marina', 'marinas', 'agua', '...) para controlar el flujo
         elif any(k in n for k in ['marina', 'marinas', 'agua', 'océano', 'ozónica']):
+            # Retornamos el resultado procesado (('#224052' if is_dark else '#a8c7da', '#152933'...)
             return ("#224052" if is_dark else "#a8c7da", "#152933" if is_dark else "#eaf2f7", "#92ccdb" if is_dark else "#173a4b")
+        # Evaluamos la condición lógica (any((k in n for k in ['albahaca', 'bergamota', 'card...) para controlar el flujo
         elif any(k in n for k in ['albahaca', 'bergamota', 'cardamomo', 'higo', 'manzana', 'menta', 'pachulí', 'pera', 'romero', 'salvia', 'té verde', 'té blanco', 'vetiver', 'abedul', 'eucalipto', 'gálbano']):
+            # Retornamos el resultado procesado (('#234530' if is_dark else '#a4cca2', '#162b1e'...)
             return ("#234530" if is_dark else "#a4cca2", "#162b1e" if is_dark else "#ebf5ee", "#93d1a3" if is_dark else "#193d25")
+        # Evaluamos la condición lógica (any((k in n for k in ['iris', 'lavanda', 'jazmín', '...) para controlar el flujo
         elif any(k in n for k in ['iris', 'lavanda', 'jazmín', 'nardos', 'neroli', 'violeta', 'fresia', 'gardenia', 'ylang', 'magnolia', 'azahar']):
+            # Retornamos el resultado procesado (('#432d52' if is_dark else '#c3b1d4', '#2b1d33'...)
             return ("#432d52" if is_dark else "#c3b1d4", "#2b1d33" if is_dark else "#f2ebf7", "#c7a9db" if is_dark else "#391c47")
+        # Evaluamos la condición lógica (any((k in n for k in ['caramelo', 'miel', 'solares',...) para controlar el flujo
         elif any(k in n for k in ['caramelo', 'miel', 'solares', 'vainilla', 'cacao', 'café', 'canela', 'tonka', 'nuez moscada', 'praliné', 'almendra', 'avellana', 'ron', 'cognac', 'whisky']):
+            # Retornamos el resultado procesado (('#523522' if is_dark else '#d8bca7', '#332115'...)
             return ("#523522" if is_dark else "#d8bca7", "#332115" if is_dark else "#f7ede6", "#dbb193" if is_dark else "#452914")
+        # Evaluamos la condición lógica (any((k in n for k in ['ámbar gris', 'cedro', 'sándal...) para controlar el flujo
         elif any(k in n for k in ['ámbar gris', 'cedro', 'sándalo', 'tabaco', 'cuero', 'oud', 'incienso', 'ciprés', 'ébano', 'guayac', 'musgo', 'benjuí', 'ládano']):
+            # Retornamos el resultado procesado (('#373d47' if is_dark else '#bdc1c9', '#23272e'...)
             return ("#373d47" if is_dark else "#bdc1c9", "#23272e" if is_dark else "#edeef0", "#aeb5c2" if is_dark else "#292e36")
+        # Evaluamos la condición lógica (any((k in n for k in ['azafrán', 'ámbar', 'mandarina...) para controlar el flujo
         elif any(k in n for k in ['azafrán', 'ámbar', 'mandarina', 'melocotón', 'durazno', 'mirra', 'naranjo', 'pomelo', 'cítrico', 'cítricos', 'limón', 'lima', 'piña', 'jengibre', 'yuzu']):
+            # Retornamos el resultado procesado (('#59331e' if is_dark else '#debca8', '#382013'...)
             return ("#59331e" if is_dark else "#debca8", "#382013" if is_dark else "#f9ede6", "#dfab8c" if is_dark else "#4f2711")
         else:
+            # Retornamos el resultado procesado (('#333842' if is_dark else '#cad0d9', '#1f2228'...)
             return ("#333842" if is_dark else "#cad0d9", "#1f2228" if is_dark else "#f2f4f7", "#bcc2cc" if is_dark else "#2b3038")
 
+    # Asignamos 'essence_descriptions' con {'Bergamota': 'Cítrico efervescente y lumi...
     essence_descriptions = {
         "Bergamota": "Cítrico efervescente y luminoso con delicados matices florales.",
         "Clementina": "Cítrico dulce, jugoso y chispeante que transmite alegría inmediata.",
@@ -954,26 +1101,40 @@ elif st.session_state['current_page'] == 'esencias_page':
         "Sangre (Metálica)": "Nota vanguardista nicho; evoca hierro y un matiz salado."
     }
 
+    # Renderizado de componente visual o control interactivo en la interfaz Streamlit
     col_es_1, col_es_2 = st.columns(2, gap="medium")
+    # Asignamos 'html_col1' con []
     html_col1 = []
+    # Asignamos 'html_col2' con []
     html_col2 = []
     
+    # Recorremos iterativamente cada '(i, note)' en enumerate(all_notes)
     for i, note in enumerate(all_notes):
+        # Asignamos '(border_col, bg_col, text_c)' con get_essence_colors(note)
         border_col, bg_col, text_c = get_essence_colors(note)
+        # Petición HTTP GET hacia el servidor externo con control de timeout y cabeceras
         desc = essence_descriptions.get(note, "Nota olfativa distintiva que aporta carácter y equilibrio.")
         
+        # Asignamos 'tarjeta_html' con f'\n <div class="essence-card" onclick="(w...
         tarjeta_html = f"""
         <div class="essence-card" onclick="(window.playBubbleSound || window.parent.playBubbleSound || function(){{}})()" style="border-color: {border_col}; background-color: {bg_col}; color: {text_c};">
             <div class="essence-title" style="color: {text_c} !important;">{note}</div>
             <div class="essence-desc" style="color: {text_c} !important;">{desc}</div>
         </div>
         """
+        # Evaluamos la condición lógica (i % 2 == 0) para controlar el flujo
         if i % 2 == 0:
+            # Ejecutamos instrucción: html_col1.append(tarjeta_html)
             html_col1.append(tarjeta_html)
         else:
+            # Ejecutamos instrucción: html_col2.append(tarjeta_html)
             html_col2.append(tarjeta_html)
 
+    # Gestión automática de contexto y recursos para: col_es_1
     with col_es_1:
+        # Renderizado de componente visual o control interactivo en la interfaz Streamlit
         st.markdown("\n".join(html_col1), unsafe_allow_html=True)
+    # Gestión automática de contexto y recursos para: col_es_2
     with col_es_2:
+        # Renderizado de componente visual o control interactivo en la interfaz Streamlit
         st.markdown("\n".join(html_col2), unsafe_allow_html=True)
