@@ -2226,15 +2226,16 @@ if st.session_state['current_page'] == 'home':
     bajadas_semana = get_cached_bajadas()
     # Evaluamos la condición lógica (bajadas_semana and (not search_query) and (not selec...) para controlar el flujo
     if bajadas_semana and not search_query and not selected_essences and st.session_state.get('selected_category', 'todos') == 'todos':
-        # Renderizado de componente visual o control interactivo en la interfaz Streamlit
-        st.markdown(clean_html(f"""
-            <div style="margin-top: 20px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;">
-                <div style="font-size: 1.15rem; font-weight: 800; color: {text_color}; display: flex; align-items: center; gap: 8px;">
+        # Renderizamos el encabezado y el enlace nativo de Streamlit hacia la página de remates (evitando rutas HTML rotas)
+        col_head_bajadas, col_link_remates = st.columns([4.2, 1.3], vertical_alignment="center")
+        with col_head_bajadas:
+            st.markdown(clean_html(f"""
+                <div style="margin-top: 16px; margin-bottom: 8px; font-size: 1.15rem; font-weight: 800; color: {text_color}; display: flex; align-items: center; gap: 8px;">
                     <span>🔥</span> Mayores Caídas de Precio de la Semana
                 </div>
-                <a href="pages/remates.py" style="font-size: 0.85rem; font-weight: 700; color: {accent}; text-decoration: none;">Ver todos los remates ↗</a>
-            </div>
-        """), unsafe_allow_html=True)
+            """), unsafe_allow_html=True)
+        with col_link_remates:
+            st.page_link("pages/remates.py", label="Ver todos los remates ↗", use_container_width=True)
 
         # Renderizado de componente visual o control interactivo en la interfaz Streamlit
         cols_bajadas = st.columns(min(len(bajadas_semana), 3), gap="small")
