@@ -51,23 +51,27 @@ except ImportError:  # pragma: no cover
 
 # Bloque try/except para manejo seguro de errores y resiliencia operativa
 try:
-    # Importación de componentes (clave_identidad_perfume, detectar_formato_oferta, inferir_genero_explicito_nombre, limpiar_nombre_perfume, ...) desde el módulo 'backend.normalizador'
+    # Importación de componentes (clave_identidad_perfume, detectar_formato_oferta, generos_compatibles, inferir_genero_explicito_nombre, ...) desde el módulo 'backend.normalizador'
     from backend.normalizador import (
         clave_identidad_perfume,
         detectar_formato_oferta,
+        generos_compatibles,
         inferir_genero_explicito_nombre,
         limpiar_nombre_perfume,
+        normalizar_genero,
         normalizar_marca_canonica,
     )
 except ImportError:
     # Bloque try/except para manejo seguro de errores y resiliencia operativa
     try:
-        # Importación de componentes (clave_identidad_perfume, detectar_formato_oferta, inferir_genero_explicito_nombre, limpiar_nombre_perfume, ...) desde el módulo 'APP.backend.normalizador'
+        # Importación de componentes (clave_identidad_perfume, detectar_formato_oferta, generos_compatibles, inferir_genero_explicito_nombre, ...) desde el módulo 'APP.backend.normalizador'
         from APP.backend.normalizador import (
             clave_identidad_perfume,
             detectar_formato_oferta,
+            generos_compatibles,
             inferir_genero_explicito_nombre,
             limpiar_nombre_perfume,
+            normalizar_genero,
             normalizar_marca_canonica,
         )
     except ImportError:
@@ -85,6 +89,42 @@ except ImportError:
         def normalizar_marca_canonica(marca: str) -> str:
             # Retornamos el resultado procesado ((marca or '').strip())
             return (marca or "").strip()
+
+        # Definición de función 'normalizar_genero' (parámetros: genero)
+        def normalizar_genero(genero: Optional[str]) -> Optional[str]:
+            # Asignamos 'g' con (genero or '').strip().lower()
+            g = (genero or "").strip().lower()
+            # Evaluamos la condición lógica (g in ('mujer', 'femenino', 'female', 'women', 'woman', 'dama', 'f')) para controlar el flujo
+            if g in ("mujer", "femenino", "female", "women", "woman", "dama", "f"):
+                # Retornamos el resultado procesado ('Mujer')
+                return "Mujer"
+            # Evaluamos la condición lógica (g in ('hombre', 'masculino', 'male', 'men', 'man', 'caballero', 'h')) para controlar el flujo
+            if g in ("hombre", "masculino", "male", "men", "man", "caballero", "h"):
+                # Retornamos el resultado procesado ('Hombre')
+                return "Hombre"
+            # Evaluamos la condición lógica (g in ('unisex', 'u', 'ambos')) para controlar el flujo
+            if g in ("unisex", "u", "ambos"):
+                # Retornamos el resultado procesado ('Unisex')
+                return "Unisex"
+            # Retornamos el resultado procesado (None)
+            return None
+
+        # Definición de función 'generos_compatibles' (parámetros: g1, g2)
+        def generos_compatibles(g1: Optional[str], g2: Optional[str]) -> Tuple[bool, str]:
+            # Asignamos 'n1' con normalizar_genero(g1) or 'Unisex'
+            n1 = normalizar_genero(g1) or "Unisex"
+            # Asignamos 'n2' con normalizar_genero(g2) or 'Unisex'
+            n2 = normalizar_genero(g2) or "Unisex"
+            # Evaluamos la condición lógica (n1 == n2 or n1 == 'Unisex') para controlar el flujo
+            if n1 == n2 or n1 == "Unisex":
+                # Retornamos el resultado procesado ((True, n2))
+                return True, n2
+            # Evaluamos la condición lógica (n2 == 'Unisex') para controlar el flujo
+            if n2 == "Unisex":
+                # Retornamos el resultado procesado ((True, n1))
+                return True, n1
+            # Retornamos el resultado procesado ((False, ''))
+            return False, ""
 
         # Definición de función 'inferir_genero_explicito_nombre' (parámetros: nombre, genero_actual)
         def inferir_genero_explicito_nombre(nombre: str, genero_actual: Optional[str] = None) -> str:
