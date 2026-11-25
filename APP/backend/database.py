@@ -24,10 +24,14 @@ import json
 import logging
 # Importación de librería estándar o dependencia externa (os)
 import os
+# Importación de librería estándar o dependencia externa (re)
+import re
 # Importación de librería estándar o dependencia externa (secrets)
 import secrets
 # Importación de librería estándar o dependencia externa (sqlite3)
 import sqlite3
+# Importación de librería estándar o dependencia externa (statistics)
+import statistics
 # Importación de librería estándar o dependencia externa (time)
 import time
 # Importación de componentes (Any, Callable, Dict, Generator, ...) desde el módulo 'typing'
@@ -3950,6 +3954,93 @@ def normalizar_texto_busqueda(txt: Any) -> str:
     return sin_diacriticos.lower().strip()
 
 
+# Expresión regular compilada para bloquear desodorantes ('deo'), body sprays, mists y accesorios en URLs de ofertas
+_RE_URL_NO_PERFUME = re.compile(
+    r"\b(?:"
+    r"deo|desodorante|deodorant|antitranspirante|antiperspirant|"
+    r"bodyspray|body\s+spray|bodymist|body\s+mist|hair\s+mist|mist|"
+    r"bodysplash|body\s+splash|body\s+splah|splash|body\s+m\s+236|"
+    r"after\s+shave|aftershave|shower\s+gel|gel\s+de\s+ducha|body\s+lotion|"
+    r"locion|crema|shampoo|acondicionador|jabon|vela|candle|difusor|ambientador|"
+    r"gift\s+card|giftcard|bombones|truff|botin|zapatilla|zapato|sandalia|calza|calzas|"
+    r"polera|pantalon|chaqueta|vestido|falda|sosten|reloj|maleta|cartera|bolso|mochila|billetera|"
+    r"vape|vapeador|repelente|maquillaje|labial|mascara|delineador|esmalte|bloqueador|"
+    r"esencia\s+tonica|aceite\s+para\s+labios|decant|muestra|vial|\d+g|\d+gr"
+    r")\b",
+    re.IGNORECASE,
+)
+
+
+# Definición de función '_es_url_oferta_no_perfume' (parámetros: url_prod, precio_act)
+def _es_url_oferta_no_perfume(url_prod: str, precio_act: int = 0) -> bool:
+    """Detecta si la URL de una oferta corresponde a un desodorante ('deo'), body spray, mist o artículo no-perfume."""
+    # Evaluamos la condición lógica (not url_prod) para controlar el flujo
+    if not url_prod:
+        # Retornamos el resultado procesado (False)
+        return False
+    # Asignamos 'palabras_url' con re.sub('[^a-zA-Z0-9]+', ' ', str(url_prod)).lower()
+    palabras_url = re.sub(r"[^a-zA-Z0-9]+", " ", str(url_prod)).lower()
+    # Evaluamos la condición lógica (_RE_URL_NO_PERFUME.search(palabras_url)) para controlar el flujo
+    if _RE_URL_NO_PERFUME.search(palabras_url):
+        # Retornamos el resultado procesado (True)
+        return True
+    # Latas de desodorante en aerosol de 125ml/200ml comercializadas como 'perfume spray' a bajo precio (< $15.000)
+    if "perfume spray" in palabras_url and 0 < int(precio_act or 0) < 15000:
+        # Retornamos el resultado procesado (True)
+        return True
+    # Retornamos el resultado procesado (False)
+    return False
+
+
+# Definición de función '_filtrar_outliers_multivariante_perfume' (parámetros: ofertas_lista)
+def _filtrar_outliers_multivariante_perfume(ofertas_lista: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """
+    Descarta ofertas con precios anormalmente bajos en presentaciones grandes (>= 90 ml)
+    respecto de la mediana de mercado del propio perfume (ej. desodorantes 200 ml a $8.990
+    cuando el perfume de 100/105 ml tiene mediana >= $20.000).
+    """
+    # Evaluamos la condición lógica (not ofertas_lista) para controlar el flujo
+    if not ofertas_lista:
+        # Retornamos el resultado procesado ([])
+        return []
+    # Asignamos 'precios_activos' con [int(o.get('precio_actual') or 0) for o in ofertas_lista ...]
+    precios_activos = [
+        int(o.get("precio_actual") or 0)
+        for o in ofertas_lista
+        if o.get("en_stock", True) and int(o.get("precio_actual") or 0) > 0
+    ]
+    # Evaluamos la condición lógica (len(precios_activos) < 3) para controlar el flujo
+    if len(precios_activos) < 3:
+        # Retornamos el resultado procesado (ofertas_lista)
+        return ofertas_lista
+    # Asignamos 'mediana_p' con float(statistics.median(precios_activos))
+    mediana_p = float(statistics.median(precios_activos))
+    # Evaluamos la condición lógica (mediana_p < 20000) para controlar el flujo
+    if mediana_p < 20000:
+        # Retornamos el resultado procesado (ofertas_lista)
+        return ofertas_lista
+    # Asignamos 'filtradas' con []
+    filtradas: List[Dict[str, Any]] = []
+    # Recorremos iterativamente cada 'o' en ofertas_lista
+    for o in ofertas_lista:
+        # Asignamos 'p_val' con int(o.get('precio_actual') or 0)
+        p_val = int(o.get("precio_actual") or 0)
+        # Asignamos 'vol_val' con float(o.get('volumen_ml') or 100)
+        vol_val = float(o.get("volumen_ml") or 100)
+        # Evaluamos la condición lógica (vol_val >= 180 and 0 < p_val < 0.5 * mediana_p) para controlar el flujo
+        if vol_val >= 180 and 0 < p_val < (0.50 * mediana_p):
+            # Saltamos a la siguiente iteración del ciclo descartando el elemento actual
+            continue
+        # Evaluamos la condición lógica (vol_val >= 90 and 0 < p_val < 0.4 * mediana_p) para controlar el flujo
+        if vol_val >= 90 and 0 < p_val < (0.40 * mediana_p):
+            # Saltamos a la siguiente iteración del ciclo descartando el elemento actual
+            continue
+        # Ejecutamos instrucción: filtradas.append(o)
+        filtradas.append(o)
+    # Retornamos el resultado procesado (filtradas if filtradas else ofertas_lista)
+    return filtradas if filtradas else ofertas_lista
+
+
 # BLOQUE 12: CONSULTAS DE CATÁLOGO Y OFERTAS CON PAGINACIÓN AUTOMÁTICA (>1.000)
 # =============================================================================
 # - ¿Qué hace esta función (Consolidación de Catálogo Maestro en RAM)?:
@@ -4042,6 +4133,10 @@ def _obtener_catalogo_master_supabase(force_refresh: bool = False) -> List[Dict[
 
         # Evaluamos la condición lógica (not pid or p_act <= 0 or vol < 25) para controlar el flujo
         if not pid or p_act <= 0 or vol < 25:
+            # Saltamos a la siguiente iteración del ciclo descartando el elemento actual
+            continue
+        # Evaluamos la condición lógica (_es_url_oferta_no_perfume(url_p, p_act)) para controlar el flujo
+        if _es_url_oferta_no_perfume(url_p, p_act):
             # Saltamos a la siguiente iteración del ciclo descartando el elemento actual
             continue
 
@@ -4518,6 +4613,10 @@ def obtener_precios_actuales(perfume_id: int) -> List[Dict[str, Any]]:
 
                     # Asignamos 'url_prod' con str(item.get('url_producto') or '')
                     url_prod = str(item.get("url_producto") or "")
+                    # Evaluamos la condición lógica (_es_url_oferta_no_perfume(url_prod, p_act)) para controlar el flujo
+                    if _es_url_oferta_no_perfume(url_prod, p_act):
+                        # Saltamos a la siguiente iteración del ciclo descartando el elemento actual
+                        continue
                     # Asignamos 'fmt' con str(v.get('formato') or 'regular').lower()
                     fmt = str(v.get("formato") or "regular").lower()
                     # Evaluamos la condición lógica (fmt != 'tester' and 'tester' in url_prod.lower()) para controlar el flujo
@@ -4548,8 +4647,8 @@ def obtener_precios_actuales(perfume_id: int) -> List[Dict[str, Any]]:
                         "nivel_frescura": clasificar_frescura_oferta(dias_sv),
                         "excluida_mejor_precio": not es_oferta_elegible_mejor_precio(dias_sv),
                     })
-                # Retornamos el resultado procesado (res_lista)
-                return res_lista
+                # Retornamos el resultado procesado (_filtrar_outliers_multivariante_perfume(res_lista))
+                return _filtrar_outliers_multivariante_perfume(res_lista)
             # Retornamos el resultado procesado ([])
             return []
         except Exception as e:
@@ -4585,6 +4684,10 @@ def obtener_precios_actuales(perfume_id: int) -> List[Dict[str, Any]]:
             visibles_oa: List[Dict[str, Any]] = []
             # Recorremos iterativamente cada 'r' en rows_oa
             for r in rows_oa:
+                # Evaluamos la condición lógica (_es_url_oferta_no_perfume(str(r.get('url_producto') or ''), int(r.get('precio_actual') or 0))) para controlar el flujo
+                if _es_url_oferta_no_perfume(str(r.get("url_producto") or ""), int(r.get("precio_actual") or 0)):
+                    # Saltamos a la siguiente iteración del ciclo descartando el elemento actual
+                    continue
                 # Asignamos 'en_stock_sq' con bool(r['en_stock']) and str(r.get('estado'...
                 en_stock_sq = bool(r["en_stock"]) and str(r.get("estado") or "activa") == "activa"
                 # Asignamos 'r['en_stock']' con en_stock_sq
@@ -4607,8 +4710,8 @@ def obtener_precios_actuales(perfume_id: int) -> List[Dict[str, Any]]:
                 r["excluida_mejor_precio"] = not es_oferta_elegible_mejor_precio(dias_sv)
                 # Ejecutamos instrucción: visibles_oa.append(r)
                 visibles_oa.append(r)
-            # Retornamos el resultado procesado (visibles_oa)
-            return visibles_oa
+            # Retornamos el resultado procesado (_filtrar_outliers_multivariante_perfume(visibles_oa))
+            return _filtrar_outliers_multivariante_perfume(visibles_oa)
 
         # Asignamos 'query' con "\n SELECT t.id as tienda_id, t.nombre as ...
         query = """

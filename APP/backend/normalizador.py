@@ -310,8 +310,9 @@ PALABRAS_EXCLUSION: List[str] = [
     # Formatos derivados que NO son perfumes frasco individual (sprays corporales, ambientales, desodorantes)
     "all over spray", "all over", "desodorante ambiental", "perfume ambiental", "ambientador",
     "air freshener", "difusor", "aromatizante", "scented candle",
-    "desodorante", "deodorant", "body mist", "bodymist", "body spray", "bodyspray",
-    "body splash", "bodysplash", "splash", "hair mist", "hairmist", "bruma", "leau brume", "l'eau brume",
+    "desodorante", "deodorant", "deo", "deo spray", "deodorant spray", "antitranspirante", "antiperspirant",
+    "body mist", "bodymist", "body spray", "bodyspray", "perfume bodyspray",
+    "body splash", "bodysplash", "body splah", "splash", "hair mist", "hairmist", "mist", "bruma", "leau brume", "l'eau brume",
     "body lotion", "crema", "locion corporal", "loción corporal", "locion ", "loción ",
     "locion para despues", "loción para después", "después del afeitado", "despues del afeitado",
     "shampoo", "champu", "acondicionador", "gel de ducha", "shower gel", "jabon", "jabón", "vela", "candle",
@@ -319,8 +320,8 @@ PALABRAS_EXCLUSION: List[str] = [
     "estuche vacío", "perfumero", "de vidrio", "atomizador recargable", "recargable", "recarga",
     "refill", "refillable", "recargrefill",
     "labial", "mascara pestañas", "mascara", "sachet", "achet", "with box",
-    "roll on", "roll-on", "cuidado del cabello", "tratamiento hidratante",
-    "twist and spray", "twist & spray", "travel purse",
+    "roll on", "roll-on", "cuidado del cabello", "tratamiento hidratante", "esencia tonica", "tonica hidratante",
+    "twist and spray", "twist & spray", "travel purse", "gift card", "giftcard", "bombones",
     # Muestras, decants, discovery sets y sets multipieza
     "atomizador", "atomizer", "travel spray", "pocket spray", "miniatura", "decant", "sample",
     "muestra", "vial", "discovery", "estuche", "cofre", "coffret", "gift set",
@@ -1323,20 +1324,32 @@ FORMATOS_EXCLUIDOS: List[Tuple[str, str]] = [
     (r"\b\d+\s*x\s*\d+\s*ml\b", "multipack viales"),
     (r"\bdesodorante\b", "desodorante"),
     (r"\bdeodorant\b", "desodorante"),
+    (r"\bdeo\b", "desodorante"),
+    (r"\bantitranspirante\b", "desodorante"),
+    (r"\bantiperspirant\b", "desodorante"),
     (r"\bafter\s*shave\b", "after shave"),
     (r"\baftershave\b", "after shave"),
     (r"\bbody\s*mist\b", "body mist"),
+    (r"\bbodymist\b", "body mist"),
     (r"\bhair\s*mist\b", "hair mist"),
     (r"\bperfume\s*mist\b", "perfume mist"),
     (r"\bfragr?ance\s*mist\b", "fragrance mist"),
     (r"\bmist\b", "mist"),
+    (r"\bbody\s+m\s+236\s*ml\b", "body mist"),
     (r"\bambiental\b", "ambientador"),
     (r"\bambientador\b", "ambientador"),
     (r"\bleau[\s\-]*brume\b", "bruma capilar/corporal"),
     (r"\bbrume\b", "bruma"),
     (r"\bbruma\b", "bruma"),
     (r"\bsplash\b", "body splash"),
+    (r"\bbodysplash\b", "body splash"),
+    (r"\bbody\s*splah\b", "body splash"),
     (r"\bbody\s*spray\b", "body spray"),
+    (r"\bbodyspray\b", "body spray"),
+    (r"\bgift\s*card\b", "gift card"),
+    (r"\bgiftcard\b", "gift card"),
+    (r"\bbombones\b", "bombones"),
+    (r"\besencia\s+tonica\b", "cosmético facial"),
     (r"\bbody\s*lotion\b", "body lotion"),
     (r"\blocion\b", "loción"),
     (r"\bloci[oó]n\b", "loción"),
@@ -2044,7 +2057,20 @@ def coincide_entidad_detallada(
             )
 
     # 11. Guardia de Sanidad Comercial de Precio vs Referencia de Mercado (Ajustada por Volumen y Tester)
-    if precio_candidato and precio_referencia and precio_referencia >= 65000:
+    # Descarta latas de desodorante en aerosol etiquetadas como 'Perfume Spray 200ml' (< $15.000 CLP)
+    if precio_candidato and precio_candidato < 15000 and re.search(r"\bperfume\s+spray\b", combo_text):
+        # Retornamos el resultado procesado (ResultadoCoincidencia(coincide=False, confianza=0.0, ...))
+        return ResultadoCoincidencia(
+            coincide=False,
+            confianza=0.0,
+            motivo=f"Desodorante en aerosol ('perfume spray') detectado por precio bajo ({precio_candidato} CLP)",
+            volumen_detectado=vol_candidato or volumen_esperado,
+            formato_invalido="perfume_spray_aerosol",
+            formato_detectado=formato_det,
+        )
+
+    # Evaluamos la condición lógica (precio_candidato and precio_referencia and precio_referencia >= 18000) para controlar el flujo
+    if precio_candidato and precio_referencia and precio_referencia >= 18000:
         # Asignamos 'vol_base' con volumen_esperado or (vol_candidato if vol_...
         vol_base = volumen_esperado or (vol_candidato if vol_candidato >= 25 else 100)
         # Asignamos 'vol_ratio' con max(0.42, min(1.5, vol_base / 100.0))

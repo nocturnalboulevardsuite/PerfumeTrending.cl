@@ -74,7 +74,7 @@ except Exception:  # pragma: no cover
 
 
 # Asignamos 'CODIGO_DIGITOS' con 6
-CODIGO_DIGITOS = 6
+CODIGO_DIGITOS = 6 
 # Asignamos 'CODIGO_VIGENCIA_SEG' con 10 * 60
 CODIGO_VIGENCIA_SEG = 10 * 60      # el código vence a los 10 minutos
 # Asignamos 'REENVIO_ESPERA_SEG' con 45
