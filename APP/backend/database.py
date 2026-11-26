@@ -2822,6 +2822,46 @@ def generar_url_tienda(tienda_nombre: str, perfume_nombre: str, url_directa: Opt
     if "dbs" in t:
         # Retornamos el resultado procesado (f'https://www.dbs.cl/search?q={q}')
         return f"https://www.dbs.cl/search?q={q}"
+    # Evaluamos la condición lógica ('odoro' in t) para controlar el flujo
+    if "odoro" in t:
+        # Retornamos el resultado procesado (f'https://www.lodoro.cl/search?q={q}')
+        return f"https://www.lodoro.cl/search?q={q}"
+    # Evaluamos la condición lógica ('mundo' in t) para controlar el flujo
+    if "mundo" in t:
+        # Retornamos el resultado procesado (f'https://mundoaromas.cl/search?q={q}')
+        return f"https://mundoaromas.cl/search?q={q}"
+    # Evaluamos la condición lógica ('cosmetic' in t) para controlar el flujo
+    if "cosmetic" in t:
+        # Retornamos el resultado procesado (f'https://cosmetic.cl/search?q={q}')
+        return f"https://cosmetic.cl/search?q={q}"
+    # Evaluamos la condición lógica ('fragante' in t) para controlar el flujo
+    if "fragante" in t:
+        # Retornamos el resultado procesado (f'https://fragante.cl/search?q={q}')
+        return f"https://fragante.cl/search?q={q}"
+    # Evaluamos la condición lógica ('comprarenchile' in t or 'comprar' in t) para controlar el flujo
+    if "comprarenchile" in t or "comprar" in t:
+        # Retornamos el resultado procesado (f'https://comprarenchile.cl/search?q={q}')
+        return f"https://comprarenchile.cl/search?q={q}"
+    # Evaluamos la condición lógica ('aromata' in t) para controlar el flujo
+    if "aromata" in t:
+        # Retornamos el resultado procesado (f'https://aromata.cl/search?q={q}')
+        return f"https://aromata.cl/search?q={q}"
+    # Evaluamos la condición lógica ('chile perfume' in t or 'chileperfume' in t) para controlar el flujo
+    if "chile perfume" in t or "chileperfume" in t:
+        # Retornamos el resultado procesado (f'https://www.chileperfume.cl/?s={q}&post_type=product')
+        return f"https://www.chileperfume.cl/?s={q}&post_type=product"
+    # Evaluamos la condición lógica ('portal' in t) para controlar el flujo
+    if "portal" in t:
+        # Retornamos el resultado procesado (f'https://portaldelperfume.cl/?s={q}&post_type=product')
+        return f"https://portaldelperfume.cl/?s={q}&post_type=product"
+    # Evaluamos la condición lógica ('lujo' in t) para controlar el flujo
+    if "lujo" in t:
+        # Retornamos el resultado procesado (f'https://productosdelujo.cl/?s={q}&post_type=product')
+        return f"https://productosdelujo.cl/?s={q}&post_type=product"
+    # Evaluamos la condición lógica ('multimarca' in t) para controlar el flujo
+    if "multimarca" in t:
+        # Retornamos el resultado procesado (f'https://multimarcasperfumes.cl/?s={q}&post_type=product')
+        return f"https://multimarcasperfumes.cl/?s={q}&post_type=product"
     # Retornamos el resultado procesado (None)
     return None
 
